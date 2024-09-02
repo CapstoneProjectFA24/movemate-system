@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="12.0.1" />
+		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+		<PackageReference Include="FluentValidation" Version="11.7.1" />
+		<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+		<PackageReference Include="Google.Cloud.Firestore" Version="3.8.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.27.2" />
+		<PackageReference Include="LinqKit" Version="1.3.0" />
+		<PackageReference Include="MediatR" Version="12.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
+
+		<PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.7.0" />
+		<PackageReference Include="Quartz.AspNetCore" Version="3.7.0" />
+		<PackageReference Include="Quartz.Extensions.Hosting" Version="3.7.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\MoveMate.Domain\MoveMate.Domain.csproj" />
+	  <ProjectReference Include="..\MoveMate.Repository\MoveMate.Repository.csproj" />
+	</ItemGroup>
+</Project>
