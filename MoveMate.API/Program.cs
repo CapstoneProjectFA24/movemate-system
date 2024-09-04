@@ -11,6 +11,7 @@ using System.Text;
 using MoveMate.Service.Commons;
 using MoveMate.API.Constants;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ViewModels.ModelRequests;
 
 namespace MoveMate.API
 {
@@ -75,8 +76,8 @@ namespace MoveMate.API
             });
 
             // Fluent Validation
-            //builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AccountRequestValidator>());
-            //builder.Services.AddValidatorsFromAssemblyContaining<AccountTokenValidator>();
+            builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AccountRequestValidator>());
+            builder.Services.AddValidatorsFromAssemblyContaining<AccountTokenValidator>();
 
             // Add Quartz (Optional, uncomment if needed)
             //builder.Services.AddQuartz(q =>

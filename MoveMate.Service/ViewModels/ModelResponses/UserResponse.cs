@@ -14,6 +14,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
+        public bool IsDeleted { get; set; }
         public string AvatarUrl { get; set; }
         public List<int> WalletIds { get; set; } // Collection of Wallet IDs
     }
