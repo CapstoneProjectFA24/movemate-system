@@ -7,11 +7,9 @@ public partial class ScheduleDetail
 {
     public int Id { get; set; }
 
-    public int? BookingId { get; set; }
+    public int? UserId { get; set; }
 
     public int? ScheduleId { get; set; }
-
-    public int? StatisticalId { get; set; }
 
     public DateOnly? WorkingDays { get; set; }
 
@@ -23,9 +21,7 @@ public partial class ScheduleDetail
 
     public double? Amount { get; set; }
 
-    public virtual Booking? Booking { get; set; }
-
     public virtual Schedule? Schedule { get; set; }
 
-    public virtual Statistical? Statistical { get; set; }
+    public virtual User? User { get; set; }
 }
