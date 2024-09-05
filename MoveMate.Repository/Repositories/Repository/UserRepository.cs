@@ -1,4 +1,5 @@
-﻿using MoveMate.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
 using System;
@@ -11,8 +12,35 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
     {
+        private readonly TruckRentalContext _dbContext;
+
         public UserRepository(TruckRentalContext context) : base(context)
         {
+            _dbContext = context;
+        }
+        public async Task<User> GetUserAsync(int accountId)
+        {
+            try
+            {
+                return await this._dbContext.Users.Include(x => x.Role)
+                                                     .SingleOrDefaultAsync(x => x.Id == accountId );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        public async Task<User> GetUserAsync(string email)
+        {
+            try
+            {
+                return await this._dbContext.Users.Include(x => x.Role)
+                                                     .SingleOrDefaultAsync(x => x.Email == email );
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }
