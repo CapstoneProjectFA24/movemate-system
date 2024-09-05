@@ -39,8 +39,6 @@ public partial class User
 
     public int? ModifiedVersion { get; set; }
 
-    public int? TotalTrips { get; set; }
-
     public bool? IsDriver { get; set; }
 
     public string? CodeIntroduce { get; set; }
@@ -61,11 +59,11 @@ public partial class User
 
     public virtual Role? Role { get; set; }
 
-    public virtual Schedule? Schedule { get; set; }
-
-    public virtual ICollection<Statistical> Statisticals { get; set; } = new List<Statistical>();
+    public virtual ICollection<ScheduleDetail> ScheduleDetails { get; set; } = new List<ScheduleDetail>();
 
     public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
+
+    public virtual ICollection<TripAccuracy> TripAccuracies { get; set; } = new List<TripAccuracy>();
 
     public virtual ICollection<Truck> Trucks { get; set; } = new List<Truck>();
 

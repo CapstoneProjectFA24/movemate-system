@@ -24,14 +24,12 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private BookingStaffDailyRepository _bookingStaffDailyRepository;
         private BookingTrackerRepository _bookingTrackerRepository;
         private FeeDetailRepository _feeDetailRepository;
-        private FeeSettingRepository _feeSettingRepository;
-        private GroupRolePermissionRepository _groupRolePermissionRepository;
+        private FeeSettingRepository _feeSettingRepository;     
         private HouseTypeRepository _houseTypeRepository;
         private ItemRepository _itemRepository;
         private ItemCategoryRepository _itemCategoryRepository;
         private NotificationRepository _notificationRepository;
-        private PaymentRepository _paymentRepository;
-        private PermissionRepository _permissionRepository;
+        private PaymentRepository _paymentRepository;   
         private PromotionDetailRepository _promotionDetailRepository;
         private PromotionCategoryRepository _promotionCategoryRepository;
         private UserRepository _userRepository;
@@ -39,8 +37,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private ScheduleRepository _scheduleRepository;
         private ScheduleDetailRepository _scheduleDetailRepository;
         private ServiceRepository _serviceRepository;
-        private ServiceBookingRepository _serviceBookingRepository;
-        private StatisticalRepository _statisticalRepository;
+        private ServiceBookingRepository _serviceBookingRepository;      
         private TokenRepository _tokenRepository;
         private TrackerSourceRepository _trackerSourceRepository;
         private TransactionRepository _transactionRepository;
@@ -198,17 +195,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public GroupRolePermissionRepository GroupRolePermissionRepository
-        {
-            get
-            {
-                if (_groupRolePermissionRepository == null)
-                {
-                    _groupRolePermissionRepository= new GroupRolePermissionRepository(_dbContext);
-                }
-                return _groupRolePermissionRepository;
-            }
-        }
+     
 
         public HouseTypeRepository HouseTypeRepository
         {
@@ -270,18 +257,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public PermissionRepository PermissionRepository
-        {
-            get
-            {
-                if(_permissionRepository == null)
-                {
-                    _permissionRepository = new PermissionRepository(_dbContext);
-                }
-                return _permissionRepository;
-            }
-        }
-
+       
         public PromotionDetailRepository PromotionDetailRepository
         {
             get
@@ -367,17 +343,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public StatisticalRepository StatisticalRepository
-        {
-            get
-            {
-                if(_statisticalRepository == null)
-                {
-                    _statisticalRepository = new StatisticalRepository(_dbContext);
-                }
-                return _statisticalRepository;
-            }
-        }
+       
 
         public TokenRepository TokenRepository
         {

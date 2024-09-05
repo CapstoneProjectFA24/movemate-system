@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Configuration;
 
 namespace MoveMate.Domain.Models;
 
@@ -37,8 +35,6 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
 
-    public virtual DbSet<GroupRolePermission> GroupRolePermissions { get; set; }
-
     public virtual DbSet<HouseType> HouseTypes { get; set; }
 
     public virtual DbSet<Item> Items { get; set; }
@@ -48,8 +44,6 @@ public partial class TruckRentalContext : DbContext
     public virtual DbSet<Notification> Notifications { get; set; }
 
     public virtual DbSet<Payment> Payments { get; set; }
-
-    public virtual DbSet<Permission> Permissions { get; set; }
 
     public virtual DbSet<PromotionCategory> PromotionCategories { get; set; }
 
@@ -65,13 +59,13 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<ServiceBooking> ServiceBookings { get; set; }
 
-    public virtual DbSet<Statistical> Statisticals { get; set; }
-
     public virtual DbSet<Token> Tokens { get; set; }
 
     public virtual DbSet<TrackerSource> TrackerSources { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
+
+    public virtual DbSet<TripAccuracy> TripAccuracies { get; set; }
 
     public virtual DbSet<Truck> Trucks { get; set; }
 
@@ -85,31 +79,10 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-    //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-    //        => optionsBuilder.UseSqlServer("Server=HANANH\\HANANH;database=TruckRental;uid=sa;pwd=12345;TrustServerCertificate=True");
-
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.ConfigureWarnings(warnings =>
-        warnings.Ignore(CoreEventId.InvalidIncludePathError));
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer(GetConnectionString());
-        }
-    }
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=HANANH\\HANANH;database=TruckRental;uid=sa;pwd=12345;TrustServerCertificate=True");
 
-    private string GetConnectionString()
-    {
-        IConfiguration config = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", true, true)
-            .Build();
-        var strConn = config["ConnectionStrings:MyDB"];
-
-        return strConn;
-    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Achievement>(entity =>
@@ -279,21 +252,6 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.Type).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<GroupRolePermission>(entity =>
-        {
-            entity.ToTable("GroupRolePermission");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-
-            entity.HasOne(d => d.Permission).WithMany(p => p.GroupRolePermissions)
-                .HasForeignKey(d => d.PermissionId)
-                .HasConstraintName("FK_GroupRolePermission_Permission");
-
-            entity.HasOne(d => d.Role).WithMany(p => p.GroupRolePermissions)
-                .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK_GroupRolePermission_Role");
-        });
-
         modelBuilder.Entity<HouseType>(entity =>
         {
             entity
@@ -376,15 +334,6 @@ public partial class TruckRentalContext : DbContext
                 .HasConstraintName("FK_Payment_Booking");
         });
 
-        modelBuilder.Entity<Permission>(entity =>
-        {
-            entity.ToTable("Permission");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Src).HasMaxLength(255);
-            entity.Property(e => e.TypePermission).HasMaxLength(255);
-        });
-
         modelBuilder.Entity<PromotionCategory>(entity =>
         {
             entity.ToTable("PromotionCategory");
@@ -440,17 +389,13 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
 
-            entity.HasOne(d => d.Booking).WithMany(p => p.ScheduleDetails)
-                .HasForeignKey(d => d.BookingId)
-                .HasConstraintName("FK_ScheduleDetails_Booking");
-
             entity.HasOne(d => d.Schedule).WithMany(p => p.ScheduleDetails)
                 .HasForeignKey(d => d.ScheduleId)
                 .HasConstraintName("FK_ScheduleDetails_Schedule");
 
-            entity.HasOne(d => d.Statistical).WithMany(p => p.ScheduleDetails)
-                .HasForeignKey(d => d.StatisticalId)
-                .HasConstraintName("FK_ScheduleDetails_Statistical");
+            entity.HasOne(d => d.User).WithMany(p => p.ScheduleDetails)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_ScheduleDetails_User");
         });
 
         modelBuilder.Entity<Service>(entity =>
@@ -476,20 +421,6 @@ public partial class TruckRentalContext : DbContext
             entity.HasOne(d => d.Service).WithMany(p => p.ServiceBookings)
                 .HasForeignKey(d => d.ServiceId)
                 .HasConstraintName("FK_ServiceBooking_Service");
-        });
-
-        modelBuilder.Entity<Statistical>(entity =>
-        {
-            entity.ToTable("Statistical");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Shard).HasMaxLength(255);
-            entity.Property(e => e.Type).HasMaxLength(255);
-            entity.Property(e => e.Week).HasMaxLength(255);
-
-            entity.HasOne(d => d.User).WithMany(p => p.Statisticals)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Statistical_User");
         });
 
         modelBuilder.Entity<Token>(entity =>
@@ -547,6 +478,20 @@ public partial class TruckRentalContext : DbContext
             entity.HasOne(d => d.Wallet).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.WalletId)
                 .HasConstraintName("FK_Transaction_Wallet");
+        });
+
+        modelBuilder.Entity<TripAccuracy>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC07210484F1");
+
+            entity.ToTable("TripAccuracy");
+
+            entity.Property(e => e.Shard).HasMaxLength(255);
+            entity.Property(e => e.TotalApprovedTrip).HasColumnName("TotalApproved_trip");
+
+            entity.HasOne(d => d.User).WithMany(p => p.TripAccuracies)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_TripAccuracy_User");
         });
 
         modelBuilder.Entity<Truck>(entity =>
@@ -622,10 +567,6 @@ public partial class TruckRentalContext : DbContext
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("FK_User_Role");
-
-            entity.HasOne(d => d.Schedule).WithMany(p => p.Users)
-                .HasForeignKey(d => d.ScheduleId)
-                .HasConstraintName("FK_User_Schedule");
         });
 
         modelBuilder.Entity<UserInfo>(entity =>
