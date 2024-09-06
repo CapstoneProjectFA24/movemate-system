@@ -17,7 +17,7 @@ public partial class Schedule
 
     public DateTime? EndTime { get; set; }
 
-    public virtual ICollection<ScheduleDetail> ScheduleDetails { get; set; } = new List<ScheduleDetail>();
+    public int? ScheduleDetailsId { get; set; }
 
-    public virtual ICollection<User> Users { get; set; } = new List<User>();
+    public virtual ICollection<ScheduleDetail> ScheduleDetails { get; set; } = new List<ScheduleDetail>();
 }

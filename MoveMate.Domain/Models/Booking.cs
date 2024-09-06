@@ -103,8 +103,6 @@ public partial class Booking
 
     public virtual ICollection<PromotionDetail> PromotionDetails { get; set; } = new List<PromotionDetail>();
 
-    public virtual ICollection<ScheduleDetail> ScheduleDetails { get; set; } = new List<ScheduleDetail>();
-
     public virtual ICollection<ServiceBooking> ServiceBookings { get; set; } = new List<ServiceBooking>();
 
     public virtual User? User { get; set; }
