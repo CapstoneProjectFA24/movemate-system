@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
@@ -15,14 +16,36 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
       //  private RedisConnectionProvider _redisConnectionProvider;
         public DbFactory()
         {
-
+            DotNetEnv.Env.Load();
         }
 
         public TruckRentalContext InitDbContext()
         {
             if (_dbContext == null)
             {
-                _dbContext = new TruckRentalContext();
+            
+                var cnn = Environment.GetEnvironmentVariable("MDB");
+                var finalConnectionString = "";
+
+                if (!string.IsNullOrEmpty(cnn))
+                {
+                    finalConnectionString = cnn;
+                }
+                else
+                {
+                    var builder = new ConfigurationBuilder()
+                        .SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                
+                    IConfigurationRoot configuration = builder.Build();
+                    finalConnectionString = configuration.GetConnectionString("MyDB");
+                }
+                
+                var optionsBuilder = new DbContextOptionsBuilder<TruckRentalContext>();
+                optionsBuilder.UseSqlServer(finalConnectionString);
+                optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        
+                _dbContext = new TruckRentalContext(optionsBuilder.Options);
             }
             return _dbContext;
         }
