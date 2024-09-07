@@ -47,7 +47,7 @@ namespace MoveMate.Service.Services
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
-                    includeProperties: "Wallet"
+                    includeProperties: "Wallets"
                 );
                 var listResponse = _mapper.Map<List<UserResponse>>(entities);
 
