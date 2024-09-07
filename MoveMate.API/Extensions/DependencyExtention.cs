@@ -30,6 +30,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IDbFactory, DbFactory>();
             services.AddScoped<IUserServices, UserService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IBookingServices, BookingServices>();
             //services.AddScoped<IAuctionService, AuctionService>();
             //services.AddScoped<IOrderService, OrderService>();
             ////services.AddScoped(typeof(IFirebaseService<>), typeof(FirebaseService<>));

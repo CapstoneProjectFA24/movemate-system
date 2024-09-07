@@ -31,6 +31,13 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
                 
                 .ForMember(dest => dest.Tokens, opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
+
+
+
+
+            //Booking
+            CreateMap<Booking, BookingResponse>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.User.Id));
         }
     }
 
