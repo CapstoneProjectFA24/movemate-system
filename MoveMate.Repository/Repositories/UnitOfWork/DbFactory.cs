@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
@@ -22,7 +23,17 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             if (_dbContext == null)
             {
-                _dbContext = new TruckRentalContext();
+                var builder = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                IConfigurationRoot configuration = builder.Build();
+                
+                var optionsBuilder = new DbContextOptionsBuilder<TruckRentalContext>();
+                optionsBuilder.UseSqlServer(configuration.GetConnectionString("MyDB"));
+                optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        
+                _dbContext = new TruckRentalContext(optionsBuilder.Options);
+                //_dbContext = new TruckRentalContext();
             }
             return _dbContext;
         }

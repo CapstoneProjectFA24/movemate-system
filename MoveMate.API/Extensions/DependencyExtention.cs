@@ -2,6 +2,9 @@
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Text;
+using Hangfire;
+using Hangfire.Storage.SQLite;
+using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using MoveMate.API.Middleware;
@@ -11,6 +14,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Utils;
 using MoveMate.API.Constants;
+using MoveMate.Service.BackgroundServices;
 
 
 namespace MoveMate.API.Extensions
@@ -40,6 +44,17 @@ namespace MoveMate.API.Extensions
             //services.AddScoped<IBidRepository, BidRepository>();
             //services.AddScoped<ITransactionService, TransactionService>();
             
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            IConfigurationRoot configuration = builder.Build();
+            
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSQLiteStorage(configuration.GetConnectionString("HangfireConnection")));
+            services.AddHangfireServer();
 
             return services;
         }
@@ -140,22 +155,34 @@ namespace MoveMate.API.Extensions
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseCors(CorsConstants.PolicyName);
+            app.UseRouting();
             app.UseAuthentication();
-            app.UseMiddleware<ExceptionMiddleware>();
             app.UseAuthorization();
+            app.UseMiddleware<ExceptionMiddleware>();
             //Add middleware extentions
             app.ConfigureExceptionMiddleware();
             app.MapControllers();
-            app.UseRouting();
+            
             //app.UseEndpoints(endpoints =>
             //{
             //    endpoints.MapControllers();
             //});
-            //app.UseHangfireDashboard("/hangfire", new DashboardOptions
-            //{
-            //    Authorization = new[] { new HangfireAuthenticationFilter() }
-            //});
-            //BackgroundJob.Enqueue<IConfigurationService>(cf => cf.StartAllBackgroundJob());
+            // hangfire
+            app.UseHangfireDashboard();
+            app.MapHangfireDashboard("/hangfire", new DashboardOptions()
+            {
+                DashboardTitle = "MoveMateSysterm - Background Services",
+                
+                Authorization = new []
+                {
+                    new HangfireCustomBasicAuthenticationFilter()
+                    {
+                        User = "root",
+                        Pass = "root"
+                    }
+                }
+            });
+            BackgroundJob.Enqueue<IBackgroundService>(cf => cf.StartAllBackgroundJob());
             return app;
         }
     }
