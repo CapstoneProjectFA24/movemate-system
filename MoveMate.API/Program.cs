@@ -57,6 +57,7 @@ namespace MoveMate.API
             });
 
             // Dependency Injection
+            builder.Services.AddDbFactory();
             builder.Services.AddUnitOfWork();
             builder.Services.AddServices();
             builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());

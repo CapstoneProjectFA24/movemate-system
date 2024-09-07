@@ -26,14 +26,20 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             return services;
         }
+        
+        public static IServiceCollection AddDbFactory(this IServiceCollection services)
+        {
+            services.AddScoped<IDbFactory, DbFactory>();
+            return services;
+        }
 
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             //services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IDbFactory, DbFactory>();
             services.AddScoped<IUserServices, UserService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
             //services.AddScoped<IAuctionService, AuctionService>();
             //services.AddScoped<IOrderService, OrderService>();
             ////services.AddScoped(typeof(IFirebaseService<>), typeof(FirebaseService<>));
@@ -182,7 +188,7 @@ namespace MoveMate.API.Extensions
                     }
                 }
             });
-            BackgroundJob.Enqueue<IBackgroundService>(cf => cf.StartAllBackgroundJob());
+            BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;
         }
     }

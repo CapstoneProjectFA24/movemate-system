@@ -1,6 +1,6 @@
 ﻿namespace MoveMate.Service.BackgroundServices;
 
-public interface IBackgroundService
+public interface IBackgroundServiceHangFire
 {
     public Task StartAllBackgroundJob();
 }

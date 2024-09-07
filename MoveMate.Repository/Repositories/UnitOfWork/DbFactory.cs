@@ -16,24 +16,36 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
       //  private RedisConnectionProvider _redisConnectionProvider;
         public DbFactory()
         {
-
+            DotNetEnv.Env.Load();
         }
 
         public TruckRentalContext InitDbContext()
         {
             if (_dbContext == null)
             {
-                var builder = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                IConfigurationRoot configuration = builder.Build();
+            
+                var cnn = Environment.GetEnvironmentVariable("MDB");
+                var finalConnectionString = "";
+
+                if (!string.IsNullOrEmpty(cnn))
+                {
+                    finalConnectionString = cnn;
+                }
+                else
+                {
+                    var builder = new ConfigurationBuilder()
+                        .SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                
+                    IConfigurationRoot configuration = builder.Build();
+                    finalConnectionString = configuration.GetConnectionString("MyDB");
+                }
                 
                 var optionsBuilder = new DbContextOptionsBuilder<TruckRentalContext>();
-                optionsBuilder.UseSqlServer(configuration.GetConnectionString("MyDB"));
+                optionsBuilder.UseSqlServer(finalConnectionString);
                 optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         
                 _dbContext = new TruckRentalContext(optionsBuilder.Options);
-                //_dbContext = new TruckRentalContext();
             }
             return _dbContext;
         }

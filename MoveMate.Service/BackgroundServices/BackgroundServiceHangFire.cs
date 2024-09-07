@@ -2,7 +2,7 @@
 
 namespace MoveMate.Service.BackgroundServices;
 
-public class BackgroundService : IBackgroundService
+public class BackgroundServiceHangFire : IBackgroundServiceHangFire
 {
     public async Task StartAllBackgroundJob()
     {
