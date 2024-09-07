@@ -27,7 +27,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             return services;
         }
-        
+
         public static IServiceCollection AddDbFactory(this IServiceCollection services)
         {
             services.AddScoped<IDbFactory, DbFactory>();
@@ -50,12 +50,12 @@ namespace MoveMate.API.Extensions
             //services.AddScoped<IBidService, BidService>();
             //services.AddScoped<IBidRepository, BidRepository>();
             //services.AddScoped<ITransactionService, TransactionService>();
-            
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
             IConfigurationRoot configuration = builder.Build();
-            
+
             services.AddHangfire(config => config
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
@@ -67,8 +67,8 @@ namespace MoveMate.API.Extensions
                         SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
                         UseRecommendedIsolationLevel = true,
                         DisableGlobalLocks = true,
-                        JobExpirationCheckInterval = TimeSpan.FromDays(1) 
-                    }));    
+                        JobExpirationCheckInterval = TimeSpan.FromDays(1)
+                    }));
             services.AddHangfireServer();
 
             return services;
@@ -78,38 +78,38 @@ namespace MoveMate.API.Extensions
         {
             var key = Encoding.UTF8.GetBytes(builder.Configuration["JWTAuth:Key"]);
             builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-                options.Events = new JwtBearerEvents
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
                 {
-                    OnChallenge = async context =>
+                    options.RequireHttpsMetadata = false;
+                    options.SaveToken = true;
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        context.HandleResponse();
-                        context.Response.StatusCode = 401;
-                        await context.Response.WriteAsJsonAsync(new
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = async context =>
                         {
-                            Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
-                        });
-                    }
-                };
-            });
-        
-    }
+                            context.HandleResponse();
+                            context.Response.StatusCode = 401;
+                            await context.Response.WriteAsJsonAsync(new
+                            {
+                                Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(
+                                    ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
+                            });
+                        }
+                    };
+                });
+        }
 
         public static IServiceCollection AddConfigSwagger(this IServiceCollection services)
         {
@@ -131,19 +131,19 @@ namespace MoveMate.API.Extensions
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
-        }
-    });
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
             });
             return services;
         }
@@ -177,7 +177,7 @@ namespace MoveMate.API.Extensions
             //Add middleware extentions
             app.ConfigureExceptionMiddleware();
             app.MapControllers();
-            
+
             //app.UseEndpoints(endpoints =>
             //{
             //    endpoints.MapControllers();
@@ -187,8 +187,8 @@ namespace MoveMate.API.Extensions
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
-                
-                Authorization = new []
+
+                Authorization = new[]
                 {
                     new HangfireCustomBasicAuthenticationFilter()
                     {
