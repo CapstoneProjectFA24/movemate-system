@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Text;
 using Hangfire;
+using Hangfire.SqlServer;
 using Hangfire.Storage.SQLite;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -59,7 +60,15 @@ namespace MoveMate.API.Extensions
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseSQLiteStorage(configuration.GetConnectionString("HangfireConnection")));
+                .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection"),
+                    new SqlServerStorageOptions()
+                    {
+                        QueuePollInterval = TimeSpan.FromSeconds(1),
+                        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+                        UseRecommendedIsolationLevel = true,
+                        DisableGlobalLocks = true,
+                        JobExpirationCheckInterval = TimeSpan.FromDays(1) 
+                    }));    
             services.AddHangfireServer();
 
             return services;
