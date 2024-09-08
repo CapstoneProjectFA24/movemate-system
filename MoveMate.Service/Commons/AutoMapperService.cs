@@ -33,7 +33,10 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.Tokens, opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
 
 
-
+            //Register
+            CreateMap<User, RegisterResponse>()
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+            ;
 
             //Booking
             CreateMap<Booking, BookingResponse>()
