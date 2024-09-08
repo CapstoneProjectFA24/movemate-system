@@ -16,6 +16,9 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Utils;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using MoveMate.Domain.Models;
+using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.Service.Services
 {
@@ -131,6 +134,82 @@ namespace MoveMate.Service.Services
             return accountResponse;
         }
 
+
+        public async Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister)
+        {
+            var result = new OperationResult<RegisterResponse>();
+
+            try
+            {
+                var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
+                if (existingUser != null)
+                {
+                    result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
+                    return result;
+                }
+
+                string randomPassword = GenerateRandomPassword(12);
+
+                byte[] salt = new byte[128 / 8];
+                using (var rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(salt);
+                }
+
+                string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: randomPassword,
+                    salt: salt,
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 10000,
+                    numBytesRequested: 256 / 8));
+
+                var newUser = new User
+                {
+                    Email = customerToRegister.Email,
+                    Password = hashedPassword,
+                    RoleId = 3
+                };
+
+                await _unitOfWork.UserRepository.AddAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
+
+                var userResponse = _mapper.Map<RegisterResponse>(newUser);
+
+                result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during user registration.");
+                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.", null);
+                return result;
+            }
+        }
+
+
+
+
+
+        private string GenerateRandomPassword(int length)
+        {
+            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            StringBuilder password = new StringBuilder();
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                byte[] randomBytes = new byte[1];
+                while (password.Length < length)
+                {
+                    rng.GetBytes(randomBytes);
+                    char randomChar = (char)randomBytes[0];
+                    if (validChars.Contains(randomChar))
+                    {
+                        password.Append(randomChar);
+                    }
+                }
+            }
+            return password.ToString();
+        }
 
 
         private string GenerateRefreshToken()

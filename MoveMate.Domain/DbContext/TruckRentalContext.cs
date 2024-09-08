@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace MoveMate.Domain.Models;
+namespace MoveMate.Domain.DbContext;
 
 public partial class TruckRentalContext : DbContext
 {
@@ -21,6 +21,8 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<AchievementSetting> AchievementSettings { get; set; }
 
+    public virtual DbSet<AggregatedCounter> AggregatedCounters { get; set; }
+
     public virtual DbSet<Booking> Bookings { get; set; }
 
     public virtual DbSet<BookingDetail> BookingDetails { get; set; }
@@ -31,15 +33,27 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<BookingTracker> BookingTrackers { get; set; }
 
+    public virtual DbSet<Counter> Counters { get; set; }
+
     public virtual DbSet<FeeDetail> FeeDetails { get; set; }
 
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
+
+    public virtual DbSet<Hash> Hashes { get; set; }
 
     public virtual DbSet<HouseType> HouseTypes { get; set; }
 
     public virtual DbSet<Item> Items { get; set; }
 
     public virtual DbSet<ItemCategory> ItemCategories { get; set; }
+
+    public virtual DbSet<Job> Jobs { get; set; }
+
+    public virtual DbSet<JobParameter> JobParameters { get; set; }
+
+    public virtual DbSet<JobQueue> JobQueues { get; set; }
+
+    public virtual DbSet<List> Lists { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -55,9 +69,17 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<ScheduleDetail> ScheduleDetails { get; set; }
 
+    public virtual DbSet<Schema> Schemas { get; set; }
+
+    public virtual DbSet<Server> Servers { get; set; }
+
     public virtual DbSet<Service> Services { get; set; }
 
     public virtual DbSet<ServiceBooking> ServiceBookings { get; set; }
+
+    public virtual DbSet<Set> Sets { get; set; }
+
+    public virtual DbSet<State> States { get; set; }
 
     public virtual DbSet<Token> Tokens { get; set; }
 
@@ -78,14 +100,17 @@ public partial class TruckRentalContext : DbContext
     public virtual DbSet<UserInfo> UserInfos { get; set; }
 
     public virtual DbSet<Wallet> Wallets { get; set; }
-    
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=HANANH\\HANANH;uid=sa;pwd=12345;database=TruckRental;TrustServerCertificate=True");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Achievement>(entity =>
         {
             entity.ToTable("Achievement");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
 
@@ -96,8 +121,6 @@ public partial class TruckRentalContext : DbContext
 
         modelBuilder.Entity<AchievementDetail>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
-
             entity.HasOne(d => d.Achievement).WithMany(p => p.AchievementDetails)
                 .HasForeignKey(d => d.AchievementId)
                 .HasConstraintName("FK_AchievementDetails_Achievement");
@@ -111,17 +134,27 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("AchievementSetting");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AwardWinningHook).HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<AggregatedCounter>(entity =>
+        {
+            entity.HasKey(e => e.Key).HasName("PK_HangFire_CounterAggregated");
+
+            entity.ToTable("AggregatedCounter", "HangFire");
+
+            entity.HasIndex(e => e.ExpireAt, "IX_HangFire_AggregatedCounter_ExpireAt").HasFilter("([ExpireAt] IS NOT NULL)");
+
+            entity.Property(e => e.Key).HasMaxLength(100);
+            entity.Property(e => e.ExpireAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Booking>(entity =>
         {
             entity.ToTable("Booking");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Bonus).HasMaxLength(255);
             entity.Property(e => e.BoxType).HasMaxLength(255);
             entity.Property(e => e.CancelReason).HasMaxLength(255);
@@ -158,7 +191,6 @@ public partial class TruckRentalContext : DbContext
 
         modelBuilder.Entity<BookingDetail>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.StaffType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
 
@@ -175,7 +207,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("BookingItem");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.EstimatedHeight).HasMaxLength(255);
             entity.Property(e => e.EstimatedLenght).HasMaxLength(255);
             entity.Property(e => e.EstimatedVolume).HasMaxLength(255);
@@ -196,7 +227,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("BookingStaffDaily");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AddressCurrent).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
 
@@ -209,7 +239,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("BookingTracker");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Location).HasMaxLength(255);
             entity.Property(e => e.Point).HasMaxLength(255);
@@ -222,11 +251,23 @@ public partial class TruckRentalContext : DbContext
                 .HasConstraintName("FK_BookingTracker_Booking");
         });
 
+        modelBuilder.Entity<Counter>(entity =>
+        {
+            entity.HasKey(e => new { e.Key, e.Id }).HasName("PK_HangFire_Counter");
+
+            entity.ToTable("Counter", "HangFire");
+
+            entity.Property(e => e.Key).HasMaxLength(100);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.ExpireAt).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<FeeDetail>(entity =>
         {
             entity.HasNoKey();
 
             entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Name).HasMaxLength(255);
 
             entity.HasOne(d => d.Booking).WithMany()
@@ -242,10 +283,21 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("FeeSetting");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<Hash>(entity =>
+        {
+            entity.HasKey(e => new { e.Key, e.Field }).HasName("PK_HangFire_Hash");
+
+            entity.ToTable("Hash", "HangFire");
+
+            entity.HasIndex(e => e.ExpireAt, "IX_HangFire_Hash_ExpireAt").HasFilter("([ExpireAt] IS NOT NULL)");
+
+            entity.Property(e => e.Key).HasMaxLength(100);
+            entity.Property(e => e.Field).HasMaxLength(100);
         });
 
         modelBuilder.Entity<HouseType>(entity =>
@@ -255,6 +307,7 @@ public partial class TruckRentalContext : DbContext
                 .ToTable("HouseType");
 
             entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Name).HasMaxLength(255);
 
             entity.HasOne(d => d.Booking).WithMany()
@@ -266,7 +319,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("Item");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(255);
@@ -284,7 +336,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("ItemCategory");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(255);
@@ -295,11 +346,62 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
         });
 
+        modelBuilder.Entity<Job>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_HangFire_Job");
+
+            entity.ToTable("Job", "HangFire");
+
+            entity.HasIndex(e => e.ExpireAt, "IX_HangFire_Job_ExpireAt").HasFilter("([ExpireAt] IS NOT NULL)");
+
+            entity.HasIndex(e => e.StateName, "IX_HangFire_Job_StateName").HasFilter("([StateName] IS NOT NULL)");
+
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.ExpireAt).HasColumnType("datetime");
+            entity.Property(e => e.StateName).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<JobParameter>(entity =>
+        {
+            entity.HasKey(e => new { e.JobId, e.Name }).HasName("PK_HangFire_JobParameter");
+
+            entity.ToTable("JobParameter", "HangFire");
+
+            entity.Property(e => e.Name).HasMaxLength(40);
+
+            entity.HasOne(d => d.Job).WithMany(p => p.JobParameters)
+                .HasForeignKey(d => d.JobId)
+                .HasConstraintName("FK_HangFire_JobParameter_Job");
+        });
+
+        modelBuilder.Entity<JobQueue>(entity =>
+        {
+            entity.HasKey(e => new { e.Queue, e.Id }).HasName("PK_HangFire_JobQueue");
+
+            entity.ToTable("JobQueue", "HangFire");
+
+            entity.Property(e => e.Queue).HasMaxLength(50);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.FetchedAt).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<List>(entity =>
+        {
+            entity.HasKey(e => new { e.Key, e.Id }).HasName("PK_HangFire_List");
+
+            entity.ToTable("List", "HangFire");
+
+            entity.HasIndex(e => e.ExpireAt, "IX_HangFire_List_ExpireAt").HasFilter("([ExpireAt] IS NOT NULL)");
+
+            entity.Property(e => e.Key).HasMaxLength(100);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.ExpireAt).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.ToTable("Notification");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.DeviceId).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
@@ -316,7 +418,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("Payment");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.BankCode).HasMaxLength(255);
             entity.Property(e => e.BankTransNo).HasMaxLength(255);
             entity.Property(e => e.CardType).HasMaxLength(255);
@@ -334,7 +435,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("PromotionCategory");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.EndBookingTime).HasColumnType("datetime");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
@@ -346,7 +446,6 @@ public partial class TruckRentalContext : DbContext
 
         modelBuilder.Entity<PromotionDetail>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Code).HasMaxLength(255);
 
             entity.HasOne(d => d.Booking).WithMany(p => p.PromotionDetails)
@@ -366,7 +465,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("Role");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).HasMaxLength(50);
         });
 
@@ -374,14 +472,12 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("Schedule");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.EndTime).HasColumnType("datetime");
             entity.Property(e => e.StartTime).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<ScheduleDetail>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
 
@@ -394,11 +490,31 @@ public partial class TruckRentalContext : DbContext
                 .HasConstraintName("FK_ScheduleDetails_User");
         });
 
+        modelBuilder.Entity<Schema>(entity =>
+        {
+            entity.HasKey(e => e.Version).HasName("PK_HangFire_Schema");
+
+            entity.ToTable("Schema", "HangFire");
+
+            entity.Property(e => e.Version).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<Server>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_HangFire_Server");
+
+            entity.ToTable("Server", "HangFire");
+
+            entity.HasIndex(e => e.LastHeartbeat, "IX_HangFire_Server_LastHeartbeat");
+
+            entity.Property(e => e.Id).HasMaxLength(200);
+            entity.Property(e => e.LastHeartbeat).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<Service>(entity =>
         {
             entity.ToTable("Service");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.ImageUrl).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
@@ -407,8 +523,6 @@ public partial class TruckRentalContext : DbContext
         modelBuilder.Entity<ServiceBooking>(entity =>
         {
             entity.ToTable("ServiceBooking");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
 
             entity.HasOne(d => d.Booking).WithMany(p => p.ServiceBookings)
                 .HasForeignKey(d => d.BookingId)
@@ -419,11 +533,43 @@ public partial class TruckRentalContext : DbContext
                 .HasConstraintName("FK_ServiceBooking_Service");
         });
 
+        modelBuilder.Entity<Set>(entity =>
+        {
+            entity.HasKey(e => new { e.Key, e.Value }).HasName("PK_HangFire_Set");
+
+            entity.ToTable("Set", "HangFire");
+
+            entity.HasIndex(e => e.ExpireAt, "IX_HangFire_Set_ExpireAt").HasFilter("([ExpireAt] IS NOT NULL)");
+
+            entity.HasIndex(e => new { e.Key, e.Score }, "IX_HangFire_Set_Score");
+
+            entity.Property(e => e.Key).HasMaxLength(100);
+            entity.Property(e => e.Value).HasMaxLength(256);
+            entity.Property(e => e.ExpireAt).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<State>(entity =>
+        {
+            entity.HasKey(e => new { e.JobId, e.Id }).HasName("PK_HangFire_State");
+
+            entity.ToTable("State", "HangFire");
+
+            entity.HasIndex(e => e.CreatedAt, "IX_HangFire_State_CreatedAt");
+
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(20);
+            entity.Property(e => e.Reason).HasMaxLength(100);
+
+            entity.HasOne(d => d.Job).WithMany(p => p.States)
+                .HasForeignKey(d => d.JobId)
+                .HasConstraintName("FK_HangFire_State_Job");
+        });
+
         modelBuilder.Entity<Token>(entity =>
         {
             entity.ToTable("Token");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.RefreshToken).HasMaxLength(255);
             entity.Property(e => e.Token1)
                 .HasMaxLength(255)
@@ -441,7 +587,6 @@ public partial class TruckRentalContext : DbContext
 
             entity.ToTable("TrackerSource");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ResourceCode).HasMaxLength(255);
             entity.Property(e => e.ResourceUrl).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
@@ -455,7 +600,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("Transaction");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.FailedReason).HasMaxLength(255);
@@ -478,7 +622,7 @@ public partial class TruckRentalContext : DbContext
 
         modelBuilder.Entity<TripAccuracy>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC07210484F1");
+            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC0738E9E07D");
 
             entity.ToTable("TripAccuracy");
 
@@ -496,7 +640,6 @@ public partial class TruckRentalContext : DbContext
 
             entity.ToTable("Truck");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Brand).HasMaxLength(255);
             entity.Property(e => e.Color).HasMaxLength(255);
             entity.Property(e => e.Model).HasMaxLength(255);
@@ -517,7 +660,6 @@ public partial class TruckRentalContext : DbContext
 
             entity.ToTable("TruckCategory");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CategoryName).HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.EstimatedHeight).HasMaxLength(255);
@@ -533,7 +675,6 @@ public partial class TruckRentalContext : DbContext
 
             entity.ToTable("TruckImg");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ImageCode).HasMaxLength(255);
             entity.Property(e => e.ImageUrl).HasMaxLength(255);
 
@@ -546,7 +687,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("User");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.AvatarUrl).HasMaxLength(255);
             entity.Property(e => e.CodeIntroduce).HasMaxLength(255);
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
@@ -569,7 +709,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("UserInfo");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Cavet).HasMaxLength(255);
             entity.Property(e => e.CitizenIdentification).HasMaxLength(255);
             entity.Property(e => e.Code).HasMaxLength(255);
@@ -591,7 +730,6 @@ public partial class TruckRentalContext : DbContext
         {
             entity.ToTable("Wallet");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.LockReason).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
