@@ -16,6 +16,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.Utils;
 using MoveMate.API.Constants;
 using MoveMate.Service.BackgroundServices;
+using MoveMate.Service.ViewModels.ModelRequests;
 
 
 namespace MoveMate.API.Extensions
@@ -60,7 +61,7 @@ namespace MoveMate.API.Extensions
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection"),
+                .UseSqlServerStorage(configuration.GetConnectionString("MyDB"),
                     new SqlServerStorageOptions()
                     {
                         QueuePollInterval = TimeSpan.FromSeconds(1),
@@ -70,6 +71,35 @@ namespace MoveMate.API.Extensions
                         JobExpirationCheckInterval = TimeSpan.FromDays(1)
                     }));
             services.AddHangfireServer();
+
+            return services;
+        }
+
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        {
+            var jwtSettings = configuration.GetSection("JWTAuth");
+            services.Configure<JWTAuth>(jwtSettings);
+
+            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
 
             return services;
         }
@@ -163,48 +193,8 @@ namespace MoveMate.API.Extensions
             });
             return services;
         }
-        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
-        {
-            var jwtSettings = configuration.GetSection("JWTAuth");
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-                options.Events = new JwtBearerEvents
-                {
-                    OnChallenge = async context =>
-                    {
-                        context.HandleResponse();
-                        context.Response.StatusCode = 401;
-                        await context.Response.WriteAsJsonAsync(new
-                        {
-                            Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(
-                                ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
-                        });
-                    }
-                };
-            });
-
-            return services;
-        }
-    
-    public static WebApplication AddApplicationConfig(this WebApplication app)
+        public static WebApplication AddApplicationConfig(this WebApplication app)
         {
             // Configure the HTTP request pipeline.
             app.UseSwagger();
