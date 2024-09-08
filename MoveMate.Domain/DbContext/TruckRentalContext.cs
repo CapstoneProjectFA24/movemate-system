@@ -78,9 +78,7 @@ public partial class TruckRentalContext : DbContext
     public virtual DbSet<UserInfo> UserInfos { get; set; }
 
     public virtual DbSet<Wallet> Wallets { get; set; }
-
-  
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Achievement>(entity =>

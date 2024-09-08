@@ -7,6 +7,7 @@ namespace MoveMate.API.Extensions
         public static void ConfigureExceptionMiddleware(this IApplicationBuilder app)
         {
             app.UseMiddleware<ExceptionMiddleware>();
+            // bibi
         }
     }
 }

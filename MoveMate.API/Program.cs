@@ -8,6 +8,9 @@ using MoveMate.API.Middleware;
 using Quartz;
 using System.Reflection;
 using System.Text;
+using Hangfire;
+using Hangfire.Storage.SQLite;
+using HangfireBasicAuthenticationFilter;
 using MoveMate.Service.Commons;
 using MoveMate.API.Constants;
 using MoveMate.Domain.Models;
@@ -29,31 +32,10 @@ namespace MoveMate.API
             builder.Services.AddConfigSwagger();
 
             // JWT Authentication
-            var jwtSettings = builder.Configuration.GetSection("JWTAuth");
-            builder.Services.Configure<JWTAuth>(jwtSettings);
-
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
-            builder.Services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+            builder.Services.AddJwtAuthentication(builder.Configuration);
 
             // Dependency Injection
+            builder.Services.AddDbFactory();
             builder.Services.AddUnitOfWork();
             builder.Services.AddServices();
             builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
@@ -67,14 +49,7 @@ namespace MoveMate.API
                 {
                     policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
                 }));
-
-            // Add DbContext with SQL Server configuration
-            builder.Services.AddDbContext<TruckRentalContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration["ConnectionStrings:MyDB"]);
-                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-            });
-
+            
             // Fluent Validation
             builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AccountRequestValidator>());
             builder.Services.AddValidatorsFromAssemblyContaining<AccountTokenValidator>();
@@ -93,15 +68,7 @@ namespace MoveMate.API
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            app.UseSwagger();
-            app.UseSwaggerUI();
-            app.UseCors(CorsConstants.PolicyName);
-            app.UseRouting(); // Must be placed before Authentication & Authorization
-            app.UseAuthentication(); // Must be placed before Authorization
-            app.UseAuthorization(); // Must be placed after Authentication
-            app.UseMiddleware<ExceptionMiddleware>();
-            app.MapControllers();
-
+            app.AddApplicationConfig();
             app.Run();
         }
     }
