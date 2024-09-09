@@ -13,9 +13,10 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
-using MoveMate.Service.Utils;
 using MoveMate.API.Constants;
+using MoveMate.API.Utils;
 using MoveMate.Service.BackgroundServices;
+using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 
 
 namespace MoveMate.API.Extensions
@@ -50,17 +51,20 @@ namespace MoveMate.API.Extensions
             //services.AddScoped<IBidService, BidService>();
             //services.AddScoped<IBidRepository, BidRepository>();
             //services.AddScoped<ITransactionService, TransactionService>();
+            
+            return services;
+        }
+        
+        public static IServiceCollection AddHangfire(this IServiceCollection services)
+        {
 
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-            IConfigurationRoot configuration = builder.Build();
-
+            string connectionString = DbUtil.getConnectString();
+            
             services.AddHangfire(config => config
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseSqlServerStorage(configuration.GetConnectionString("HangfireConnection"),
+                .UseSqlServerStorage(connectionString,
                     new SqlServerStorageOptions()
                     {
                         QueuePollInterval = TimeSpan.FromSeconds(1),
@@ -130,7 +134,7 @@ namespace MoveMate.API.Extensions
                     Scheme = "bearer"
                 });
 
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
