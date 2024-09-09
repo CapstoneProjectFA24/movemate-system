@@ -6,7 +6,7 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelResponses;
 using Newtonsoft.Json;
-using Service.Commons;
+using MoveMate.Service.Commons;
 
 using System;
 using System.Collections.Generic;

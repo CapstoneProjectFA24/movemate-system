@@ -1,7 +1,7 @@
 ﻿using FluentValidation.Results;
 using MoveMate.Service.Commons;
 using Newtonsoft.Json;
-using Service.Commons;
+using MoveMate.Service.Commons;
 using System;
 using System.Collections.Generic;
 

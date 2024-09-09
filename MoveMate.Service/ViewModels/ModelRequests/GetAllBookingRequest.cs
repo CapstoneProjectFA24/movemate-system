@@ -1,6 +1,6 @@
 ﻿using LinqKit;
 using MoveMate.Domain.Models;
-using Service.Commons;
+using MoveMate.Service.Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -113,7 +113,7 @@ namespace MoveMate.Service.Services
                 {
             new Claim(JwtRegisteredClaimNames.Sub, accountResponse.Email),
             new Claim(JwtRegisteredClaimNames.Email, accountResponse.Email),
-            new Claim(JwtRegisteredClaimNames.Sid, accountResponse.UserId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sid, accountResponse.Id.ToString()),
             new Claim(ClaimTypes.Role, accountResponse.RoleId.ToString()), // Use ClaimTypes.Role for roles
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         }),
