@@ -22,7 +22,7 @@ namespace MoveMate.API.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("user/get-all")]
+        [HttpGet("get-all")]
         [Authorize(Roles = "1")]
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllUserRequest request)
