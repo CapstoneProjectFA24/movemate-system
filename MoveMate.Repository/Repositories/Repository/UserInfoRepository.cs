@@ -1,4 +1,5 @@
-﻿using MoveMate.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
 using System;
@@ -14,5 +15,14 @@ namespace MoveMate.Repository.Repositories.Repository
         public UserInfoRepository(TruckRentalContext context) : base(context)
         {
         }
+
+        public async Task<UserInfo> GetUserInfoByUserIdAsync(int accountId)
+        {
+            return await _dbSet
+                .Include(ui => ui.User)  // Eagerly load the related User entity
+                .Where(a => a.UserId == accountId)
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

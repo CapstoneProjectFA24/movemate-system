@@ -32,29 +32,7 @@ namespace MoveMate.API
             builder.Services.AddConfigSwagger();
 
             // JWT Authentication
-            var jwtSettings = builder.Configuration.GetSection("JWTAuth");
-            builder.Services.Configure<JWTAuth>(jwtSettings);
-
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
-            builder.Services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+            builder.Services.AddJwtAuthentication(builder.Configuration);
 
             // Dependency Injection
             builder.Services.AddDbFactory();

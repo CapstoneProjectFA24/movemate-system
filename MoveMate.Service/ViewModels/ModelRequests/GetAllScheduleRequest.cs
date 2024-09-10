@@ -10,34 +10,23 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllUserRequest : PaginationRequest<User>
+    public class GetAllSchedule : PaginationRequestV2<Schedule>
     {
         public string? Search { get; set; }
-        public string? Name { get; set; }
-        public int? RoleId { get; set; }
         public string? Status { get; set; }
 
-        public override Expression<Func<User, bool>> GetExpressions()
+        public override Expression<Func<Schedule, bool>> GetExpressions()
         {
 
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<User>(true);
-                queryExpression.Or(cus => cus.Email.ToLower().Contains(Search));
+                var queryExpression = PredicateBuilder.New<Schedule>(true);
+                queryExpression.Or(cus => cus.StartTime.ToString().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);
-            }
-
-            if (!string.IsNullOrWhiteSpace(Name))
-            {
-                Expression = Expression.And(u => u.Name == Name);
-            }
-            if (!string.IsNullOrWhiteSpace(RoleId.ToString()))
-            {
-                Expression = Expression.And(u => u.RoleId == RoleId);
             }
 
             if (!string.IsNullOrWhiteSpace(Status))
@@ -48,10 +37,10 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                                  .Select(s => s.Value)
                                  .ToArray();
 
-               
+
             }
 
-            Expression = Expression.And(u => u.IsDeleted == false);
+            Expression = Expression.And(u => u.IsActived == true);
 
             return Expression;
         }

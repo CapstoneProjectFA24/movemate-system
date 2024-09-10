@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using LinqKit;
 using MoveMate.Domain.Models;
-using Service.Commons;
+using MoveMate.Service.Commons;
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
 

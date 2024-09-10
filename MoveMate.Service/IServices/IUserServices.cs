@@ -14,6 +14,6 @@ namespace MoveMate.Service.IServices
     {
         public Task<OperationResult<List<UserResponse>>> GetAll(GetAllUserRequest request);
         public Task<UserResponse> GetAccountAsync(int id, IEnumerable<Claim> claims);
-
+        public Task<OperationResult<UserInfoResponse>> GetUserInfoByUserIdAsync(string userId);
     }
 }

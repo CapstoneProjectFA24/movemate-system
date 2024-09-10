@@ -3,7 +3,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Service.Commons;
+using MoveMate.Service.Commons;
 
 using System;
 using System.Collections.Generic;

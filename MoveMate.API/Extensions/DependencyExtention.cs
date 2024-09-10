@@ -17,6 +17,7 @@ using MoveMate.API.Constants;
 using MoveMate.API.Utils;
 using MoveMate.Service.BackgroundServices;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
+using MoveMate.Service.ViewModels.ModelRequests;
 
 
 namespace MoveMate.API.Extensions
@@ -44,6 +45,9 @@ namespace MoveMate.API.Extensions
             services.AddScoped<ITruckServices, TruckServices>();
             //services.AddScoped<IAuctionService, AuctionService>();
             //services.AddScoped<IOrderService, OrderService>();
+            //services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
+            services.AddScoped<IScheduleServices, ScheduleServices>();
+            services.AddScoped<IBookingServices, BookingServices>();
             ////services.AddScoped(typeof(IFirebaseService<>), typeof(FirebaseService<>));
             //services.AddScoped<IFirebaseService<Auction>, FirebaseService<Auction>>();
             //services.AddScoped<IVnPayService, VnPayService>();
@@ -76,6 +80,35 @@ namespace MoveMate.API.Extensions
                         JobExpirationCheckInterval = TimeSpan.FromDays(1)
                     }));
             services.AddHangfireServer();
+
+            return services;
+        }
+
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        {
+            var jwtSettings = configuration.GetSection("JWTAuth");
+            services.Configure<JWTAuth>(jwtSettings);
+
+            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
 
             return services;
         }
