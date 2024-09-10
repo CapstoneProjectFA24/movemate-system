@@ -5,7 +5,7 @@ using MoveMate.Domain.Models;
 
 //using ShopRepository.Models;
 using System.Linq.Expressions;
-
+using MoveMate.Repository.Repositories.UnitOfWork;
 
 
 namespace MoveMate.Repository.Repositories.GenericRepository
@@ -179,9 +179,7 @@ namespace MoveMate.Repository.Repositories.GenericRepository
         {
             return await FindAll(includeProperties).SingleOrDefaultAsync(predicate);
         }
-
-
-
+        
         public virtual IEnumerable<TEntity> Get(
              Expression<Func<TEntity, bool>> filter = null,
              Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
@@ -190,7 +188,7 @@ namespace MoveMate.Repository.Repositories.GenericRepository
              int? pageSize = null)
         {
             IQueryable<TEntity> query = _dbSet;
-
+            
             if (filter != null)
             {
                 query = query.Where(filter);
@@ -223,8 +221,57 @@ namespace MoveMate.Repository.Repositories.GenericRepository
             return query.ToList();
 
         }
+        
+        public virtual PagedResult<TEntity>  GetWithPagination(
+            Expression<Func<TEntity, bool>> filter = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+            string includeProperties = "",
+            int? pageIndex = null,
+            int? pageSize = null)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            
+            var pagin = new Pagination();
+            pagin.TotalItemsCount = query.Count();
+            pagin.PageSize = pageSize ?? -1;
+            pagin.PageIndex = pageIndex ?? 0;
+            
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
 
+            foreach (var includeProperty in includeProperties.Split
+                         (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty);
+            }
 
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            // Implementing pagination
+            if (pageIndex.HasValue && pageSize.HasValue)
+            {
+                // Ensure the pageIndex and pageSize are valid
+                int validPageIndex = pageIndex.Value > 0 ? pageIndex.Value - 1 : 0;
+                int validPageSize = pageSize.Value > 0 ? pageSize.Value : 10; // Assuming a default pageSize of 10 if an invalid value is passed
+                if (pageSize.Value > 0)
+                {
+                    query = query.Skip(validPageIndex * validPageSize).Take(validPageSize);
+                }
+
+            }
+            
+            return new PagedResult<TEntity>
+            {
+                Results = query.ToList(),
+                Pagination = pagin
+            };
+
+        }
 
         /*public async Task<IReadOnlyList<T>> ListAsync(ISpecifications<T> specification)
         {

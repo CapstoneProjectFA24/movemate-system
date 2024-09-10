@@ -31,6 +31,10 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
                 
                 .ForMember(dest => dest.Tokens, opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
+
+            CreateMap<TruckCategory, TruckCateResponse>();
+            CreateMap<TruckCategory, TruckCateDetailResponse>();
+
         }
     }
 
