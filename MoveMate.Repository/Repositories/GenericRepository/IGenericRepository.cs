@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Repository.Repositories.UnitOfWork;
 
 namespace MoveMate.Repository.Repositories.GenericRepository
 {
@@ -19,6 +20,13 @@ namespace MoveMate.Repository.Repositories.GenericRepository
            string includeProperties = "",
            int? pageIndex = null,
            int? pageSize = null);
+
+        PagedResult<TEntity> GetWithPagination(
+            Expression<Func<TEntity, bool>> filter = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+            string includeProperties = "",
+            int? pageIndex = null,
+            int? pageSize = null);
         Task<TEntity> UpdateAsync(TEntity entity);
         Task UpdateEntityAsync(TEntity entity);
         void Update(TEntity entity);

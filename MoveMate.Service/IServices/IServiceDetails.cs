@@ -8,5 +8,6 @@ namespace MoveMate.Service.IServices
 {
     public interface IServiceDetails
     {
+        Task GetAll();
     }
 }

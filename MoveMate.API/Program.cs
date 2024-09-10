@@ -59,6 +59,7 @@ namespace MoveMate.API
             // Dependency Injection
             builder.Services.AddDbFactory();
             builder.Services.AddUnitOfWork();
+            builder.Services.AddHangfire();
             builder.Services.AddServices();
             builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             builder.Services.AddAutoMapper(typeof(AutoMapperService));

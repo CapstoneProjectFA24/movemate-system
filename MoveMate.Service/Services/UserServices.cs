@@ -36,14 +36,12 @@ namespace MoveMate.Service.Services
         {
             var result = new OperationResult<List<UserResponse>>();
 
-            var pagin = new Pagination();
-
             var filter = request.GetExpressions();
 
             try
             {
                 var entities = _unitOfWork.UserRepository.Get(
-                    filter: request.GetExpressions(),
+                    filter: filter,
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
@@ -56,9 +54,6 @@ namespace MoveMate.Service.Services
                     result.AddResponseStatusCode(StatusCode.Ok, "List User is Empty!", listResponse);
                     return result;
                 }
-
-                pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
 
                 result.AddResponseStatusCode(StatusCode.Ok, "Get List User Done.", listResponse);
 
