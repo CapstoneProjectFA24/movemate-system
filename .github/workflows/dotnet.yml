@@ -1,0 +1,60 @@
+name: CD
+
+on:
+  push:
+    branches: main
+
+jobs:
+  build:
+    name: build move-mate
+    runs-on: ubuntu-latest
+    steps:
+#      - name: Clear useless artifacts
+#        uses: c-hive/gha-remove-artifacts@v1.2.0
+#        with:
+#          age: '14 days'
+
+      - uses: actions/checkout@v3
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Publish
+        run: |
+          
+          dotnet publish -c Release --property PublishDir='${{ github.workspace }}/site' -r win-x64 --self-contained false
+      - name: Zip Package
+        run: |
+          cd ${{ github.workspace }}/site
+          zip -r ${{ github.workspace }}/site.zip *
+      - name: Upload zip sources
+        uses: actions/upload-artifact@v2
+        with:
+          name: move-mate
+          path: site.zip
+
+  deploy:
+    needs: build
+    name: deploy move-mate
+    runs-on: self-hosted
+    steps:
+      - name: Clone source zip
+        uses: actions/download-artifact@v2
+        with:
+          name: move-mate
+      - name: Deploy to IIS
+        shell: powershell
+        run: |
+          iisreset /stop
+          Remove-Item -Recurse -Force -Confirm:$false C:\inetpub\wwwroot\MoveMate-API\
+          mkdir C:\inetpub\wwwroot\MoveMate-API
+          Expand-Archive site.zip C:\inetpub\wwwroot\MoveMate-API
+          iisreset /start

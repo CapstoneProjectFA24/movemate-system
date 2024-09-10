@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.IServices
 {
-    public interface IBookingServices
+    public interface IScheduleServices
     {
-        public Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request);
+        public Task<OperationResult<List<ScheduleResponse>>> GetAll(GetAllSchedule request);
+        public Task<OperationResult<ScheduleResponse>> GetById(int id);
     }
 }

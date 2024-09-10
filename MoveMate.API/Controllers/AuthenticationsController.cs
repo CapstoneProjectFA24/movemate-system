@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MoveMate.API.Middleware;
 using MoveMate.API.Utils;
+using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
@@ -136,5 +137,35 @@ namespace MoveMate.API.Controllers
         }
         #endregion
 
+        #region Register API
+        /// <summary>
+        /// Register a new account in the system.
+        /// </summary>
+        /// <param name="customerToRegister">The customer registration information (email).</param>
+        /// <returns>The created account details.</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/authentications/register
+        ///     {
+        ///         "email": "user@example.com"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Registration successful.</response>
+        /// <response code="400">Validation failed or email is already registered.</response>
+        /// <response code="500">System error occurred.</response>
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> RegisterAsync([FromBody] CustomerToRegister customerToRegister)
+        {
+            
+                // Register user
+                var response = await _authenticationService.Register(customerToRegister);
+               
+                return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            
+        #endregion
     }
+}
 }

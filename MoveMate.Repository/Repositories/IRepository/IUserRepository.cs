@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoveMate.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,6 @@ namespace MoveMate.Repository.Repositories.IRepository
 {
     public interface IUserRepository
     {
+        Task<User?> FindByEmailAsync(string email);
     }
 }

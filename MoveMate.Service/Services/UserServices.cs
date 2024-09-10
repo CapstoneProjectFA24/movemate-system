@@ -102,5 +102,38 @@ namespace MoveMate.Service.Services
             }
         }
 
+
+        public async Task<OperationResult<UserInfoResponse>> GetUserInfoByUserIdAsync(string userId)
+        {
+            var result = new OperationResult<UserInfoResponse>();
+
+            try
+            {
+                // Retrieve the user and their address information using the userId
+                var userInfo = await _unitOfWork.UserInfoRepository.GetUserInfoByUserIdAsync(int.Parse(userId));
+                
+                // Check if the user's address is available
+                if (userInfo != null)
+                {
+                    // Map the UserInfo to a UserAddressResponse
+                    var addressResponse = _mapper.Map<UserInfoResponse>(userInfo);
+                    result.Payload = addressResponse;
+                    result.Message = "User address retrieved successfully.";
+                }
+                else
+                {
+                    result.AddError(StatusCode.NotFound, $"Address for user '{userId}' not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving the user address.");
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+            }
+
+            return result;
+        }
+
+
     }
 }

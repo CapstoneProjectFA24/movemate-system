@@ -276,7 +276,8 @@ __pycache__/
 
 ### hangfire ###
 hangfire.db
-
+MoveMate.API/hangfire.db-shm
+MoveMate.API/hangfire.db-wal
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore,dotenv
 
 appsettings.Development.json
@@ -285,3 +286,6 @@ out/
 out2/
 
 firebase_credentials.json
+
+
+

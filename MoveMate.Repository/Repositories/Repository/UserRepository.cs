@@ -42,5 +42,11 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+        public async Task<User?> FindByEmailAsync(string email)
+        {
+            return await this._dbContext.Users
+                .AsNoTracking() // No tracking is needed for read operations
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
     }
 }

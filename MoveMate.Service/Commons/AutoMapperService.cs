@@ -29,9 +29,32 @@ namespace MoveMate.Service.Commons
             // Mapping for User -> AccountResponse
             CreateMap<User, AccountResponse>()
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
-                
                 .ForMember(dest => dest.Tokens, opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
+            //Address
+            CreateMap<UserInfo, UserInfoResponse>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User.Phone))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.User.AvatarUrl));
 
+            //Register
+            CreateMap<User, RegisterResponse>()
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+            ;
+
+            //Booking
+            CreateMap<Booking, BookingResponse>();
+                
+
+
+            //Schedule
+            CreateMap<Schedule, ScheduleResponse>()
+               .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
+
+            CreateMap<ScheduleDetail, ScheduleDetailResponse>();
+                
+           
+
+            //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
             CreateMap<TruckCategory, TruckCateDetailResponse>();
 

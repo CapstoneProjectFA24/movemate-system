@@ -17,7 +17,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
       //  private RedisConnectionProvider _redisConnectionProvider;
         public DbFactory()
         {
-            DotNetEnv.Env.Load();
+            
         }
 
         public TruckRentalContext InitDbContext()

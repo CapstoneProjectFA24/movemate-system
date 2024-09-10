@@ -10,35 +10,31 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllUserRequest : PaginationRequest<User>
+    public class GetAllBookingRequest : PaginationRequest<Booking>
     {
         public string? Search { get; set; }
-        public string? Name { get; set; }
-        public int? RoleId { get; set; }
+        public string? UserName { get; set; }
         public string? Status { get; set; }
 
-        public override Expression<Func<User, bool>> GetExpressions()
+        public override Expression<Func<Booking, bool>> GetExpressions()
         {
 
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<User>(true);
-                queryExpression.Or(cus => cus.Email.ToLower().Contains(Search));
+                var queryExpression = PredicateBuilder.New<Booking>(true);
+                queryExpression.Or(cus => cus.DeliveryPoint.ToLower().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);
             }
 
-            if (!string.IsNullOrWhiteSpace(Name))
+            if (!string.IsNullOrWhiteSpace(UserName))
             {
-                Expression = Expression.And(u => u.Name == Name);
+                Expression = Expression.And(u => u.User.Name == UserName);
             }
-            if (!string.IsNullOrWhiteSpace(RoleId.ToString()))
-            {
-                Expression = Expression.And(u => u.RoleId == RoleId);
-            }
+           
 
             if (!string.IsNullOrWhiteSpace(Status))
             {
@@ -48,7 +44,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                                  .Select(s => s.Value)
                                  .ToArray();
 
-               
+
             }
 
             Expression = Expression.And(u => u.IsDeleted == false);
