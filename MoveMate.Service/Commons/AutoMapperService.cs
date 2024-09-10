@@ -51,6 +51,13 @@ namespace MoveMate.Service.Commons
                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
 
             CreateMap<ScheduleDetail, ScheduleDetailResponse>();
+                
+           
+
+            //Truck
+            CreateMap<TruckCategory, TruckCateResponse>();
+            CreateMap<TruckCategory, TruckCateDetailResponse>();
+
         }
     }
 

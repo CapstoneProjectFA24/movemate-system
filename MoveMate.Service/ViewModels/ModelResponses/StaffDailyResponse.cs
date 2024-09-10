@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Service.IServices
+namespace MoveMate.Service.ViewModels.ModelResponses
 {
-    public interface IServiceDetails
+    public class StaffDailyResponse
     {
-        Task GetAll();
+
     }
 }
