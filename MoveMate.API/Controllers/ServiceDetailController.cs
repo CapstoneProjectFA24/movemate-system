@@ -4,11 +4,11 @@ using MoveMate.Service.IServices;
 namespace MoveMate.API.Controllers
 {
     [ApiController]
-    public class ServiceDetailsController : BaseController
+    public class ServiceDetailController : BaseController
     {
         private readonly IServiceDetails _serviceDetails;
 
-        public ServiceDetailsController(IServiceDetails serviceDetails)
+        public ServiceDetailController(IServiceDetails serviceDetails)
         {
             _serviceDetails = serviceDetails;
         }

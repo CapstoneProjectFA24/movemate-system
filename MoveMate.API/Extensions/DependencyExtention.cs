@@ -41,7 +41,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IUserServices, UserService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-            services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
+            services.AddScoped<ITruckServices, TruckServices>();
             //services.AddScoped<IAuctionService, AuctionService>();
             //services.AddScoped<IOrderService, OrderService>();
             ////services.AddScoped(typeof(IFirebaseService<>), typeof(FirebaseService<>));
@@ -57,6 +57,8 @@ namespace MoveMate.API.Extensions
         
         public static IServiceCollection AddHangfire(this IServiceCollection services)
         {
+
+            services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
 
             string connectionString = DbUtil.getConnectString();
             
