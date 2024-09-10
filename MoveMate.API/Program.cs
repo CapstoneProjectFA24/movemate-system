@@ -35,6 +35,7 @@ namespace MoveMate.API
             builder.Services.AddJwtAuthentication(builder.Configuration);
 
             // Dependency Injection
+            DotNetEnv.Env.Load();
             builder.Services.AddDbFactory();
             builder.Services.AddUnitOfWork();
             builder.Services.AddHangfire();

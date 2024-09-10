@@ -43,18 +43,8 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IUserServices, UserService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<ITruckServices, TruckServices>();
-            //services.AddScoped<IAuctionService, AuctionService>();
-            //services.AddScoped<IOrderService, OrderService>();
-            //services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
             services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
-            ////services.AddScoped(typeof(IFirebaseService<>), typeof(FirebaseService<>));
-            //services.AddScoped<IFirebaseService<Auction>, FirebaseService<Auction>>();
-            //services.AddScoped<IVnPayService, VnPayService>();
-            //services.AddScoped<IWalletService, WalletService>();
-            //services.AddScoped<IBidService, BidService>();
-            //services.AddScoped<IBidRepository, BidRepository>();
-            //services.AddScoped<ITransactionService, TransactionService>();
             
             return services;
         }
