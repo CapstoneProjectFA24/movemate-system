@@ -36,7 +36,7 @@ jobs:
           cd ${{ github.workspace }}/site
           zip -r ${{ github.workspace }}/site.zip *
       - name: Upload zip sources
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: move-mate
           path: site.zip
@@ -47,7 +47,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Clone source zip
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: move-mate
       - name: Deploy to IIS
