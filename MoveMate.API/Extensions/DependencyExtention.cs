@@ -232,12 +232,14 @@ namespace MoveMate.API.Extensions
             //    endpoints.MapControllers();
             //});
             // hangfire
-            app.UseHangfireDashboard();
+            
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
                 Authorization = new[] { new MyAuthorizationFilter() }
             });
+            app.UseHangfireDashboard();
+            app.MapHangfireDashboard();
             BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;
         }
