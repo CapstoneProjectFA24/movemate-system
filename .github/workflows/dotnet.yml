@@ -47,7 +47,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Clone source zip
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2
         with:
           name: move-mate
       - name: Deploy to IIS
