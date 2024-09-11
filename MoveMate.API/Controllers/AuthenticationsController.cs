@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using FirebaseAdmin.Auth;
+using FluentValidation;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -8,6 +9,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
 
@@ -17,6 +19,8 @@ namespace MoveMate.API.Controllers
     public class AuthenticationsController : BaseController
     {
         private IAuthenticationService _authenticationService;
+        private IFirebaseServices _firebaseService;
+
         private IOptions<Service.ViewModels.ModelRequests.JWTAuth> _jwtAuthOptions;
         private IValidator<AccountRequest> _accountRequestValidator;
         private IValidator<AccountTokenRequest> _accountTokenRequestValidator;
@@ -24,7 +28,7 @@ namespace MoveMate.API.Controllers
         // private IValidator<ResetPasswordRequest> _resetPasswordValidator;
         public AuthenticationsController(IAuthenticationService authenticationService, IOptions<JWTAuth> jwtAuthOptions,
             IValidator<AccountRequest> accountRequestValidator, IValidator<AccountTokenRequest> accountTokenRequestValidator,
-            ILogger<ExceptionMiddleware> logger)
+            ILogger<ExceptionMiddleware> logger, IFirebaseServices firebaseServices)
         // IValidator<ResetPasswordRequest> resetPasswordValidator)
         {
             this._authenticationService = authenticationService;
@@ -32,6 +36,7 @@ namespace MoveMate.API.Controllers
             this._accountRequestValidator = accountRequestValidator;
             this._accountTokenRequestValidator = accountTokenRequestValidator;
             this._logger = logger;
+            this._firebaseService = firebaseServices;
             // this._resetPasswordValidator = resetPasswordValidator;
         }
 
@@ -167,5 +172,20 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
-}
+
+
+        [HttpPost("verify-token")]
+        public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
+        {
+            try
+            {
+                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+                return Ok(new { message = "Token verified", uid = decodedToken.Uid });
+            }
+            catch (FirebaseAuthException ex)
+            {
+                return BadRequest(new { message = "Invalid token", error = ex.Message });
+            }
+        }
+    }
 }

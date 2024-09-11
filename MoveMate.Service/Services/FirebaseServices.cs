@@ -12,21 +12,32 @@ namespace MoveMate.Service.Services
 {
     public class FirebaseServices : IFirebaseServices
     {
-        private readonly FirebaseApp _firebaseApp;
+        private static FirebaseApp _firebaseApp;
+
         public FirebaseServices(string authJsonFile)
         {
-            var appOptions = new AppOptions()
+            // Check if the default FirebaseApp is already created
+            if (_firebaseApp == null)
             {
-                Credential = GoogleCredential.FromFile(authJsonFile),
-            };
-            _firebaseApp = FirebaseApp.Create(appOptions);
+                var appOptions = new AppOptions()
+                {
+                    Credential = GoogleCredential.FromFile(authJsonFile)
+                };
+
+                _firebaseApp = FirebaseApp.Create(appOptions);
+            }
         }
 
-        public async Task<UserRecord> CreateUser(string username,
-            string password,
-            string email,         
-            string phoneNumber
-            )
+
+        // Verify the ID token sent from the client
+        public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken)
+        {
+            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+            FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
+            return decodedToken;
+        }
+
+        public async Task<UserRecord> CreateUser(string username, string password, string email, string phoneNumber)
         {
             var defaultAuth = FirebaseAuth.GetAuth(_firebaseApp);
 
@@ -40,12 +51,12 @@ namespace MoveMate.Service.Services
             };
 
             return await defaultAuth.CreateUserAsync(args);
-
         }
 
         public async Task<UserRecord> RetrieveUser(string email)
         {
-            return await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);
+            return await FirebaseAuth.GetAuth(_firebaseApp).GetUserByEmailAsync(email);
         }
     }
+
 }

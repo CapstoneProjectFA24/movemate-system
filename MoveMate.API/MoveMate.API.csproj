@@ -31,6 +31,9 @@
 		<PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.7.0" />
 		<PackageReference Include="Quartz.AspNetCore" Version="3.7.0" />
 		<PackageReference Include="Quartz.Extensions.Hosting" Version="3.7.0" />
+		<None Update="firebase_app_settings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -38,5 +41,7 @@
 	  <ProjectReference Include="..\MoveMate.Repository\MoveMate.Repository.csproj" />
 	  <ProjectReference Include="..\MoveMate.Service\MoveMate.Service.csproj" />
 	</ItemGroup>
+
+	<ProjectExtensions><VisualStudio><UserProperties firebase_3app_3settings_1json__JsonSchema="https://json.schemastore.org/appsettings.json" /></VisualStudio></ProjectExtensions>
 
 </Project>

@@ -16,5 +16,7 @@ namespace MoveMate.Service.IServices
             string email,
             string phoneNumber
             );
+
+        public Task<FirebaseToken> VerifyIdTokenAsync(string idToken);
     }
 }

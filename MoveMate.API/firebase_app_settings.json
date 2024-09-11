@@ -1,10 +1,13 @@
 {
-  "Firebase": {
-    "ProjectId": "movemate-bb487",
-    "StorageBucket": "movemate-bb487.appspot.com",
-    "ApiKey": "AIzaSyBquGjA3fx_RlGcDupTtNFwUctoFXj-zAY",
-    "AuthDomain": "movemate-bb487.firebaseapp.com",
-    "MessagingSenderId": "708811505333",
-    "AppId": "1:708811505333:web:c59b0cfaab19c3a5f508fc"
-  }
+  "type": "service_account",
+  "project_id": "movemate-bb487",
+  "private_key_id": "ba279a27a20a53a2ffcfe311f0361b2e5a56c5cc",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCrAKrCVs6MXrrz\nTO0ZAe44gGVowWJ1VEqtCQ73Q7DJMmY1WrUOX04zHoBUarj+nocwsHd62JOrBxGV\niwwKdyTltE6wTEi4lX5oVSrCKqFx6GyysytJhmqONwUmCyY+YWI+Ka/S6wtLrGHf\nv46NBcpbPtPkOpuFLunQICR4fqHMgpOJ55GlQas2rzxI0/HO4l5idFwn0gwvbicu\nYRzUMM8eF6oGl7pMeUWBdCd49rjE2rGZJbRmP90YmKHkSpBrnq0tmJ2rFXxEJbnW\nf91ykANZZfdy8zoxGlwR3a6/92ZwY2rHvpeJUs2PC5zYJ1kwH4fir81Y9n8sBqWO\nMyBFP1DDAgMBAAECggEAGoWt9m++9WfemHcpRvmqWGUXABpjtPhFOh/vjEuZaHtC\nqFUl7nwQWuleKg8Axle8IWxypkEKa4+wcICdIM+95KAEnF9t4AMqafAxA5CCcx0D\neZaZyNDqR0h3/0s3ZpwgFVgjMb7ML7PQMliO5DHZDYc/F2TnqM56lpHbAOf9xwQw\ngBbkfrXqlT0CRZLGfkTCSr+m8ckOjhqJDg1HuF0ksmt2KDgqv4GR8rtpwSIRpC8I\nhbDPTqyTb+1JY1bneq5NGUNy+zJVxIGHSY6U6CgHiUu5MKA1d9B0r/J/LR7LfSeH\ngQnk8bgScA430mknwxEXP3O1w+J4WGrpBztd7T1ucQKBgQDirrWaTQX83lpTZWXh\nBsxEaUjdcc6cWaB1DQR7eueRNapXDCf+2ERVrD0eEVeT/Tm5BJsgifb0VKtHLy82\n88XLgSO7s5D2YiV1KBrDNJTYLKlXHN9FhTSVHNCCrfHMekLEzAFtHfhWRC9HdCBn\nBqOhrupQpw3KLhIlQj3y+7/0xwKBgQDBHnA57YEcBebyQmtTuzoiyKXNa7eAx+P7\nFe+iVOHSNbme+ou7DyfJfkZSAjJS4RlsPxRMlRSfLZYc66rm2hvhQ85rKPcXe6HY\ncO3qAIn+ZUEjl9ftr6kVtbj9zmiUva/V1n8kpzw0xDhuSqHui+uQFqZgt0akbmrv\nsi7n7aeQJQKBgBNb8lx8KX/ACZzHsxy1tOo+x59J4ehOazqz4uccxvwKxkJq4luM\nYsGiVRHlT0JvROe9MfZkcffJ51rL989MoF7R55hXLJEuLp7Dzw1Ox0ty/P9YkuTg\nDG6TqGcQre7VnjAqcBC+l3/ekN8cVswVsBHV22MJ8U6MAra14o6G24zvAoGBAKIJ\ndSbVxkgKF75bxowqA1yeOKhE4mK21e6eeEQfrp7fn1DqboXU8JBbWIuE9k6eOuOd\nhd3AFN5+tH6tqucqSMxZRYCajcDxZloiXy3BqAeBVAeWZ4Iyqs/he0fSgeOTyU7G\nPEY34AdyQNsh2f86/bsXliB+h1J+p1FZk4vc14TVAoGAJv4qox/zccg6zc2uMfXN\ng1uzw9vBAu+ouw6MxZ9TWSpkhXR+5eJOjJi1jNGWTkkfzp4GStXRd/m0W7unoBTU\nQyva8BaBUwOfgvMlcgGy4011GkkFbPJCuwRR+xpYV+bAwtCWhr5st+GPWNbBV6JB\nlhFCE9ifBoOHPr1AD02MTQo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-210cf@movemate-bb487.iam.gserviceaccount.com",
+  "client_id": "105166311164379350960",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-210cf%40movemate-bb487.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
 }
