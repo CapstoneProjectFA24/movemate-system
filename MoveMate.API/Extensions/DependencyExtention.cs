@@ -233,15 +233,6 @@ namespace MoveMate.API.Extensions
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
-
-                Authorization = new[]
-                {
-                    new HangfireCustomBasicAuthenticationFilter()
-                    {
-                        User = "root",
-                        Pass = "root"
-                    }
-                }
             });
             BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;
