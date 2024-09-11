@@ -22,23 +22,24 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./MoveMate.API/MoveMate.API.csproj
 
       - name: Build
-        run: dotnet build -c Release --no-restore
+        run: dotnet build ./MoveMate.API/MoveMate.API.csproj --configuration Release --no-restore
 
-      - name: Publish
+      - name: Publish .NET Application
         run: |
-          
-          dotnet publish -c Release --property PublishDir='${{ github.workspace }}/site' -r win-x64 --self-contained false
-      - name: Zip Package
+          dotnet publish ./MoveMate.API/MoveMate.API.csproj --configuration Release --output ./publish
+
+      - name: Create and Zip the Site
         run: |
-          cd ${{ github.workspace }}/site
-          zip -r ${{ github.workspace }}/site.zip *
-      - name: Upload zip sources
+          cd ./publish
+          zip -r ../site.zip *
+
+      - name: Upload Zip to GitHub
         uses: actions/upload-artifact@v3
         with:
-          name: move-mate
+          name: site
           path: site.zip
 
   deploy:
@@ -54,7 +55,7 @@ jobs:
         shell: powershell
         run: |
           iisreset /stop
-          Remove-Item -Recurse -Force -Confirm:$false C:\inetpub\wwwroot\MoveMate\
-          mkdir C:\inetpub\wwwroot\MoveMate
-          Expand-Archive site.zip C:\inetpub\wwwroot\MoveMate
+          Remove-Item -Recurse -Force -Confirm:$false C:\inetpub\wwwroot\MoveMate-API\
+          mkdir C:\inetpub\wwwroot\MoveMate-API
+          Expand-Archive site.zip C:\inetpub\wwwroot\MoveMate-API
           iisreset /start
