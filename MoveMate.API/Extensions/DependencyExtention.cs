@@ -8,6 +8,7 @@ using Hangfire.Storage.SQLite;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using MoveMate.API.Authorization;
 using MoveMate.API.Middleware;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
@@ -16,6 +17,7 @@ using MoveMate.Service.Commons;
 using MoveMate.API.Constants;
 using MoveMate.API.Utils;
 using MoveMate.Service.BackgroundServices;
+using MoveMate.Service.ThirdPartyService;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
 
@@ -45,6 +47,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<ITruckServices, TruckServices>();
             services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
+            services.AddScoped<IGoogleMapsService,GoogleMapsService>();
            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
@@ -233,6 +236,7 @@ namespace MoveMate.API.Extensions
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
+                Authorization = new[] { new MyAuthorizationFilter() }
             });
             BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;
