@@ -54,7 +54,7 @@ jobs:
         shell: powershell
         run: |
           iisreset /stop
-          Remove-Item -Recurse -Force -Confirm:$false C:\inetpub\wwwroot\MoveMate-API\
-          mkdir C:\inetpub\wwwroot\MoveMate-API
-          Expand-Archive site.zip C:\inetpub\wwwroot\MoveMate-API
+          Remove-Item -Recurse -Force -Confirm:$false C:\inetpub\wwwroot\MoveMate\
+          mkdir C:\inetpub\wwwroot\MoveMate
+          Expand-Archive site.zip C:\inetpub\wwwroot\MoveMate
           iisreset /start
