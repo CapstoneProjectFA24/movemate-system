@@ -8,30 +8,31 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.API.Utils;
+using MoveMate.Domain.DBContext;
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
     public class DbFactory : Disposable, IDbFactory
     {
-        private TruckRentalContext _dbContext;
+        private MoveMateDbContext _dbContext;
       //  private RedisConnectionProvider _redisConnectionProvider;
         public DbFactory()
         {
             
         }
 
-        public TruckRentalContext InitDbContext()
+        public MoveMateDbContext InitDbContext()
         {
             if (_dbContext == null)
             {
 
                 string connectionString = DbUtil.getConnectString();
                 
-                var optionsBuilder = new DbContextOptionsBuilder<TruckRentalContext>();
+                var optionsBuilder = new DbContextOptionsBuilder<MoveMateDbContext>();
                 optionsBuilder.UseSqlServer(connectionString);
                 optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         
-                _dbContext = new TruckRentalContext(optionsBuilder.Options);
+                _dbContext = new MoveMateDbContext(optionsBuilder.Options);
             }
             return _dbContext;
         }

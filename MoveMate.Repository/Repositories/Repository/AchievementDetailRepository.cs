@@ -1,4 +1,5 @@
-﻿using MoveMate.Domain.Models;
+﻿using MoveMate.Domain.DBContext;
+using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
 using System;
@@ -11,7 +12,7 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class AchievementDetailRepository : GenericRepository<AchievementDetail>, IAchievementDetailRepository
     {
-        public AchievementDetailRepository(TruckRentalContext context) : base(context)
+        public AchievementDetailRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

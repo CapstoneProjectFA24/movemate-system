@@ -14,4 +14,6 @@ public partial class HouseType
     public string? Description { get; set; }
 
     public virtual Booking? Booking { get; set; }
+
+    public virtual ICollection<HouseTypeSetting> HouseTypeSettings { get; set; } = new List<HouseTypeSetting>();
 }

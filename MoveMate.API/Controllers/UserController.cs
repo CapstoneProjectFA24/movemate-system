@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FirebaseAdmin.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoveMate.API.Middleware;
+using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
@@ -13,8 +16,11 @@ namespace MoveMate.API.Controllers
     {
         private readonly IUserServices _userService;
 
-        public UserController(IUserServices userService)
+        private readonly IFirebaseMiddleware _firebaseMiddleware;
+
+        public UserController(IUserServices userService, IFirebaseMiddleware firebaseMiddleware)
         {
+            _firebaseMiddleware = firebaseMiddleware;
             _userService = userService;
         }
 
@@ -62,6 +68,18 @@ namespace MoveMate.API.Controllers
             }
 
             return Ok(result.Payload);
+        }
+
+
+        [HttpPost(Name = "CreateUser")]
+        public async Task<OperationResult<UserRecord>> CreateUser(CreateUserRequest user)
+        {
+            return await _firebaseMiddleware.CreateUser(
+               user.Name,
+               user.Password,
+               user.Email,
+               user.Phone
+               );
         }
 
     }

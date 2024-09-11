@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
     {
-        public NotificationRepository(TruckRentalContext context) : base(context)
+        public NotificationRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

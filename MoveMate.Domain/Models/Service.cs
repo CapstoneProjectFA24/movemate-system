@@ -17,5 +17,9 @@ public partial class Service
 
     public string? ImageUrl { get; set; }
 
-    public virtual ICollection<ServiceBooking> ServiceBookings { get; set; } = new List<ServiceBooking>();
+    public int? DiscountRate { get; set; }
+
+    public double? Amount { get; set; }
+
+    public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
 }

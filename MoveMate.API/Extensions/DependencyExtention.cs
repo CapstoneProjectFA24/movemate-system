@@ -8,6 +8,7 @@ using Hangfire.Storage.SQLite;
 using HangfireBasicAuthenticationFilter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using MoveMate.API.Authorization;
 using MoveMate.API.Middleware;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
@@ -16,6 +17,7 @@ using MoveMate.Service.Commons;
 using MoveMate.API.Constants;
 using MoveMate.API.Utils;
 using MoveMate.Service.BackgroundServices;
+using MoveMate.Service.ThirdPartyService;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
 
@@ -45,9 +47,14 @@ namespace MoveMate.API.Extensions
             services.AddScoped<ITruckServices, TruckServices>();
             services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
-            
+            services.AddScoped<IGoogleMapsService,GoogleMapsService>();
+           // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
+           // services.AddScoped<IFirebaseServices, FirebaseServices>();
+
             return services;
         }
+
+
         
         public static IServiceCollection AddHangfire(this IServiceCollection services)
         {
@@ -74,6 +81,19 @@ namespace MoveMate.API.Extensions
             return services;
         }
 
+
+        //Firebase
+        public static IServiceCollection AddFirebaseServices(this IServiceCollection services)
+        {
+            // Register the Firebase services
+            services.AddScoped<IFirebaseServices>(sp => new FirebaseServices("firebase_app_settings.json"));
+
+            services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
+
+            return services;
+        }
+
+        //Authen
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtSettings = configuration.GetSection("JWTAuth");
@@ -216,6 +236,7 @@ namespace MoveMate.API.Extensions
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
+                Authorization = new[] { new MyAuthorizationFilter() }
             });
             BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;

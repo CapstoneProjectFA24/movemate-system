@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
     {
-        public PaymentRepository(TruckRentalContext context) : base(context)
+        public PaymentRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

@@ -16,6 +16,8 @@ namespace MoveMate.Service.Commons
         ServerError = 500,
         UnAuthorize = 401,
         Forbidden = 403,
-        UnknownError = 999
+        UnknownError = 999,
+        FirebaseAuthError = 600,        // Specific Firebase authentication error
+        ValidationError = 422           // Data validation error
     }
 }
