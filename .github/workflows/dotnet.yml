@@ -39,7 +39,7 @@ jobs:
       - name: Upload Zip to GitHub
         uses: actions/upload-artifact@v3
         with:
-          name: site
+          name: move-mate
           path: site.zip
 
   deploy:
