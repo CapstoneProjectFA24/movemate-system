@@ -57,29 +57,15 @@ public partial class Booking
 
     public string? TypeBooking { get; set; }
 
-    public string? EstimatedAcreage { get; set; }
-
     public string? RoomNumber { get; set; }
 
     public string? FloorsNumber { get; set; }
 
     public bool? IsManyItems { get; set; }
 
-    public string? EstimatedTotalWeight { get; set; }
-
     public bool? IsCancel { get; set; }
 
     public string? CancelReason { get; set; }
-
-    public string? EstimatedWeight { get; set; }
-
-    public string? EstimatedHeight { get; set; }
-
-    public string? EstimatedWidth { get; set; }
-
-    public string? EstimatedLength { get; set; }
-
-    public string? EstimatedVolume { get; set; }
 
     public bool? IsPorter { get; set; }
 
@@ -99,11 +85,13 @@ public partial class Booking
 
     public virtual ICollection<BookingTracker> BookingTrackers { get; set; } = new List<BookingTracker>();
 
+    public virtual ICollection<HouseType> HouseTypes { get; set; } = new List<HouseType>();
+
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
     public virtual ICollection<PromotionDetail> PromotionDetails { get; set; } = new List<PromotionDetail>();
 
-    public virtual ICollection<ServiceBooking> ServiceBookings { get; set; } = new List<ServiceBooking>();
+    public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
 
     public virtual User? User { get; set; }
 }

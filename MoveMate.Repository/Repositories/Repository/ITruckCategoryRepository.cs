@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class TruckCategoryRepository : GenericRepository<TruckCategory>, ITruckCategoryRepository
     {
-        private TruckRentalContext _dbContext;
-        public TruckCategoryRepository(TruckRentalContext context) : base(context)
+        private MoveMateDbContext _dbContext;
+        public TruckCategoryRepository(MoveMateDbContext context) : base(context)
         {
             this._dbContext = context;
         }

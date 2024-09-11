@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class PromotionCategoryRepository : GenericRepository<PromotionCategory>, IPromotionCategoryRepository
     {
-        public PromotionCategoryRepository(TruckRentalContext context) : base(context)
+        public PromotionCategoryRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

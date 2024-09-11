@@ -7,14 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
     {
-        private readonly TruckRentalContext _dbContext;
+        private readonly MoveMateDbContext _dbContext;
 
-        public UserRepository(TruckRentalContext context) : base(context)
+        public UserRepository(MoveMateDbContext context) : base(context)
         {
             _dbContext = context;
         }

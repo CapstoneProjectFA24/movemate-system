@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MoveMate.Domain.DBContext;
 using System.Threading.Tasks;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class AchievementRepository : GenericRepository<Achievement>, IAchievementRepository
     {
-        public AchievementRepository(TruckRentalContext context) : base(context)
+        public AchievementRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

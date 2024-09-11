@@ -25,6 +25,8 @@ namespace MoveMate.Service.Commons
 
             // Mapping for AccountRequest -> User
             CreateMap<AccountRequest, User>();
+            CreateMap<CreateUserRequest, User>();
+
 
             // Mapping for User -> AccountResponse
             CreateMap<User, AccountResponse>()

@@ -7,12 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class ScheduleRepository : GenericRepository<Schedule>, IScheduleRepository
     {
-        public ScheduleRepository(TruckRentalContext context) : base(context)
+        public ScheduleRepository(MoveMateDbContext context) : base(context)
         {
         }
 

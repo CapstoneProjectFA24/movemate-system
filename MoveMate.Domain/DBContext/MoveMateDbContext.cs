@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using MoveMate.Domain.Models;
 
-namespace MoveMate.Domain.Models;
+namespace MoveMate.Domain.DBContext;
 
-public partial class TruckRentalContext : DbContext
+public partial class MoveMateDbContext : DbContext
 {
-    public TruckRentalContext()
+    public MoveMateDbContext()
     {
     }
 
-    public TruckRentalContext(DbContextOptions<TruckRentalContext> options)
+    public MoveMateDbContext(DbContextOptions<MoveMateDbContext> options)
         : base(options)
     {
     }
@@ -21,7 +22,7 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<AchievementSetting> AchievementSettings { get; set; }
 
-   
+    
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
@@ -33,20 +34,23 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<BookingTracker> BookingTrackers { get; set; }
 
-   
+    
+
     public virtual DbSet<FeeDetail> FeeDetails { get; set; }
 
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
 
-   
+    
 
     public virtual DbSet<HouseType> HouseTypes { get; set; }
+
+    public virtual DbSet<HouseTypeSetting> HouseTypeSettings { get; set; }
 
     public virtual DbSet<Item> Items { get; set; }
 
     public virtual DbSet<ItemCategory> ItemCategories { get; set; }
 
-   
+    
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -66,7 +70,7 @@ public partial class TruckRentalContext : DbContext
 
     public virtual DbSet<Service> Services { get; set; }
 
-    public virtual DbSet<ServiceBooking> ServiceBookings { get; set; }
+    public virtual DbSet<ServiceDetail> ServiceDetails { get; set; }
 
     
 
@@ -126,7 +130,7 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(255);
         });
 
-        
+       
 
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -139,15 +143,8 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.DeliveryAddress).HasMaxLength(255);
             entity.Property(e => e.DeliveryPoint).HasMaxLength(255);
-            entity.Property(e => e.EstimatedAcreage).HasMaxLength(255);
             entity.Property(e => e.EstimatedDeliveryTime).HasMaxLength(255);
             entity.Property(e => e.EstimatedDistance).HasMaxLength(255);
-            entity.Property(e => e.EstimatedHeight).HasMaxLength(255);
-            entity.Property(e => e.EstimatedLength).HasMaxLength(255);
-            entity.Property(e => e.EstimatedTotalWeight).HasMaxLength(255);
-            entity.Property(e => e.EstimatedVolume).HasMaxLength(255);
-            entity.Property(e => e.EstimatedWeight).HasMaxLength(255);
-            entity.Property(e => e.EstimatedWidth).HasMaxLength(255);
             entity.Property(e => e.FeeInfo).HasMaxLength(255);
             entity.Property(e => e.FloorsNumber).HasMaxLength(255);
             entity.Property(e => e.Note).HasMaxLength(255);
@@ -228,7 +225,7 @@ public partial class TruckRentalContext : DbContext
                 .HasConstraintName("FK_BookingTracker_Booking");
         });
 
-       
+        
 
         modelBuilder.Entity<FeeDetail>(entity =>
         {
@@ -260,17 +257,32 @@ public partial class TruckRentalContext : DbContext
 
         modelBuilder.Entity<HouseType>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("HouseType");
+            entity.ToTable("HouseType");
 
             entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.Name).HasMaxLength(255);
 
-            entity.HasOne(d => d.Booking).WithMany()
+            entity.HasOne(d => d.Booking).WithMany(p => p.HouseTypes)
                 .HasForeignKey(d => d.BookingId)
                 .HasConstraintName("FK_HouseType_Booking");
+        });
+
+        modelBuilder.Entity<HouseTypeSetting>(entity =>
+        {
+            entity.ToTable("HouseTypeSetting");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Value).HasMaxLength(255);
+
+            entity.HasOne(d => d.HouseType).WithMany(p => p.HouseTypeSettings)
+                .HasForeignKey(d => d.HouseTypeId)
+                .HasConstraintName("FK_HouseTypeSetting_HouseType");
+
+            entity.HasOne(d => d.TruckCategory).WithMany(p => p.HouseTypeSettings)
+                .HasForeignKey(d => d.TruckCategoryId)
+                .HasConstraintName("FK_HouseTypeSetting_TruckCategory");
         });
 
         modelBuilder.Entity<Item>(entity =>
@@ -304,7 +316,7 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
         });
 
-        
+       
 
         modelBuilder.Entity<Notification>(entity =>
         {
@@ -398,7 +410,7 @@ public partial class TruckRentalContext : DbContext
                 .HasConstraintName("FK_ScheduleDetails_User");
         });
 
-      
+        
 
         modelBuilder.Entity<Service>(entity =>
         {
@@ -409,20 +421,21 @@ public partial class TruckRentalContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<ServiceBooking>(entity =>
+        modelBuilder.Entity<ServiceDetail>(entity =>
         {
-            entity.ToTable("ServiceBooking");
+            entity.HasKey(e => e.Id).HasName("PK_ServiceBooking");
 
-            entity.HasOne(d => d.Booking).WithMany(p => p.ServiceBookings)
+            entity.HasOne(d => d.Booking).WithMany(p => p.ServiceDetails)
                 .HasForeignKey(d => d.BookingId)
                 .HasConstraintName("FK_ServiceBooking_Booking");
 
-            entity.HasOne(d => d.Service).WithMany(p => p.ServiceBookings)
+            entity.HasOne(d => d.Service).WithMany(p => p.ServiceDetails)
                 .HasForeignKey(d => d.ServiceId)
                 .HasConstraintName("FK_ServiceBooking_Service");
         });
 
        
+
         modelBuilder.Entity<Token>(entity =>
         {
             entity.ToTable("Token");

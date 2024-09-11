@@ -15,6 +15,8 @@ using MoveMate.Service.Commons;
 using MoveMate.API.Constants;
 using MoveMate.Domain.Models;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.IServices;
+using MoveMate.Service.Services;
 
 namespace MoveMate.API
 {
@@ -43,6 +45,7 @@ namespace MoveMate.API
             builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             builder.Services.AddAutoMapper(typeof(AutoMapperService));
             builder.Services.AddExceptionMiddleware();
+           // builder.Services.AddFirebaseServices();
 
             // CORS Policy
             builder.Services.AddCors(cors => cors.AddPolicy(
@@ -55,6 +58,7 @@ namespace MoveMate.API
             // Fluent Validation
             builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AccountRequestValidator>());
             builder.Services.AddValidatorsFromAssemblyContaining<AccountTokenValidator>();
+
 
             // Add Quartz (Optional, uncomment if needed)
             //builder.Services.AddQuartz(q =>
