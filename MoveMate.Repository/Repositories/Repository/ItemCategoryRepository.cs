@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class ItemCategoryRepository : GenericRepository<ItemCategory>, IItemCategoryRepository
     {
-        public ItemCategoryRepository(TruckRentalContext context) : base(context)
+        public ItemCategoryRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

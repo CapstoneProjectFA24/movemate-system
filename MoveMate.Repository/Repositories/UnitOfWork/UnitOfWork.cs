@@ -7,12 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.Repository;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private TruckRentalContext _dbContext;
+        private MoveMateDbContext _dbContext;
         private IDbFactory _dbFactory;
 
         private AchievementRepository _achievementRepository;
@@ -37,7 +37,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private ScheduleRepository _scheduleRepository;
         private ScheduleDetailRepository _scheduleDetailRepository;
         private ServiceRepository _serviceRepository;
-        private ServiceBookingRepository _serviceBookingRepository;      
+        private ServiceDetailsRepository _serviceDetailsRepository;      
         private TokenRepository _tokenRepository;
         private TrackerSourceRepository _trackerSourceRepository;
         private TransactionRepository _transactionRepository;
@@ -331,15 +331,15 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public ServiceBookingRepository ServiceBookingRepository
+        public ServiceDetailsRepository ServiceDetailsRepository
         {
             get
             {
-                if(_serviceBookingRepository == null)
+                if(_serviceDetailsRepository == null)
                 {
-                    _serviceBookingRepository = new ServiceBookingRepository(_dbContext);
+                    _serviceDetailsRepository = new ServiceDetailsRepository(_dbContext);
                 }
-                return _serviceBookingRepository;
+                return _serviceDetailsRepository;
             }
         }
 

@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using MoveMate.Domain.DBContext;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class BookingDetailRepository : GenericRepository<BookingDetail>, IBookingDetailRepository
     {
-        public BookingDetailRepository(TruckRentalContext context) : base(context)
+        public BookingDetailRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

@@ -6,6 +6,7 @@ using MoveMate.Domain.Models;
 //using ShopRepository.Models;
 using System.Linq.Expressions;
 using MoveMate.Repository.Repositories.UnitOfWork;
+using MoveMate.Domain.DBContext;
 
 
 namespace MoveMate.Repository.Repositories.GenericRepository
@@ -14,7 +15,7 @@ namespace MoveMate.Repository.Repositories.GenericRepository
     {
         protected DbSet<TEntity> _dbSet;
         protected readonly DbContext _context;
-        public GenericRepository(TruckRentalContext context)
+        public GenericRepository(MoveMateDbContext context)
         {
             _context = context;
             _dbSet = context.Set<TEntity>();

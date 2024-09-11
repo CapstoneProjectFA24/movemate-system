@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Repository.Repositories.IRepository
 {
-    public interface IServiceBookingRepository
+    public interface IServiceDetailsRepository
     {
     }
 }
