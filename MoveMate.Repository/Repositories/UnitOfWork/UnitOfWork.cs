@@ -19,15 +19,12 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private AchievementDetailRepository _achievementDetailRepository;
         private AchievementSettingRepository _achievementSettingRepository;
         private BookingRepository _bookingRepository;
-        private BookingDetailRepository _bookingDetailRepository;
-        private BookingItemRepository _bookingItemRepository;
+        private BookingDetailRepository _bookingDetailRepository;      
         private BookingStaffDailyRepository _bookingStaffDailyRepository;
         private BookingTrackerRepository _bookingTrackerRepository;
         private FeeDetailRepository _feeDetailRepository;
         private FeeSettingRepository _feeSettingRepository;     
-        private HouseTypeRepository _houseTypeRepository;
-        private ItemRepository _itemRepository;
-        private ItemCategoryRepository _itemCategoryRepository;
+        private HouseTypeRepository _houseTypeRepository;    
         private NotificationRepository _notificationRepository;
         private PaymentRepository _paymentRepository;   
         private PromotionDetailRepository _promotionDetailRepository;
@@ -123,17 +120,6 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public BookingItemRepository BookingItemRepository
-        {
-            get
-            {
-                if(_bookingItemRepository == null)
-                {
-                    _bookingItemRepository = new BookingItemRepository(_dbContext);
-                }
-                return _bookingItemRepository;
-            }
-        }
 
         public BookingDetailRepository BookingDetailRepository
         {
@@ -209,30 +195,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
       
-        public ItemRepository ItemRepository
-        {
-            get
-            {
-                if(_itemRepository == null)
-                {
-                    _itemRepository = new ItemRepository(_dbContext);   
-                }
-                return _itemRepository;
-            }
-        }
-
-        public ItemCategoryRepository ItemCategoryRepository
-        {
-            get
-            {
-                if(_itemCategoryRepository == null)
-                {
-                    _itemCategoryRepository = new ItemCategoryRepository(_dbContext);
-                }
-                return _itemCategoryRepository;
-            }
-        }
-
+       
         public NotificationRepository NotificationRepository
         {
             get

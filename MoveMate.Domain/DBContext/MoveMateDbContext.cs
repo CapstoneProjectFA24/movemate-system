@@ -28,8 +28,6 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<BookingDetail> BookingDetails { get; set; }
 
-    public virtual DbSet<BookingItem> BookingItems { get; set; }
-
     public virtual DbSet<BookingStaffDaily> BookingStaffDailies { get; set; }
 
     public virtual DbSet<BookingTracker> BookingTrackers { get; set; }
@@ -41,14 +39,9 @@ public partial class MoveMateDbContext : DbContext
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
 
     
-
     public virtual DbSet<HouseType> HouseTypes { get; set; }
 
     public virtual DbSet<HouseTypeSetting> HouseTypeSettings { get; set; }
-
-    public virtual DbSet<Item> Items { get; set; }
-
-    public virtual DbSet<ItemCategory> ItemCategories { get; set; }
 
     
 
@@ -66,7 +59,7 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<ScheduleDetail> ScheduleDetails { get; set; }
 
-   
+    
 
     public virtual DbSet<Service> Services { get; set; }
 
@@ -94,8 +87,7 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-    
-
+   
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Achievement>(entity =>
@@ -130,7 +122,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(255);
         });
 
-       
+      
 
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -177,26 +169,6 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_BookingDetails_User");
         });
 
-        modelBuilder.Entity<BookingItem>(entity =>
-        {
-            entity.ToTable("BookingItem");
-
-            entity.Property(e => e.EstimatedHeight).HasMaxLength(255);
-            entity.Property(e => e.EstimatedLenght).HasMaxLength(255);
-            entity.Property(e => e.EstimatedVolume).HasMaxLength(255);
-            entity.Property(e => e.EstimatedWeight).HasMaxLength(255);
-            entity.Property(e => e.EstimatedWidth).HasMaxLength(255);
-            entity.Property(e => e.Status).HasMaxLength(255);
-
-            entity.HasOne(d => d.Booking).WithMany(p => p.BookingItems)
-                .HasForeignKey(d => d.BookingId)
-                .HasConstraintName("FK_BookingItem_Booking");
-
-            entity.HasOne(d => d.Item).WithMany(p => p.BookingItems)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("FK_BookingItem_Item");
-        });
-
         modelBuilder.Entity<BookingStaffDaily>(entity =>
         {
             entity.ToTable("BookingStaffDaily");
@@ -225,7 +197,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_BookingTracker_Booking");
         });
 
-        
+       
 
         modelBuilder.Entity<FeeDetail>(entity =>
         {
@@ -285,38 +257,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_HouseTypeSetting_TruckCategory");
         });
 
-        modelBuilder.Entity<Item>(entity =>
-        {
-            entity.ToTable("Item");
-
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.CreatedBy).HasMaxLength(255);
-            entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.ImgUrl).HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
-
-            entity.HasOne(d => d.ItemCategory).WithMany(p => p.Items)
-                .HasForeignKey(d => d.ItemCategoryId)
-                .HasConstraintName("FK_Item_ItemCategory");
-        });
-
-        modelBuilder.Entity<ItemCategory>(entity =>
-        {
-            entity.ToTable("ItemCategory");
-
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.CreatedBy).HasMaxLength(255);
-            entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.ImgUrl).HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.Type).HasMaxLength(255);
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
-        });
-
-       
+        
 
         modelBuilder.Entity<Notification>(entity =>
         {
