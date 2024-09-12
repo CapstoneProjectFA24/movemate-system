@@ -39,7 +39,8 @@ namespace MoveMate.API.Extensions
         }
 
         public static IServiceCollection AddServices(this IServiceCollection services)
-        {
+        { 
+            services.AddHttpClient();
             //services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IUserServices, UserService>();

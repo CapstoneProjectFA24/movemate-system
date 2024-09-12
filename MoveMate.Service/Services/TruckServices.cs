@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire;
 using MoveMate.Service.Commons;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
@@ -34,6 +35,9 @@ namespace MoveMate.Service.Services
 
         public async Task<OperationResult<List<TruckCateResponse>>> GetAllCate()
         {
+            // deplay
+            BackgroundJob.Schedule(()=> Console.WriteLine("delay---"), TimeSpan.FromMinutes(1));
+            
             var result = new OperationResult<List<TruckCateResponse>>();
             
             var response = _unitOfWork.TruckCategoryRepository.GetWithPagination();
@@ -49,9 +53,8 @@ namespace MoveMate.Service.Services
                 return result;
             }
             
-
             result.AddResponseStatusCode(StatusCode.Ok, "Get List User Done.", listResponse, pagin);
-
+            
             return result;
         }
 
