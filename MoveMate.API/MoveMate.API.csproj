@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	<InvariantGlobalization>false</InvariantGlobalization>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<_FunctionsSkipCleanOutput>true</_FunctionsSkipCleanOutput>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -31,9 +32,14 @@
 		<PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.7.0" />
 		<PackageReference Include="Quartz.AspNetCore" Version="3.7.0" />
 		<PackageReference Include="Quartz.Extensions.Hosting" Version="3.7.0" />
+<<<<<<< HEAD
 		<None Update="firebase_app_settings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+=======
+		
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
+>>>>>>> 4fbf945feca30b722f7146153c63e40035698342
 	</ItemGroup>
 
 	<ItemGroup>
