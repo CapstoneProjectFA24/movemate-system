@@ -26,8 +26,7 @@ namespace MoveMate.API.Controllers
             }
             if (errors.Any(e => e.Code == MoveMate.Service.Commons.StatusCode.ServerError))
             {
-                var error = errors.FirstOrDefault(e => e.Code == MoveMate.Service.Commons.StatusCode.ServerError);
-                return base.StatusCode(500, new ErrorResponse(500, errors.FirstOrDefault()?.Message == null ? "Server Error" : errors.FirstOrDefault()!.Message, true, error!.Message, DateTime.Now));
+                return base.StatusCode(500, new ErrorResponse(500, "Server Error", true, "An internal server error occurred.", DateTime.Now));
             }
             return StatusCode(400, new ErrorResponse(400, errors.FirstOrDefault()?.Message == null ? "Bad Request" : errors.FirstOrDefault()!.Message, true, errors, DateTime.Now));
         }

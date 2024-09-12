@@ -81,7 +81,8 @@ namespace MoveMate.API.Controllers
                 if (!validationResult.IsValid)
                 {
                     var errors = ErrorUtil.GetErrorsString(validationResult);
-                    throw new BadRequestException(errors);
+                    var errorList = errors.Select(e => new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = e.ToString() });
+                    return HandleErrorResponse((List<Error>)errorList);
                 }
 
                 var accountResponse = await _authenticationService.LoginAsync(account, _jwtAuthOptions.Value);
@@ -90,7 +91,15 @@ namespace MoveMate.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during login.");
-                throw;
+                var errors = new List<Error>
+        {
+            new Error
+            {
+                Code = MoveMate.Service.Commons.StatusCode.ServerError,
+                Message = "An internal server error occurred."
+            }
+        };
+                return HandleErrorResponse(errors);
             }
         }
         #endregion
