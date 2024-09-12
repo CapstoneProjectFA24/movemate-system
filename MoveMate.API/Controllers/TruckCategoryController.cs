@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
+using MoveMate.Service.ThirdPartyService;
 
 namespace MoveMate.API.Controllers;
 
@@ -7,10 +8,11 @@ namespace MoveMate.API.Controllers;
 public class TruckCategoryController : BaseController
 {
     private readonly ITruckServices _truckServices;
-
-    public TruckCategoryController(ITruckServices truckServices)
+    private readonly IGoogleMapsService _googleMapsService;
+    public TruckCategoryController(ITruckServices truckServices, IGoogleMapsService googleMapsService)
     {
         _truckServices = truckServices;
+        _googleMapsService = googleMapsService;
     }
     
     /// <summary>
