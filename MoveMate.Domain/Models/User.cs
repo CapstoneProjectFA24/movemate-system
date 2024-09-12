@@ -45,6 +45,8 @@ public partial class User
 
     public string? NumberIntroduce { get; set; }
 
+    public bool? IsInitUser { get; set; }
+
     public virtual ICollection<Achievement> Achievements { get; set; } = new List<Achievement>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();

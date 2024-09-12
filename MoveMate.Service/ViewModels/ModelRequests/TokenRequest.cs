@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Repository.Repositories.IRepository
+namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public interface IItemCategoryRepository
+    public class TokenRequest
     {
+        public string IdToken { get; set; }
     }
+
 }

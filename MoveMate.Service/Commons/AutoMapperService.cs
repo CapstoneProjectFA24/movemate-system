@@ -44,8 +44,16 @@ namespace MoveMate.Service.Commons
             ;
 
             //Booking
-            CreateMap<Booking, BookingResponse>();
-                
+            CreateMap<Booking, BookingResponse>()
+                .ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
+                .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
+                .ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
+                .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
+
+            CreateMap<ServiceDetail, ServiceDetailsResponse>();
+            CreateMap<BookingDetail, BookingDetailsResponse>();
+            CreateMap<BookingTracker, BookingTrackerResponse>();
+            CreateMap<HouseType, HouseTypeResponse>();
 
 
             //Schedule

@@ -39,8 +39,9 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
-                    
+                    orderBy: request.GetOrder(),
+                    includeProperties: "ServiceDetails, HouseTypes, BookingDetails, BookingTrackers"
+
                 );
                 var listResponse = _mapper.Map<List<BookingResponse>>(entities);
 
@@ -62,6 +63,13 @@ namespace MoveMate.Service.Services
                 _logger.LogError(e, "Error occurred in getAll Service Method");
                 throw;
             }
+        }
+
+        public Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
+        {
+            
+            
+            return null;
         }
     }
 }
