@@ -63,5 +63,12 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
+
+        public Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
+        {
+            
+            
+            return null;
+        }
     }
 }

@@ -35,7 +35,7 @@ public class GoogleMapsService : IGoogleMapsService
         }
     }
 
-    public async Task<bool> GetDistanceAndDuration(string origins, string destinations)
+    public async Task<string?> GetDistanceAndDuration(string origins, string destinations)
     {
         try
         {
@@ -55,10 +55,10 @@ public class GoogleMapsService : IGoogleMapsService
                 var distanceText = elements.GetProperty("distance").GetProperty("text").GetString();
                 var durationText = elements.GetProperty("duration").GetProperty("text").GetString();
 
-               
+                return durationText;
             }
 
-            return true;
+            return "0";
         }
         catch (Exception ex)
         {
