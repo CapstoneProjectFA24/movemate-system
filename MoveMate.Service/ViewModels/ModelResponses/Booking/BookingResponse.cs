@@ -1,5 +1,4 @@
 ﻿using MoveMate.Domain.Models;
-using MoveMate.Service.ViewModels.ModelRequests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,12 +95,12 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public string FeeInfo { get; set; }
 
-        public List<ServiceDetailsResponse> ServiceDetails { get; set; }
+        //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
 
-        public List<BookingDetailsResponse> BookingDetails { get; set; }
+        //public List<BookingDetailsResponse> BookingDetails { get; set; }
 
-        public List<BookingTrackerResponse> BookingTrackers { get; set; }
+        //public List<BookingTrackerResponse> BookingTrackers { get; set; }
 
-        public List<HouseTypeResponse> HouseTypes { get; set; }
+        //public List<HouseTypeResponse> HouseTypes { get; set; }
     }
 }

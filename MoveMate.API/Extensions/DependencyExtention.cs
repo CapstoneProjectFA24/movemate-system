@@ -49,6 +49,10 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
             services.AddScoped<IGoogleMapsService,GoogleMapsService>();
+            services.AddScoped<IHouseTypeServices, HouseTypeServices>();
+            services.AddScoped<IHouseTypeSettingServices, HouseTypeSettingServices>();
+            services.AddScoped<IServiceServices , ServiceServices>();
+            services.AddScoped<IServiceDetails, ServiceDetails>();
            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 

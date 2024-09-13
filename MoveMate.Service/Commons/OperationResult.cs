@@ -12,16 +12,33 @@ namespace MoveMate.Service.Commons
         public T? Payload { get; set; }
         
         public object? MetaData { get; set; }
-        public Pagination? Pagination { get; set; }
+        //public Pagination? Pagination { get; set; }
         public List<Error> Errors { get; set; } = new List<Error>();
         public void AddError(StatusCode code, string message)
         {
             HandleError(code, message);
         }
 
-        public void AddResponseStatusCode(StatusCode code, string message, T? payload, Pagination? pagination = null, object? metaData = null )
+        public void AddResponseStatusCode(
+            StatusCode code,
+            string message,
+            T? payload,
+            object? metaData = null
+            )
         {
-            HandleResponse(code, message, payload, pagination, metaData);
+            HandleResponse(code, message, payload, metaData);
+        }
+
+        private void HandleResponse(StatusCode code, string message,
+            T? payload, object? metaData)
+        {
+            StatusCode = code;
+            IsError = false;
+            Message = message;
+            Payload = payload;
+            MetaData ??= metaData;
+
+
         }
 
         public void AddUnknownError(string message)
@@ -40,7 +57,7 @@ namespace MoveMate.Service.Commons
             IsError = false;
             Message = message;
             Payload = payload;
-            Pagination = pagination ?? new Pagination(0,1,1);
+           // Pagination = pagination ?? new Pagination(0,1,1);
             MetaData ??= metaData;
 
         }

@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllBookingRequest : PaginationRequest<Booking>
+    public class GetAllBookingRequest : PaginationRequest<MoveMate.Domain.Models.Booking>
     {
         public string? Search { get; set; }
         public string? UserName { get; set; }
         public string? Status { get; set; }
 
-        public override Expression<Func<Booking, bool>> GetExpressions()
+        public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
         {
 
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<Booking>(true);
+                var queryExpression = PredicateBuilder.New<MoveMate.Domain.Models.Booking>(true);
                 queryExpression.Or(cus => cus.DeliveryPoint.ToLower().Contains(Search));
 
 

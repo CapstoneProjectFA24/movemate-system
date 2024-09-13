@@ -21,5 +21,11 @@ public partial class Service
 
     public double? Amount { get; set; }
 
+    public int? ParentServiceId { get; set; }
+
+    public virtual ICollection<Service> InverseParentService { get; set; } = new List<Service>();
+
+    public virtual Service? ParentService { get; set; }
+
     public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
 }

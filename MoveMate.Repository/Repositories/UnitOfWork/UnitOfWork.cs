@@ -24,7 +24,8 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private BookingTrackerRepository _bookingTrackerRepository;
         private FeeDetailRepository _feeDetailRepository;
         private FeeSettingRepository _feeSettingRepository;     
-        private HouseTypeRepository _houseTypeRepository;    
+        private HouseTypeRepository _houseTypeRepository;
+        private HouseTypeSettingRepository _houseTypeSettingRepository;
         private NotificationRepository _notificationRepository;
         private PaymentRepository _paymentRepository;   
         private PromotionDetailRepository _promotionDetailRepository;
@@ -194,8 +195,20 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
                 return _houseTypeRepository;
             }
         }
-      
-       
+
+        public HouseTypeSettingRepository HouseTypeSettingRepository
+        {
+            get
+            {
+                if (_houseTypeSettingRepository == null)
+                {
+                    _houseTypeSettingRepository = new HouseTypeSettingRepository(_dbContext);
+                }
+                return _houseTypeSettingRepository;
+            }
+        }
+
+
         public NotificationRepository NotificationRepository
         {
             get
