@@ -22,7 +22,7 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<AchievementSetting> AchievementSettings { get; set; }
 
-    
+   
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
@@ -39,6 +39,7 @@ public partial class MoveMateDbContext : DbContext
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
 
     
+
     public virtual DbSet<HouseType> HouseTypes { get; set; }
 
     public virtual DbSet<HouseTypeSetting> HouseTypeSettings { get; set; }
@@ -87,7 +88,8 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-   
+  
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Achievement>(entity =>
@@ -122,7 +124,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(255);
         });
 
-      
+       
 
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -197,7 +199,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_BookingTracker_Booking");
         });
 
-       
+        
 
         modelBuilder.Entity<FeeDetail>(entity =>
         {
@@ -225,8 +227,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Type).HasMaxLength(255);
         });
 
-       
-
+        
         modelBuilder.Entity<HouseType>(entity =>
         {
             entity.ToTable("HouseType");
@@ -242,11 +243,6 @@ public partial class MoveMateDbContext : DbContext
         modelBuilder.Entity<HouseTypeSetting>(entity =>
         {
             entity.ToTable("HouseTypeSetting");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.Value).HasMaxLength(255);
 
             entity.HasOne(d => d.HouseType).WithMany(p => p.HouseTypeSettings)
                 .HasForeignKey(d => d.HouseTypeId)
@@ -351,7 +347,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_ScheduleDetails_User");
         });
 
-        
+       
 
         modelBuilder.Entity<Service>(entity =>
         {
@@ -360,6 +356,10 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.ImageUrl).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
+
+            entity.HasOne(d => d.ParentService).WithMany(p => p.InverseParentService)
+                .HasForeignKey(d => d.ParentServiceId)
+                .HasConstraintName("FK_Service_ParentService");
         });
 
         modelBuilder.Entity<ServiceDetail>(entity =>

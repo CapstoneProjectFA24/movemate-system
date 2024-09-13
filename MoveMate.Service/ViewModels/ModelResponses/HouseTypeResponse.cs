@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Service.ViewModels.ModelRequests
+namespace MoveMate.Service.ViewModels.ModelResponses
 {
     public class HouseTypeResponse
     {
-        //public int? BookingId { get; set; }
-
+        public int? BookingId { get; set; }
+        public int Id { get; set; }
         public string? Name { get; set; }
 
         public string? Description { get; set; }

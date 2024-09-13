@@ -54,9 +54,11 @@ namespace MoveMate.Service.Services
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Schedule Done.", listResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done.", listResponse, pagin);
 
                 return result;
+
+                
             }
             catch (Exception e)
             {
