@@ -71,5 +71,5 @@ public partial class User
 
     public virtual ICollection<UserInfo> UserInfos { get; set; } = new List<UserInfo>();
 
-    public virtual ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
+    public virtual Wallet? Wallet { get; set; }
 }

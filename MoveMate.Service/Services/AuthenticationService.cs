@@ -222,5 +222,37 @@ namespace MoveMate.Service.Services
             }
         }
 
+        public async Task<AccountResponse> GenerateTokenWithUserIdAsync(string userId, JWTAuth jwtAuthOptions)
+        {  
+            var jwtTokenHandler = new JwtSecurityTokenHandler(); 
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtAuthOptions.Key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
+            var tokenDescription = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+            new Claim(JwtRegisteredClaimNames.Sub, userId), 
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
+        }),
+                Expires = DateTime.UtcNow.AddHours(12),
+                SigningCredentials = credentials
+            };
+            var token = jwtTokenHandler.CreateToken(tokenDescription);
+            var accessToken = jwtTokenHandler.WriteToken(token);
+            var refreshToken = GenerateRefreshToken();
+            var accountResponse = new AccountResponse
+            {
+                Tokens = new AccountTokenResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
+                }
+            };
+
+            return accountResponse;
+        }
+
+
+
     }
 }

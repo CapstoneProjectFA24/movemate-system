@@ -188,13 +188,35 @@ namespace MoveMate.API.Controllers
         {
             try
             {
+                
                 var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
-                return Ok(new { message = "Token verified", uid = decodedToken.Uid });
+
+               
+                if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
+                {
+                    var userId = decodedToken.Uid; 
+                    var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
+                    return Ok(new
+                    {
+                        message = "Token verified and JWT generated successfully",
+                        accessToken = accountResponse.Tokens.AccessToken, 
+                        refreshToken = accountResponse.Tokens.RefreshToken 
+                    });
+                }
+
+               
+                return BadRequest(new { message = "Invalid token: UID not found" });
             }
             catch (FirebaseAuthException ex)
             {
-                return BadRequest(new { message = "Invalid token", error = ex.Message });
+                return BadRequest(new { message = "Firebase token verification failed", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during token verification.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
             }
         }
+
     }
 }
