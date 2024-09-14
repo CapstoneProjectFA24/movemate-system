@@ -7,7 +7,7 @@ public partial class Wallet
 {
     public int Id { get; set; }
 
-    public int? UserId { get; set; }
+    public int UserId { get; set; }
 
     public double? Balance { get; set; }
 
@@ -25,7 +25,9 @@ public partial class Wallet
 
     public string? Type { get; set; }
 
+    public double? FixedSalary { get; set; }
+
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
-    public virtual User? User { get; set; }
+    public virtual User User { get; set; } = null!;
 }

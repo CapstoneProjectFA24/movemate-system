@@ -17,7 +17,7 @@ namespace MoveMate.Service.Commons
         {
             // Mapping for UserResponse
             CreateMap<User, UserResponse>()
-                .ForMember(dest => dest.WalletIds, opt => opt.MapFrom(src => src.Wallets.Select(w => w.Id)));
+                .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Wallet.Id)); 
 
             // Mapping for AccountToken
             CreateMap<AccountTokenRequest, AccountToken>();

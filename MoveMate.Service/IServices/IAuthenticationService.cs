@@ -10,6 +10,7 @@ namespace MoveMate.Service.IServices
     {
         public Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister);
         public Task<AccountResponse> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth);
+        public Task<AccountResponse> GenerateTokenWithUserIdAsync(string userId, JWTAuth jwtAuthOptions);
         public Task<AccountTokenResponse> ReGenerateTokensAsync(AccountTokenRequest accountTokenRequest, JWTAuth jwtAuth);
        
     }
