@@ -48,8 +48,10 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
-            //var response =  await _bookingServices.RegisterBooking(request);
-            return Ok(request);
+            var response =  await _bookingServices.RegisterBooking(request);
+            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
         }
     }
 }

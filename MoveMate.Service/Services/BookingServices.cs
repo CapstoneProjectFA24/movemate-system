@@ -64,11 +64,13 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
+        public async Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
         {
+            var result = new OperationResult<BookingRegisterResponse>();
+
             
             
-            return null;
+            return result;
         }
     }
 }
