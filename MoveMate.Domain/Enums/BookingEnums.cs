@@ -9,14 +9,21 @@ namespace MoveMate.Domain.Enums
     public enum BookingEnums
     {
         PENDING,
-        APPROVE,
+        RECOMMEND,
+        APPROVED,
+        WAITING,
         ASSIGNED,
-        START,
+        ACCEPT,
         ARRIVED,
         PACKING,
         LOADING,
         IN_TRANSIT,
-        DELIVERED
+        DELIVERED,
+        UNLOADED,
+        ROUND_TRIP,
+        CONFIRM,
+        COMPLETED,
+        CANCEL
 
     }
 }
