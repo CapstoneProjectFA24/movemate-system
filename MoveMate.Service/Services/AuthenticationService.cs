@@ -19,6 +19,7 @@ using MoveMate.Service.Utils;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using MoveMate.Domain.Models;
 using MoveMate.Service.ViewModels.ModelResponses;
+using Microsoft.Extensions.Options;
 
 namespace MoveMate.Service.Services
 {
@@ -26,12 +27,14 @@ namespace MoveMate.Service.Services
     {
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
+        private readonly JWTAuth _jwtAuthOptions;
         private readonly ILogger<AuthenticationService> _logger;
-        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger)
+        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger, IOptions<JWTAuth> jwtAuthOptions)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
+            _jwtAuthOptions = jwtAuthOptions.Value;
         }
 
         public async Task<AccountResponse> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth)
@@ -252,7 +255,64 @@ namespace MoveMate.Service.Services
             return accountResponse;
         }
 
+        public async Task<AccountResponse> LoginWithEmailAsync(string email)
+        {
+            // Check if the email exists in the system
+            var user = await _unitOfWork.UserRepository.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return new AccountResponse
+                {
+                    IsError = true,
+                    Errors = new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = StatusCode.NotFound,
+                            Message = "User not found."
+                        }
+                    }
+                };
+            }
 
+            // Generate JWT token for the user
+            var token = await GenerateJwtTokenAsync(user, _jwtAuthOptions.Key);
+            return new AccountResponse
+            {
+                Tokens = new AccountTokenResponse
+                {
+                    AccessToken = token.AccessToken,
+                    RefreshToken = token.RefreshToken
+                }
+            };
+        }
+
+
+        private async Task<AccountTokenResponse> GenerateJwtTokenAsync(User user, string jwtAuthKey)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtAuthKey));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
+            var tokenDescription = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Sid, user.Id.ToString()),
+                    new Claim(ClaimTypes.Role, user.RoleId.ToString()), // Use ClaimTypes.Role for roles
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                }),
+                Expires = DateTime.UtcNow.AddHours(12),
+                SigningCredentials = credentials
+            };
+            var token = jwtTokenHandler.CreateToken(tokenDescription);
+            return new AccountTokenResponse
+            {
+                AccessToken = jwtTokenHandler.WriteToken(token),
+                RefreshToken = GenerateRefreshToken()
+            };
+        }
 
     }
 }
