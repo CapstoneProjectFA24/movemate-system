@@ -81,6 +81,9 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
 
+
+            //Wallet
+            CreateMap<Wallet,  WalletResponse>();
         }
     }
 

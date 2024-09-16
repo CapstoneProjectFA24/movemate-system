@@ -29,6 +29,17 @@ namespace MoveMate.Service.Commons
             HandleResponse(code, message, payload, metaData);
         }
 
+        public static OperationResult<T> Success(T payload, StatusCode statusCode = StatusCode.Ok, string? message = null)
+        {
+            return new OperationResult<T>
+            {
+                StatusCode = statusCode,
+                Message = message ?? "Success",
+                IsError = false,
+                Payload = payload
+            };
+        }
+
         private void HandleResponse(StatusCode code, string message,
             T? payload, object? metaData)
         {
