@@ -28,6 +28,7 @@ public class TruckCategoryController : BaseController
         //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
         var response = await _truckServices.GetAllCate();
+        //_googleMapsService.GetDistanceAndDuration("9.922823, 106.333055","10.772132, 106.653129");
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }

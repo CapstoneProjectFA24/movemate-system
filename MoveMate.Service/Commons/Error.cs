@@ -14,6 +14,7 @@ namespace MoveMate.Service.Commons
     {
         public StatusCode Code { get; set; }
         public string Message { get; set; }
+
     }
 }
 

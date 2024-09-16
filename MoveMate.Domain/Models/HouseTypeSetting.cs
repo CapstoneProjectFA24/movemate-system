@@ -11,11 +11,11 @@ public partial class HouseTypeSetting
 
     public int? TruckCategoryId { get; set; }
 
-    public string? Value { get; set; }
+    public int? NumberOfFloors { get; set; }
 
-    public string? Description { get; set; }
+    public int? NumberOfRooms { get; set; }
 
-    public string? Name { get; set; }
+    public int? NumberOfTrucks { get; set; }
 
     public virtual HouseType? HouseType { get; set; }
 

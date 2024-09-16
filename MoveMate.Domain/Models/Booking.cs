@@ -81,8 +81,6 @@ public partial class Booking
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
-    public virtual ICollection<BookingItem> BookingItems { get; set; } = new List<BookingItem>();
-
     public virtual ICollection<BookingTracker> BookingTrackers { get; set; } = new List<BookingTracker>();
 
     public virtual ICollection<HouseType> HouseTypes { get; set; } = new List<HouseType>();

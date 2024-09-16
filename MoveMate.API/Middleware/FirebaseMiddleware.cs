@@ -29,12 +29,12 @@ namespace MoveMate.API.Middleware
 
                 // Handle success response
                 operationResult.AddResponseStatusCode(
-                    StatusCode.Ok, "User created successfully", userRecord);
+                    Service.Commons.StatusCode.Ok, "User created successfully", userRecord);
             }
             catch (FirebaseAuthException ex)
             {
                 // Handle Firebase-specific exception
-                operationResult.AddError(StatusCode.FirebaseAuthError, ex.Message);
+                operationResult.AddError(Service.Commons.StatusCode.FirebaseAuthError, ex.Message);
             }
             catch (Exception ex)
             {
@@ -55,12 +55,12 @@ namespace MoveMate.API.Middleware
 
                 // Handle success response
                 operationResult.AddResponseStatusCode(
-                    StatusCode.Ok, "User retrieved successfully", userRecord);
+                    Service.Commons.StatusCode.Ok, "User retrieved successfully", userRecord);
             }
             catch (FirebaseAuthException ex)
             {
                 // Handle Firebase-specific exception
-                operationResult.AddError(StatusCode.FirebaseAuthError, ex.Message);
+                operationResult.AddError(Service.Commons.StatusCode.FirebaseAuthError, ex.Message);
             }
             catch (Exception ex)
             {

@@ -39,11 +39,11 @@ namespace MoveMate.API.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = ex switch
             {
-                NotFoundException _ => StatusCodes.Status404NotFound,
-                BadRequestException _ => StatusCodes.Status400BadRequest,
-                ConflictException _ => StatusCodes.Status409Conflict,
-                JsonReaderException _ => StatusCodes.Status400BadRequest, // Consider BadRequest for JSON errors
-                _ => StatusCodes.Status500InternalServerError
+                NotFoundException _ => Microsoft.AspNetCore.Http.StatusCodes.Status404NotFound,
+                BadRequestException _ => Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest,
+                ConflictException _ => Microsoft.AspNetCore.Http.StatusCodes.Status409Conflict,
+                JsonReaderException _ => Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest, // Consider BadRequest for JSON errors
+                _ => Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError
             };
 
             var errorDetails = new List<ErrorDetail>
@@ -57,7 +57,7 @@ namespace MoveMate.API.Middleware
 
             var error = new Error
             {
-                Code = (StatusCode)context.Response.StatusCode,
+                Code = (Service.Commons.StatusCode)context.Response.StatusCode,
                 Message = ex.Message // Use the exception message as the error message
             };
 

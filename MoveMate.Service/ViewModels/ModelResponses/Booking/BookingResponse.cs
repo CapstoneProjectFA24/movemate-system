@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoveMate.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -93,5 +94,13 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public double TotalFee { get; set; }
 
         public string FeeInfo { get; set; }
+
+        //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
+
+        //public List<BookingDetailsResponse> BookingDetails { get; set; }
+
+        //public List<BookingTrackerResponse> BookingTrackers { get; set; }
+
+        //public List<HouseTypeResponse> HouseTypes { get; set; }
     }
 }

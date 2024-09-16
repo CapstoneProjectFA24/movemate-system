@@ -39,8 +39,8 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
-                    
+                    orderBy: request.GetOrder()            
+
                 );
                 var listResponse = _mapper.Map<List<BookingResponse>>(entities);
 
@@ -53,7 +53,7 @@ namespace MoveMate.Service.Services
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Booking Done.", listResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done.", listResponse, pagin);
 
                 return result;
             }
@@ -62,6 +62,13 @@ namespace MoveMate.Service.Services
                 _logger.LogError(e, "Error occurred in getAll Service Method");
                 throw;
             }
+        }
+
+        public Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
+        {
+            
+            
+            return null;
         }
     }
 }

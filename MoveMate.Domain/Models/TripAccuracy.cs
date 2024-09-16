@@ -33,5 +33,11 @@ public partial class TripAccuracy
 
     public int? UserId { get; set; }
 
+    public double? TotalOnline { get; set; }
+
+    public double? TotalOnlinePeriod { get; set; }
+
+    public bool? IsEnoughKpi { get; set; }
+
     public virtual User? User { get; set; }
 }

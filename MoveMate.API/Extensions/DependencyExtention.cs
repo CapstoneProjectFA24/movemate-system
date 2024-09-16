@@ -39,7 +39,8 @@ namespace MoveMate.API.Extensions
         }
 
         public static IServiceCollection AddServices(this IServiceCollection services)
-        {
+        { 
+            services.AddHttpClient();
             //services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IUserServices, UserService>();
@@ -47,7 +48,11 @@ namespace MoveMate.API.Extensions
             services.AddScoped<ITruckServices, TruckServices>();
             services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
-            //services.AddScoped<IGoogleMapsService,GoogleMapsService>();
+            services.AddScoped<IGoogleMapsService,GoogleMapsService>();
+            services.AddScoped<IHouseTypeServices, HouseTypeServices>();
+            services.AddScoped<IHouseTypeSettingServices, HouseTypeSettingServices>();
+            services.AddScoped<IServiceServices , ServiceServices>();
+            services.AddScoped<IServiceDetails, ServiceDetails>();
            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
@@ -83,15 +88,20 @@ namespace MoveMate.API.Extensions
 
 
         //Firebase
-        public static IServiceCollection AddFirebaseServices(this IServiceCollection services)
+        public static IServiceCollection AddFirebaseServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // Register the Firebase services
-            services.AddScoped<IFirebaseServices>(sp => new FirebaseServices("firebase_app_settings.json"));
+            // Retrieve the Firebase config file path from appsettings.json
+            string firebaseConfigPath = configuration.GetSection("FirebaseSettings:ConfigFile").Value;
+
+            // Register FirebaseServices as a singleton to ensure only one instance is created
+            services.AddSingleton<IFirebaseServices>(sp => new FirebaseServices(firebaseConfigPath));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 
             return services;
         }
+
+
 
         //Authen
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)

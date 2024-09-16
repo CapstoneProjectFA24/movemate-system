@@ -13,13 +13,14 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public int Id { get; set; }
         public int ScheduleId { get; set; }
         public int RoleId { get; set; }
+        public int WalletId { get; set; }
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
         public bool IsDeleted { get; set; }
         public string AvatarUrl { get; set; }
-        [JsonIgnore]
-        public List<int> WalletIds { get; set; } // Collection of Wallet IDs
+        
+         
     }
 
 

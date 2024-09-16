@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
@@ -22,7 +23,7 @@ namespace MoveMate.API.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("booking/get-all")]
+        [HttpGet("get-all")]
         
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllBookingRequest request)
@@ -32,6 +33,23 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.GetAll(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        
+        
+        /// <summary>
+        ///
+        /// register booking
+        /// </summary>
+        /// <returns></returns>
+        ///
+        
+        // Post - register booking
+        [HttpPost("register-booking")]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
+        {
+            //var response =  await _bookingServices.RegisterBooking(request);
+            return Ok(request);
         }
     }
 }
