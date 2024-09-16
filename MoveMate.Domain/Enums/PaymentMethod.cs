@@ -8,5 +8,8 @@ namespace MoveMate.Domain.Enums
 {
     public enum PaymentMethod
     {
+        RECHARGE,
+        DEPOSIT,
+        PAYMENT
     }
 }
