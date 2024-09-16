@@ -1,5 +1,5 @@
-﻿using ShopRepository.Enums;
-using ShopRepository.Models;
+﻿
+using MoveMate.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

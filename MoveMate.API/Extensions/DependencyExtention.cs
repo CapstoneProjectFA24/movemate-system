@@ -20,6 +20,8 @@ using MoveMate.Service.BackgroundServices;
 using MoveMate.Service.ThirdPartyService;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
+using Service.IServices;
+using Service.Services;
 
 
 namespace MoveMate.API.Extensions
@@ -53,6 +55,8 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IHouseTypeSettingServices, HouseTypeSettingServices>();
             services.AddScoped<IServiceServices , ServiceServices>();
             services.AddScoped<IServiceDetails, ServiceDetails>();
+            services.AddScoped<IVnPayService, VnPayService>();
+            services.AddScoped<IWalletServices, WalletServices>();
            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
