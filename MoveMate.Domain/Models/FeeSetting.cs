@@ -16,4 +16,14 @@ public partial class FeeSetting
     public bool? IsActived { get; set; }
 
     public string? Type { get; set; }
+
+    public string? Unit { get; set; }
+
+    public double? RangeMin { get; set; }
+
+    public double? RangeMax { get; set; }
+
+    public bool? IsMin { get; set; }
+
+    public bool? IsMax { get; set; }
 }
