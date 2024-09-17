@@ -87,6 +87,8 @@ public partial class Booking
 
     public virtual ICollection<BookingTracker> BookingTrackers { get; set; } = new List<BookingTracker>();
 
+    public virtual ICollection<FeeDetail> FeeDetails { get; set; } = new List<FeeDetail>();
+
     public virtual HouseType? HouseType { get; set; }
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
