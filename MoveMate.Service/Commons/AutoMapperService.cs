@@ -54,7 +54,9 @@ namespace MoveMate.Service.Commons
             CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<BookingTracker, BookingTrackerResponse>();
             CreateMap<HouseType, HouseTypeResponse>();
-
+                // REQUEST
+            CreateMap<BookingRegisterRequest, Booking>();
+                //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
             CreateMap<Schedule, ScheduleResponse>()
@@ -81,6 +83,7 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
 
+            //Booking
         }
     }
 

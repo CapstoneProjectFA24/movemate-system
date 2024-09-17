@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
 
@@ -25,6 +26,15 @@ public class BookingRegisterRequest
     [Required(ErrorMessage = "Filed is required")]
     public string? Note { get; set; }
     
+    public bool? IsRoundTrip { get; set; }
+    
+    public bool? IsManyItems { get; set; }
+    
+    public string? RoomNumber { get; set; }
+
+    public string? FloorsNumber { get; set; }
+    
     [Required(ErrorMessage = "Filed is required")]
-    public List<int?> ServiceDetailList {get; set;} = new List<int?>();
+    public List<ServiceDetailRequest> ServiceDetails {get; set;} = new List<ServiceDetailRequest>();
+
 }
