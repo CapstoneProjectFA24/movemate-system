@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Domain.Enums;
+using MoveMate.Domain.Models;
 
 namespace MoveMate.Service.Services
 {
@@ -68,9 +70,96 @@ namespace MoveMate.Service.Services
         {
             var result = new OperationResult<BookingRegisterResponse>();
 
+            try
+            {
+                var existingHouseType =
+                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+
+                // check houseType
+                if (existingHouseType == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Category with id: {request.HouseTypeId} not found!");
+                    return result;
+                }
+                
+                // check matching HouseTypeSettings of existingHouseType
+                var matchingSetting = existingHouseType.HouseTypeSettings
+                    .FirstOrDefault(setting =>
+                        setting.TruckCategoryId == request.TruckCategoryId &&
+                        setting.NumberOfFloors == (string.IsNullOrEmpty(request.FloorsNumber) ? null : int.Parse(request.FloorsNumber)) &&
+                        setting.NumberOfRooms == (string.IsNullOrEmpty(request.RoomNumber) ? null : int.Parse(request.RoomNumber)) &&
+                        setting.NumberOfTrucks == request.TruckNumber
+                    );
+                
+                // logic matching
+                // if null then 
+                // if !null then
+                var entity = _mapper.Map<Booking>(request);
+                var status = BookingEnums.PENDING.ToString();
+                if (matchingSetting == null)
+                {
+                    status = BookingEnums.RECOMMEND.ToString();
+                }
+                // logic services and set amount
+                
+                var serviceDetails = new List<ServiceDetail>();
+                foreach (var serviceDetailRequest in request.ServiceDetails)
+                {
+                    var service = await _unitOfWork.ServiceRepository.GetByIdAsync(serviceDetailRequest.Id);
             
-            
-            return result;
+                    if (service == null)
+                    {
+                        result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                        return result;
+                    }
+
+                    // Tạo `ServiceDetail`
+                    var quantity = serviceDetailRequest.Quantity;
+                    var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
+                    
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price =  price,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                        
+                    };
+                    
+                    // check type 
+                    // if type != common
+                    // create fee details based on service
+                    
+                    serviceDetails.Add(serviceDetail);
+                }
+                
+                // list lên fee common
+                
+                
+                
+                // save
+                status = BookingEnums.APPROVED.ToString();
+                entity.Status = status;
+                await _unitOfWork.BookingRepository.AddAsync(entity);
+                var checkResult = _unitOfWork.Save();
+                if (checkResult > 0)
+                {
+                    var response = _mapper.Map<BookingRegisterResponse>(entity);
+                    result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Add Booking Failed!"); 
+                }
+                return result;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
         }
     }
 }

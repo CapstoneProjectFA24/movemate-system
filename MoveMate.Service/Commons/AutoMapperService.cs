@@ -45,6 +45,7 @@ namespace MoveMate.Service.Commons
 
             //Booking
             CreateMap<Booking, BookingResponse>();
+            CreateMap<Booking, BookingRegisterResponse>();
                 //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
                 //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
                 //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
@@ -82,8 +83,7 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
-
-
+            
             //Wallet
             CreateMap<Wallet,  WalletResponse>();
         }
