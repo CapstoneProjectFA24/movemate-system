@@ -8,11 +8,11 @@ namespace MoveMate.API.Controllers;
 public class TruckCategoryController : BaseController
 {
     private readonly ITruckServices _truckServices;
-    private readonly IGoogleMapsService _googleMapsService;
-    public TruckCategoryController(ITruckServices truckServices, IGoogleMapsService googleMapsService)
+    //private readonly IGoogleMapsService _googleMapsService;
+    public TruckCategoryController(ITruckServices truckServices)
     {
         _truckServices = truckServices;
-        _googleMapsService = googleMapsService;
+        //_googleMapsService = googleMapsService;
     }
     
     /// <summary>
