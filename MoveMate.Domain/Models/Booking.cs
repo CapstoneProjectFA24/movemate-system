@@ -79,6 +79,8 @@ public partial class Booking
 
     public int? HouseTypeId { get; set; }
 
+    public DateTime? BookingAt { get; set; }
+
     public virtual ICollection<AchievementDetail> AchievementDetails { get; set; } = new List<AchievementDetail>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();

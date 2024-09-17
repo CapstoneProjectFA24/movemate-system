@@ -23,6 +23,14 @@ public partial class Service
 
     public int? ParentServiceId { get; set; }
 
+    public string? Type { get; set; }
+
+    public bool? IsQuantity { get; set; }
+
+    public int? QuantityMax { get; set; }
+
+    public int? QuantityMin { get; set; }
+
     public virtual ICollection<Service> InverseParentService { get; set; } = new List<Service>();
 
     public virtual Service? ParentService { get; set; }
