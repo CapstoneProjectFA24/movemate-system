@@ -22,6 +22,8 @@ using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
 using Service.IServices;
 using Service.Services;
+using Microsoft.Extensions.Options;
+using MoveMate.Service.ThirdPartyService.PayOs;
 
 
 namespace MoveMate.API.Extensions
@@ -208,6 +210,20 @@ namespace MoveMate.API.Extensions
                     }
                 });
             });
+            return services;
+        }
+
+        //PayOS
+        public static IServiceCollection AddPayOS(this IServiceCollection services, IConfiguration configuration)
+        {
+            // Read configuration values
+            string clientId = configuration["PAYOS:CLIENT_ID"];
+            string apiKey = configuration["PAYOS:API_KEY"];
+            string checksumKey = configuration["PAYOS:CHECKSUM_KEY"];
+
+            // Register PayOS as a singleton
+            services.AddSingleton(new PayOS(clientId, apiKey, checksumKey));
+
             return services;
         }
 
