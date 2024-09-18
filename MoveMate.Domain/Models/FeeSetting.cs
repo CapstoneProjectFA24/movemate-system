@@ -23,7 +23,17 @@ public partial class FeeSetting
 
     public double? RangeMax { get; set; }
 
-    public bool? IsMin { get; set; }
+    public int? HouseTypeSettingId { get; set; }
 
-    public bool? IsMax { get; set; }
+    public int? TruckCategoryId { get; set; }
+
+    public int? ServiceId { get; set; }
+
+    public virtual ICollection<FeeDetail> FeeDetails { get; set; } = new List<FeeDetail>();
+
+    public virtual HouseTypeSetting? HouseTypeSetting { get; set; }
+
+    public virtual Service? Service { get; set; }
+
+    public virtual TruckCategory? TruckCategory { get; set; }
 }

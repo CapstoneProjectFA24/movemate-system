@@ -31,6 +31,8 @@ public partial class Service
 
     public int? QuantityMin { get; set; }
 
+    public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
+
     public virtual ICollection<Service> InverseParentService { get; set; } = new List<Service>();
 
     public virtual Service? ParentService { get; set; }

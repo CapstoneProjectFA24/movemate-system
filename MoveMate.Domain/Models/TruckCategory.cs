@@ -27,6 +27,8 @@ public partial class TruckCategory
 
     public int? TotalTrips { get; set; }
 
+    public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
+
     public virtual ICollection<HouseTypeSetting> HouseTypeSettings { get; set; } = new List<HouseTypeSetting>();
 
     public virtual ICollection<Truck> Trucks { get; set; } = new List<Truck>();
