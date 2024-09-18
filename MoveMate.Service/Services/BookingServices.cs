@@ -134,14 +134,33 @@ namespace MoveMate.Service.Services
                 }
                 
                 // list lên fee common
-                
-                
+                var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
+                var feeDetails = new List<FeeDetail>();
+                foreach (var feeSetting in feeSettings)
+                {
+                    var feeDetail = new FeeDetail
+                    {
+                        FeeSettingId = feeSetting.Id,
+                        Name = feeSetting.Name,
+                        Description = feeSetting.Description,
+                        Amount = feeSetting.Amount,
+                        
+                    };
+
+                    feeDetails.Add(feeDetail);
+                }
                 
                 // save
                 status = BookingEnums.APPROVED.ToString();
                 entity.Status = status;
+                entity.ServiceDetails = serviceDetails;
+                //entity.FeeDetails = feeDetails;
                 await _unitOfWork.BookingRepository.AddAsync(entity);
                 var checkResult = _unitOfWork.Save();
+                
+                // create a job check booking time, if now = bookingtime and status still APPROVED then change Stastus to CANCEL
+                // logic 
+                
                 if (checkResult > 0)
                 {
                     var response = _mapper.Map<BookingRegisterResponse>(entity);
