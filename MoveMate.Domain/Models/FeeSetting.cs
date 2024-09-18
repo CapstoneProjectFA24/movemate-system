@@ -29,6 +29,8 @@ public partial class FeeSetting
 
     public int? ServiceId { get; set; }
 
+    public int? DiscountRate { get; set; }
+
     public virtual ICollection<FeeDetail> FeeDetails { get; set; } = new List<FeeDetail>();
 
     public virtual HouseTypeSetting? HouseTypeSetting { get; set; }
