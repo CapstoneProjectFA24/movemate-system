@@ -12,8 +12,11 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class ServiceRepository : GenericRepository<Service>, IServiceRepository
     {
+        private readonly MoveMateDbContext _context;
+
         public ServiceRepository(MoveMateDbContext context) : base(context)
         {
+            _context = context;
         }
 
         public virtual async Task<Service?> GetByIdAsyncV1(int id, string includeProperties = "")
