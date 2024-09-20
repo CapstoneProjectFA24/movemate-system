@@ -140,7 +140,7 @@ namespace MoveMate.Service.Services
                     // logic fee 
                     var feeSettingList = service.FeeSettings;
                     var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList());
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
 
                     var (totalTruckFee, feeTruckDetails) = this.CalculateDistanceFee(request.TruckCategoryId,
                         double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
@@ -244,7 +244,7 @@ namespace MoveMate.Service.Services
                 
                 // logic fee 
                 var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList());
+                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
 
                 var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
                     double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
@@ -268,6 +268,62 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(BookingValuationRequest request)
+        {
+            var result = new OperationResult<BookingValuationResponse>();
+
+            var existingHouseType =
+                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+
+            // check houseType
+            if (existingHouseType == null)
+            {
+                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                return result;
+            }
+
+            double totalFee = 0;
+
+            foreach (var serviceDetailRequest in request.ServiceDetails)
+            {
+                var service =
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+
+                if (service == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    return result;
+                }
+
+                // Tạo `ServiceDetail`
+                var quantity = serviceDetailRequest.Quantity;
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate/100;
+                
+                // logic fee 
+                var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
+
+                var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
+                    int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                totalFee += floorTotalFee;
+                //feeDetails.AddRange(floorUnitFeeDetails);
+
+                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
+                totalFee += nullTotalFee;
+                //feeDetails.AddRange(nullUnitFeeDetails);
+                
+                //totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate/100);
+                
+            }
+
+            var response = new BookingValuationResponse();
+
+            response.Amount = totalFee;
+            
+            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+
+            return result;
+        }
         private (double totalFee, List<FeeDetail> feeDetails) CalculateDistanceFee(int truckCategoryId,
             double estimatedDistance,
             List<FeeSetting>? feeSettings, int quantity)
@@ -365,7 +421,7 @@ namespace MoveMate.Service.Services
         }
 
         private (List<FeeSetting>? nullUnitFees, List<FeeSetting>? kmUnitFees, List<FeeSetting>? floorUnitFees)
-            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings)
+            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings, int HouseTypeId)
         {
             var nullUnitFees = new List<FeeSetting>();
             var kmUnitFees = new List<FeeSetting>();
@@ -382,7 +438,11 @@ namespace MoveMate.Service.Services
                         kmUnitFees.Add(fee);
                         break;
                     case "FLOOR":
-                        floorUnitFees.Add(fee);
+                        if (fee.HouseTypeId == HouseTypeId)
+                        {
+                            floorUnitFees.Add(fee);
+                        }
+                        
                         break;
                 }
             }
@@ -490,25 +550,25 @@ namespace MoveMate.Service.Services
 
             // Lọc các FeeSetting thuộc TruckCategoryId và có Unit là "FLOOR"
             var relevantFees = feeSettings
-                .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "FLOOR" && f.IsActived == true)
+                .Where(f => f.Unit == "FLOOR" && f.IsActived == true)
                 .OrderBy(f => f.RangeMin)
                 .ToList();
 
             double totalFee = 0;
             int remainingFloors = numberOfFloors;
             var feeDetails = new List<FeeDetail>();
-
+            double defaultAmount = 0;
             foreach (var fee in relevantFees)
             {
                 double rangeMin = fee.RangeMin ?? 0;
                 double rangeMax = fee.RangeMax ?? double.MaxValue; // Nếu RangeMax là null, hiểu là không giới hạn
                 double baseAmount = fee.Amount ?? 0;
-                double currentAmount = baseAmount;
+                double currentAmount = defaultAmount;
 
                 // Nếu RangeMin = 0 hoặc 1, tính phí cố định từ RangeMin đến RangeMax
                 if (rangeMin == 0 || rangeMin == 1)
                 {
-                    if (remainingFloors > rangeMin)
+                    if (numberOfFloors > rangeMin)
                     {
                         int floorsInRange = (int)Math.Min(remainingFloors, rangeMax - rangeMin);
                         totalFee += baseAmount * quantity; // Giá cố định cho khoảng từ RangeMin đến RangeMax
@@ -524,12 +584,15 @@ namespace MoveMate.Service.Services
                         });
 
                         remainingFloors -= floorsInRange;
+
+                        defaultAmount = baseAmount;
+
                     }
                 }
                 else
                 {
                     // Tính phí cho số tầng trong khoảng này
-                    if (remainingFloors > rangeMin)
+                    if (numberOfFloors > rangeMin)
                     {
                         int floorsInRange = (int)Math.Min(remainingFloors, rangeMax - rangeMin);
                         totalFee += floorsInRange * currentAmount * quantity;

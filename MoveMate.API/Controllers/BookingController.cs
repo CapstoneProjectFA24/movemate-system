@@ -86,9 +86,7 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
         {
-            var response =  await _bookingServices.ValuationDistanceBooking(request);
-            
-            
+            var response =  await _bookingServices.ValuationFloorBooking(request);
             
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
