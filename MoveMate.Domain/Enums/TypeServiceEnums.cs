@@ -5,5 +5,6 @@ public enum TypeServiceEnums
     COMMON,
     DRIVER,
     PORTER,
+    TRUCK,
     SYSTEM
 }

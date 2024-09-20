@@ -53,5 +53,26 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }
+        
+        /// <summary>
+        ///
+        /// register booking
+        /// </summary>
+        /// <returns></returns>
+        ///
+        
+        // Post - register booking
+        [HttpPost("valuation-booking")]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
+        {
+            var response =  await _bookingServices.ValuationBooking(request);
+            
+            
+            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+        
     }
 }

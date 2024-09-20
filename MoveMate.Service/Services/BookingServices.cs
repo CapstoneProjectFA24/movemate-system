@@ -112,6 +112,7 @@ namespace MoveMate.Service.Services
 
                 var serviceDetails = new List<ServiceDetail>();
                 var feeDetails = new List<FeeDetail>();
+                double totalFee = 0;
 
                 foreach (var serviceDetailRequest in request.ServiceDetails)
                 {
@@ -138,23 +139,22 @@ namespace MoveMate.Service.Services
 
                     // logic fee 
                     var feeSettingList = service.FeeSettings;
-                    
-                    double totalFee = 0;
+                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList());
 
-                    foreach (var feeSetting in service.FeeSettings)
-                    {
-                        var feeDetail = new FeeDetail
-                        {
-                            FeeSettingId = feeSetting.Id,
-                            Name = feeSetting.Name,
-                            Description = feeSetting.Description,
-                            Amount = feeSetting.Amount * quantity,
-                            Quantity = quantity
-                        };
+                    var (totalTruckFee, feeTruckDetails) = this.CalculateDistanceFee(request.TruckCategoryId,
+                        double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
+                    totalFee += totalTruckFee;
+                    feeDetails.AddRange(feeTruckDetails);
 
-                        feeDetails.Add(feeDetail);
-                    }
+                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
+                    totalFee += nullTotalFee;
+                    feeDetails.AddRange(nullUnitFeeDetails);
 
+                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
+                        int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                    totalFee += floorTotalFee;
+                    feeDetails.AddRange(floorUnitFeeDetails);
                     // check type 
                     // if type != common
                     // create fee details based on service
@@ -185,6 +185,7 @@ namespace MoveMate.Service.Services
                 entity.ServiceDetails = serviceDetails;
                 // fees
                 entity.FeeDetails = feeDetails;
+                entity.TotalFee = totalFee;
                 await _unitOfWork.BookingRepository.AddAsync(entity);
                 var checkResult = _unitOfWork.Save();
 
@@ -210,9 +211,86 @@ namespace MoveMate.Service.Services
             }
         }
 
-        private (double totalFee, List<FeeDetail> feeDetails) CalculateFee(int truckCategoryId, double estimatedDistance,
-            List<FeeSetting> feeSettings, int quantity)
+        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
         {
+            var result = new OperationResult<BookingValuationResponse>();
+
+            var existingHouseType =
+                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+
+            // check houseType
+            if (existingHouseType == null)
+            {
+                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                return result;
+            }
+
+            double totalFee = 0;
+            var feeDetails = new List<FeeDetail>();
+
+            foreach (var serviceDetailRequest in request.ServiceDetails)
+            {
+                var service =
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+
+                if (service == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    return result;
+                }
+
+                // Tạo `ServiceDetail`
+                var quantity = serviceDetailRequest.Quantity;
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
+
+                var serviceDetail = new ServiceDetail
+                {
+                    ServiceId = service.Id,
+                    Quantity = quantity,
+                    Price = price,
+                    IsQuantity = serviceDetailRequest.IsQuantity,
+                };
+
+                // logic fee 
+                var feeSettingList = service.FeeSettings;
+                var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList());
+
+                var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
+                    double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
+                totalFee += totalTruckFee;
+                feeDetails.AddRange(feeTruckDetails);
+
+                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
+                totalFee += nullTotalFee;
+                feeDetails.AddRange(nullUnitFeeDetails);
+
+                // check type 
+                // if type != common
+                // create fee details based on service
+
+                //serviceDetails.Add(serviceDetail);
+            }
+
+            var response = new BookingValuationResponse();
+
+            response.Amount = totalFee;
+            
+            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+
+            return result;
+        }
+
+        private (double totalFee, List<FeeDetail> feeDetails) CalculateDistanceFee(int truckCategoryId,
+            double estimatedDistance,
+            List<FeeSetting>? feeSettings, int quantity)
+        {
+            if (feeSettings == null || !feeSettings.Any())
+            {
+                // Return 0 total fee and an empty list of fee details
+                return (0, new List<FeeDetail>());
+            }
+
             // Lọc các FeeSetting thuộc TruckCategoryId và có Unit là "KM"
             var relevantFees = feeSettings
                 .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "KM" && f.IsActived == true)
@@ -293,6 +371,200 @@ namespace MoveMate.Service.Services
                         Quantity = quantity
                     };
                     feeDetails.Add(feeDetail);
+                }
+            }
+
+            return (totalFee, feeDetails);
+        }
+
+        private (List<FeeSetting>? nullUnitFees, List<FeeSetting>? kmUnitFees, List<FeeSetting>? floorUnitFees)
+            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings)
+        {
+            var nullUnitFees = new List<FeeSetting>();
+            var kmUnitFees = new List<FeeSetting>();
+            var floorUnitFees = new List<FeeSetting>();
+
+            foreach (var fee in feeSettings)
+            {
+                switch (fee.Unit)
+                {
+                    case null:
+                        nullUnitFees.Add(fee);
+                        break;
+                    case "KM":
+                        kmUnitFees.Add(fee);
+                        break;
+                    case "FLOOR":
+                        floorUnitFees.Add(fee);
+                        break;
+                }
+            }
+
+            return (nullUnitFees, kmUnitFees, floorUnitFees);
+        }
+
+
+        private (double totalNullFee, List<FeeDetail> feeNullDetails) CalculateBaseFee(List<FeeSetting>? nullUnitFees,
+            int quantity)
+        {
+            if (nullUnitFees == null || !nullUnitFees.Any())
+            {
+                // Return 0 total fee and an empty list of fee details
+                return (0, new List<FeeDetail>());
+            }
+
+
+            // Khởi tạo danh sách FeeDetail để trả về
+            var feeDetails = new List<FeeDetail>();
+            double totalFee = 0;
+
+            // Lặp qua danh sách nullUnitFees
+            foreach (var feeSetting in nullUnitFees)
+            {
+                // Tính toán phí dựa trên FeeSetting
+                double feeAmount = (feeSetting.Amount ?? 0) * quantity;
+                totalFee += feeAmount; // Cộng dồn vào totalFee
+
+                // Tạo FeeDetail từ FeeSetting
+                var feeDetail = new FeeDetail
+                {
+                    FeeSettingId = feeSetting.Id,
+                    Name = feeSetting.Name,
+                    Description = feeSetting.Description,
+                    Amount = feeAmount,
+                    Quantity = quantity
+                };
+
+                // Thêm FeeDetail vào danh sách feeDetails
+                feeDetails.Add(feeDetail);
+            }
+
+            // Trả về tổng phí và danh sách FeeDetail
+            return (totalFee, feeDetails);
+        }
+
+        private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFee(int truckCategoryId, int numberOfFloors,
+            List<FeeSetting>? feeSettings, int quantity)
+        {
+            if (feeSettings == null || !feeSettings.Any())
+            {
+                // Return 0 total fee and an empty list of fee details
+                return (0, new List<FeeDetail>());
+            }
+
+
+            var relevantFees = feeSettings
+                .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "FLOOR" && f.IsActived == true)
+                .ToList();
+
+            double totalFee = 0;
+            var feeDetails = new List<FeeDetail>();
+
+            foreach (var fee in relevantFees)
+            {
+                double baseAmount = fee.Amount ?? 0;
+                double currentAmount = baseAmount;
+                int floorsToCalculate = numberOfFloors;
+
+                if (floorsToCalculate > 3)
+                {
+                    // Apply the discount rate for floors above the basic range
+                    for (int floor = 4; floor <= floorsToCalculate; floor++)
+                    {
+                        currentAmount += currentAmount * (fee.DiscountRate ?? 0) / 100;
+                    }
+                }
+
+                totalFee += currentAmount * quantity;
+
+                // Add fee details
+                feeDetails.Add(new FeeDetail
+                {
+                    FeeSettingId = fee.Id,
+                    Name = fee.Name,
+                    Description = fee.Description,
+                    Amount = currentAmount * quantity,
+                    Quantity = quantity
+                });
+            }
+
+            return (totalFee, feeDetails);
+        }
+
+        private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFeeV2(int truckCategoryId,
+            int numberOfFloors,
+            List<FeeSetting>? feeSettings, int quantity)
+        {
+            if (feeSettings == null || !feeSettings.Any())
+            {
+                // Return 0 total fee and an empty list of fee details
+                return (0, new List<FeeDetail>());
+            }
+
+            // Lọc các FeeSetting thuộc TruckCategoryId và có Unit là "FLOOR"
+            var relevantFees = feeSettings
+                .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "FLOOR" && f.IsActived == true)
+                .OrderBy(f => f.RangeMin)
+                .ToList();
+
+            double totalFee = 0;
+            int remainingFloors = numberOfFloors;
+            var feeDetails = new List<FeeDetail>();
+
+            foreach (var fee in relevantFees)
+            {
+                double rangeMin = fee.RangeMin ?? 0;
+                double rangeMax = fee.RangeMax ?? double.MaxValue; // Nếu RangeMax là null, hiểu là không giới hạn
+                double baseAmount = fee.Amount ?? 0;
+                double currentAmount = baseAmount;
+
+                // Nếu RangeMin = 0 hoặc 1, tính phí cố định từ RangeMin đến RangeMax
+                if (rangeMin == 0 || rangeMin == 1)
+                {
+                    if (remainingFloors > rangeMin)
+                    {
+                        int floorsInRange = (int)Math.Min(remainingFloors, rangeMax - rangeMin);
+                        totalFee += baseAmount * quantity; // Giá cố định cho khoảng từ RangeMin đến RangeMax
+
+                        // Thêm FeeDetail vào danh sách
+                        feeDetails.Add(new FeeDetail
+                        {
+                            FeeSettingId = fee.Id,
+                            Name = fee.Name,
+                            Description = fee.Description,
+                            Amount = baseAmount * quantity,
+                            Quantity = quantity
+                        });
+
+                        remainingFloors -= floorsInRange;
+                    }
+                }
+                else
+                {
+                    // Tính phí cho số tầng trong khoảng này
+                    if (remainingFloors > rangeMin)
+                    {
+                        int floorsInRange = (int)Math.Min(remainingFloors, rangeMax - rangeMin);
+                        totalFee += floorsInRange * currentAmount * quantity;
+
+                        // Thêm FeeDetail vào danh sách
+                        feeDetails.Add(new FeeDetail
+                        {
+                            FeeSettingId = fee.Id,
+                            Name = fee.Name,
+                            Description = fee.Description,
+                            Amount = floorsInRange * currentAmount * quantity,
+                            Quantity = quantity
+                        });
+
+                        remainingFloors -= floorsInRange;
+                    }
+                }
+
+                // Nếu đã tính hết số tầng, thoát khỏi vòng lặp
+                if (remainingFloors <= 0)
+                {
+                    break;
                 }
             }
 
