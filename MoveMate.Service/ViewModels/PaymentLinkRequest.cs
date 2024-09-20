@@ -4,14 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Service.ThirdPartyService.PayOs
+namespace MoveMate.Service.ViewModels
 {
-    public class PaymentData
+    public class PaymentLinkRequest
     {
-        public string OrderCode { get; set; }
-        public int Amount { get; set; }
+        public string ProductName { get; set; }
         public string Description { get; set; }
-        public ItemData Item { get; set; }
+        public decimal Amount { get; set; }
         public string ReturnUrl { get; set; }
         public string CancelUrl { get; set; }
     }

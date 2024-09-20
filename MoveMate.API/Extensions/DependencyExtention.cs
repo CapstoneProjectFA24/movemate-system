@@ -24,6 +24,7 @@ using Service.IServices;
 using Service.Services;
 using Microsoft.Extensions.Options;
 using MoveMate.Service.ThirdPartyService.PayOs;
+using Net.payOS;
 
 
 namespace MoveMate.API.Extensions
@@ -59,6 +60,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IServiceDetails, ServiceDetails>();
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IWalletServices, WalletServices>();
+            services.AddScoped<IPaymentServices, PaymentService>();
            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
