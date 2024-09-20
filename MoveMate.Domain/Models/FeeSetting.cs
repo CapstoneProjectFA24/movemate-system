@@ -31,6 +31,8 @@ public partial class FeeSetting
 
     public int? DiscountRate { get; set; }
 
+    public double? FloorPercentage { get; set; }
+
     public virtual ICollection<FeeDetail> FeeDetails { get; set; } = new List<FeeDetail>();
 
     public virtual HouseType? HouseType { get; set; }
