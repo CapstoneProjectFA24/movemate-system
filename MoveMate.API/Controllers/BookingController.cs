@@ -48,8 +48,51 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
-            //var response =  await _bookingServices.RegisterBooking(request);
-            return Ok(request);
+            var response =  await _bookingServices.RegisterBooking(request);
+            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
         }
+        
+        /// <summary>
+        ///
+        /// valuation distance booking
+        /// </summary>
+        /// <returns></returns>
+        ///
+        
+        // Post - valuation distance booking
+        [HttpPost("valuation-distance-booking")]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ValuationDistanceBooking(BookingValuationRequest request)
+        {
+            var response =  await _bookingServices.ValuationDistanceBooking(request);
+            
+            
+            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+        
+        /// <summary>
+        ///
+        /// valuation distance booking
+        /// </summary>
+        /// <returns></returns>
+        ///
+        
+        // Post - valuation distance booking
+        [HttpPost("valuation-floor-booking")]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
+        {
+            var response =  await _bookingServices.ValuationDistanceBooking(request);
+            
+            
+            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+        
     }
 }
