@@ -352,6 +352,10 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.ParentService).WithMany(p => p.InverseParentService)
                 .HasForeignKey(d => d.ParentServiceId)
                 .HasConstraintName("FK_Service_ParentService");
+
+            entity.HasOne(d => d.TruckCategory).WithMany(p => p.Services)
+                .HasForeignKey(d => d.TruckCategoryId)
+                .HasConstraintName("FK_Service_TruckCategory");
         });
 
         modelBuilder.Entity<ServiceDetail>(entity =>
