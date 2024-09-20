@@ -76,7 +76,7 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-    
+   
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Achievement>(entity =>
@@ -214,9 +214,9 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.Unit).HasMaxLength(255);
 
-            entity.HasOne(d => d.HouseTypeSetting).WithMany(p => p.FeeSettings)
-                .HasForeignKey(d => d.HouseTypeSettingId)
-                .HasConstraintName("FK_FeeSetting_HouseTypeSetting");
+            entity.HasOne(d => d.HouseType).WithMany(p => p.FeeSettings)
+                .HasForeignKey(d => d.HouseTypeId)
+                .HasConstraintName("FK_FeeSetting_HouseType");
 
             entity.HasOne(d => d.Service).WithMany(p => p.FeeSettings)
                 .HasForeignKey(d => d.ServiceId)
@@ -352,6 +352,10 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.ParentService).WithMany(p => p.InverseParentService)
                 .HasForeignKey(d => d.ParentServiceId)
                 .HasConstraintName("FK_Service_ParentService");
+
+            entity.HasOne(d => d.TruckCategory).WithMany(p => p.Services)
+                .HasForeignKey(d => d.TruckCategoryId)
+                .HasConstraintName("FK_Service_TruckCategory");
         });
 
         modelBuilder.Entity<ServiceDetail>(entity =>

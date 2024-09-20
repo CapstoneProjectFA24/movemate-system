@@ -29,7 +29,7 @@ public partial class Service
 
     public int? QuantityMax { get; set; }
 
-    public int? QuantityMin { get; set; }
+    public int? TruckCategoryId { get; set; }
 
     public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
 
@@ -38,4 +38,6 @@ public partial class Service
     public virtual Service? ParentService { get; set; }
 
     public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
+
+    public virtual TruckCategory? TruckCategory { get; set; }
 }

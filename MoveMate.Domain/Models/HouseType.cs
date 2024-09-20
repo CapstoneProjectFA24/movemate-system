@@ -13,5 +13,7 @@ public partial class HouseType
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
+    public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
+
     public virtual ICollection<HouseTypeSetting> HouseTypeSettings { get; set; } = new List<HouseTypeSetting>();
 }
