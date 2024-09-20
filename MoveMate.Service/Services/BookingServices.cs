@@ -211,7 +211,7 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
+        public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(BookingValuationRequest request)
         {
             var result = new OperationResult<BookingValuationResponse>();
 
@@ -226,7 +226,6 @@ namespace MoveMate.Service.Services
             }
 
             double totalFee = 0;
-            var feeDetails = new List<FeeDetail>();
 
             foreach (var serviceDetailRequest in request.ServiceDetails)
             {
@@ -241,35 +240,23 @@ namespace MoveMate.Service.Services
 
                 // Tạo `ServiceDetail`
                 var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
-
-                var serviceDetail = new ServiceDetail
-                {
-                    ServiceId = service.Id,
-                    Quantity = quantity,
-                    Price = price,
-                    IsQuantity = serviceDetailRequest.IsQuantity,
-                };
-
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate/100;
+                
                 // logic fee 
-                var feeSettingList = service.FeeSettings;
                 var (nullUnitFees, kmUnitFees, floorUnitFees) =
                     SeparateFeeSettingsByUnit(service.FeeSettings.ToList());
 
                 var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
                     double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
                 totalFee += totalTruckFee;
-                feeDetails.AddRange(feeTruckDetails);
+                //feeDetails.AddRange(feeTruckDetails);
 
                 var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
                 totalFee += nullTotalFee;
-                feeDetails.AddRange(nullUnitFeeDetails);
-
-                // check type 
-                // if type != common
-                // create fee details based on service
-
-                //serviceDetails.Add(serviceDetail);
+                //feeDetails.AddRange(nullUnitFeeDetails);
+                
+                totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate/100);
+                
             }
 
             var response = new BookingValuationResponse();
@@ -326,7 +313,7 @@ namespace MoveMate.Service.Services
                 else
                 {
                     // Tính khoảng cách trong khoảng này
-                    if (remainingDistance > rangeMin)
+                    if (estimatedDistance > rangeMin)
                     {
                         double distanceInRange = Math.Min(remainingDistance, rangeMax - rangeMin);
                         totalFee += distanceInRange * (fee.Amount ?? 0);

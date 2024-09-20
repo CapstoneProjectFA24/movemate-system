@@ -14,8 +14,6 @@ public partial class FeeSetting
     public double? Amount { get; set; }
 
     public bool? IsActived { get; set; }
-    
-    public bool? IsDefault { get; set; }
 
     public string? Type { get; set; }
 

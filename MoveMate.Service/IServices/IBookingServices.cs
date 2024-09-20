@@ -13,6 +13,6 @@ namespace MoveMate.Service.IServices
     {
         public Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request);
         Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request);
-        Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request);
+        Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(BookingValuationRequest request);
     }
 }
