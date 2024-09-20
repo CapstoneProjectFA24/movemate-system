@@ -23,7 +23,7 @@ public partial class Transaction
 
     public string? TransactionCode { get; set; }
 
-    public string? FailedReason { get; set; }
+    public string? TransactionType { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
