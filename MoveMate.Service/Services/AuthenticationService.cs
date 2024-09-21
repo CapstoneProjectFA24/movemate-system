@@ -183,11 +183,47 @@ namespace MoveMate.Service.Services
             }
         }
 
+        public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
+        {
+            var result = new OperationResult<AccountResponse>();
 
+            try
+            {
+                var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
+                if (existingUser != null)
+                {
+                    result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
+                    return result;
+                }
 
+                var newUser = new User
+                {
+                    Email = customerToRegister.Email,
+                    Phone = customerToRegister.Phone,
+                    Name = customerToRegister.Name,
+                    Password = customerToRegister.Password,
+                    RoleId = 3 // or set to the appropriate role
+                };
 
+                await _unitOfWork.UserRepository.AddAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
 
+                var userResponse = _mapper.Map<AccountResponse>(newUser);
+                result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
 
+                // Generate token for the newly registered user
+                var tokenResponse = await GenerateTokenAsync(userResponse, _jwtAuthOptions);
+                userResponse.Tokens = tokenResponse.Tokens; // Use the correct property
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during user registration.");
+                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.", null);
+                return result;
+            }
+        }
         private string GenerateRandomPassword(int length)
         {
             const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
