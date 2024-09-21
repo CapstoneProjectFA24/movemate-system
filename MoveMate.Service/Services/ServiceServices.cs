@@ -103,7 +103,8 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
+                    orderBy: request.GetOrder(),
+                    includeProperties: "TruckCategory"
 
                 );
                 var listResponse = _mapper.Map<List<ServiceResponse>>(entities);

@@ -80,12 +80,19 @@ namespace MoveMate.Service.Commons
 
 
             //Service
-            CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
+            CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>()
+          .ForMember(dest => dest.TruckCategory, opt => opt.MapFrom(src => src.TruckCategory));
+
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
             
             //Wallet
             CreateMap<Wallet,  WalletResponse>();
+
+          
+
+            // Mapping for TruckCategory to TruckCategoryResponse
+            CreateMap<TruckCategory, TruckCategoryResponse>();
         }
     }
 
