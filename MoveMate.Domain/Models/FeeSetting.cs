@@ -16,4 +16,28 @@ public partial class FeeSetting
     public bool? IsActived { get; set; }
 
     public string? Type { get; set; }
+
+    public string? Unit { get; set; }
+
+    public double? RangeMin { get; set; }
+
+    public double? RangeMax { get; set; }
+
+    public int? HouseTypeId { get; set; }
+
+    public int? TruckCategoryId { get; set; }
+
+    public int? ServiceId { get; set; }
+
+    public int? DiscountRate { get; set; }
+
+    public double? FloorPercentage { get; set; }
+
+    public virtual ICollection<FeeDetail> FeeDetails { get; set; } = new List<FeeDetail>();
+
+    public virtual HouseType? HouseType { get; set; }
+
+    public virtual Service? Service { get; set; }
+
+    public virtual TruckCategory? TruckCategory { get; set; }
 }

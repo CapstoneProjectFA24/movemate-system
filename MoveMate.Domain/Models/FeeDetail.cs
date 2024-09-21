@@ -17,6 +17,8 @@ public partial class FeeDetail
 
     public double? Amount { get; set; }
 
+    public int? Quantity { get; set; }
+
     public virtual Booking? Booking { get; set; }
 
     public virtual FeeSetting? FeeSetting { get; set; }
