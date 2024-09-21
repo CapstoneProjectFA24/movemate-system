@@ -147,7 +147,7 @@ namespace MoveMate.Service.Services
                     totalFee += totalTruckFee;
                     feeDetails.AddRange(feeTruckDetails);
 
-                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
+                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
                     totalFee += nullTotalFee;
                     feeDetails.AddRange(nullUnitFeeDetails);
 
@@ -251,7 +251,7 @@ namespace MoveMate.Service.Services
                 totalFee += totalTruckFee;
                 //feeDetails.AddRange(feeTruckDetails);
 
-                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
+                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
                 totalFee += nullTotalFee;
                 //feeDetails.AddRange(nullUnitFeeDetails);
                 
@@ -308,7 +308,7 @@ namespace MoveMate.Service.Services
                 totalFee += floorTotalFee;
                 //feeDetails.AddRange(floorUnitFeeDetails);
 
-                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, request.TruckNumber);
+                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
                 totalFee += nullTotalFee;
                 //feeDetails.AddRange(nullUnitFeeDetails);
                 
@@ -459,8 +459,7 @@ namespace MoveMate.Service.Services
                 // Return 0 total fee and an empty list of fee details
                 return (0, new List<FeeDetail>());
             }
-
-
+            
             // Khởi tạo danh sách FeeDetail để trả về
             var feeDetails = new List<FeeDetail>();
             double totalFee = 0;
@@ -487,54 +486,6 @@ namespace MoveMate.Service.Services
             }
 
             // Trả về tổng phí và danh sách FeeDetail
-            return (totalFee, feeDetails);
-        }
-
-        private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFee(int truckCategoryId, int numberOfFloors,
-            List<FeeSetting>? feeSettings, int quantity)
-        {
-            if (feeSettings == null || !feeSettings.Any())
-            {
-                // Return 0 total fee and an empty list of fee details
-                return (0, new List<FeeDetail>());
-            }
-
-
-            var relevantFees = feeSettings
-                .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "FLOOR" && f.IsActived == true)
-                .ToList();
-
-            double totalFee = 0;
-            var feeDetails = new List<FeeDetail>();
-
-            foreach (var fee in relevantFees)
-            {
-                double baseAmount = fee.Amount ?? 0;
-                double currentAmount = baseAmount;
-                int floorsToCalculate = numberOfFloors;
-
-                if (floorsToCalculate > 3)
-                {
-                    // Apply the discount rate for floors above the basic range
-                    for (int floor = 4; floor <= floorsToCalculate; floor++)
-                    {
-                        currentAmount += currentAmount * (fee.DiscountRate ?? 0) / 100;
-                    }
-                }
-
-                totalFee += currentAmount * quantity;
-
-                // Add fee details
-                feeDetails.Add(new FeeDetail
-                {
-                    FeeSettingId = fee.Id,
-                    Name = fee.Name,
-                    Description = fee.Description,
-                    Amount = currentAmount * quantity,
-                    Quantity = quantity
-                });
-            }
-
             return (totalFee, feeDetails);
         }
 
@@ -594,8 +545,10 @@ namespace MoveMate.Service.Services
                     // Tính phí cho số tầng trong khoảng này
                     if (numberOfFloors > rangeMin)
                     {
+
+                        double floorPercentage = (fee.FloorPercentage ?? 100) / 100;
                         int floorsInRange = (int)Math.Min(remainingFloors, rangeMax - rangeMin);
-                        totalFee += floorsInRange * currentAmount * quantity;
+                        totalFee += floorsInRange * currentAmount * quantity * floorPercentage;
 
                         // Thêm FeeDetail vào danh sách
                         feeDetails.Add(new FeeDetail
@@ -603,7 +556,7 @@ namespace MoveMate.Service.Services
                             FeeSettingId = fee.Id,
                             Name = fee.Name,
                             Description = fee.Description,
-                            Amount = floorsInRange * currentAmount * quantity,
+                            Amount = floorsInRange * currentAmount * quantity * floorPercentage,
                             Quantity = quantity
                         });
 
