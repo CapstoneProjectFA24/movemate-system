@@ -218,6 +218,26 @@ namespace MoveMate.API.Controllers
             }
         }
 
+        [HttpPost("verify-token/v2")]
+        public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
+        {
+            try
+            {
+                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+                return Ok(new { isValid = decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid });
+            }
+            catch (FirebaseAuthException ex)
+            {
+                return BadRequest(new { message = "Firebase token verification failed", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during token verification.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
+            }
+        }
+
+
         [HttpPost("google-login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
