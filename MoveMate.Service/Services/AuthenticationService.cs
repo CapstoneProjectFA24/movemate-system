@@ -190,9 +190,9 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task<OperationResult<RegisterResponse>> RegisterV2(CustomerToRegister customerToRegister)
+        public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
         {
-            var result = new OperationResult<RegisterResponse>();
+            var result = new OperationResult<AccountResponse>();
 
             try
             {
@@ -206,18 +206,21 @@ namespace MoveMate.Service.Services
                 var newUser = new User
                 {
                     Email = customerToRegister.Email,
+                    Phone = customerToRegister.Phone,
+                    Name = customerToRegister.Name,
+                    Password = customerToRegister.Password,
                     RoleId = 3 // or set to the appropriate role
                 };
 
                 await _unitOfWork.UserRepository.AddAsync(newUser);
                 await _unitOfWork.SaveChangesAsync();
 
-                var userResponse = _mapper.Map<RegisterResponse>(newUser);
+                var userResponse = _mapper.Map<AccountResponse>(newUser);
                 result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
 
                 // Generate token for the newly registered user
-                var tokenResponse = await GenerateTokenAsync(userResponse, _jwtAuthOptions.Value);
-                userResponse.AccessToken = tokenResponse.Tokens.AccessToken; // Assuming RegisterResponse has an AccessToken property
+                var tokenResponse = await GenerateTokenAsync(userResponse, _jwtAuthOptions);
+                userResponse.Tokens = tokenResponse.Tokens; // Use the correct property
 
                 return result;
             }
@@ -228,12 +231,6 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
-
-
-
-
-
-
         private string GenerateRandomPassword(int length)
         {
             const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";

@@ -181,7 +181,20 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
+        [HttpPost("register/v2")]
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
+        {
 
+            // Register user
+            var response = await _authenticationService.RegisterV2(customerToRegister);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+
+        }
 
         [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
@@ -224,7 +237,7 @@ namespace MoveMate.API.Controllers
             try
             {
                 var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
-                return Ok(new { isValid = decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid });
+                return Ok(new { isValid = decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid )});
             }
             catch (FirebaseAuthException ex)
             {
