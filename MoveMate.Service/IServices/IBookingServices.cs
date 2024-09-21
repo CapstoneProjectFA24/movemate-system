@@ -16,5 +16,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(BookingValuationRequest request);
         Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(BookingValuationRequest request);
 
+        Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request);
+
     }
 }

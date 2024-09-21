@@ -211,7 +211,8 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(BookingValuationRequest request)
+        public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(
+            BookingValuationRequest request)
         {
             var result = new OperationResult<BookingValuationResponse>();
 
@@ -240,8 +241,8 @@ namespace MoveMate.Service.Services
 
                 // Tạo `ServiceDetail`
                 var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate/100;
-                
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
+
                 // logic fee 
                 var (nullUnitFees, kmUnitFees, floorUnitFees) =
                     SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
@@ -254,21 +255,21 @@ namespace MoveMate.Service.Services
                 var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
                 totalFee += nullTotalFee;
                 //feeDetails.AddRange(nullUnitFeeDetails);
-                
-                totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate/100);
-                
+
+                totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate / 100);
             }
 
             var response = new BookingValuationResponse();
 
             response.Amount = totalFee;
-            
+
             result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
 
             return result;
         }
 
-        public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(BookingValuationRequest request)
+        public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(
+            BookingValuationRequest request)
         {
             var result = new OperationResult<BookingValuationResponse>();
 
@@ -297,8 +298,8 @@ namespace MoveMate.Service.Services
 
                 // Tạo `ServiceDetail`
                 var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate/100;
-                
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
+
                 // logic fee 
                 var (nullUnitFees, kmUnitFees, floorUnitFees) =
                     SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
@@ -311,19 +312,88 @@ namespace MoveMate.Service.Services
                 var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
                 totalFee += nullTotalFee;
                 //feeDetails.AddRange(nullUnitFeeDetails);
-                
+
                 //totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate/100);
-                
             }
 
             var response = new BookingValuationResponse();
 
             response.Amount = totalFee;
-            
+
             result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
 
             return result;
         }
+
+        // VAlUA
+        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
+        {
+            var result = new OperationResult<BookingValuationResponse>();
+
+            var existingHouseType =
+                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+
+            // check houseType
+            if (existingHouseType == null)
+            {
+                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                return result;
+            }
+
+            double totalFee = 0;
+
+            foreach (var serviceDetailRequest in request.ServiceDetails)
+            {
+                var service =
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+
+                if (service == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    return result;
+                }
+
+                if (service.Amount == 0d)
+                {
+                }
+
+                // Tạo `ServiceDetail`
+                var quantity = serviceDetailRequest.Quantity;
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
+
+                // logic fee 
+                var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
+
+                // FEE FLOOR
+                var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
+                    int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                totalFee += floorTotalFee;
+                //feeDetails.AddRange(floorUnitFeeDetails);
+
+                // FEE DISTANCE
+                var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
+                    double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
+                totalFee += totalTruckFee;
+
+                // FEE BASE
+                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
+                totalFee += nullTotalFee;
+                //feeDetails.AddRange(nullUnitFeeDetails);
+
+                totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate / 100);
+            }
+
+            var response = new BookingValuationResponse();
+
+            response.Amount = totalFee;
+
+            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+
+            return result;
+        }
+
+        //
         private (double totalFee, List<FeeDetail> feeDetails) CalculateDistanceFee(int truckCategoryId,
             double estimatedDistance,
             List<FeeSetting>? feeSettings, int quantity)
@@ -442,14 +512,13 @@ namespace MoveMate.Service.Services
                         {
                             floorUnitFees.Add(fee);
                         }
-                        
+
                         break;
                 }
             }
 
             return (nullUnitFees, kmUnitFees, floorUnitFees);
         }
-
 
         private (double totalNullFee, List<FeeDetail> feeNullDetails) CalculateBaseFee(List<FeeSetting>? nullUnitFees,
             int quantity)
@@ -459,7 +528,7 @@ namespace MoveMate.Service.Services
                 // Return 0 total fee and an empty list of fee details
                 return (0, new List<FeeDetail>());
             }
-            
+
             // Khởi tạo danh sách FeeDetail để trả về
             var feeDetails = new List<FeeDetail>();
             double totalFee = 0;
@@ -537,7 +606,6 @@ namespace MoveMate.Service.Services
                         remainingFloors -= floorsInRange;
 
                         defaultAmount = baseAmount;
-
                     }
                 }
                 else
@@ -545,7 +613,6 @@ namespace MoveMate.Service.Services
                     // Tính phí cho số tầng trong khoảng này
                     if (numberOfFloors > rangeMin)
                     {
-
                         double floorPercentage = (fee.FloorPercentage ?? 100) / 100;
                         int floorsInRange = (int)Math.Min(remainingFloors, rangeMax - rangeMin);
                         totalFee += floorsInRange * currentAmount * quantity * floorPercentage;

@@ -56,7 +56,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation distance booking
+        /// valuation distance booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
@@ -76,7 +76,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation distance booking
+        /// valuation floor booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
@@ -87,6 +87,24 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
         {
             var response =  await _bookingServices.ValuationFloorBooking(request);
+            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+        
+        /// <summary>
+        ///
+        /// valuation floor booking, dev by vinh
+        /// </summary>
+        /// <returns></returns>
+        ///
+        
+        // Post - valuation distance booking
+        [HttpPost("valuation-booking")]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
+        {
+            var response =  await _bookingServices.ValuationBooking(request);
             
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
