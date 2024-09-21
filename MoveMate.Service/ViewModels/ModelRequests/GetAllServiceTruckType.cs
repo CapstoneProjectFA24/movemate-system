@@ -38,6 +38,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             Expression = Expression.And(u => u.IsActived == true);
 
             Expression = Expression.And(u => u.Type == TypeServiceEnums.TRUCK.ToString());
+           
 
             return Expression;
         }

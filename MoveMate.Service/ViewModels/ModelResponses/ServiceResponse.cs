@@ -24,5 +24,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public int DiscountRate { get; set; }
 
         public double Amount { get; set; }
+        public TruckCategoryResponse TruckCategory { get; set; }
     }
 }
