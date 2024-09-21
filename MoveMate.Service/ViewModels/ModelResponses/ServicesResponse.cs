@@ -22,6 +22,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public int DiscountRate { get; set; }
 
+        public string Type { get; set; }
+
         public double Amount { get; set; }
 
         public int ParentServiceId { get; set; }

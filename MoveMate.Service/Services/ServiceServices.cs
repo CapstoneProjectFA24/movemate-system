@@ -89,5 +89,44 @@ namespace MoveMate.Service.Services
             }
         }
 
+        public async Task<OperationResult<List<ServiceResponse>>> GetAllServiceTruck(GetAllServiceTruckType request)
+        {
+            var result = new OperationResult<List<ServiceResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.ServiceRepository.Get(
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder()
+
+                );
+                var listResponse = _mapper.Map<List<ServiceResponse>>(entities);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, "List Service has truck type is Empty!", listResponse);
+                    return result;
+                }
+
+                pagin.PageSize = request.per_page;
+                pagin.TotalItemsCount = listResponse.Count();
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Services Done.", listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occurred in getAll Service Method");
+                throw;
+            }
+        }
+
     }
 }
