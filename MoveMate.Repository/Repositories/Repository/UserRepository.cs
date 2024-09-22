@@ -61,5 +61,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 .AsNoTracking() // No tracking is needed for read operations
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
+
+       
     }
 }
