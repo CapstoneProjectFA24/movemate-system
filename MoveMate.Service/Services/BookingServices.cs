@@ -102,6 +102,7 @@ namespace MoveMate.Service.Services
                     /*result.AddError(StatusCode.BadRequest, "Truck selection is not valid based on house type and truck settings.");
                     return result;*/
                     status = BookingEnums.RECOMMEND.ToString();
+                    
                 }
                 // done check matching
 
@@ -164,19 +165,19 @@ namespace MoveMate.Service.Services
                 // done services
 
                 // list lên fee common
-                var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
-                foreach (var feeSetting in feeSettings)
-                {
-                    var feeDetail = new FeeDetail
+                    var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
+                    foreach (var feeSetting in feeSettings)
                     {
-                        FeeSettingId = feeSetting.Id,
-                        Name = feeSetting.Name,
-                        Description = feeSetting.Description,
-                        Amount = feeSetting.Amount,
-                    };
+                        var feeDetail = new FeeDetail
+                        {
+                            FeeSettingId = feeSetting.Id,
+                            Name = feeSetting.Name,
+                            Description = feeSetting.Description,
+                            Amount = feeSetting.Amount,
+                        };
 
-                    feeDetails.Add(feeDetail);
-                }
+                        feeDetails.Add(feeDetail);
+                    }
                 // done fee
 
                 // save
@@ -341,6 +342,8 @@ namespace MoveMate.Service.Services
             }
 
             double totalFee = 0;
+            var serviceDetails = new List<ServiceDetail>();
+            var feeDetails = new List<FeeDetail>();
 
             foreach (var serviceDetailRequest in request.ServiceDetails)
             {
@@ -352,42 +355,66 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
                     return result;
                 }
-
-                if (service.Amount == 0d)
-                {
-                }
-
-                // Tạo `ServiceDetail`
+                
                 var quantity = serviceDetailRequest.Quantity;
                 var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
+                
+                if (service.Amount == 0d)
+                {
+                    // logic fee 
+                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
 
-                // logic fee 
-                var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
+                    // FEE FLOOR
+                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
+                        int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                    totalFee += floorTotalFee;
+                    //feeDetails.AddRange(floorUnitFeeDetails);
 
-                // FEE FLOOR
-                var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
-                    int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
-                totalFee += floorTotalFee;
-                //feeDetails.AddRange(floorUnitFeeDetails);
+                    // FEE DISTANCE
+                    var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
+                        double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
+                    totalFee += totalTruckFee;
 
-                // FEE DISTANCE
-                var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
-                    double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
-                totalFee += totalTruckFee;
+                    // FEE BASE
+                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
+                    totalFee += nullTotalFee;
+                    //feeDetails.AddRange(nullUnitFeeDetails);
 
-                // FEE BASE
-                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
-                totalFee += nullTotalFee;
-                //feeDetails.AddRange(nullUnitFeeDetails);
+                    totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate / 100);
+                    
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price = totalFee,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                    };
+                    
+                    serviceDetails.Add(serviceDetail);
 
-                totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate / 100);
+                }
+                else
+                {
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price = price,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                    };
+                    
+                    serviceDetails.Add(serviceDetail);
+
+                }
+                
             }
 
             var response = new BookingValuationResponse();
 
             response.Amount = totalFee;
-
+            response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
+            
             result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
 
             return result;

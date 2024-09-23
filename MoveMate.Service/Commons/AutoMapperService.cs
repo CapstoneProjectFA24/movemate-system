@@ -64,7 +64,6 @@ namespace MoveMate.Service.Commons
                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
 
             CreateMap<ScheduleDetail, ScheduleDetailResponse>();
-                
           
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
@@ -83,9 +82,16 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
+            CreateMap<ServiceDetail, ServiceDetailsResponse>();
+            
+            //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
             
             //Wallet
             CreateMap<Wallet,  WalletResponse>();
+            
+            // Free
+            //CreateMap<FeeDetail, FeeDetailResponse>();
+            //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
         }
     }
 
