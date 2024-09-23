@@ -81,8 +81,6 @@ public partial class Booking
 
     public DateTime? BookingAt { get; set; }
 
-    public virtual ICollection<AchievementDetail> AchievementDetails { get; set; } = new List<AchievementDetail>();
-
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
     public virtual ICollection<BookingTracker> BookingTrackers { get; set; } = new List<BookingTracker>();
@@ -91,11 +89,13 @@ public partial class Booking
 
     public virtual HouseType? HouseType { get; set; }
 
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    public virtual ICollection<LoyalUserDetail> LoyalUserDetails { get; set; } = new List<LoyalUserDetail>();
 
-    public virtual ICollection<PromotionDetail> PromotionDetails { get; set; } = new List<PromotionDetail>();
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
     public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
 
     public virtual User? User { get; set; }
+
+    public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
 }

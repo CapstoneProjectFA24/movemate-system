@@ -19,9 +19,11 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public int Tier { get; set; }
 
         public string ImageUrl { get; set; }
+        public string Type { get; set; }
 
         public int DiscountRate { get; set; }
 
         public double Amount { get; set; }
+        public TruckCategoryResponse TruckCategory { get; set; }
     }
 }

@@ -64,6 +64,7 @@ namespace MoveMate.Service.Commons
                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
 
             CreateMap<ScheduleDetail, ScheduleDetailResponse>();
+                
           
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
@@ -88,6 +89,11 @@ namespace MoveMate.Service.Commons
             
             //Wallet
             CreateMap<Wallet,  WalletResponse>();
+
+          
+
+            // Mapping for TruckCategory to TruckCategoryResponse
+            CreateMap<TruckCategory, TruckCategoryResponse>();
             
             // Free
             //CreateMap<FeeDetail, FeeDetailResponse>();

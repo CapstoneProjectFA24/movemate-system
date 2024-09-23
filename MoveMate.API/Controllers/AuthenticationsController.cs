@@ -181,7 +181,20 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
+        [HttpPost("register/v2")]
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
+        {
 
+            // Register user
+            var response = await _authenticationService.RegisterV2(customerToRegister);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+
+        }
 
         [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
@@ -217,6 +230,26 @@ namespace MoveMate.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
             }
         }
+
+        [HttpPost("verify-token/v2")]
+        public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
+        {
+            try
+            {
+                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+                return Ok(new { isValid = decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid )});
+            }
+            catch (FirebaseAuthException ex)
+            {
+                return BadRequest(new { message = "Firebase token verification failed", error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during token verification.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
+            }
+        }
+
 
         [HttpPost("google-login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]

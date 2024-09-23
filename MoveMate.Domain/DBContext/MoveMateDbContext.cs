@@ -16,12 +16,7 @@ public partial class MoveMateDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Achievement> Achievements { get; set; }
-
-    public virtual DbSet<AchievementDetail> AchievementDetails { get; set; }
-
-    public virtual DbSet<AchievementSetting> AchievementSettings { get; set; }
-
+   
     public virtual DbSet<Booking> Bookings { get; set; }
 
     public virtual DbSet<BookingDetail> BookingDetails { get; set; }
@@ -30,13 +25,23 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<BookingTracker> BookingTrackers { get; set; }
 
+  
     public virtual DbSet<FeeDetail> FeeDetails { get; set; }
 
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
 
+
     public virtual DbSet<HouseType> HouseTypes { get; set; }
 
     public virtual DbSet<HouseTypeSetting> HouseTypeSettings { get; set; }
+
+ 
+   
+    public virtual DbSet<LoyalUser> LoyalUsers { get; set; }
+
+    public virtual DbSet<LoyalUserDetail> LoyalUserDetails { get; set; }
+
+    public virtual DbSet<LoyalUserSetting> LoyalUserSettings { get; set; }
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -44,18 +49,18 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<PromotionCategory> PromotionCategories { get; set; }
 
-    public virtual DbSet<PromotionDetail> PromotionDetails { get; set; }
-
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
 
     public virtual DbSet<ScheduleDetail> ScheduleDetails { get; set; }
 
+  
     public virtual DbSet<Service> Services { get; set; }
 
     public virtual DbSet<ServiceDetail> ServiceDetails { get; set; }
 
+ 
     public virtual DbSet<Token> Tokens { get; set; }
 
     public virtual DbSet<TrackerSource> TrackerSources { get; set; }
@@ -74,42 +79,14 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<UserInfo> UserInfos { get; set; }
 
+    public virtual DbSet<Voucher> Vouchers { get; set; }
+
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-   
+  
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Achievement>(entity =>
-        {
-            entity.ToTable("Achievement");
-
-            entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(255);
-
-            entity.HasOne(d => d.User).WithMany(p => p.Achievements)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_Achievement_User");
-        });
-
-        modelBuilder.Entity<AchievementDetail>(entity =>
-        {
-            entity.HasOne(d => d.Achievement).WithMany(p => p.AchievementDetails)
-                .HasForeignKey(d => d.AchievementId)
-                .HasConstraintName("FK_AchievementDetails_Achievement");
-
-            entity.HasOne(d => d.Booking).WithMany(p => p.AchievementDetails)
-                .HasForeignKey(d => d.BookingId)
-                .HasConstraintName("FK_AchievementDetails_Booking");
-        });
-
-        modelBuilder.Entity<AchievementSetting>(entity =>
-        {
-            entity.ToTable("AchievementSetting");
-
-            entity.Property(e => e.AwardWinningHook).HasMaxLength(255);
-            entity.Property(e => e.Description).HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(255);
-        });
+        
 
         modelBuilder.Entity<Booking>(entity =>
         {
@@ -189,6 +166,8 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_BookingTracker_Booking");
         });
 
+       
+
         modelBuilder.Entity<FeeDetail>(entity =>
         {
             entity.ToTable("FeeDetail");
@@ -227,6 +206,8 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_FeeSetting_TruckCategory");
         });
 
+       
+
         modelBuilder.Entity<HouseType>(entity =>
         {
             entity.ToTable("HouseType");
@@ -246,6 +227,46 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.TruckCategory).WithMany(p => p.HouseTypeSettings)
                 .HasForeignKey(d => d.TruckCategoryId)
                 .HasConstraintName("FK_HouseTypeSetting_TruckCategory");
+        });
+
+       
+
+        modelBuilder.Entity<LoyalUser>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Achievement");
+
+            entity.ToTable("LoyalUser");
+
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
+
+            entity.HasOne(d => d.User).WithMany(p => p.LoyalUsers)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_Achievement_User");
+        });
+
+        modelBuilder.Entity<LoyalUserDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_AchievementDetails");
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.LoyalUserDetails)
+                .HasForeignKey(d => d.BookingId)
+                .HasConstraintName("FK_AchievementDetails_Booking");
+
+            entity.HasOne(d => d.LoyalUser).WithMany(p => p.LoyalUserDetails)
+                .HasForeignKey(d => d.LoyalUserId)
+                .HasConstraintName("FK_AchievementDetails_Achievement");
+        });
+
+        modelBuilder.Entity<LoyalUserSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_AchievementSetting");
+
+            entity.ToTable("LoyalUserSetting");
+
+            entity.Property(e => e.AwardWinningHook).HasMaxLength(255);
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
         });
 
         modelBuilder.Entity<Notification>(entity =>
@@ -294,23 +315,6 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Type).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<PromotionDetail>(entity =>
-        {
-            entity.Property(e => e.Code).HasMaxLength(255);
-
-            entity.HasOne(d => d.Booking).WithMany(p => p.PromotionDetails)
-                .HasForeignKey(d => d.BookingId)
-                .HasConstraintName("FK_PromotionDetails_Booking");
-
-            entity.HasOne(d => d.PromotionCategory).WithMany(p => p.PromotionDetails)
-                .HasForeignKey(d => d.PromotionCategoryId)
-                .HasConstraintName("FK_PromotionDetails_PromotionCategory");
-
-            entity.HasOne(d => d.User).WithMany(p => p.PromotionDetails)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_PromotionDetails_User");
-        });
-
         modelBuilder.Entity<Role>(entity =>
         {
             entity.ToTable("Role");
@@ -340,6 +344,8 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_ScheduleDetails_User");
         });
 
+      
+
         modelBuilder.Entity<Service>(entity =>
         {
             entity.ToTable("Service");
@@ -362,6 +368,10 @@ public partial class MoveMateDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_ServiceBooking");
 
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
             entity.HasOne(d => d.Booking).WithMany(p => p.ServiceDetails)
                 .HasForeignKey(d => d.BookingId)
                 .HasConstraintName("FK_ServiceBooking_Booking");
@@ -371,6 +381,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_ServiceBooking_Service");
         });
 
+   
         modelBuilder.Entity<Token>(entity =>
         {
             entity.ToTable("Token");
@@ -427,7 +438,7 @@ public partial class MoveMateDbContext : DbContext
 
         modelBuilder.Entity<TripAccuracy>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC07AE86325A");
+            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC077AF0360E");
 
             entity.ToTable("TripAccuracy");
 
@@ -530,6 +541,27 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserInfos)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_UserInfo_User");
+        });
+
+        modelBuilder.Entity<Voucher>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_PromotionDetails");
+
+            entity.ToTable("Voucher");
+
+            entity.Property(e => e.Code).HasMaxLength(255);
+
+            entity.HasOne(d => d.Booking).WithMany(p => p.Vouchers)
+                .HasForeignKey(d => d.BookingId)
+                .HasConstraintName("FK_PromotionDetails_Booking");
+
+            entity.HasOne(d => d.PromotionCategory).WithMany(p => p.Vouchers)
+                .HasForeignKey(d => d.PromotionCategoryId)
+                .HasConstraintName("FK_PromotionDetails_PromotionCategory");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Vouchers)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_PromotionDetails_User");
         });
 
         modelBuilder.Entity<Wallet>(entity =>
