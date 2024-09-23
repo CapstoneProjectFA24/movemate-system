@@ -42,6 +42,19 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<User> GetUserByPhoneAsync(string phone)
+        {
+            try
+            {
+                return await this._dbContext.Users.Include(x => x.Role)
+                                                     .SingleOrDefaultAsync(x => x.Phone == phone);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
         public async Task<User?> FindByEmailAsync(string email)
         {
             return await this._dbContext.Users

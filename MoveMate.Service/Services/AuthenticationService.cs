@@ -150,26 +150,20 @@ namespace MoveMate.Service.Services
                     result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
                     return result;
                 }
-
-                string randomPassword = GenerateRandomPassword(12);
-
-                byte[] salt = new byte[128 / 8];
-                using (var rng = RandomNumberGenerator.Create())
+                var existingUserByPhone = await _unitOfWork.UserRepository.GetUserByPhoneAsync(customerToRegister.Phone);
+                if (existingUserByPhone != null)
                 {
-                    rng.GetBytes(salt);
+                    result.AddResponseStatusCode(StatusCode.BadRequest, "Phone number is already registered.", null);
+                    return result;
                 }
 
-                string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                    password: randomPassword,
-                    salt: salt,
-                    prf: KeyDerivationPrf.HMACSHA256,
-                    iterationCount: 10000,
-                    numBytesRequested: 256 / 8));
 
                 var newUser = new User
                 {
                     Email = customerToRegister.Email,
-                    Password = hashedPassword,
+                    Password = customerToRegister.Password,
+                    Name = customerToRegister.Name,
+                    Phone = customerToRegister.Phone,
                     RoleId = 3
                 };
 
@@ -179,7 +173,6 @@ namespace MoveMate.Service.Services
                 var userResponse = _mapper.Map<RegisterResponse>(newUser);
 
                 result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
-
                 return result;
             }
             catch (Exception ex)
@@ -190,10 +183,47 @@ namespace MoveMate.Service.Services
             }
         }
 
+        public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
+        {
+            var result = new OperationResult<AccountResponse>();
 
+            try
+            {
+                var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
+                if (existingUser != null)
+                {
+                    result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
+                    return result;
+                }
 
+                var newUser = new User
+                {
+                    Email = customerToRegister.Email,
+                    Phone = customerToRegister.Phone,
+                    Name = customerToRegister.Name,
+                    Password = customerToRegister.Password,
+                    RoleId = 3 // or set to the appropriate role
+                };
 
+                await _unitOfWork.UserRepository.AddAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
 
+                var userResponse = _mapper.Map<AccountResponse>(newUser);
+                result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
+
+                // Generate token for the newly registered user
+                var tokenResponse = await GenerateTokenAsync(userResponse, _jwtAuthOptions);
+                userResponse.Tokens = tokenResponse.Tokens; // Use the correct property
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during user registration.");
+                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.", null);
+                return result;
+            }
+        }
         private string GenerateRandomPassword(int length)
         {
             const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";

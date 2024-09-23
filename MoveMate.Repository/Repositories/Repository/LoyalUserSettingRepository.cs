@@ -10,9 +10,9 @@ using MoveMate.Domain.DBContext;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
-    public class AchievementSettingRepository : GenericRepository<AchievementSetting>, IAchievementSettingRepository
+    public class LoyalUserSettingRepository : GenericRepository<LoyalUserSetting>, ILoyalUserSettingRepository
     {
-        public AchievementSettingRepository(MoveMateDbContext context) : base(context)
+        public LoyalUserSettingRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

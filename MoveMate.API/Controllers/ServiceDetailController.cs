@@ -55,6 +55,24 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+        /// <summary>
+        /// 
+        /// Get all services has type TRUCK
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("truck-category/get-all")]
+
+        // get all
+        public async Task<IActionResult> GetAllServiceTruck([FromQuery] GetAllServiceTruckType request)
+        {
+            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+            var response = await _services.GetAllServiceTruck(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
         /// <summary>
         /// Get services by Id

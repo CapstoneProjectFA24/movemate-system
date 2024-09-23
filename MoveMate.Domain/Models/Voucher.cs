@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MoveMate.Domain.Models;
 
-public partial class PromotionDetail
+public partial class Voucher
 {
     public int Id { get; set; }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MoveMate.Domain.Models;
 
-public partial class AchievementSetting
+public partial class LoyalUserSetting
 {
     public int Id { get; set; }
 

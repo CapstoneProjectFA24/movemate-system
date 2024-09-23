@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MoveMate.Domain.Models;
 
-public partial class Achievement
+public partial class LoyalUser
 {
     public int Id { get; set; }
 
@@ -15,7 +15,7 @@ public partial class Achievement
 
     public int? Quantity { get; set; }
 
-    public virtual ICollection<AchievementDetail> AchievementDetails { get; set; } = new List<AchievementDetail>();
+    public virtual ICollection<LoyalUserDetail> LoyalUserDetails { get; set; } = new List<LoyalUserDetail>();
 
     public virtual User? User { get; set; }
 }

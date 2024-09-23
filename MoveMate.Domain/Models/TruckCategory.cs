@@ -31,5 +31,7 @@ public partial class TruckCategory
 
     public virtual ICollection<HouseTypeSetting> HouseTypeSettings { get; set; } = new List<HouseTypeSetting>();
 
+    public virtual ICollection<Service> Services { get; set; } = new List<Service>();
+
     public virtual ICollection<Truck> Trucks { get; set; } = new List<Truck>();
 }
