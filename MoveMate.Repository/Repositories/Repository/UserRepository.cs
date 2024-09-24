@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
+using System.Linq.Expressions;
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
@@ -41,6 +42,11 @@ namespace MoveMate.Repository.Repositories.Repository
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<bool> AnyAsync(Expression<Func<User, bool>> predicate)
+        {
+            return await _dbContext.Users.AnyAsync(predicate);
         }
 
         public async Task<User> GetUserByPhoneAsync(string phone)
