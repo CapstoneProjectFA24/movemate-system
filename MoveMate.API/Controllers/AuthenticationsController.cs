@@ -181,6 +181,22 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
+
+        /// <summary>
+        /// Register a new account in the system.
+        /// </summary>
+        /// <param name="customerToRegister">The customer registration information (email).</param>
+        /// <returns>The created account details.</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/authentications/register
+        ///     {
+        ///         "email": "user@example.com"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Registration successful.</response>
+        /// <response code="400">Validation failed or email is already registered.</response>
+        /// <response code="500">System error occurred.</response>
         [HttpPost("register/v2")]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
@@ -196,6 +212,23 @@ namespace MoveMate.API.Controllers
 
         }
 
+
+        /// <summary>
+        /// VerifyToken 
+        /// </summary>
+        /// <param name="verifyToken">The system will check the token from Firebase</param>
+        /// <returns>The system verify token from Firebase</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "idToken": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Token verified and JWT generated successfully</response>
+        /// <response code="400">Invalid token: UID not found</response>
+        /// <response code="400">Firebase token verification failed</response>
+        /// <response code="500">An internal server error occurred</response>
         [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
         {
@@ -227,10 +260,26 @@ namespace MoveMate.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during token verification.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred" });
             }
         }
 
+
+        /// <summary>
+        /// VerifyToken 
+        /// </summary>
+        /// <param name="verifyToken">The system will check the token from Firebase</param>
+        /// <returns>The system verify token from Firebase</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "idToken": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Token verified and JWT generated successfully</response>        
+        /// <response code="400">Firebase token verification failed</response>
+        /// <response code="500">An internal server error occurred</response>
         [HttpPost("verify-token/v2")]
         public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
         {
@@ -251,6 +300,21 @@ namespace MoveMate.API.Controllers
         }
 
 
+        /// <summary>
+        /// Login Google 
+        /// </summary>
+        /// <param name="loginGoogle">User login by Google Gmail</param>
+        /// <returns>User access to the system by Google </returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "idToken": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Token verified and JWT generated successfully</response>
+        /// <respomse code="404">User not found</respomse>
+        /// <response code="500">An internal server error occurred</response>
         [HttpPost("google-login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
@@ -269,7 +333,7 @@ namespace MoveMate.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during Google login.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred" });
             }
         }
 

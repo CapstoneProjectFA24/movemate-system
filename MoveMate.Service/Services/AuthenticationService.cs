@@ -299,7 +299,7 @@ namespace MoveMate.Service.Services
                         new Error
                         {
                             Code = StatusCode.NotFound,
-                            Message = "User not found."
+                            Message = "User not found"
                         }
                     }
                 };
