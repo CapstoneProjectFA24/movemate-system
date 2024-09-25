@@ -12,6 +12,7 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
+using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
 {
@@ -365,6 +366,43 @@ namespace MoveMate.API.Controllers
                 _logger.LogError(ex, "An error occurred during Google login.");
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
             }
+        }
+
+        [HttpPost("fcm")]
+        public async Task<IActionResult> SaveUserDeviceToken([FromBody] UserDeviceRequest request)
+        {
+            var result = new OperationResult<bool>
+            {
+                StatusCode = MoveMate.Service.Commons.StatusCode.Ok,
+                Message = string.Empty,
+                IsError = false
+            };
+
+            if (string.IsNullOrEmpty(request.FCMToken) || string.IsNullOrEmpty(request.DeviceId))
+            {
+                result.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "FCM Token and Device ID are required.");
+                return HandleErrorResponse(result.Errors);
+            }
+
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountIdClaim = claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+
+            if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int userId))
+            {
+                result.AddError(MoveMate.Service.Commons.StatusCode.UnAuthorize, "Invalid user ID in token.");
+                return HandleErrorResponse(result.Errors);
+            }
+
+            var saveResult = await _authenticationService.SaveUserNotificationAsync(userId, request.DeviceId);
+
+            if (saveResult.IsError)
+            {
+                result.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An error occurred while saving the FCM token and device ID.");
+                return HandleErrorResponse(result.Errors);
+            }
+
+            result.AddResponseStatusCode(MoveMate.Service.Commons.StatusCode.Ok, "FCM token and device ID saved successfully.", true);
+            return Ok(result);
         }
 
 

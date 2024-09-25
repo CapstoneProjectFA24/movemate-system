@@ -37,6 +37,55 @@ namespace MoveMate.Service.Services
             _jwtAuthOptions = jwtAuthOptions.Value;
         }
 
+
+        public async Task<OperationResult<bool>> SaveUserNotificationAsync(int userId, string deviceId)
+        {
+            var result = new OperationResult<bool>();
+
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddResponseStatusCode(StatusCode.NotFound, "User not found.", false);
+                    return result;
+                }
+
+
+
+                // Check if a notification for this user and device already exists
+                var notification = await _unitOfWork.NotificationRepository
+                    .FirstOrDefaultAsync(userId, deviceId); // Pass the parameters correctly
+
+                if (notification == null)
+                {
+                    // Create a new Notification entry if it doesn't exist
+                    notification = new Notification
+                    {
+                        UserId = userId,
+                        DeviceId = deviceId,
+                        Name = user.Name,
+                        Description = "",
+                        SentFrom = "System",
+                        Receive = user.Id.ToString(),  
+                        Topic = "Device Registration",
+                    };
+                    await _unitOfWork.NotificationRepository.AddAsync(notification);
+                }                
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, "Customer information is available.", true, null);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while saving user notification.");
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                return result;
+            }
+        }
+
+
+
         public async Task<AccountResponse> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth)
         {
             try
