@@ -104,8 +104,6 @@ namespace MoveMate.Service.Services
             };
         }
 
-
-
         public async Task<AccountResponse> GenerateTokenAsync(AccountResponse accountResponse, JWTAuth jwtAuth)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
