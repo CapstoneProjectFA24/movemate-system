@@ -224,25 +224,37 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
-        private string GenerateRandomPassword(int length)
+        public async Task<OperationResult<object>> CheckCustomerExistsAsync(CustomerToRegister customer)
         {
-            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            StringBuilder password = new StringBuilder();
-            using (var rng = RandomNumberGenerator.Create())
+            var result = new OperationResult<object>();
+
+            try
             {
-                byte[] randomBytes = new byte[1];
-                while (password.Length < length)
+                // Check for existing customers
+                var emailExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Email == customer.Email);
+                if (emailExists)
                 {
-                    rng.GetBytes(randomBytes);
-                    char randomChar = (char)randomBytes[0];
-                    if (validChars.Contains(randomChar))
-                    {
-                        password.Append(randomChar);
-                    }
+                    result.AddError(StatusCode.BadRequest, "Email already exists.");
+                    return result;
                 }
+                var phoneExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Phone == customer.Phone);
+                if (phoneExists)
+                {
+                    result.AddError(StatusCode.BadRequest, "Phone already exists.");
+                    return result;
+                }
+
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Customer information is available.", null, null);
+                return result;
             }
-            return password.ToString();
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                return result;
+            }
         }
+
 
 
         private string GenerateRefreshToken()
@@ -316,6 +328,8 @@ namespace MoveMate.Service.Services
                 }
             };
         }
+
+
 
 
         private async Task<AccountTokenResponse> GenerateJwtTokenAsync(User user, string jwtAuthKey)

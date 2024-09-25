@@ -11,6 +11,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -132,6 +133,28 @@ namespace MoveMate.Service.Services
             }
 
             return result;
+        }
+
+
+        public async Task UpdateUserAsync(string id, UpdateUserRequest updateUserRequest)
+        {
+            int userId = int.Parse(id);
+
+            try
+            {         
+                var existingUser = await _unitOfWork.UserRepository.GetUserAsync(userId);
+                if (existingUser == null)
+                {
+                    throw new Exception("User not found.");
+                }
+                var updatedUser = _mapper.Map(updateUserRequest, existingUser);
+                await _unitOfWork.UserRepository.UpdateAsync(updatedUser);
+                var checkResult = _unitOfWork.Save();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error updating user: " + ex.Message);
+            }
         }
 
 
