@@ -14,21 +14,55 @@ namespace MoveMate.API.Controllers
     {
         protected IActionResult HandleErrorResponse(List<Error> errors)
         {
+            var errorMessages = errors.Select(e => e.Message).ToList(); // Extract only the messages
+
             if (errors.Any(e => e.Code == MoveMate.Service.Commons.StatusCode.UnAuthorize))
             {
                 var error = errors.FirstOrDefault(e => e.Code == MoveMate.Service.Commons.StatusCode.UnAuthorize);
-                return base.Unauthorized(new ErrorResponse(401, "UnAuthorize", true, error!.Message, DateTime.Now));
+                return base.Unauthorized(new
+                {
+                    statusCode = 401,
+                    message = "UnAuthorize",
+                    isError = true,
+                    errors = new List<string> { error!.Message }, // Return only the message
+                    timestamp = DateTime.Now
+                });
             }
+
             if (errors.Any(e => e.Code == MoveMate.Service.Commons.StatusCode.NotFound))
             {
                 var error = errors.FirstOrDefault(e => e.Code == MoveMate.Service.Commons.StatusCode.NotFound);
-                return base.NotFound(new ErrorResponse(404, "Not Found", true, error!.Message, DateTime.Now));
+                return base.NotFound(new
+                {
+                    statusCode = 404,
+                    message = "Not Found",
+                    isError = true,
+                    errors = new List<string> { error!.Message }, // Return only the message
+                    timestamp = DateTime.Now
+                });
             }
+
             if (errors.Any(e => e.Code == MoveMate.Service.Commons.StatusCode.ServerError))
             {
-                return base.StatusCode(500, new ErrorResponse(500, "Server Error", true, "An internal server error occurred.", DateTime.Now));
+                return base.StatusCode(500, new
+                {
+                    statusCode = 500,
+                    message = "Server Error",
+                    isError = true,
+                    errors = new List<string> { "An internal server error occurred." }, // Custom message
+                    timestamp = DateTime.Now
+                });
             }
-            return StatusCode(400, new ErrorResponse(400, errors.FirstOrDefault()?.Message == null ? "Bad Request" : errors.FirstOrDefault()!.Message, true, errors, DateTime.Now));
+
+            return StatusCode(400, new
+            {
+                statusCode = 400,
+                message = "Bad Request",
+                isError = true,
+                errors = errorMessages,
+                timestamp = DateTime.UtcNow 
+            });
         }
+
     }
 }

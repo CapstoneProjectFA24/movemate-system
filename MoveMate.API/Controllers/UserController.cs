@@ -82,5 +82,49 @@ namespace MoveMate.API.Controllers
                );
         }
 
+        /// <summary>
+        /// Update User
+        /// </summary>
+        /// <param name="updateUserRequest">The details of the auction to create.</param>
+        /// <param name="id">ID Auction</param>
+        /// <returns>Returns the result of the auction creation.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST
+        ///     {
+        ///         "name": "string",
+        ///         "imageUrl": "string",
+        ///         "dob": "2002-06-06T16:36:23.949Z",
+        ///         "isBanned": false,
+        ///         "expiredAt": "2025-07-25T16:36:23.949Z",
+        ///         "createdBy": "Admin",
+        ///         "modifiedBy": "Admin",       
+        ///         "isDeleted": false
+        ///     }   
+        /// </remarks>    
+        [HttpPut("update-user")]
+        //[Authorize(Roles = "1")]
+        public async Task<ActionResult> UpdateUserAsync([FromBody] UpdateUserRequest updateUserRequest)
+        {
+            try
+            {
+                IEnumerable<Claim> claims = HttpContext.User.Claims;
+                Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+                var userId = int.Parse(accountId.Value).ToString();
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { Message = "Invalid user ID in token." });
+                }
+
+                await _userService.UpdateUserAsync(userId, updateUserRequest);
+                return Ok("User updated successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
