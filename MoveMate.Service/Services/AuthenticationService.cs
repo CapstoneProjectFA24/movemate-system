@@ -29,7 +29,9 @@ namespace MoveMate.Service.Services
         private IMapper _mapper;
         private readonly JWTAuth _jwtAuthOptions;
         private readonly ILogger<AuthenticationService> _logger;
-        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger, IOptions<JWTAuth> jwtAuthOptions)
+
+        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger,
+            IOptions<JWTAuth> jwtAuthOptions)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -101,8 +103,6 @@ namespace MoveMate.Service.Services
                 RefreshToken = GenerateRefreshToken()
             };
         }
-
-
 
         public async Task<AccountResponse> GenerateTokenAsync(AccountResponse accountResponse, JWTAuth jwtAuth)
         {

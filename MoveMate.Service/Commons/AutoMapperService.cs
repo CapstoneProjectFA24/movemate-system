@@ -57,7 +57,11 @@ namespace MoveMate.Service.Commons
             CreateMap<BookingTracker, BookingTrackerResponse>();
             CreateMap<HouseType, HouseTypeResponse>();
                 // REQUEST
-            CreateMap<BookingRegisterRequest, Booking>();
+                CreateMap<BookingRegisterRequest, Booking>()
+                    .ForMember(dest => dest.ServiceDetails,
+                        opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
+                    .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
+                    .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
                 //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
@@ -65,8 +69,7 @@ namespace MoveMate.Service.Commons
                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
 
             CreateMap<ScheduleDetail, ScheduleDetailResponse>();
-                
-          
+            
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
             CreateMap<TruckCategory, TruckCateDetailResponse>();
@@ -81,11 +84,12 @@ namespace MoveMate.Service.Commons
 
 
             //Service
-            CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>()
-          .ForMember(dest => dest.TruckCategory, opt => opt.MapFrom(src => src.TruckCategory));
-
+            CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
+            CreateMap<ServiceDetail, ServiceDetailsResponse>();
+            
+            //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
             
             //Wallet
             CreateMap<Wallet,  WalletResponse>();
@@ -94,6 +98,10 @@ namespace MoveMate.Service.Commons
 
             // Mapping for TruckCategory to TruckCategoryResponse
             CreateMap<TruckCategory, TruckCategoryResponse>();
+            
+            // Free
+            //CreateMap<FeeDetail, FeeDetailResponse>();
+            //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
         }
     }
 
