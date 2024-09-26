@@ -19,7 +19,7 @@ namespace MoveMate.API.Controllers
 
         /// <summary>
         /// 
-        /// Get all bookings
+        /// FEATURE: Get all bookings
         /// 
         /// </summary>
         /// <returns></returns>
@@ -38,7 +38,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// register booking
+        /// FEATURE: register booking
         /// </summary>
         /// <returns></returns>
         ///
@@ -56,7 +56,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation distance booking, test by vinh
+        /// TEST: valuation distance booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
@@ -76,7 +76,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation floor booking, test by vinh
+        /// TEST: valuation floor booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
@@ -94,7 +94,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation floor booking, dev by vinh
+        /// FEATURE: valuation floor booking, dev by vinh
         /// </summary>
         /// <returns></returns>
         ///
