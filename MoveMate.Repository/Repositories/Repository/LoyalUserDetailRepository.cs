@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
-    public class AchievementDetailRepository : GenericRepository<AchievementDetail>, IAchievementDetailRepository
+    public class LoyalUserDetailRepository : GenericRepository<LoyalUserDetail>, ILoyalUserDetailRepository
     {
-        public AchievementDetailRepository(MoveMateDbContext context) : base(context)
+        public LoyalUserDetailRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

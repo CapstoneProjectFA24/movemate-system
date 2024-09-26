@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
+using System.Threading.Tasks;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
-    public class PromotionDetailRepository : GenericRepository<PromotionDetail>, IPromotionDetailRepository
+    public class LoyalUserRepository : GenericRepository<LoyalUser>, ILoyalUserRepository
     {
-        public PromotionDetailRepository(MoveMateDbContext context) : base(context)
+        public LoyalUserRepository(MoveMateDbContext context) : base(context)
         {
         }
     }

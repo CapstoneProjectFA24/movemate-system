@@ -1,6 +1,6 @@
 ﻿using FirebaseAdmin.Auth;
 using FluentValidation;
-
+using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MoveMate.API.Middleware;
@@ -181,42 +181,169 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
+        [HttpPost("register/v2")]
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
+        {
 
+            // Register user
+            var response = await _authenticationService.RegisterV2(customerToRegister);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+
+        }
+
+
+        /// <summary>
+        /// Check Customer Exists
+        /// </summary>
+        /// <param name="checkCustomer">Check information of customer</param>
+        /// <returns>Validate information customer are available</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "email": "user@example.com",
+        ///         "phone": "string",
+        ///         "name": "string",
+        ///         "password": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Customer information is available.</response>
+        /// <response code="400">Email already exists.</response>
+        /// <response code="400">Phone already exists.</response>
+        /// <response code="500">An unexpected error occurred.</response>
+        [HttpPost("check-exists")]
+        public async Task<IActionResult> CheckCustomerExists([FromBody] CustomerToRegister customer)
+        {
+            var result = await _authenticationService.CheckCustomerExistsAsync(customer);
+
+            if (result.IsError)
+            {
+                return HandleErrorResponse(result.Errors);
+            }
+
+            return Ok(result);
+        }
 
         [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
         {
+            var result = new OperationResult<object>
+            {
+                StatusCode = Service.Commons.StatusCode.Ok,
+                Message = string.Empty,
+                IsError = false,
+                Payload = null
+            };
+
             try
             {
-                
                 var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
 
-               
                 if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
                 {
-                    var userId = decodedToken.Uid; 
+                    var userId = decodedToken.Uid;
                     var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
-                    return Ok(new
+
+                    result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified and JWT generated successfully", new
                     {
-                        message = "Token verified and JWT generated successfully",
-                        accessToken = accountResponse.Tokens.AccessToken, 
-                        refreshToken = accountResponse.Tokens.RefreshToken 
+                        accessToken = accountResponse.Tokens.AccessToken,
+                        refreshToken = accountResponse.Tokens.RefreshToken
                     });
                 }
-
-               
-                return BadRequest(new { message = "Invalid token: UID not found" });
+                else
+                {
+                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token: UID not found");
+                }
             }
             catch (FirebaseAuthException ex)
             {
-                return BadRequest(new { message = "Firebase token verification failed", error = ex.Message });
+                _logger.LogError(ex, "Firebase token verification failed.");
+                result.AddError(Service.Commons.StatusCode.BadRequest, "Firebase token verification failed: " + ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred during token verification.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
+                _logger.LogError(ex, "An internal server error occurred during token verification.");
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
             }
+
+            // If there are errors, use HandleErrorResponse to return only the error messages
+            if (result.IsError)
+            {
+                return HandleErrorResponse(result.Errors);
+            }
+
+            // If successful, return the payload and omit unnecessary data
+            return Ok(new
+            {
+                statusCode = (int)result.StatusCode,
+                message = result.Message,
+                isError = result.IsError,
+                payload = result.Payload
+            });
         }
+
+
+        [HttpPost("verify-token/v2")]
+        public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
+        {
+            var result = new OperationResult<object>
+            {
+                StatusCode = Service.Commons.StatusCode.Ok,
+                Message = string.Empty,
+                IsError = false,
+                Payload = null
+            };
+
+            try
+            {
+                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+
+                if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
+                {
+                    result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
+                    {
+                        isValid = true,
+                        uid = decodedToken.Uid
+                    });
+                }
+                else
+                {
+                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token");
+                }
+            }
+            catch (FirebaseAuthException ex)
+            {
+                _logger.LogError(ex, "Firebase token verification failed.");
+                result.AddError(Service.Commons.StatusCode.BadRequest, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An internal server error occurred during token verification.");
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+            }
+
+            // If there are errors, use HandleErrorResponse to return only the error messages
+            if (result.IsError)
+            {
+                return HandleErrorResponse(result.Errors);
+            }
+
+            // If successful, return the payload and omit unnecessary data
+            return Ok(new
+            {
+                statusCode = (int)result.StatusCode,
+                message = result.Message,
+                isError = result.IsError,
+                payload = result.Payload
+            });
+        }
+
+
 
         [HttpPost("google-login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]

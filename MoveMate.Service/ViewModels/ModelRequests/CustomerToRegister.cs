@@ -12,10 +12,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; }
-
+        public string Phone {  get; set; }
         public string Name { get; set; }
-        public string Phone { get; set; }
         public string Password { get; set; }
-       
     }
 }

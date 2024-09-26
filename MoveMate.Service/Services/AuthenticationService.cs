@@ -29,7 +29,9 @@ namespace MoveMate.Service.Services
         private IMapper _mapper;
         private readonly JWTAuth _jwtAuthOptions;
         private readonly ILogger<AuthenticationService> _logger;
-        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger, IOptions<JWTAuth> jwtAuthOptions)
+
+        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger,
+            IOptions<JWTAuth> jwtAuthOptions)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -101,8 +103,6 @@ namespace MoveMate.Service.Services
                 RefreshToken = GenerateRefreshToken()
             };
         }
-
-
 
         public async Task<AccountResponse> GenerateTokenAsync(AccountResponse accountResponse, JWTAuth jwtAuth)
         {
@@ -183,30 +183,78 @@ namespace MoveMate.Service.Services
             }
         }
 
-
-
-
-
-
-        private string GenerateRandomPassword(int length)
+        public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
         {
-            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            StringBuilder password = new StringBuilder();
-            using (var rng = RandomNumberGenerator.Create())
+            var result = new OperationResult<AccountResponse>();
+
+            try
             {
-                byte[] randomBytes = new byte[1];
-                while (password.Length < length)
+                var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
+                if (existingUser != null)
                 {
-                    rng.GetBytes(randomBytes);
-                    char randomChar = (char)randomBytes[0];
-                    if (validChars.Contains(randomChar))
-                    {
-                        password.Append(randomChar);
-                    }
+                    result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
+                    return result;
                 }
+
+                var newUser = new User
+                {
+                    Email = customerToRegister.Email,
+                    Phone = customerToRegister.Phone,
+                    Name = customerToRegister.Name,
+                    Password = customerToRegister.Password,
+                    RoleId = 3 // or set to the appropriate role
+                };
+
+                await _unitOfWork.UserRepository.AddAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
+
+                var userResponse = _mapper.Map<AccountResponse>(newUser);
+                result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
+
+                // Generate token for the newly registered user
+                var tokenResponse = await GenerateTokenAsync(userResponse, _jwtAuthOptions);
+                userResponse.Tokens = tokenResponse.Tokens; // Use the correct property
+
+                return result;
             }
-            return password.ToString();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during user registration.");
+                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.", null);
+                return result;
+            }
         }
+        public async Task<OperationResult<object>> CheckCustomerExistsAsync(CustomerToRegister customer)
+        {
+            var result = new OperationResult<object>();
+
+            try
+            {
+                // Check for existing customers
+                var emailExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Email == customer.Email);
+                if (emailExists)
+                {
+                    result.AddError(StatusCode.BadRequest, "Email already exists.");
+                    return result;
+                }
+                var phoneExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Phone == customer.Phone);
+                if (phoneExists)
+                {
+                    result.AddError(StatusCode.BadRequest, "Phone already exists.");
+                    return result;
+                }
+
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Customer information is available.", null, null);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                return result;
+            }
+        }
+
 
 
         private string GenerateRefreshToken()
@@ -280,6 +328,8 @@ namespace MoveMate.Service.Services
                 }
             };
         }
+
+
 
 
         private async Task<AccountTokenResponse> GenerateJwtTokenAsync(User user, string jwtAuthKey)

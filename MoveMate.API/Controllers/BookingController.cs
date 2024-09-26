@@ -19,7 +19,7 @@ namespace MoveMate.API.Controllers
 
         /// <summary>
         /// 
-        /// Get all bookings
+        /// FEATURE: Get all bookings
         /// 
         /// </summary>
         /// <returns></returns>
@@ -38,7 +38,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// register booking
+        /// FEATURE: register booking
         /// </summary>
         /// <returns></returns>
         ///
@@ -56,7 +56,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation distance booking
+        /// TEST: valuation distance booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
@@ -76,7 +76,7 @@ namespace MoveMate.API.Controllers
         
         /// <summary>
         ///
-        /// valuation distance booking
+        /// TEST: valuation floor booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
@@ -86,9 +86,25 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
         {
-            var response =  await _bookingServices.ValuationDistanceBooking(request);
+            var response =  await _bookingServices.ValuationFloorBooking(request);
             
-            
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+        
+        /// <summary>
+        ///
+        /// FEATURE: valuation floor booking, dev by vinh
+        /// </summary>
+        /// <returns></returns>
+        ///
+        
+        // Post - valuation distance booking
+        [HttpPost("valuation-booking")]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
+        {
+            var response =  await _bookingServices.ValuationBooking(request);
             
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
