@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class UserDeviceRequest
+    internal class MoMoRequest
     {
-        public string FCMToken { get; set; }
-       
     }
 }

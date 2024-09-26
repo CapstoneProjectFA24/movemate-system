@@ -24,6 +24,7 @@ namespace MoveMate.API.Controllers
 
         private IOptions<Service.ViewModels.ModelRequests.JWTAuth> _jwtAuthOptions;
         private IValidator<AccountRequest> _accountRequestValidator;
+        private IValidator<PhoneLoginRequest> _phoneLoginRequestValidator;
         private IValidator<AccountTokenRequest> _accountTokenRequestValidator;
         private readonly ILogger<ExceptionMiddleware> _logger;
         // private IValidator<ResetPasswordRequest> _resetPasswordValidator;
@@ -198,6 +199,63 @@ namespace MoveMate.API.Controllers
         }
 
 
+        #region Login Phone API
+        /// <summary>
+        /// Login to access the system using your phone number.
+        /// </summary>
+        /// <param name="phoneLoginRequest">
+        /// PhoneLoginRequest object contains Phone property and Password property. 
+        /// Notice that the password must be hashed with MD5 algorithm before sending to Login API.
+        /// </param>
+        /// <returns>
+        /// An Object with a JSON format that contains Account Id, Phone, Role name, and a pair token (access token, refresh token).
+        /// </returns>
+        /// <remarks>
+        ///     Sample request:
+        ///
+        ///         POST 
+        ///         {
+        ///             "phone": "0123456789",
+        ///             "password": "1"
+        ///         }
+        /// </remarks>
+        /// <response code="200">Login Successfully.</response>
+        /// <response code="400">Some error about request data and logic data.</response>
+        /// <response code="404">Some error about request data not found.</response>
+        /// <response code="500">Some error about the system.</response>
+        /// <exception cref="BadRequestException">Throw Error about request data and logic business.</exception>
+        /// <exception cref="NotFoundException">Throw Error about request data that are not found.</exception>
+        /// <exception cref="Exception">Throw Error about the system.</exception>
+        [HttpPost("LoginPhone")]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> PostLoginPhoneAsync([FromBody] PhoneLoginRequest phoneLoginRequest)
+        {
+            try
+            {
+               
+                var accountResponse = await _authenticationService.LoginByPhoneAsync(phoneLoginRequest, _jwtAuthOptions.Value);
+                return Ok(accountResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during phone login.");
+                var errors = new List<Error>
+        {
+            new Error
+            {
+                Code = MoveMate.Service.Commons.StatusCode.ServerError,
+                Message = "An internal server error occurred."
+            }
+        };
+                return HandleErrorResponse(errors);
+            }
+        }
+        #endregion
+
+
         /// <summary>
         /// Check Customer Exists
         /// </summary>
@@ -368,41 +426,19 @@ namespace MoveMate.API.Controllers
             }
         }
 
-        [HttpPost("fcm")]
-        public async Task<IActionResult> SaveUserDeviceToken([FromBody] UserDeviceRequest request)
+        [HttpPost("validate-fcm-token")]
+        public async Task<IActionResult> ValidateFcmToken([FromBody] string token)
         {
-            var result = new OperationResult<bool>
+            if (string.IsNullOrEmpty(token))
             {
-                StatusCode = MoveMate.Service.Commons.StatusCode.Ok,
-                Message = string.Empty,
-                IsError = false
-            };
-
-            if (string.IsNullOrEmpty(request.FCMToken) || string.IsNullOrEmpty(request.DeviceId))
-            {
-                result.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "FCM Token and Device ID are required.");
-                return HandleErrorResponse(result.Errors);
+                return BadRequest(); // Optional: You can still return BadRequest if the token is empty.
             }
 
-            IEnumerable<Claim> claims = HttpContext.User.Claims;
-            Claim accountIdClaim = claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            // Perform token validation but do not return any response
+            await _firebaseService.ValidateFcmToken(token);
 
-            if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int userId))
-            {
-                result.AddError(MoveMate.Service.Commons.StatusCode.UnAuthorize, "Invalid user ID in token.");
-                return HandleErrorResponse(result.Errors);
-            }
-
-            var saveResult = await _authenticationService.SaveUserNotificationAsync(userId, request.DeviceId);
-
-            if (saveResult.IsError)
-            {
-                result.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An error occurred while saving the FCM token and device ID.");
-                return HandleErrorResponse(result.Errors);
-            }
-
-            result.AddResponseStatusCode(MoveMate.Service.Commons.StatusCode.Ok, "FCM token and device ID saved successfully.", true);
-            return Ok(result);
+          
+            return NoContent();
         }
 
 

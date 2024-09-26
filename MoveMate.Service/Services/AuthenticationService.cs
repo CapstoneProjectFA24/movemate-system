@@ -37,55 +37,6 @@ namespace MoveMate.Service.Services
             _jwtAuthOptions = jwtAuthOptions.Value;
         }
 
-
-        public async Task<OperationResult<bool>> SaveUserNotificationAsync(int userId, string deviceId)
-        {
-            var result = new OperationResult<bool>();
-
-            try
-            {
-                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    result.AddResponseStatusCode(StatusCode.NotFound, "User not found.", false);
-                    return result;
-                }
-
-
-
-                // Check if a notification for this user and device already exists
-                var notification = await _unitOfWork.NotificationRepository
-                    .FirstOrDefaultAsync(userId, deviceId); // Pass the parameters correctly
-
-                if (notification == null)
-                {
-                    // Create a new Notification entry if it doesn't exist
-                    notification = new Notification
-                    {
-                        UserId = userId,
-                        DeviceId = deviceId,
-                        Name = user.Name,
-                        Description = "",
-                        SentFrom = "System",
-                        Receive = user.Id.ToString(),  
-                        Topic = "Device Registration",
-                    };
-                    await _unitOfWork.NotificationRepository.AddAsync(notification);
-                }                
-                await _unitOfWork.SaveChangesAsync();
-                result.AddResponseStatusCode(StatusCode.Ok, "Customer information is available.", true, null);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while saving user notification.");
-                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
-                return result;
-            }
-        }
-
-
-
         public async Task<AccountResponse> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth)
         {
             try
@@ -186,6 +137,36 @@ namespace MoveMate.Service.Services
             return accountResponse;
         }
 
+
+        public async Task<AccountResponse> LoginByPhoneAsync(PhoneLoginRequest request, JWTAuth jwtAuth)
+        {
+            try
+            {
+                // Fetch the user by phone number
+                var user = await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Phone);
+                if (user == null)
+                {
+                    throw new NotFoundException("The phone number does not exist.");
+                }
+
+                // Check if the password matches
+                if (!user.Password.Equals(request.Password))
+                {
+                    throw new BadRequestException("Invalid phone number or password.");
+                }
+
+                // Map user information to AccountResponse
+                var accountResponse = _mapper.Map<AccountResponse>(user);
+                // Generate token
+                accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
+                return accountResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while logging in with phone number.");
+                throw;
+            }
+        }
 
         public async Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister)
         {

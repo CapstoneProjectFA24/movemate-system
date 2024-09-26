@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class UserDeviceRequest
+    public class PhoneLoginRequest
     {
-        public string FCMToken { get; set; }
-       
+        public string Phone { get; set; }
+        public string Password { get; set; }
     }
 }

@@ -18,5 +18,7 @@ namespace MoveMate.Service.IServices
             );
 
         public Task<FirebaseToken> VerifyIdTokenAsync(string idToken);
+
+        public Task<bool> ValidateFcmToken(string token);
     }
 }

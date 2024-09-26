@@ -57,6 +57,19 @@ namespace MoveMate.Service.Services
         {
             return await FirebaseAuth.GetAuth(_firebaseApp).GetUserByEmailAsync(email);
         }
+
+        public async Task<bool> ValidateFcmToken(string token)
+        {
+            try
+            {
+                FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
+                return decodedToken != null;
+            }
+            catch (FirebaseAuthException ex)
+            {
+                return false;
+            }
+        }
     }
 
 }
