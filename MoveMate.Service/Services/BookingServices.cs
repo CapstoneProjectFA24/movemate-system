@@ -8,10 +8,12 @@ using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
+using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.Services
 {
@@ -69,7 +71,7 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
         {
             var result = new OperationResult<BookingRegisterResponse>();
-            string status = BookingEnums.APPROVED.ToString();
+            string status = BookingEnums.PENDING.ToString();
 
             try
             {
@@ -82,111 +84,49 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
                     return result;
                 }
-                // done check houseType
 
-
-                // check matching HouseTypeSettings of existingHouseType
-                // logic matching
-                // if null then 
-                // if !null then
-                bool isValidTruckSelection = _unitOfWork.HouseTypeSettingRepository.IsValidTruckSelection(
-                    request.HouseTypeId,
-                    request.TruckCategoryId,
-                    request.TruckNumber,
-                    string.IsNullOrEmpty(request.FloorsNumber) ? null : int.Parse(request.FloorsNumber),
-                    string.IsNullOrEmpty(request.RoomNumber) ? null : int.Parse(request.RoomNumber)
-                );
-
-                if (!isValidTruckSelection)
-                {
-                    /*result.AddError(StatusCode.BadRequest, "Truck selection is not valid based on house type and truck settings.");
-                    return result;*/
-                    status = BookingEnums.RECOMMEND.ToString();
-                    
-                }
-                // done check matching
+                // setting var
+                var serviceDetails = new List<ServiceDetail>();
+                var feeDetails = new List<FeeDetail>();
+                double total = 0;
 
                 // mapping dto to entity
                 var entity = _mapper.Map<Booking>(request);
 
                 // logic services and fee set amount
-
-                var serviceDetails = new List<ServiceDetail>();
-                var feeDetails = new List<FeeDetail>();
-                double totalFee = 0;
-
-                foreach (var serviceDetailRequest in request.ServiceDetails)
-                {
-                    var service =
-                        await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
-
-                    if (service == null)
-                    {
-                        result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
-                        return result;
-                    }
-
-                    // Tạo `ServiceDetail`
-                    var quantity = serviceDetailRequest.Quantity;
-                    var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
-
-                    var serviceDetail = new ServiceDetail
-                    {
-                        ServiceId = service.Id,
-                        Quantity = quantity,
-                        Price = price,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
-                    };
-
-                    // logic fee 
-                    var feeSettingList = service.FeeSettings;
-                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
-
-                    var (totalTruckFee, feeTruckDetails) = this.CalculateDistanceFee(request.TruckCategoryId,
-                        double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
-                    totalFee += totalTruckFee;
-                    feeDetails.AddRange(feeTruckDetails);
-
-                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
-                    totalFee += nullTotalFee;
-                    feeDetails.AddRange(nullUnitFeeDetails);
-
-                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
-                        int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
-                    totalFee += floorTotalFee;
-                    feeDetails.AddRange(floorUnitFeeDetails);
-                    // check type 
-                    // if type != common
-                    // create fee details based on service
-
-                    serviceDetails.Add(serviceDetail);
-                }
-                // done services
-
+                var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
+                    request.HouseTypeId,
+                    request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
+                
+                total += totalServices;
+                serviceDetails.AddRange(listServiceDetails);
+                    
                 // list lên fee common
-                    var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
-                    foreach (var feeSetting in feeSettings)
-                    {
-                        var feeDetail = new FeeDetail
-                        {
-                            FeeSettingId = feeSetting.Id,
-                            Name = feeSetting.Name,
-                            Description = feeSetting.Description,
-                            Amount = feeSetting.Amount,
-                        };
+                var dateBooking = entity.BookingAt ?? DateTime.Now;
+                var (totalFee, feeCommonDetails) = await CalculateAndAddFees(dateBooking);
+                
+                total += totalFee;
+                feeDetails.AddRange(feeCommonDetails);
 
-                        feeDetails.Add(feeDetail);
-                    }
-                // done fee
-
+                if (request.IsRoundTrip == true)
+                {
+                    (double updatedTotal, List<FeeDetail> updatedFeeDetails) = await ApplyPercentFeesAsync(total);
+                    total += updatedTotal;
+                    feeDetails.AddRange(updatedFeeDetails);
+                }
+                
                 // save
                 entity.Status = status;
-                // services
+            
                 entity.ServiceDetails = serviceDetails;
-                // fees
                 entity.FeeDetails = feeDetails;
+
                 entity.TotalFee = totalFee;
+                entity.TotalReal = total;
+                entity.Total = total;
+                
+                entity.TypeBooking = TypeBookingEnums.NOW.ToString();
+                
                 await _unitOfWork.BookingRepository.AddAsync(entity);
                 var checkResult = _unitOfWork.Save();
 
@@ -211,7 +151,36 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
+        
+        private async Task<(double updatedTotal, List<FeeDetail> feeDetails)> ApplyPercentFeesAsync(double total)
+        {
+            var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentFeeSettingsAsync();
+    
+            var feeDetails = new List<FeeDetail>();
 
+            var totalAmount = 0d;
+            
+            foreach (var feeSetting in feePercentSettings)
+            {
+                var value = feeSetting.Amount ?? 100;
+                var amount = total * value / 100;
+
+                var feeDetail = new FeeDetail
+                {
+                    FeeSettingId = feeSetting.Id,
+                    Name = feeSetting.Name,
+                    Description = feeSetting.Description,
+                    Amount = amount,
+                };
+
+                feeDetails.Add(feeDetail);
+                totalAmount += amount;
+            }
+
+            return (totalAmount, feeDetails);
+        }
+
+        
         public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(
             BookingValuationRequest request)
         {
@@ -249,7 +218,7 @@ namespace MoveMate.Service.Services
                     SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
 
                 var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
-                    double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
+                    double.Parse(request.EstimatedDistance), kmUnitFees, quantity ?? 1);
                 totalFee += totalTruckFee;
                 //feeDetails.AddRange(feeTruckDetails);
 
@@ -267,6 +236,60 @@ namespace MoveMate.Service.Services
             result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
 
             return result;
+        }
+
+        private (double totalFee, List<FeeDetail> feeDetails) AddFeeDetails(IEnumerable<FeeSetting> feeSettings)
+        {
+            double totalFee = 0;
+            var feeDetails = new List<FeeDetail>();
+
+            foreach (var feeSetting in feeSettings)
+            {
+                var feeDetail = new FeeDetail
+                {
+                    FeeSettingId = feeSetting.Id,
+                    Name = feeSetting.Name,
+                    Description = feeSetting.Description,
+                    Amount = feeSetting.Amount,
+                };
+
+                feeDetails.Add(feeDetail);
+                totalFee += feeSetting.Amount ?? 0;
+            }
+
+            return (totalFee, feeDetails);
+        }
+
+        private async Task<(double totalFee, List<FeeDetail> feeNullDetails)> CalculateAndAddFees(DateTime dateBooking)
+        {
+            double totalFee = 0;
+            var feeNullDetails = new List<FeeDetail>();
+
+            // Get common fees
+            var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
+            var (commonFee, commonFeeDetails) = AddFeeDetails(feeSettings);
+            totalFee += commonFee;
+            feeNullDetails.AddRange(commonFeeDetails);
+
+            // Check if the date is a weekend
+            if (DateUtil.IsWeekend(dateBooking))
+            {
+                var feeWeekendSettings = await _unitOfWork.FeeSettingRepository.GetWeekendFeeSettingsAsync();
+                var (weekendFee, weekendFeeDetails) = AddFeeDetails(feeWeekendSettings);
+                totalFee += weekendFee;
+                feeNullDetails.AddRange(weekendFeeDetails);
+            }
+
+            // Check if it's outside business hours
+            if (DateUtil.IsOutsideBusinessHours(dateBooking))
+            {
+                var feeOBHSettings = await _unitOfWork.FeeSettingRepository.GetOBHFeeSettingsAsync();
+                var (obhFee, obhFeeDetails) = AddFeeDetails(feeOBHSettings);
+                totalFee += obhFee;
+                feeNullDetails.AddRange(obhFeeDetails);
+            }
+
+            return (totalFee, feeNullDetails);
         }
 
         public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(
@@ -326,6 +349,87 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        private async Task<(double totalServices, List<ServiceDetail> serviceDetails)> CalculateServiceFees(
+            List<ServiceDetailRequest> serviceDetailRequests,
+            int houseTypeId,
+            int truckCategoryId,
+            string floorsNumber,
+            string estimatedDistance)
+        {
+            double totalServices = 0;
+            var serviceDetails = new List<ServiceDetail>();
+
+            foreach (var serviceDetailRequest in serviceDetailRequests)
+            {
+                // Check Service
+                var service =
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+
+                if (service == null)
+                {
+                    throw new Exception(
+                        $"Service with id: {serviceDetailRequest.Id} not found!"); // Consider throwing an exception for better error handling
+                }
+
+                // Set var
+                var quantity = serviceDetailRequest.Quantity;
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
+
+                if (service.Amount == 0d)
+                {
+                    // Logic fee 
+
+                    var amount = 0d;
+                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId);
+
+                    // FEE FLOOR
+                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
+                        int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                    amount += floorTotalFee;
+
+                    // FEE DISTANCE
+                    var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
+                        double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
+                    amount += totalTruckFee;
+
+                    // FEE BASE
+                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
+                    amount += nullTotalFee;
+
+                    amount = (double)(amount  -
+                                       amount  * service.DiscountRate / 100) !;
+                    
+                    totalServices += amount;
+
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price = amount,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                    };
+
+                    serviceDetails.Add(serviceDetail);
+                }
+                else
+                {
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price = price,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                    };
+
+                    serviceDetails.Add(serviceDetail);
+                }
+            }
+
+            return (totalServices, serviceDetails);
+        }
+
+
         // VAlUA
         public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
         {
@@ -345,76 +449,17 @@ namespace MoveMate.Service.Services
             var serviceDetails = new List<ServiceDetail>();
             var feeDetails = new List<FeeDetail>();
 
-            foreach (var serviceDetailRequest in request.ServiceDetails)
-            {
-                var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
-
-                if (service == null)
-                {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
-                    return result;
-                }
-                
-                var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
-                
-                if (service.Amount == 0d)
-                {
-                    // logic fee 
-                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
-
-                    // FEE FLOOR
-                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
-                        int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
-                    totalFee += floorTotalFee;
-                    //feeDetails.AddRange(floorUnitFeeDetails);
-
-                    // FEE DISTANCE
-                    var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
-                        double.Parse(request.EstimatedDistance), kmUnitFees, request.TruckNumber);
-                    totalFee += totalTruckFee;
-
-                    // FEE BASE
-                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
-                    totalFee += nullTotalFee;
-                    //feeDetails.AddRange(nullUnitFeeDetails);
-
-                    totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate / 100);
-                    
-                    var serviceDetail = new ServiceDetail
-                    {
-                        ServiceId = service.Id,
-                        Quantity = quantity,
-                        Price = totalFee,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
-                    };
-                    
-                    serviceDetails.Add(serviceDetail);
-
-                }
-                else
-                {
-                    var serviceDetail = new ServiceDetail
-                    {
-                        ServiceId = service.Id,
-                        Quantity = quantity,
-                        Price = price,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
-                    };
-                    
-                    serviceDetails.Add(serviceDetail);
-
-                }
-                
-            }
+            var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
+                request.HouseTypeId,
+                request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
+            totalFee += totalServices;
+            serviceDetails.AddRange(listServiceDetails);
 
             var response = new BookingValuationResponse();
 
             response.Amount = totalFee;
             response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
-            
+
             result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
 
             return result;
@@ -514,6 +559,7 @@ namespace MoveMate.Service.Services
                 }
             }
 
+            totalFee = totalFee * quantity;
             return (totalFee, feeDetails);
         }
 

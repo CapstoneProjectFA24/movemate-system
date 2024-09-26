@@ -25,9 +25,6 @@ public class BookingValuationRequest
     [Required(ErrorMessage = "Filed is required")]
     public int TruckCategoryId {get; set;} 
     
-    [Required(ErrorMessage = "Filed is required")]
-    public int TruckNumber {get; set;} 
-    
     public string? FloorsNumber {get; set;} 
 
     public List<ServiceDetailRequest> ServiceDetails {get; set;} = new List<ServiceDetailRequest>();
