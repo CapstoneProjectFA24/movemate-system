@@ -99,7 +99,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         //public List<BookingDetailsResponse> BookingDetails { get; set; }
 
-        //public List<BookingTrackerResponse> BookingTrackers { get; set; }
+        public List<BookingTrackerResponse> BookingTrackers { get; set; }
 
         //public List<HouseTypeResponse> HouseTypes { get; set; }
     }

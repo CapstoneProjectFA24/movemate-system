@@ -26,13 +26,17 @@ public class BookingRegisterRequest
     
     [Required(ErrorMessage = "Filed is required")]
     public string? Note { get; set; }
-    
-    public bool? IsRoundTrip { get; set; }
-    
-    public bool? IsManyItems { get; set; }
-    
-    public string? RoomNumber { get; set; }
 
+    public string? EstimatedDeliveryTime { get; set; }
+
+    public bool? IsRoundTrip { get; set; } = false;
+
+    public bool? IsManyItems { get; set; } = false;
+    
+    [DisplayFormat(DataFormatString = "{0:N0}")]
+    public string? RoomNumber { get; set; }
+    
+    [DisplayFormat(DataFormatString = "{0:N0}")] 
     public string? FloorsNumber { get; set; }
     
     [Required(ErrorMessage = "Filed is required")]
@@ -41,18 +45,31 @@ public class BookingRegisterRequest
     [Required(ErrorMessage = "Filed is required")]
     public int TruckCategoryId {get; set;} 
     
-    [Required(ErrorMessage = "Filed is required")]
-    public int TruckNumber {get; set;} 
-    
-    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
+    [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
     [Required(ErrorMessage = "Filed is required")]
     public DateTime? BookingAt { get; set; } 
     
     [JsonIgnore]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
-    public DateTime CreateAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
     
     [JsonIgnore]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+    [JsonIgnore]
+    public bool? IsCancel { get; set; } = false;
+    [JsonIgnore]
+    public bool? IsDeleted { get; set; } = false;
+    [JsonIgnore]
+    public bool? IsReported { get; set; } = false;
+    [JsonIgnore]
+    public bool? IsBonus { get; set; } = false;
+    [JsonIgnore]
+    public bool? IsDeposited { get; set; } = false;
+
+    public virtual ICollection<ResourceRequest> ResourceList { get; set; } = new List<ResourceRequest>();
+
+
+
 }

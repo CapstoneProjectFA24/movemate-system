@@ -15,9 +15,9 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private MoveMateDbContext _dbContext;
         private IDbFactory _dbFactory;
 
-        private AchievementRepository _achievementRepository;
-        private AchievementDetailRepository _achievementDetailRepository;
-        private AchievementSettingRepository _achievementSettingRepository;
+        private LoyalUserRepository _loyalUserRepository;
+        private LoyalUserDetailRepository _loyalUserDetailRepository;
+        private LoyalUserSettingRepository _loyalUserSettingRepository;
         private BookingRepository _bookingRepository;
         private BookingDetailRepository _bookingDetailRepository;      
         private BookingStaffDailyRepository _bookingStaffDailyRepository;
@@ -28,7 +28,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private HouseTypeSettingRepository _houseTypeSettingRepository;
         private NotificationRepository _notificationRepository;
         private PaymentRepository _paymentRepository;   
-        private PromotionDetailRepository _promotionDetailRepository;
+        private VoucherRepository _voucherRepository;
         private PromotionCategoryRepository _promotionCategoryRepository;
         private UserRepository _userRepository;
         private RoleRepository _roleRepository;
@@ -61,27 +61,27 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         }
 
 
-        public AchievementRepository AchievementRepository
+        public LoyalUserRepository LoyalUserRepository
         {
             get
             {
-                if (_achievementRepository == null)
+                if (_loyalUserRepository == null)
                 {
-                    _achievementRepository = new AchievementRepository(_dbContext);
+                    _loyalUserRepository = new LoyalUserRepository(_dbContext);
                 }
-                return _achievementRepository;
+                return _loyalUserRepository;
             }
         }
 
-        public AchievementDetailRepository AchievementDetailRepository
+        public LoyalUserDetailRepository LoyalUserDetailRepository
         {
             get
             {
-                if (_achievementDetailRepository == null)
+                if (_loyalUserDetailRepository == null)
                 {
-                    _achievementDetailRepository = new AchievementDetailRepository(_dbContext);
+                    _loyalUserDetailRepository = new LoyalUserDetailRepository(_dbContext);
                 }
-                return _achievementDetailRepository;
+                return _loyalUserDetailRepository;
             }
         }
 
@@ -97,15 +97,15 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public AchievementSettingRepository AchievementSettingRepository
+        public LoyalUserSettingRepository LoyalUserSettingRepository
         {
             get
             {
-                if(_achievementSettingRepository == null)
+                if(_loyalUserSettingRepository == null)
                 {
-                    _achievementSettingRepository = new AchievementSettingRepository(_dbContext);
+                    _loyalUserSettingRepository = new LoyalUserSettingRepository(_dbContext);
                 }
-                return _achievementSettingRepository;
+                return _loyalUserSettingRepository;
             }
         }
 
@@ -234,15 +234,15 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         }
 
        
-        public PromotionDetailRepository PromotionDetailRepository
+        public VoucherRepository VoucherRepository
         {
             get
             {
-                if(_promotionDetailRepository == null)
+                if(_voucherRepository == null)
                 {
-                    _promotionDetailRepository = new PromotionDetailRepository(_dbContext);
+                    _voucherRepository = new VoucherRepository(_dbContext);
                 }
-                return _promotionDetailRepository;
+                return _voucherRepository;
             }
         }
 

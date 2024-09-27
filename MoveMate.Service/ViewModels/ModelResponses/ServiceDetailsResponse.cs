@@ -17,6 +17,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public double? Price { get; set; }
 
         public bool? IsQuantity { get; set; }
+        
+        public string? Description { get; set; }
 
     }
 }

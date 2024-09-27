@@ -47,17 +47,15 @@ public partial class User
 
     public bool? IsInitUser { get; set; }
 
-    public virtual ICollection<Achievement> Achievements { get; set; } = new List<Achievement>();
-
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
     public virtual ICollection<BookingStaffDaily> BookingStaffDailies { get; set; } = new List<BookingStaffDaily>();
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public virtual ICollection<LoyalUser> LoyalUsers { get; set; } = new List<LoyalUser>();
 
-    public virtual ICollection<PromotionDetail> PromotionDetails { get; set; } = new List<PromotionDetail>();
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual Role? Role { get; set; }
 
@@ -70,6 +68,8 @@ public partial class User
     public virtual ICollection<Truck> Trucks { get; set; } = new List<Truck>();
 
     public virtual ICollection<UserInfo> UserInfos { get; set; } = new List<UserInfo>();
+
+    public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
 
     public virtual Wallet? Wallet { get; set; }
 }

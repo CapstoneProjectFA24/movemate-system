@@ -26,12 +26,15 @@ namespace MoveMate.API.Controllers
         private IValidator<AccountRequest> _accountRequestValidator;
         private IValidator<PhoneLoginRequest> _phoneLoginRequestValidator;
         private IValidator<AccountTokenRequest> _accountTokenRequestValidator;
+
         private readonly ILogger<ExceptionMiddleware> _logger;
+
         // private IValidator<ResetPasswordRequest> _resetPasswordValidator;
         public AuthenticationsController(IAuthenticationService authenticationService, IOptions<JWTAuth> jwtAuthOptions,
-            IValidator<AccountRequest> accountRequestValidator, IValidator<AccountTokenRequest> accountTokenRequestValidator,
-            ILogger<ExceptionMiddleware> logger, IFirebaseServices firebaseServices)
-        // IValidator<ResetPasswordRequest> resetPasswordValidator)
+                IValidator<AccountRequest> accountRequestValidator,
+                IValidator<AccountTokenRequest> accountTokenRequestValidator,
+                ILogger<ExceptionMiddleware> logger, IFirebaseServices firebaseServices)
+            // IValidator<ResetPasswordRequest> resetPasswordValidator)
         {
             this._authenticationService = authenticationService;
             this._jwtAuthOptions = jwtAuthOptions;
@@ -43,6 +46,7 @@ namespace MoveMate.API.Controllers
         }
 
         #region Login API
+
         /// <summary>
         /// Login to access into the system by your account.
         /// </summary>
@@ -90,6 +94,7 @@ namespace MoveMate.API.Controllers
         #endregion
 
         #region Re-GenerateTokens API
+
         /// <summary>
         /// Re-generate pair token from the old pair token that are provided by the MBKC system before.
         /// </summary>
@@ -131,12 +136,15 @@ namespace MoveMate.API.Controllers
                 throw new BadRequestException(errors);
             }
 
-            var accountTokenResponse = await _authenticationService.ReGenerateTokensAsync(accountToken, _jwtAuthOptions.Value);
+            var accountTokenResponse =
+                await _authenticationService.ReGenerateTokensAsync(accountToken, _jwtAuthOptions.Value);
             return Ok(accountTokenResponse);
         }
+
         #endregion
 
         #region Register API
+
         /// <summary>
         /// Register a new account in the system.
         /// </summary>
@@ -158,15 +166,15 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> RegisterAsync([FromBody] CustomerToRegister customerToRegister)
         {
-            
-                // Register user
-                var response = await _authenticationService.Register(customerToRegister);
-               
-                return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-            
-        #endregion
-    }
-        [HttpPost("register/v2")]
+            // Register user
+            var response = await _authenticationService.Register(customerToRegister);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+            #endregion
+        }
+
+        [HttpPost("register")]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
@@ -325,7 +333,7 @@ namespace MoveMate.API.Controllers
 
 
 
-        [HttpPost("verify-token/v2")]
+        [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
         {
             var result = new OperationResult<object>();
@@ -350,7 +358,6 @@ namespace MoveMate.API.Controllers
         }
 
 
-
         [HttpPost("google-login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
@@ -364,12 +371,14 @@ namespace MoveMate.API.Controllers
                 {
                     return BadRequest(new { Errors = accountResponse.Errors });
                 }
+
                 return Ok(accountResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during Google login.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "An internal server error occurred." });
             }
         }
 
@@ -387,7 +396,5 @@ namespace MoveMate.API.Controllers
           
             return NoContent();
         }
-
-
     }
 }
