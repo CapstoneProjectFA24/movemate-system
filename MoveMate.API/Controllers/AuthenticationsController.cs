@@ -77,33 +77,16 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PostLoginAsync([FromBody] AccountRequest account)
         {
-            try
-            {
-                var validationResult = await _accountRequestValidator.ValidateAsync(account);
-                if (!validationResult.IsValid)
-                {
-                    var errors = ErrorUtil.GetErrorsString(validationResult);
-                    var errorList = errors.Select(e => new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = e.ToString() });
-                    return HandleErrorResponse((List<Error>)errorList);
-                }
+            var result = await _authenticationService.LoginAsync(account, _jwtAuthOptions.Value);
 
-                var accountResponse = await _authenticationService.LoginAsync(account, _jwtAuthOptions.Value);
-                return Ok(accountResponse);
-            }
-            catch (Exception ex)
+            if (result.IsError)
             {
-                _logger.LogError(ex, "An error occurred during login.");
-                var errors = new List<Error>
-        {
-            new Error
-            {
-                Code = MoveMate.Service.Commons.StatusCode.ServerError,
-                Message = "An internal server error occurred."
+                return HandleErrorResponse(result.Errors);
             }
-        };
-                return HandleErrorResponse(errors);
-            }
+
+            return Ok(result);
         }
+
         #endregion
 
         #region Re-GenerateTokens API
@@ -183,20 +166,24 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
-        //[HttpPost("register/v2")]
-        //[ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
-        //[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
-        //public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
-        //{
+        [HttpPost("register/v2")]
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
+        {
 
-        //    // Register user
-        //    var response = await _authenticationService.RegisterV2(customerToRegister);
+            var response = await _authenticationService.RegisterV2(customerToRegister);
 
-        //    return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            if (response.IsError)
+            {
+                return HandleErrorResponse(response.Errors);
+            }
 
+            // Format response similar to your desired output structure
+            return Ok(response);
 
-        //}
+        }
 
 
         #region Login Phone API
@@ -233,49 +220,38 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PostLoginPhoneAsync([FromBody] PhoneLoginRequest phoneLoginRequest)
         {
-            try
+            var result = await _authenticationService.LoginByPhoneAsync(phoneLoginRequest, _jwtAuthOptions.Value);
+
+            if (result.IsError)
             {
-               
-                var accountResponse = await _authenticationService.LoginByPhoneAsync(phoneLoginRequest, _jwtAuthOptions.Value);
-                return Ok(accountResponse);
+                return HandleErrorResponse(result.Errors);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred during phone login.");
-                var errors = new List<Error>
-        {
-            new Error
-            {
-                Code = MoveMate.Service.Commons.StatusCode.ServerError,
-                Message = "An internal server error occurred."
-            }
-        };
-                return HandleErrorResponse(errors);
-            }
+
+            return Ok(result);
         }
-        #endregion
+            #endregion
 
 
-        /// <summary>
-        /// Check Customer Exists
-        /// </summary>
-        /// <param name="checkCustomer">Check information of customer</param>
-        /// <returns>Validate information customer are available</returns>
-        /// <remarks>
-        /// Sample request:
-        ///     POST 
-        ///     {
-        ///         "email": "user@example.com",
-        ///         "phone": "string",
-        ///         "name": "string",
-        ///         "password": "string"
-        ///     }
-        /// </remarks>
-        /// <response code="200">Customer information is available.</response>
-        /// <response code="400">Email already exists.</response>
-        /// <response code="400">Phone already exists.</response>
-        /// <response code="500">An unexpected error occurred.</response>
-        [HttpPost("check-exists")]
+            /// <summary>
+            /// Check Customer Exists
+            /// </summary>
+            /// <param name="checkCustomer">Check information of customer</param>
+            /// <returns>Validate information customer are available</returns>
+            /// <remarks>
+            /// Sample request:
+            ///     POST 
+            ///     {
+            ///         "email": "user@example.com",
+            ///         "phone": "string",
+            ///         "name": "string",
+            ///         "password": "string"
+            ///     }
+            /// </remarks>
+            /// <response code="200">Customer information is available.</response>
+            /// <response code="400">Email already exists.</response>
+            /// <response code="400">Phone already exists.</response>
+            /// <response code="500">An unexpected error occurred.</response>
+            [HttpPost("check-exists")]
         public async Task<IActionResult> CheckCustomerExists([FromBody] CustomerToRegister customer)
         {
             var result = await _authenticationService.CheckCustomerExistsAsync(customer);
@@ -288,67 +264,8 @@ namespace MoveMate.API.Controllers
             return Ok(result);
         }
 
-        [HttpPost("verify-token")]
-        public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
-        {
-            var result = new OperationResult<object>
-            {
-                StatusCode = Service.Commons.StatusCode.Ok,
-                Message = string.Empty,
-                IsError = false,
-                Payload = null
-            };
-
-            try
-            {
-                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
-
-                if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
-                {
-                    var userId = decodedToken.Uid;
-                    var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
-
-                    result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified and JWT generated successfully", new
-                    {
-                        accessToken = accountResponse.Tokens.AccessToken,
-                        refreshToken = accountResponse.Tokens.RefreshToken
-                    });
-                }
-                else
-                {
-                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token: UID not found");
-                }
-            }
-            catch (FirebaseAuthException ex)
-            {
-                _logger.LogError(ex, "Firebase token verification failed.");
-                result.AddError(Service.Commons.StatusCode.BadRequest, "Firebase token verification failed: " + ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An internal server error occurred during token verification.");
-                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
-            }
-
-            // If there are errors, use HandleErrorResponse to return only the error messages
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-
-            // If successful, return the payload and omit unnecessary data
-            return Ok(new
-            {
-                statusCode = (int)result.StatusCode,
-                message = result.Message,
-                isError = result.IsError,
-                payload = result.Payload
-            });
-        }
-
-
-        //[HttpPost("verify-token/v2")]
-        //public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
+        //[HttpPost("verify-token")]
+        //public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
         //{
         //    var result = new OperationResult<object>
         //    {
@@ -364,21 +281,24 @@ namespace MoveMate.API.Controllers
 
         //        if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
         //        {
-        //            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
+        //            var userId = decodedToken.Uid;
+        //            var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
+
+        //            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified and JWT generated successfully", new
         //            {
-        //                isValid = true,
-        //                uid = decodedToken.Uid
+        //                accessToken = accountResponse.Tokens.AccessToken,
+        //                refreshToken = accountResponse.Tokens.RefreshToken
         //            });
         //        }
         //        else
         //        {
-        //            result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token");
+        //            result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token: UID not found");
         //        }
         //    }
         //    catch (FirebaseAuthException ex)
         //    {
         //        _logger.LogError(ex, "Firebase token verification failed.");
-        //        result.AddError(Service.Commons.StatusCode.BadRequest, ex.Message);
+        //        result.AddError(Service.Commons.StatusCode.BadRequest, "Firebase token verification failed: " + ex.Message);
         //    }
         //    catch (Exception ex)
         //    {
@@ -401,6 +321,33 @@ namespace MoveMate.API.Controllers
         //        payload = result.Payload
         //    });
         //}
+
+
+
+
+        [HttpPost("verify-token/v2")]
+        public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
+        {
+            var result = new OperationResult<object>();
+
+            // Call the VerifyIdTokenAsync method
+            var verifyResult = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+
+            if (verifyResult.IsError)
+            {
+                // If there are errors, handle the error response
+                return HandleErrorResponse(verifyResult.Errors);
+            }
+
+            // If token verification is successful, create a success response
+            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
+            {
+                isValid = true,
+                uid = verifyResult.Payload.Uid
+            });
+
+            return Ok(result);
+        }
 
 
 
