@@ -340,29 +340,21 @@ namespace MoveMate.Service.Services
             return accountResponse;
         }
 
-        public async Task<AccountResponse> LoginWithEmailAsync(string email)
+        public async Task<OperationResult<AccountResponse>> LoginWithEmailAsync(string email)
         {
+            var result = new OperationResult<AccountResponse>();
+
             // Check if the email exists in the system
             var user = await _unitOfWork.UserRepository.FindByEmailAsync(email);
             if (user == null)
             {
-                return new AccountResponse
-                {
-                    IsError = true,
-                    Errors = new List<Error>
-                    {
-                        new Error
-                        {
-                            Code = StatusCode.NotFound,
-                            Message = "User not found."
-                        }
-                    }
-                };
+                result.AddError(Service.Commons.StatusCode.NotFound, "User not found.");
+                return result;
             }
 
             // Generate JWT token for the user
             var token = await GenerateJwtTokenAsync(user, _jwtAuthOptions.Key);
-            return new AccountResponse
+            var accountResponse = new AccountResponse
             {
                 Tokens = new AccountTokenResponse
                 {
@@ -370,7 +362,11 @@ namespace MoveMate.Service.Services
                     RefreshToken = token.RefreshToken
                 }
             };
+
+            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+            return result;
         }
+
 
 
 
