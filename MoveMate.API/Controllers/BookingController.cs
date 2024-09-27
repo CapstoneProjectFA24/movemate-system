@@ -156,14 +156,26 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Get booking by Id
+        /// FEATURE: Get booking by Id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("booking/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetBookingById(int id)
         {
             var response = await _bookingServices.GetById(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        
+        /// <summary>
+        /// FEATURE: Set booking to Cancel by Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("cancel-booking/{id}")]
+        public async Task<IActionResult> CancelBookingById(BookingCancelRequest request)
+        {
+            var response = await _bookingServices.CancelBooking(request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }
