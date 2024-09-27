@@ -364,23 +364,16 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
-            try
-            {
-                var accountResponse = await _authenticationService.LoginWithEmailAsync(request.Email);
-                if (accountResponse.IsError)
+            var result = new OperationResult<AccountResponse>();
+         
+                var loginResult = await _authenticationService.LoginWithEmailAsync(request.Email);
+                if (loginResult.IsError)
                 {
-                    return BadRequest(new { Errors = accountResponse.Errors });
+                    return HandleErrorResponse(loginResult.Errors);
                 }
-
-                return Ok(accountResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred during Google login.");
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "An internal server error occurred." });
-            }
+                return Ok(loginResult);
         }
+
 
         [HttpPost("validate-fcm-token")]
         public async Task<IActionResult> ValidateFcmToken([FromBody] string token)
