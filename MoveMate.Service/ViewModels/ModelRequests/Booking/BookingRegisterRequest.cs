@@ -68,6 +68,7 @@ public class BookingRegisterRequest
     [JsonIgnore]
     public bool? IsDeposited { get; set; } = false;
 
+    public virtual ICollection<ResourceRequest> ResourceList { get; set; } = new List<ResourceRequest>();
 
 
 

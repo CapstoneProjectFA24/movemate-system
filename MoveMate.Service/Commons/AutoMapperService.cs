@@ -32,7 +32,8 @@ namespace MoveMate.Service.Commons
             // Mapping for User -> AccountResponse
             CreateMap<User, AccountResponse>()
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
-                .ForMember(dest => dest.Tokens, opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
+                .ForMember(dest => dest.Tokens,
+                    opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
             //Address
             CreateMap<UserInfo, UserInfoResponse>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
@@ -41,35 +42,36 @@ namespace MoveMate.Service.Commons
 
             //Register
             CreateMap<User, RegisterResponse>()
-            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-            ;
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                ;
 
             //Booking
             CreateMap<Booking, BookingResponse>();
             CreateMap<Booking, BookingRegisterResponse>();
-                //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
-                //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
-                //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
-                //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
+            //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
+            //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
+            //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
+            //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
 
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
             CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<BookingTracker, BookingTrackerResponse>();
             CreateMap<HouseType, HouseTypeResponse>();
-                // REQUEST
-                CreateMap<BookingRegisterRequest, Booking>()
-                    .ForMember(dest => dest.ServiceDetails,
-                        opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
-                    .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
-                    .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
-                //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
+            // REQUEST
+            CreateMap<BookingRegisterRequest, Booking>()
+                .ForMember(dest => dest.ServiceDetails,
+                    opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
+                .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
+                .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
+            
+            //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
             CreateMap<Schedule, ScheduleResponse>()
-               .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
+                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
 
             CreateMap<ScheduleDetail, ScheduleDetailResponse>();
-            
+
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
             CreateMap<TruckCategory, TruckCateDetailResponse>();
@@ -88,21 +90,24 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
-            
-            //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
-            
-            //Wallet
-            CreateMap<Wallet,  WalletResponse>();
 
-          
+            //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
+
+            //Wallet
+            CreateMap<Wallet, WalletResponse>();
+
 
             // Mapping for TruckCategory to TruckCategoryResponse
             CreateMap<TruckCategory, TruckCategoryResponse>();
-            
+
             // Free
             //CreateMap<FeeDetail, FeeDetailResponse>();
             //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
+            
+            // Resource
+            CreateMap<ResourceRequest, TrackerSource>();
+
+            
         }
     }
-
 }

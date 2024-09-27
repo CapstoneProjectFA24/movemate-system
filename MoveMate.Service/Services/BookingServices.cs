@@ -68,9 +68,9 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task<OperationResult<BookingRegisterResponse>> RegisterBooking(BookingRegisterRequest request)
+        public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request)
         {
-            var result = new OperationResult<BookingRegisterResponse>();
+            var result = new OperationResult<BookingResponse>();
             string status = BookingEnums.PENDING.ToString();
 
             try
@@ -115,9 +115,19 @@ namespace MoveMate.Service.Services
                     feeDetails.AddRange(updatedFeeDetails);
                 }
                 
+                // resource logic
+                
+                var tracker = new BookingTracker();
+                tracker.Type = TrackerEnums.PENDING.ToString();
+                tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+                
+                List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                tracker.TrackerSources = resourceList;
+                
                 // save
                 entity.Status = status;
             
+                entity.BookingTrackers.Add(tracker);
                 entity.ServiceDetails = serviceDetails;
                 entity.FeeDetails = feeDetails;
 
@@ -135,7 +145,7 @@ namespace MoveMate.Service.Services
 
                 if (checkResult > 0)
                 {
-                    var response = _mapper.Map<BookingRegisterResponse>(entity);
+                    var response = _mapper.Map<BookingResponse>(entity);
                     result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
                 }
                 else
