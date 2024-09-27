@@ -169,7 +169,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200">Registration successful.</response>
         /// <response code="400">Validation failed or email is already registered.</response>
         /// <response code="500">System error occurred.</response>
-        [HttpPost("register")]
+        [HttpPost("registeration")]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
@@ -183,20 +183,20 @@ namespace MoveMate.API.Controllers
             
         #endregion
     }
-        [HttpPost("register/v2")]
-        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
-        {
+        //[HttpPost("register/v2")]
+        //[ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        //public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
+        //{
 
-            // Register user
-            var response = await _authenticationService.RegisterV2(customerToRegister);
+        //    // Register user
+        //    var response = await _authenticationService.RegisterV2(customerToRegister);
 
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        //    return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
 
-        }
+        //}
 
 
         #region Login Phone API
@@ -347,60 +347,60 @@ namespace MoveMate.API.Controllers
         }
 
 
-        [HttpPost("verify-token/v2")]
-        public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
-        {
-            var result = new OperationResult<object>
-            {
-                StatusCode = Service.Commons.StatusCode.Ok,
-                Message = string.Empty,
-                IsError = false,
-                Payload = null
-            };
+        //[HttpPost("verify-token/v2")]
+        //public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
+        //{
+        //    var result = new OperationResult<object>
+        //    {
+        //        StatusCode = Service.Commons.StatusCode.Ok,
+        //        Message = string.Empty,
+        //        IsError = false,
+        //        Payload = null
+        //    };
 
-            try
-            {
-                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+        //    try
+        //    {
+        //        var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
 
-                if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
-                {
-                    result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
-                    {
-                        isValid = true,
-                        uid = decodedToken.Uid
-                    });
-                }
-                else
-                {
-                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token");
-                }
-            }
-            catch (FirebaseAuthException ex)
-            {
-                _logger.LogError(ex, "Firebase token verification failed.");
-                result.AddError(Service.Commons.StatusCode.BadRequest, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An internal server error occurred during token verification.");
-                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
-            }
+        //        if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
+        //        {
+        //            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
+        //            {
+        //                isValid = true,
+        //                uid = decodedToken.Uid
+        //            });
+        //        }
+        //        else
+        //        {
+        //            result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token");
+        //        }
+        //    }
+        //    catch (FirebaseAuthException ex)
+        //    {
+        //        _logger.LogError(ex, "Firebase token verification failed.");
+        //        result.AddError(Service.Commons.StatusCode.BadRequest, ex.Message);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "An internal server error occurred during token verification.");
+        //        result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+        //    }
 
-            // If there are errors, use HandleErrorResponse to return only the error messages
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
+        //    // If there are errors, use HandleErrorResponse to return only the error messages
+        //    if (result.IsError)
+        //    {
+        //        return HandleErrorResponse(result.Errors);
+        //    }
 
-            // If successful, return the payload and omit unnecessary data
-            return Ok(new
-            {
-                statusCode = (int)result.StatusCode,
-                message = result.Message,
-                isError = result.IsError,
-                payload = result.Payload
-            });
-        }
+        //    // If successful, return the payload and omit unnecessary data
+        //    return Ok(new
+        //    {
+        //        statusCode = (int)result.StatusCode,
+        //        message = result.Message,
+        //        isError = result.IsError,
+        //        payload = result.Payload
+        //    });
+        //}
 
 
 
