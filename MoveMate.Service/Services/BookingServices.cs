@@ -723,5 +723,31 @@ namespace MoveMate.Service.Services
 
             return (totalFee, feeDetails);
         }
+
+        public async Task<OperationResult<BookingResponse>> GetById(int id)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(id, includeProperties: "BookingTrackers, TrackerSources");
+
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Can't found Booking with Id: {id}");
+                }
+                
+                else
+                {
+                    var productResponse = _mapper.Map<BookingResponse>(booking);
+                    result.AddResponseStatusCode(StatusCode.Ok, $"Get Booking by Id: {id} Success!", productResponse);
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred in Get Service By Id service method for ID: {id}");
+                throw;
+            }
+        }
     }
 }

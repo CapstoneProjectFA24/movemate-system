@@ -46,12 +46,16 @@ namespace MoveMate.Service.Commons
                 ;
 
             //Booking
-            CreateMap<Booking, BookingResponse>();
+            CreateMap<Booking, BookingResponse>()
+                .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers)); 
             CreateMap<Booking, BookingRegisterResponse>();
             //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
             //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
             //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
             //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
+
+
+
 
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
             CreateMap<BookingDetail, BookingDetailsResponse>();
@@ -106,8 +110,12 @@ namespace MoveMate.Service.Commons
             
             // Resource
             CreateMap<ResourceRequest, TrackerSource>();
+            CreateMap<TrackerSource, TrackerSourceResponse>();
 
-            
+            //Tracker
+            CreateMap<BookingTracker, BookingTrackerResponse>()
+                .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources)); 
+
         }
     }
 }

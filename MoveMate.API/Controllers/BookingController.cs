@@ -154,6 +154,17 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }
-        
+
+        /// <summary>
+        /// Get booking by Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("booking/{id}")]
+        public async Task<IActionResult> GetBookingById(int id)
+        {
+            var response = await _bookingServices.GetById(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
