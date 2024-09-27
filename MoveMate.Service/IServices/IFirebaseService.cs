@@ -1,4 +1,5 @@
 ﻿using FirebaseAdmin.Auth;
+using MoveMate.Service.Commons;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace MoveMate.Service.IServices
             string phoneNumber
             );
 
-        public Task<FirebaseToken> VerifyIdTokenAsync(string idToken);
+        public Task<OperationResult<FirebaseToken>> VerifyIdTokenAsync(string idToken);
+
+        public Task<bool> ValidateFcmToken(string token);
     }
 }
