@@ -153,19 +153,13 @@ namespace MoveMate.API.Controllers
             try
             {
                 // Tạo danh sách các item từ model nếu có
-                var items = new ItemData
-                (
-                    "he",
-                    1,
-                    2000
-
-                );
+               
                 // Tạo đối tượng PaymentData với các giá trị từ model và các URL cần thiết
                 var paymentData = new PaymentData(
                     orderCode: 4,  // Bạn có thể tạo mã đơn hàng tại đây
                     amount: (int)booking.Total,
                     description: "d",
-                    items: new List<ItemData>(),
+                    items: null,
                     cancelUrl: "http://yourdomain.com/payment/cancel",  // URL khi thanh toán bị hủy
                     returnUrl: "http://yourdomain.com/payment/return",  // URL khi thanh toán thành công
                     buyerName: user.Name,
