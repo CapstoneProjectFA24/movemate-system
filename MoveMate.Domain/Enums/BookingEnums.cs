@@ -11,7 +11,7 @@ namespace MoveMate.Domain.Enums
         PENDING,
         RECOMMEND,
         APPROVED,
-        WAITING,
+        WAITING, // Thanh toán tiền đặt cọc
         ASSIGNED,
         ACCEPT,
         ARRIVED,
@@ -22,7 +22,8 @@ namespace MoveMate.Domain.Enums
         UNLOADED,
         ROUND_TRIP,
         CONFIRM,
-        COMPLETED,
+        COMPLETED, // Thanh toán phần tiền còn lại
+        FINISHED,
         CANCEL
 
     }

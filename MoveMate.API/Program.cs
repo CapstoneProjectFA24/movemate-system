@@ -17,6 +17,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
+using MoveMate.Service.ThirdPartyService.Momo.Config;
 
 namespace MoveMate.API
 {
@@ -46,6 +47,7 @@ namespace MoveMate.API
             builder.Services.AddAutoMapper(typeof(AutoMapperService));
             builder.Services.AddExceptionMiddleware();
             builder.Services.AddFirebaseServices(builder.Configuration);
+            builder.Services.Configure<MomoConfig>(builder.Configuration.GetSection(MomoConfig.ConfigName));
 
             // CORS Policy
             builder.Services.AddCors(cors => cors.AddPolicy(

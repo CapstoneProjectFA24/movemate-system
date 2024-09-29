@@ -22,6 +22,7 @@ using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
 using Service.IServices;
 using Service.Services;
+using MoveMate.Service.ThirdPartyService.Momo;
 
 
 namespace MoveMate.API.Extensions
@@ -57,6 +58,8 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IServiceDetails, ServiceDetails>();
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IWalletServices, WalletServices>();
+            services.AddScoped<IZaloPayService, ZaloPayService>();
+            services.AddScoped<IMomoService, MomoService>();
            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
