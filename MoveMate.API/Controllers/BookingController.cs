@@ -4,6 +4,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.API.Controllers
 {
@@ -35,17 +36,60 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
         
-        
+        #region FEATURE: Register a new booking in the system.
         /// <summary>
         ///
-        /// FEATURE: register booking
+        /// FEATURE: Register a new booking in the system.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// A response that contains details of the registered booking or error information in case of failure.
+        /// </returns>
+        /// <remarks>
+        ///     Sample request:
         ///
+        ///         POST /api/v1/bookings/register-booking
+        ///         {
+        ///           "pickupAddress": "string",
+        ///           "pickupPoint": "string",
+        ///           "deliveryAddress": "string",
+        ///           "deliveryPoint": "string",
+        ///           "estimatedDistance": "3",
+        ///           "houseTypeId": 1,
+        ///           "note": "string",
+        ///           "estimatedDeliveryTime": "3",
+        ///           "isRoundTrip": true,
+        ///           "isManyItems": true,
+        ///           "roomNumber": "1",
+        ///           "floorsNumber": "2",
+        ///           "serviceDetails": [
+        ///             {
+        ///               "id": 1,
+        ///               "isQuantity": true,
+        ///               "quantity": 1
+        ///             }
+        ///           ],
+        ///           "truckCategoryId": 1,
+        ///           "bookingAt": "2024-09-27T04:05:29.705Z",
+        ///           "resourceList": [
+        ///             {
+        ///               "type": "IMG",
+        ///               "resourceUrl": "https://hoanghamobile.com/tin-tuc/wp-content/webp-express/webp-images/uploads/2024/03/anh-meme-hai.jpg.webp",
+        ///               "resourceCode": "string"
+        ///             }
+        ///           ]
+        ///         }
+        /// </remarks>
+        /// <response code="200">Booking registered successfully.</response>
+        /// <response code="400">Some Error about request data and logic data.</response>
+        /// <response code="500">Some Error about the system.</response>
+        /// <exception cref="BadRequestException">Thrown if the request data is invalid or contains logic errors.</exception>
+        /// <exception cref="Exception">Thrown in case of a system error.</exception>
         
         // Post - register booking
         [HttpPost("register-booking")]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
             var response =  await _bookingServices.RegisterBooking(request);
@@ -53,7 +97,8 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }
-        
+        #endregion
+
         /// <summary>
         ///
         /// TEST: valuation distance booking, test by vinh
@@ -109,6 +154,29 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }
+
+        /// <summary>
+        /// FEATURE: Get booking by Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBookingById(int id)
+        {
+            var response = await _bookingServices.GetById(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
         
+        /// <summary>
+        /// FEATURE: Set booking to Cancel by Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("cancel-booking/{id}")]
+        public async Task<IActionResult> CancelBookingById(BookingCancelRequest request)
+        {
+            var response = await _bookingServices.CancelBooking(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Service.Commons;
 
 namespace MoveMate.Service.Services
 {
@@ -30,12 +31,28 @@ namespace MoveMate.Service.Services
 
 
         // Verify the ID token sent from the client
-        public async Task<FirebaseToken> VerifyIdTokenAsync(string idToken)
+        public async Task<OperationResult<FirebaseToken>> VerifyIdTokenAsync(string idToken)
         {
-            FirebaseAuth auth = FirebaseAuth.DefaultInstance;
-            FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
-            return decodedToken;
+            var result = new OperationResult<FirebaseToken>();
+
+            try
+            {
+                FirebaseAuth auth = FirebaseAuth.DefaultInstance;
+                FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified successfully", decodedToken);
+            }
+            catch (FirebaseAuthException ex)
+            {
+                result.AddError(Service.Commons.StatusCode.BadRequest, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+            }
+
+            return result;
         }
+
 
         public async Task<UserRecord> CreateUser(string username, string password, string email, string phoneNumber)
         {
@@ -56,6 +73,19 @@ namespace MoveMate.Service.Services
         public async Task<UserRecord> RetrieveUser(string email)
         {
             return await FirebaseAuth.GetAuth(_firebaseApp).GetUserByEmailAsync(email);
+        }
+
+        public async Task<bool> ValidateFcmToken(string token)
+        {
+            try
+            {
+                FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
+                return decodedToken != null;
+            }
+            catch (FirebaseAuthException ex)
+            {
+                return false;
+            }
         }
     }
 
