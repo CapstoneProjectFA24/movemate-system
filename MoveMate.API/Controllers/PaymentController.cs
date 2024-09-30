@@ -4,7 +4,7 @@ using MoveMate.API.Utils;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
-using Service.IServices;
+using MoveMate.Service.ThirdPartyService.VNPay;
 using System.Security.Claims;
 
 namespace MoveMate.API.Controllers

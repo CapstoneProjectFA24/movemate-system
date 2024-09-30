@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Service.IServices
+namespace MoveMate.Service.ThirdPartyService.VNPay
 {
     public interface IVnPayService
     {

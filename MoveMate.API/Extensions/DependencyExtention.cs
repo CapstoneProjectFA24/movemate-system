@@ -20,8 +20,8 @@ using MoveMate.Service.BackgroundServices;
 using MoveMate.Service.ThirdPartyService;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
-using Service.IServices;
-using Service.Services;
+using MoveMate.Service.ThirdPartyService.VNPay;
+using MoveMate.Service.ThirdPartyService.Firebase;
 
 
 namespace MoveMate.API.Extensions
