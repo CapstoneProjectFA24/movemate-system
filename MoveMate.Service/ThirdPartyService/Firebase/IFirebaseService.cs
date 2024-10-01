@@ -19,7 +19,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             );
 
         public Task<OperationResult<FirebaseToken>> VerifyIdTokenAsync(string idToken);
-
+        public Task<OperationResult<string>> SendNotificationAsync(string token, string title, string body);
         public Task<bool> ValidateFcmToken(string token);
     }
 }

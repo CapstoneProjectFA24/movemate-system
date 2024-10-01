@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.Commons;
+using FirebaseAdmin.Messaging;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -86,6 +87,39 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 return false;
             }
         }
+        public async Task<OperationResult<string>> SendNotificationAsync(string token, string title, string body)
+        {
+            var result = new OperationResult<string>();
+
+            try
+            {
+                var message = new Message()
+                {
+                    Token = token,
+                    Notification = new Notification()
+                    {
+                        Title = title,
+                        Body = body
+                    }
+                };
+
+              
+                string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+
+                result.AddResponseStatusCode(MoveMate.Service.Commons.StatusCode.Ok, "Notification sent successfully", response);
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                result.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal error occurred: " + ex.Message);
+            }
+
+            return result;
+        }
+
     }
 
 }
