@@ -1,6 +1,6 @@
 ﻿using FirebaseAdmin.Auth;
 using MoveMate.Service.Commons;
-using MoveMate.Service.IServices;
+using MoveMate.Service.ThirdPartyService.Firebase;
 
 namespace MoveMate.API.Middleware
 {

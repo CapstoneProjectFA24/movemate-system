@@ -1,4 +1,4 @@
-﻿namespace MoveMate.Service.ThirdPartyService
+﻿namespace MoveMate.Service.ThirdPartyService.Momo
 {
     public interface IMac
     {
