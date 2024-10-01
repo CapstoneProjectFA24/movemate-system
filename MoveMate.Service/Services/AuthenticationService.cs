@@ -29,7 +29,9 @@ namespace MoveMate.Service.Services
         private IMapper _mapper;
         private readonly JWTAuth _jwtAuthOptions;
         private readonly ILogger<AuthenticationService> _logger;
-        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger, IOptions<JWTAuth> jwtAuthOptions)
+
+        public AuthenticationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AuthenticationService> logger,
+            IOptions<JWTAuth> jwtAuthOptions)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -37,31 +39,43 @@ namespace MoveMate.Service.Services
             _jwtAuthOptions = jwtAuthOptions.Value;
         }
 
-        public async Task<AccountResponse> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth)
+        public async Task<OperationResult<AccountResponse>> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth)
         {
+            var result = new OperationResult<AccountResponse>();
+
             try
             {
+                // Check if user exists
                 var user = await _unitOfWork.UserRepository.GetUserAsync(accountRequest.Email);
                 if (user == null)
                 {
-                    throw new NotFoundException(MessageConstant.CommonMessage.NotExistEmail);
-                }
-          
-                if (!user.Password.Equals(accountRequest.Password))
-                {
-                    throw new BadRequestException(MessageConstant.LoginMessage.InvalidEmailOrPassword);
+                    result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.CommonMessage.NotExistEmail);
+                    return result;
                 }
 
+                // Validate the password
+                if (!user.Password.Equals(accountRequest.Password))
+                {
+                    result.AddError(Service.Commons.StatusCode.BadRequest, MessageConstant.LoginMessage.InvalidEmailOrPassword);
+                    return result;
+                }
+
+                // Map user to AccountResponse and generate tokens
                 var accountResponse = _mapper.Map<AccountResponse>(user);
                 accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
-                return accountResponse;
+
+                // Success: Add response to result
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+                return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while logging in.");
-                throw;
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+                return result;
             }
         }
+
 
         public async Task<AccountTokenResponse> ReGenerateTokensAsync(AccountTokenRequest accountTokenRequest, JWTAuth jwtAuth)
         {
@@ -102,8 +116,6 @@ namespace MoveMate.Service.Services
             };
         }
 
-
-
         public async Task<AccountResponse> GenerateTokenAsync(AccountResponse accountResponse, JWTAuth jwtAuth)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
@@ -135,6 +147,37 @@ namespace MoveMate.Service.Services
             };
 
             return accountResponse;
+        }
+
+
+        public async Task<OperationResult<AccountResponse>> LoginByPhoneAsync(PhoneLoginRequest request, JWTAuth jwtAuth)
+        {
+            var result = new OperationResult<AccountResponse>();
+
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Phone);
+                if (user == null)
+                {
+                    result.AddError(Service.Commons.StatusCode.NotFound, "The phone number does not exist.");
+                    return result;
+                }
+                if (!user.Password.Equals(request.Password))
+                {
+                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid phone number or password.");
+                    return result;
+                }          
+                var accountResponse = _mapper.Map<AccountResponse>(user);              
+                accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while logging in with phone number.");
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+            }
+
+            return result;
         }
 
 
@@ -192,7 +235,7 @@ namespace MoveMate.Service.Services
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
                 if (existingUser != null)
                 {
-                    result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
+                    result.AddError(StatusCode.BadRequest, "Email is already registered.");
                     return result;
                 }
 
@@ -220,29 +263,41 @@ namespace MoveMate.Service.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during user registration.");
-                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.", null);
+                result.AddError(StatusCode.ServerError, "An internal error occurred during registration.");
                 return result;
             }
         }
-        private string GenerateRandomPassword(int length)
+        public async Task<OperationResult<object>> CheckCustomerExistsAsync(CustomerToRegister customer)
         {
-            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            StringBuilder password = new StringBuilder();
-            using (var rng = RandomNumberGenerator.Create())
+            var result = new OperationResult<object>();
+
+            try
             {
-                byte[] randomBytes = new byte[1];
-                while (password.Length < length)
+                // Check for existing customers
+                var emailExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Email == customer.Email);
+                if (emailExists)
                 {
-                    rng.GetBytes(randomBytes);
-                    char randomChar = (char)randomBytes[0];
-                    if (validChars.Contains(randomChar))
-                    {
-                        password.Append(randomChar);
-                    }
+                    result.AddError(StatusCode.BadRequest, "Email already exists.");
+                    return result;
                 }
+                var phoneExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Phone == customer.Phone);
+                if (phoneExists)
+                {
+                    result.AddError(StatusCode.BadRequest, "Phone already exists.");
+                    return result;
+                }
+
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Customer information is available.", null, null);
+                return result;
             }
-            return password.ToString();
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                return result;
+            }
         }
+
 
 
         private string GenerateRefreshToken()
@@ -285,29 +340,21 @@ namespace MoveMate.Service.Services
             return accountResponse;
         }
 
-        public async Task<AccountResponse> LoginWithEmailAsync(string email)
+        public async Task<OperationResult<AccountResponse>> LoginWithEmailAsync(string email)
         {
+            var result = new OperationResult<AccountResponse>();
+
             // Check if the email exists in the system
             var user = await _unitOfWork.UserRepository.FindByEmailAsync(email);
             if (user == null)
             {
-                return new AccountResponse
-                {
-                    IsError = true,
-                    Errors = new List<Error>
-                    {
-                        new Error
-                        {
-                            Code = StatusCode.NotFound,
-                            Message = "User not found"
-                        }
-                    }
-                };
+                result.AddError(Service.Commons.StatusCode.NotFound, "User not found.");
+                return result;
             }
 
             // Generate JWT token for the user
             var token = await GenerateJwtTokenAsync(user, _jwtAuthOptions.Key);
-            return new AccountResponse
+            var accountResponse = new AccountResponse
             {
                 Tokens = new AccountTokenResponse
                 {
@@ -315,7 +362,13 @@ namespace MoveMate.Service.Services
                     RefreshToken = token.RefreshToken
                 }
             };
+
+            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+            return result;
         }
+
+
+
 
 
         private async Task<AccountTokenResponse> GenerateJwtTokenAsync(User user, string jwtAuthKey)

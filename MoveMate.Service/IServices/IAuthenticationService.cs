@@ -9,10 +9,12 @@ namespace MoveMate.Service.IServices
     public interface IAuthenticationService
     {
         public Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister);
+        public Task<OperationResult<object>> CheckCustomerExistsAsync(CustomerToRegister customer);
         public Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister);
-        public Task<AccountResponse> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth);
+        public Task<OperationResult<AccountResponse>> LoginAsync(AccountRequest accountRequest, JWTAuth jwtAuth);
+        public Task<OperationResult<AccountResponse>> LoginByPhoneAsync(PhoneLoginRequest request, JWTAuth jwtAuth);
         public Task<AccountResponse> GenerateTokenWithUserIdAsync(string userId, JWTAuth jwtAuthOptions);
         public Task<AccountTokenResponse> ReGenerateTokensAsync(AccountTokenRequest accountTokenRequest, JWTAuth jwtAuth);
-        public Task<AccountResponse> LoginWithEmailAsync(string email);
+        public Task<OperationResult<AccountResponse>> LoginWithEmailAsync(string email);
     }
 }

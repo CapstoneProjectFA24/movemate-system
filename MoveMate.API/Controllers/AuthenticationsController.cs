@@ -1,6 +1,6 @@
 ﻿using FirebaseAdmin.Auth;
 using FluentValidation;
-
+using Google.Rpc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MoveMate.API.Middleware;
@@ -12,6 +12,7 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
+using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
 {
@@ -23,13 +24,17 @@ namespace MoveMate.API.Controllers
 
         private IOptions<Service.ViewModels.ModelRequests.JWTAuth> _jwtAuthOptions;
         private IValidator<AccountRequest> _accountRequestValidator;
+        private IValidator<PhoneLoginRequest> _phoneLoginRequestValidator;
         private IValidator<AccountTokenRequest> _accountTokenRequestValidator;
+
         private readonly ILogger<ExceptionMiddleware> _logger;
+
         // private IValidator<ResetPasswordRequest> _resetPasswordValidator;
         public AuthenticationsController(IAuthenticationService authenticationService, IOptions<JWTAuth> jwtAuthOptions,
-            IValidator<AccountRequest> accountRequestValidator, IValidator<AccountTokenRequest> accountTokenRequestValidator,
-            ILogger<ExceptionMiddleware> logger, IFirebaseServices firebaseServices)
-        // IValidator<ResetPasswordRequest> resetPasswordValidator)
+                IValidator<AccountRequest> accountRequestValidator,
+                IValidator<AccountTokenRequest> accountTokenRequestValidator,
+                ILogger<ExceptionMiddleware> logger, IFirebaseServices firebaseServices)
+            // IValidator<ResetPasswordRequest> resetPasswordValidator)
         {
             this._authenticationService = authenticationService;
             this._jwtAuthOptions = jwtAuthOptions;
@@ -41,6 +46,7 @@ namespace MoveMate.API.Controllers
         }
 
         #region Login API
+
         /// <summary>
         /// Login to access into the system by your account.
         /// </summary>
@@ -75,36 +81,20 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> PostLoginAsync([FromBody] AccountRequest account)
         {
-            try
-            {
-                var validationResult = await _accountRequestValidator.ValidateAsync(account);
-                if (!validationResult.IsValid)
-                {
-                    var errors = ErrorUtil.GetErrorsString(validationResult);
-                    var errorList = errors.Select(e => new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = e.ToString() });
-                    return HandleErrorResponse((List<Error>)errorList);
-                }
+            var result = await _authenticationService.LoginAsync(account, _jwtAuthOptions.Value);
 
-                var accountResponse = await _authenticationService.LoginAsync(account, _jwtAuthOptions.Value);
-                return Ok(accountResponse);
-            }
-            catch (Exception ex)
+            if (result.IsError)
             {
-                _logger.LogError(ex, "An error occurred during login.");
-                var errors = new List<Error>
-        {
-            new Error
-            {
-                Code = MoveMate.Service.Commons.StatusCode.ServerError,
-                Message = "An internal server error occurred."
+                return HandleErrorResponse(result.Errors);
             }
-        };
-                return HandleErrorResponse(errors);
-            }
+
+            return Ok(result);
         }
+
         #endregion
 
         #region Re-GenerateTokens API
+
         /// <summary>
         /// Re-generate pair token from the old pair token that are provided by the MBKC system before.
         /// </summary>
@@ -146,12 +136,15 @@ namespace MoveMate.API.Controllers
                 throw new BadRequestException(errors);
             }
 
-            var accountTokenResponse = await _authenticationService.ReGenerateTokensAsync(accountToken, _jwtAuthOptions.Value);
+            var accountTokenResponse =
+                await _authenticationService.ReGenerateTokensAsync(accountToken, _jwtAuthOptions.Value);
             return Ok(accountTokenResponse);
         }
+
         #endregion
 
         #region Register API
+
         /// <summary>
         /// Register a new account in the system.
         /// </summary>
@@ -167,136 +160,201 @@ namespace MoveMate.API.Controllers
         /// <response code="200">Registration successful.</response>
         /// <response code="400">Validation failed or email is already registered.</response>
         /// <response code="500">System error occurred.</response>
-        [HttpPost("register")]
+        [HttpPost("registeration")]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> RegisterAsync([FromBody] CustomerToRegister customerToRegister)
         {
-            
-                // Register user
-                var response = await _authenticationService.Register(customerToRegister);
-               
-                return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-            
-        #endregion
-    }
+            // Register user
+            var response = await _authenticationService.Register(customerToRegister);
 
-        /// <summary>
-        /// Register a new account in the system.
-        /// </summary>
-        /// <param name="customerToRegister">The customer registration information (email).</param>
-        /// <returns>The created account details.</returns>
-        /// <remarks>
-        /// Sample request:
-        ///     POST /api/authentications/register
-        ///     {
-        ///         "email": "user@example.com"
-        ///     }
-        /// </remarks>
-        /// <response code="200">Registration successful.</response>
-        /// <response code="400">Validation failed or email is already registered.</response>
-        /// <response code="500">System error occurred.</response>
-        [HttpPost("register/v2")]
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+            #endregion
+        }
+
+        [HttpPost("register")]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
         {
 
-            // Register user
             var response = await _authenticationService.RegisterV2(customerToRegister);
 
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            if (response.IsError)
+            {
+                return HandleErrorResponse(response.Errors);
+            }
 
+            // Format response similar to your desired output structure
+            return Ok(response);
 
         }
 
 
+        #region Login Phone API
         /// <summary>
-        /// VerifyToken 
+        /// Login to access the system using your phone number.
         /// </summary>
-        /// <param name="verifyToken">The system will check the token from Firebase</param>
-        /// <returns>The system verify token from Firebase</returns>
+        /// <param name="phoneLoginRequest">
+        /// PhoneLoginRequest object contains Phone property and Password property. 
+        /// Notice that the password must be hashed with MD5 algorithm before sending to Login API.
+        /// </param>
+        /// <returns>
+        /// An Object with a JSON format that contains Account Id, Phone, Role name, and a pair token (access token, refresh token).
+        /// </returns>
         /// <remarks>
-        /// Sample request:
-        ///     POST 
-        ///     {
-        ///         "idToken": "string"
-        ///     }
+        ///     Sample request:
+        ///
+        ///         POST 
+        ///         {
+        ///             "phone": "0123456789",
+        ///             "password": "1"
+        ///         }
         /// </remarks>
-        /// <response code="200">Token verified and JWT generated successfully</response>
-        /// <response code="400">Invalid token: UID not found</response>
-        /// <response code="400">Firebase token verification failed</response>
-        /// <response code="500">An internal server error occurred</response>
-        [HttpPost("verify-token")]
-        public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
+        /// <response code="200">Login Successfully.</response>
+        /// <response code="400">Some error about request data and logic data.</response>
+        /// <response code="404">Some error about request data not found.</response>
+        /// <response code="500">Some error about the system.</response>
+        /// <exception cref="BadRequestException">Throw Error about request data and logic business.</exception>
+        /// <exception cref="NotFoundException">Throw Error about request data that are not found.</exception>
+        /// <exception cref="Exception">Throw Error about the system.</exception>
+        [HttpPost("LoginPhone")]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> PostLoginPhoneAsync([FromBody] PhoneLoginRequest phoneLoginRequest)
         {
-            try
-            {
-                
-                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+            var result = await _authenticationService.LoginByPhoneAsync(phoneLoginRequest, _jwtAuthOptions.Value);
 
-               
-                if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
-                {
-                    var userId = decodedToken.Uid; 
-                    var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
-                    return Ok(new
-                    {
-                        message = "Token verified and JWT generated successfully",
-                        accessToken = accountResponse.Tokens.AccessToken, 
-                        refreshToken = accountResponse.Tokens.RefreshToken 
-                    });
-                }
+            if (result.IsError)
+            {
+                return HandleErrorResponse(result.Errors);
+            }
 
-               
-                return BadRequest(new { message = "Invalid token: UID not found" });
-            }
-            catch (FirebaseAuthException ex)
+            return Ok(result);
+        }
+            #endregion
+
+
+            /// <summary>
+            /// Check Customer Exists
+            /// </summary>
+            /// <param name="checkCustomer">Check information of customer</param>
+            /// <returns>Validate information customer are available</returns>
+            /// <remarks>
+            /// Sample request:
+            ///     POST 
+            ///     {
+            ///         "email": "user@example.com",
+            ///         "phone": "string",
+            ///         "name": "string",
+            ///         "password": "string"
+            ///     }
+            /// </remarks>
+            /// <response code="200">Customer information is available.</response>
+            /// <response code="400">Email already exists.</response>
+            /// <response code="400">Phone already exists.</response>
+            /// <response code="500">An unexpected error occurred.</response>
+            [HttpPost("check-exists")]
+        public async Task<IActionResult> CheckCustomerExists([FromBody] CustomerToRegister customer)
+        {
+            var result = await _authenticationService.CheckCustomerExistsAsync(customer);
+
+            if (result.IsError)
             {
-                return BadRequest(new { message = "Firebase token verification failed", error = ex.Message });
+                return HandleErrorResponse(result.Errors);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred during token verification.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred" });
-            }
+
+            return Ok(result);
         }
 
+        //[HttpPost("verify-token")]
+        //public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
+        //{
+        //    var result = new OperationResult<object>
+        //    {
+        //        StatusCode = Service.Commons.StatusCode.Ok,
+        //        Message = string.Empty,
+        //        IsError = false,
+        //        Payload = null
+        //    };
 
-        /// <summary>
-        /// VerifyToken 
-        /// </summary>
-        /// <param name="verifyToken">The system will check the token from Firebase</param>
-        /// <returns>The system verify token from Firebase</returns>
-        /// <remarks>
-        /// Sample request:
-        ///     POST 
-        ///     {
-        ///         "idToken": "string"
-        ///     }
-        /// </remarks>
-        /// <response code="200">Token verified and JWT generated successfully</response>        
-        /// <response code="400">Firebase token verification failed</response>
-        /// <response code="500">An internal server error occurred</response>
-        [HttpPost("verify-token/v2")]
+        //    try
+        //    {
+        //        var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+
+        //        if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
+        //        {
+        //            var userId = decodedToken.Uid;
+        //            var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
+
+        //            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified and JWT generated successfully", new
+        //            {
+        //                accessToken = accountResponse.Tokens.AccessToken,
+        //                refreshToken = accountResponse.Tokens.RefreshToken
+        //            });
+        //        }
+        //        else
+        //        {
+        //            result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token: UID not found");
+        //        }
+        //    }
+        //    catch (FirebaseAuthException ex)
+        //    {
+        //        _logger.LogError(ex, "Firebase token verification failed.");
+        //        result.AddError(Service.Commons.StatusCode.BadRequest, "Firebase token verification failed: " + ex.Message);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "An internal server error occurred during token verification.");
+        //        result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+        //    }
+
+        //    // If there are errors, use HandleErrorResponse to return only the error messages
+        //    if (result.IsError)
+        //    {
+        //        return HandleErrorResponse(result.Errors);
+        //    }
+
+        //    // If successful, return the payload and omit unnecessary data
+        //    return Ok(new
+        //    {
+        //        statusCode = (int)result.StatusCode,
+        //        message = result.Message,
+        //        isError = result.IsError,
+        //        payload = result.Payload
+        //    });
+        //}
+
+
+
+
+        [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
         {
-            try
+            var result = new OperationResult<object>();
+
+            // Call the VerifyIdTokenAsync method
+            var verifyResult = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
+
+            if (verifyResult.IsError)
             {
-                var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
-                return Ok(new { isValid = decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid )});
+                // If there are errors, handle the error response
+                return HandleErrorResponse(verifyResult.Errors);
             }
-            catch (FirebaseAuthException ex)
+
+            // If token verification is successful, create a success response
+            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
             {
-                return BadRequest(new { message = "Firebase token verification failed", error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred during token verification.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred." });
-            }
+                isValid = true,
+                uid = verifyResult.Payload.Uid
+            });
+
+            return Ok(result);
         }
 
 
@@ -321,22 +379,30 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
-            try
-            {
-                var accountResponse = await _authenticationService.LoginWithEmailAsync(request.Email);
-                if (accountResponse.IsError)
+            var result = new OperationResult<AccountResponse>();
+         
+                var loginResult = await _authenticationService.LoginWithEmailAsync(request.Email);
+                if (loginResult.IsError)
                 {
-                    return BadRequest(new { Errors = accountResponse.Errors });
+                    return HandleErrorResponse(loginResult.Errors);
                 }
-                return Ok(accountResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred during Google login.");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An internal server error occurred" });
-            }
+                return Ok(loginResult);
         }
 
 
+        [HttpPost("validate-fcm-token")]
+        public async Task<IActionResult> ValidateFcmToken([FromBody] string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest(); // Optional: You can still return BadRequest if the token is empty.
+            }
+
+            // Perform token validation but do not return any response
+            await _firebaseService.ValidateFcmToken(token);
+
+          
+            return NoContent();
+        }
     }
 }
