@@ -20,38 +20,41 @@ namespace MoveMate.Service.Services
             _config = config;
         }
 
-        public async Task<string> CreateOrderAsync(string userId, int bookingId)
-        {
-            var appId = _config["ZaloPay:AppId"];
-            var key1 = _config["ZaloPay:Key1"];
-            var endpoint = _config["ZaloPay:Endpoint"];
+        //public async Task<string> CreateOrderAsync(string userId, int bookingId)
+        //{
+        //    var appId = _config["ZaloPay:AppId"];
+        //    var key1 = _config["ZaloPay:Key1"];
+        //    var endpoint = _config["ZaloPay:Endpoint"];
 
-            // Tạo các tham số thanh toán và mã hóa dữ liệu
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var orderInfo = new
-            {
-                app_id = appId,
-                app_trans_id = request.OrderId,
-                app_time = timestamp,
-                amount = request.Amount,
-                app_user = request.UserId,
-                description = request.Description,
-                bank_code = request.BankCode,
-                mac = GenerateMac(appId, request.OrderId, timestamp, request.Amount, key1)
-            };
+        //    // Tạo các tham số thanh toán và mã hóa dữ liệu
+        //    var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            // Gửi yêu cầu tới ZaloPay
-            using (var client = new HttpClient())
-            {
-                var content = new StringContent(JsonConvert.SerializeObject(orderInfo), Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(endpoint, content);
+        //var booking
 
-                if (!response.IsSuccessStatusCode)
-                    throw new Exception("Failed to create ZaloPay order");
+        //var orderInfo = new
+        //{
+        //    app_id = appId,
+        //    app_trans_id = request.OrderId,
+        //    app_time = timestamp,
+        //    amount = request.Amount,
+        //    app_user = request.UserId,
+        //    description = request.Description,
+        //    bank_code = request.BankCode,
+        //    mac = GenerateMac(appId, request.OrderId, timestamp, request.Amount, key1)
+        //};
 
-                return await response.Content.ReadAsStringAsync();
-            }
-        }
+        //    // Gửi yêu cầu tới ZaloPay
+        //    using (var client = new HttpClient())
+        //    {
+        //        var content = new StringContent(JsonConvert.SerializeObject(orderInfo), Encoding.UTF8, "application/json");
+        //        var response = await client.PostAsync(endpoint, content);
+
+        //        if (!response.IsSuccessStatusCode)
+        //            throw new Exception("Failed to create ZaloPay order");
+
+        //        return await response.Content.ReadAsStringAsync();
+        //    }
+        //}
 
         private string GenerateMac(string appId, string orderId, long timestamp, int amount, string key1)
         {

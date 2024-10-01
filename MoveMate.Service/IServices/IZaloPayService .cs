@@ -9,6 +9,6 @@ namespace MoveMate.Service.IServices
 {
     public interface IZaloPayService
     {
-        public Task<string> CreateOrderAsync(ZaloPayOrderRequest request);
+       // public Task<string> CreateOrderAsync(ZaloPayOrderRequest request);
     }
 }
