@@ -10,6 +10,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
 using System.Security.Claims;

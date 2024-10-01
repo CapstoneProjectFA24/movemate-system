@@ -8,7 +8,7 @@ using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels;
 using Net.payOS;
 using Net.payOS.Types;
-using Service.IServices;
+using MoveMate.Service.ThirdPartyService.VNPay;
 using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
@@ -114,7 +114,7 @@ namespace MoveMate.API.Controllers
         /// <param name="bookingId">The ID of the booking.</param>
         /// <param name="scheduleDetailId">The ID of the schedule detail.</param>
         /// <returns>Returns the result of the payment creation.</returns>
-        [HttpPost("payment/create-booking-payment")]
+        [HttpPost("payment/zalo/create-booking-payment")]
         [Authorize]
         public async Task<IActionResult> CreateBookingPayment(int bookingId, int scheduleDetailId)
         {
@@ -137,7 +137,7 @@ namespace MoveMate.API.Controllers
 
             return Ok(result);
         }
-        [HttpPost("payment/create-payment-link")]
+        [HttpPost("payment/payOs/create-payment-link")]
         [Authorize]
         public async Task<IActionResult> CreatePaymentLink(int bookingid)
         {

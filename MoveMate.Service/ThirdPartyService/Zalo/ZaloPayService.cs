@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels;
 using Newtonsoft.Json;
 using System;
@@ -9,7 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Service.Services
+namespace MoveMate.Service.ThirdPartyService.Zalo
 {
     public class ZaloPayService : IZaloPayService
     {
