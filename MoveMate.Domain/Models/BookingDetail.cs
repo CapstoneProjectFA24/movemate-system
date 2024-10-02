@@ -17,6 +17,8 @@ public partial class BookingDetail
 
     public string? StaffType { get; set; }
 
+    public bool? IsResponsible { get; set; }
+
     public virtual Booking? Booking { get; set; }
 
     public virtual User? User { get; set; }

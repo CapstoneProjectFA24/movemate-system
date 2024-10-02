@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Service.IServices;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Commons;
@@ -9,7 +8,7 @@ using MoveMate.Service.Exceptions;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 
-namespace Service.Services
+namespace MoveMate.Service.ThirdPartyService.VNPay
 {
     public class VnPayService : IVnPayService
     {

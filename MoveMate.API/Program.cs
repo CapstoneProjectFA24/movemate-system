@@ -46,6 +46,7 @@ namespace MoveMate.API
             builder.Services.AddAutoMapper(typeof(AutoMapperService));
             builder.Services.AddExceptionMiddleware();
             builder.Services.AddFirebaseServices(builder.Configuration);
+            builder.Services.AddPayOS(builder.Configuration);
 
             // CORS Policy
             builder.Services.AddCors(cors => cors.AddPolicy(
