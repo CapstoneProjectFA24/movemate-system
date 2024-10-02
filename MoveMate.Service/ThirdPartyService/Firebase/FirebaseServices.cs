@@ -1,7 +1,6 @@
 ﻿using FirebaseAdmin.Auth;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using MoveMate.Service.IServices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.Commons;
 
-namespace MoveMate.Service.Services
+namespace MoveMate.Service.ThirdPartyService.Firebase
 {
     public class FirebaseServices : IFirebaseServices
     {
@@ -39,15 +38,15 @@ namespace MoveMate.Service.Services
             {
                 FirebaseAuth auth = FirebaseAuth.DefaultInstance;
                 FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
-                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified successfully", decodedToken);
+                result.AddResponseStatusCode(StatusCode.Ok, "Token verified successfully", decodedToken);
             }
             catch (FirebaseAuthException ex)
             {
-                result.AddError(Service.Commons.StatusCode.BadRequest, ex.Message);
+                result.AddError(StatusCode.BadRequest, ex.Message);
             }
             catch (Exception ex)
             {
-                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+                result.AddError(StatusCode.ServerError, "An internal server error occurred.");
             }
 
             return result;

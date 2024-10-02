@@ -21,10 +21,6 @@ public partial class Booking
 
     public string? DeliveryPoint { get; set; }
 
-    public bool? IsUseBox { get; set; }
-
-    public string? BoxType { get; set; }
-
     public string? EstimatedDistance { get; set; }
 
     public double? Total { get; set; }
@@ -80,6 +76,8 @@ public partial class Booking
     public int? HouseTypeId { get; set; }
 
     public DateTime? BookingAt { get; set; }
+
+    public bool? IsReviewOnline { get; set; }
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 

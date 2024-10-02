@@ -10,6 +10,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
 using System.Security.Claims;
@@ -358,6 +359,21 @@ namespace MoveMate.API.Controllers
         }
 
 
+        /// <summary>
+        /// Login Google 
+        /// </summary>
+        /// <param name="loginGoogle">User login by Google Gmail</param>
+        /// <returns>User access to the system by Google </returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "idToken": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Token verified and JWT generated successfully</response>
+        /// <respomse code="404">User not found</respomse>
+        /// <response code="500">An internal server error occurred</response>
         [HttpPost("google-login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]

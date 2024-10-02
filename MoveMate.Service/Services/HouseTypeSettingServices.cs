@@ -3,14 +3,8 @@ using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
-using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelRequests;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MoveMate.Service.Services
 {
