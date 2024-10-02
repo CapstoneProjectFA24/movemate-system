@@ -27,8 +27,6 @@ public class BookingRegisterRequest
     [Required(ErrorMessage = "Filed is required")]
     public string? Note { get; set; }
 
-    public string? EstimatedDeliveryTime { get; set; }
-
     public bool? IsRoundTrip { get; set; } = false;
 
     public bool? IsManyItems { get; set; } = false;

@@ -31,7 +31,10 @@ namespace MoveMate.Service.Services
             this._mapper = mapper;
             this._logger = logger;
         }
-
+        
+    // FEATURE    
+        // GET ALL
+        #region FEATURE: GetAll booking in the system.
         public async Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request)
         {
             var result = new OperationResult<List<BookingResponse>>();
@@ -69,7 +72,41 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
+        #endregion
+        
+        // GET BY ID
+        #region FEATURE: GetById a booking in the system.
+        public async Task<OperationResult<BookingResponse>> GetById(int id)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking =
+                    await _unitOfWork.BookingRepository.GetByIdAsyncV1(id,
+                        includeProperties: "BookingTrackers, TrackerSources");
 
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Can't found Booking with Id: {id}");
+                }
+                else
+                {
+                    var productResponse = _mapper.Map<BookingResponse>(booking);
+                    result.AddResponseStatusCode(StatusCode.Ok, $"Get Booking by Id: {id} Success!", productResponse);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred in Get Service By Id service method for ID: {id}");
+                throw;
+            }
+        }
+        #endregion
+        
+        // REGISTER
+        #region FEATURE: Register a new booking in the system.
         public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request)
         {
             var result = new OperationResult<BookingResponse>();
@@ -165,50 +202,87 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task CheckAndCancelBooking(int bookingId)
-        {
-            var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+        #endregion
+        
+        // VAlUA
+        #region FEATURE: VAlUATION a booking.
 
-            if (booking != null && booking.Status == BookingEnums.PENDING.ToString())
+        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
+        {
+            var result = new OperationResult<BookingValuationResponse>();
+
+            var existingHouseType =
+                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+
+            // check houseType
+            if (existingHouseType == null)
             {
-                booking.Status = BookingEnums.CANCEL.ToString();
-                booking.IsCancel = true;
-                booking.CancelReason = "Is expired, Cancel by System";
-                _unitOfWork.BookingRepository.Update(booking);
-                _unitOfWork.Save();
+                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                return result;
             }
-        }
 
-
-        private async Task<(double updatedTotal, List<FeeDetail> feeDetails)> ApplyPercentFeesAsync(double total)
-        {
-            var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentFeeSettingsAsync();
-
+            double totalFee = 0;
+            var serviceDetails = new List<ServiceDetail>();
             var feeDetails = new List<FeeDetail>();
 
-            var totalAmount = 0d;
+            var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
+                request.HouseTypeId,
+                request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
+            totalFee += totalServices;
+            serviceDetails.AddRange(listServiceDetails);
 
-            foreach (var feeSetting in feePercentSettings)
+            var response = new BookingValuationResponse();
+
+            response.Amount = totalFee;
+            response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
+
+            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+
+            return result;
+        }
+        #endregion
+        
+        // CANCEL
+        #region FEATURE: Cancel a booking in the system.
+        public async Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            // 
+            try
             {
-                var value = feeSetting.Amount ?? 100;
-                var amount = total * value / 100;
-
-                var feeDetail = new FeeDetail
+                var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
+                if (entity == null)
                 {
-                    FeeSettingId = feeSetting.Id,
-                    Name = feeSetting.Name,
-                    Description = feeSetting.Description,
-                    Amount = amount,
-                };
+                    result.AddError(StatusCode.NotFound, $"booking with id: {request.Id} not found!");
+                    return result;
+                }
 
-                feeDetails.Add(feeDetail);
-                totalAmount += amount;
+                entity.Status = BookingEnums.CANCEL.ToString();
+                entity.IsCancel = true;
+                entity.CancelReason = request.CancelReason;
+                _unitOfWork.BookingRepository.Update(entity);
+                _unitOfWork.Save();
+
+                //
+                var response = _mapper.Map<BookingResponse>(entity);
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Cancel Success!", response);
+
+                return result;
             }
-
-            return (totalAmount, feeDetails);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"CancelBooking is Error:  {request.Id}");
+                throw;
+            }
         }
 
+        #endregion
+        
+    //TEST
 
+        #region TEST: ValuationDistanceBooking for a new booking in the system.
         public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(
             BookingValuationRequest request)
         {
@@ -265,61 +339,9 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
-        private (double totalFee, List<FeeDetail> feeDetails) AddFeeDetails(IEnumerable<FeeSetting> feeSettings)
-        {
-            double totalFee = 0;
-            var feeDetails = new List<FeeDetail>();
-
-            foreach (var feeSetting in feeSettings)
-            {
-                var feeDetail = new FeeDetail
-                {
-                    FeeSettingId = feeSetting.Id,
-                    Name = feeSetting.Name,
-                    Description = feeSetting.Description,
-                    Amount = feeSetting.Amount,
-                };
-
-                feeDetails.Add(feeDetail);
-                totalFee += feeSetting.Amount ?? 0;
-            }
-
-            return (totalFee, feeDetails);
-        }
-
-        private async Task<(double totalFee, List<FeeDetail> feeNullDetails)> CalculateAndAddFees(DateTime dateBooking)
-        {
-            double totalFee = 0;
-            var feeNullDetails = new List<FeeDetail>();
-
-            // Get common fees
-            var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
-            var (commonFee, commonFeeDetails) = AddFeeDetails(feeSettings);
-            totalFee += commonFee;
-            feeNullDetails.AddRange(commonFeeDetails);
-
-            // Check if the date is a weekend
-            if (DateUtil.IsWeekend(dateBooking))
-            {
-                var feeWeekendSettings = await _unitOfWork.FeeSettingRepository.GetWeekendFeeSettingsAsync();
-                var (weekendFee, weekendFeeDetails) = AddFeeDetails(feeWeekendSettings);
-                totalFee += weekendFee;
-                feeNullDetails.AddRange(weekendFeeDetails);
-            }
-
-            // Check if it's outside business hours
-            if (DateUtil.IsOutsideBusinessHours(dateBooking))
-            {
-                var feeOBHSettings = await _unitOfWork.FeeSettingRepository.GetOBHFeeSettingsAsync();
-                var (obhFee, obhFeeDetails) = AddFeeDetails(feeOBHSettings);
-                totalFee += obhFee;
-                feeNullDetails.AddRange(obhFeeDetails);
-            }
-
-            return (totalFee, feeNullDetails);
-        }
-
+        #endregion
+        
+        #region TEST: ValuationFloorBooking for a new booking in the system.
         public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(
             BookingValuationRequest request)
         {
@@ -376,158 +398,119 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+        #endregion
 
-        private async Task<(double totalServices, List<ServiceDetail> serviceDetails)> CalculateServiceFees(
-            List<ServiceDetailRequest> serviceDetailRequests,
-            int houseTypeId,
-            int truckCategoryId,
-            string floorsNumber,
-            string estimatedDistance)
+    // CRONJOB
+        
+        #region CRONJOB: CheckAndCancelBooking a booking in the system.
+
+        public async Task CheckAndCancelBooking(int bookingId)
         {
-            double totalServices = 0;
-            var serviceDetails = new List<ServiceDetail>();
+            var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
 
-            foreach (var serviceDetailRequest in serviceDetailRequests)
+            if (booking != null && booking.Status == BookingEnums.PENDING.ToString())
             {
-                // Check Service
-                var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
-
-                if (service == null)
-                {
-                    throw new Exception(
-                        $"Service with id: {serviceDetailRequest.Id} not found!"); // Consider throwing an exception for better error handling
-                }
-
-                // Set var
-                var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
-
-                if (service.Amount == 0d)
-                {
-                    // Logic fee 
-
-                    var amount = 0d;
-                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId);
-
-                    // FEE FLOOR
-                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
-                        int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
-                    amount += floorTotalFee;
-
-                    // FEE DISTANCE
-                    var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
-                        double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
-                    amount += totalTruckFee;
-
-                    // FEE BASE
-                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
-                    amount += nullTotalFee;
-
-                    amount = (double)(amount -
-                                      amount * service.DiscountRate / 100) !;
-
-                    totalServices += amount;
-
-                    var serviceDetail = new ServiceDetail
-                    {
-                        ServiceId = service.Id,
-                        Quantity = quantity,
-                        Price = amount,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
-                    };
-
-                    serviceDetails.Add(serviceDetail);
-                }
-                else
-                {
-                    var serviceDetail = new ServiceDetail
-                    {
-                        ServiceId = service.Id,
-                        Quantity = quantity,
-                        Price = price,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
-                    };
-
-                    serviceDetails.Add(serviceDetail);
-                }
+                booking.Status = BookingEnums.CANCEL.ToString();
+                booking.IsCancel = true;
+                booking.CancelReason = "Is expired, Cancel by System";
+                _unitOfWork.BookingRepository.Update(booking);
+                _unitOfWork.Save();
             }
-
-            return (totalServices, serviceDetails);
         }
-
-
-        // VAlUA
-        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
+        #endregion
+        
+    // PRIVATE
+        
+        #region PRIVATE: ApplyPercentFeesAsync for a new booking in the system.
+        private async Task<(double updatedTotal, List<FeeDetail> feeDetails)> ApplyPercentFeesAsync(double total)
         {
-            var result = new OperationResult<BookingValuationResponse>();
+            var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentFeeSettingsAsync();
 
-            var existingHouseType =
-                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
-
-            // check houseType
-            if (existingHouseType == null)
-            {
-                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
-                return result;
-            }
-
-            double totalFee = 0;
-            var serviceDetails = new List<ServiceDetail>();
             var feeDetails = new List<FeeDetail>();
 
-            var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
-                request.HouseTypeId,
-                request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
-            totalFee += totalServices;
-            serviceDetails.AddRange(listServiceDetails);
+            var totalAmount = 0d;
 
-            var response = new BookingValuationResponse();
-
-            response.Amount = totalFee;
-            response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
-
-            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
-
-            return result;
-        }
-
-        public async Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest request)
-        {
-            var result = new OperationResult<BookingResponse>();
-
-            // 
-            try
+            foreach (var feeSetting in feePercentSettings)
             {
-                var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
-                if (entity == null)
+                var value = feeSetting.Amount ?? 100;
+                var amount = total * value / 100;
+
+                var feeDetail = new FeeDetail
                 {
-                    result.AddError(StatusCode.NotFound, $"booking with id: {request.Id} not found!");
-                    return result;
-                }
+                    FeeSettingId = feeSetting.Id,
+                    Name = feeSetting.Name,
+                    Description = feeSetting.Description,
+                    Amount = amount,
+                };
 
-                entity.Status = BookingEnums.CANCEL.ToString();
-                entity.IsCancel = true;
-                entity.CancelReason = request.CancelReason;
-                _unitOfWork.BookingRepository.Update(entity);
-                _unitOfWork.Save();
-
-                //
-                var response = _mapper.Map<BookingResponse>(entity);
-
-                result.AddResponseStatusCode(StatusCode.Ok, "Cancel Success!", response);
-
-                return result;
+                feeDetails.Add(feeDetail);
+                totalAmount += amount;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"CancelBooking is Error:  {request.Id}");
-                throw;
-            }
+
+            return (totalAmount, feeDetails);
         }
+        #endregion
+        
+        #region PRIVATE: AddFeeDetails for a new booking in the system.
+        private (double totalFee, List<FeeDetail> feeDetails) AddFeeDetails(IEnumerable<FeeSetting> feeSettings)
+        {
+            double totalFee = 0;
+            var feeDetails = new List<FeeDetail>();
 
-        //
+            foreach (var feeSetting in feeSettings)
+            {
+                var feeDetail = new FeeDetail
+                {
+                    FeeSettingId = feeSetting.Id,
+                    Name = feeSetting.Name,
+                    Description = feeSetting.Description,
+                    Amount = feeSetting.Amount,
+                };
+
+                feeDetails.Add(feeDetail);
+                totalFee += feeSetting.Amount ?? 0;
+            }
+
+            return (totalFee, feeDetails);
+        }
+        #endregion
+        
+        #region PRIVATE: CalculateAndAddFees for a new booking in the system.
+        private async Task<(double totalFee, List<FeeDetail> feeNullDetails)> CalculateAndAddFees(DateTime dateBooking)
+        {
+            double totalFee = 0;
+            var feeNullDetails = new List<FeeDetail>();
+
+            // Get common fees
+            var feeSettings = await _unitOfWork.FeeSettingRepository.GetCommonFeeSettingsAsync();
+            var (commonFee, commonFeeDetails) = AddFeeDetails(feeSettings);
+            totalFee += commonFee;
+            feeNullDetails.AddRange(commonFeeDetails);
+
+            // Check if the date is a weekend
+            if (DateUtil.IsWeekend(dateBooking))
+            {
+                var feeWeekendSettings = await _unitOfWork.FeeSettingRepository.GetWeekendFeeSettingsAsync();
+                var (weekendFee, weekendFeeDetails) = AddFeeDetails(feeWeekendSettings);
+                totalFee += weekendFee;
+                feeNullDetails.AddRange(weekendFeeDetails);
+            }
+
+            // Check if it's outside business hours
+            if (DateUtil.IsOutsideBusinessHours(dateBooking))
+            {
+                var feeOBHSettings = await _unitOfWork.FeeSettingRepository.GetOBHFeeSettingsAsync();
+                var (obhFee, obhFeeDetails) = AddFeeDetails(feeOBHSettings);
+                totalFee += obhFee;
+                feeNullDetails.AddRange(obhFeeDetails);
+            }
+
+            return (totalFee, feeNullDetails);
+        }
+        #endregion
+        
+        #region PRIVATE: CalculateDistanceFee for a new booking in the system.
+
         private (double totalFee, List<FeeDetail> feeDetails) CalculateDistanceFee(int truckCategoryId,
             double estimatedDistance,
             List<FeeSetting>? feeSettings, int quantity)
@@ -624,7 +607,10 @@ namespace MoveMate.Service.Services
             totalFee = totalFee * quantity;
             return (totalFee, feeDetails);
         }
-
+        #endregion
+        
+        #region PRIVATE: SeparateFeeSettingsByUnit for a new booking in the system.
+        
         private (List<FeeSetting>? nullUnitFees, List<FeeSetting>? kmUnitFees, List<FeeSetting>? floorUnitFees)
             SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings, int HouseTypeId)
         {
@@ -654,7 +640,9 @@ namespace MoveMate.Service.Services
 
             return (nullUnitFees, kmUnitFees, floorUnitFees);
         }
-
+        #endregion
+        
+        #region PRIVATE: CalculateBaseFee for a new booking in the system.
         private (double totalNullFee, List<FeeDetail> feeNullDetails) CalculateBaseFee(List<FeeSetting>? nullUnitFees,
             int quantity)
         {
@@ -692,7 +680,9 @@ namespace MoveMate.Service.Services
             // Trả về tổng phí và danh sách FeeDetail
             return (totalFee, feeDetails);
         }
-
+        #endregion
+        
+        #region PRIVATE: CalculateFloorFeeV2 for a new booking in the system.
         private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFeeV2(int truckCategoryId,
             int numberOfFloors,
             List<FeeSetting>? feeSettings, int quantity)
@@ -775,33 +765,90 @@ namespace MoveMate.Service.Services
 
             return (totalFee, feeDetails);
         }
-
-        public async Task<OperationResult<BookingResponse>> GetById(int id)
+        #endregion
+        
+        #region PRIVATE: CalculateServiceFees for a new booking in the system.
+        private async Task<(double totalServices, List<ServiceDetail> serviceDetails)> CalculateServiceFees(
+            List<ServiceDetailRequest> serviceDetailRequests,
+            int houseTypeId,
+            int truckCategoryId,
+            string floorsNumber,
+            string estimatedDistance)
         {
-            var result = new OperationResult<BookingResponse>();
-            try
-            {
-                var booking =
-                    await _unitOfWork.BookingRepository.GetByIdAsyncV1(id,
-                        includeProperties: "BookingTrackers, TrackerSources");
+            double totalServices = 0;
+            var serviceDetails = new List<ServiceDetail>();
 
-                if (booking == null)
+            foreach (var serviceDetailRequest in serviceDetailRequests)
+            {
+                // Check Service
+                var service =
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+
+                if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found Booking with Id: {id}");
+                    throw new Exception(
+                        $"Service with id: {serviceDetailRequest.Id} not found!"); // Consider throwing an exception for better error handling
+                }
+
+                // Set var
+                var quantity = serviceDetailRequest.Quantity;
+                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
+
+                if (service.Amount == 0d)
+                {
+                    // Logic fee 
+
+                    var amount = 0d;
+                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId);
+
+                    // FEE FLOOR
+                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
+                        int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                    amount += floorTotalFee;
+
+                    // FEE DISTANCE
+                    var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
+                        double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
+                    amount += totalTruckFee;
+
+                    // FEE BASE
+                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
+                    amount += nullTotalFee;
+
+                    amount = (double)(amount -
+                                      amount * service.DiscountRate / 100) !;
+
+                    totalServices += amount;
+
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price = amount,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                    };
+
+                    serviceDetails.Add(serviceDetail);
                 }
                 else
                 {
-                    var productResponse = _mapper.Map<BookingResponse>(booking);
-                    result.AddResponseStatusCode(StatusCode.Ok, $"Get Booking by Id: {id} Success!", productResponse);
-                }
+                    var serviceDetail = new ServiceDetail
+                    {
+                        ServiceId = service.Id,
+                        Quantity = quantity,
+                        Price = price,
+                        IsQuantity = serviceDetailRequest.IsQuantity,
+                    };
 
-                return result;
+                    serviceDetails.Add(serviceDetail);
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error occurred in Get Service By Id service method for ID: {id}");
-                throw;
-            }
+
+            return (totalServices, serviceDetails);
         }
+        #endregion
+    //
+  
     }
 }
