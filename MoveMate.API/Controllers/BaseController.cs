@@ -14,7 +14,7 @@ namespace MoveMate.API.Controllers
     {
         protected IActionResult HandleErrorResponse(List<Error> errors)
         {
-            var errorMessages = errors.Select(e => e.Message).ToList(); // Extract only the messages
+            var errorMessages = errors.Select(e => e.Message).ToList(); 
 
             if (errors.Any(e => e.Code == MoveMate.Service.Commons.StatusCode.UnAuthorize))
             {
@@ -24,7 +24,7 @@ namespace MoveMate.API.Controllers
                     statusCode = 401,
                     message = "UnAuthorize",
                     isError = true,
-                    errors = new List<string> { error!.Message }, // Return only the message
+                    errors = new List<string> { error!.Message }, 
                     timestamp = DateTime.Now
                 });
             }
@@ -37,19 +37,20 @@ namespace MoveMate.API.Controllers
                     statusCode = 404,
                     message = "Not Found",
                     isError = true,
-                    errors = new List<string> { error!.Message }, // Return only the message
+                    errors = new List<string> { error!.Message }, 
                     timestamp = DateTime.Now
                 });
             }
 
             if (errors.Any(e => e.Code == MoveMate.Service.Commons.StatusCode.ServerError))
             {
+                var error = errors.FirstOrDefault(e => e.Code == MoveMate.Service.Commons.StatusCode.ServerError);
                 return base.StatusCode(500, new
                 {
                     statusCode = 500,
                     message = "Server Error",
                     isError = true,
-                    errors = new List<string> { "An internal server error occurred." }, // Custom message
+                    errors = new List<string> { error!.Message },
                     timestamp = DateTime.Now
                 });
             }

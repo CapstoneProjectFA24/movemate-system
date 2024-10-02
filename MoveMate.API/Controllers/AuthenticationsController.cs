@@ -1,6 +1,7 @@
 ﻿using FirebaseAdmin.Auth;
 using FluentValidation;
 using Google.Rpc;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MoveMate.API.Middleware;
@@ -94,10 +95,52 @@ namespace MoveMate.API.Controllers
 
         #endregion
 
+
+
+        /// <summary>
+        /// Login to access the system using either email or phone number.
+        /// </summary>
+        /// <param name="loginRequest">
+        /// LoginRequest object contains EmailOrPhone property and Password property. 
+        /// Notice that the password must be hashed with MD5 algorithm before sending to Login API.
+        /// </param>
+        /// <returns>
+        /// An Object with a JSON format that contains Account Id, Email/Phone, Role name, and a pair token (access token, refresh token).
+        /// </returns>
+        /// <remarks>
+        ///     Sample request:
+        ///     POST 
+        ///     {
+        ///         "emailOrPhone": "admin@gmail.com", // Or "0123456789"
+        ///         "password": "1"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Login Successfully.</response>
+        /// <response code="400">Some error about request data and logic data.</response>
+        /// <response code="404">Some error about request data not found.</response>
+        /// <response code="500">Some error about the system.</response>
+        [HttpPost("login/email-or-phone")]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Login([FromBody] AccountRequest loginRequest)
+        {
+            var result = await _authenticationService.Login(loginRequest, _jwtAuthOptions.Value);
+
+            if (result.IsError)
+            {
+                return HandleErrorResponse(result.Errors);
+            }
+
+            return Ok(result);
+        }
+
+
         #region Re-GenerateTokens API
 
         /// <summary>
-        /// Re-generate pair token from the old pair token that are provided by the MBKC system before.
+        /// Re-generate pair token from the old pair token.
         /// </summary>
         /// <param name="accountToken">
         /// AccountToken Object contains access token property and refresh token property.
@@ -122,7 +165,7 @@ namespace MoveMate.API.Controllers
         /// <exception cref="BadRequestException">Throw Error about request data and logic bussiness.</exception>
         /// <exception cref="Exception">Throw Error about the system.</exception>
         ///[HttpPost(APIEndPointConstant.Authentication.ReGenerationTokens)]
-        [HttpPost("Re")]
+        [HttpPost("re-generate-token")]
         [ProducesResponseType(typeof(AccountTokenResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]

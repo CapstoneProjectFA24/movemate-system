@@ -48,6 +48,11 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-
+        public virtual async Task<Booking?> GetByBookingIdAndUserIdAsync(int bookingId, int userId)
+        {
+            IQueryable<Booking> query = _dbSet;
+            query = query.Where(b => b.Id == bookingId && b.UserId == userId);
+            return await query.FirstOrDefaultAsync();
+        }
     }
 }

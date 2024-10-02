@@ -8,7 +8,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class AccountRequest
     {
-        public string Email { get; set; }
+        public string EmailOrPhone { get; set; }
         public string Password { get; set; }
     }
 }

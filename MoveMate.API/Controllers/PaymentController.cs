@@ -108,60 +108,87 @@ namespace MoveMate.API.Controllers
             return Redirect("http://localhost:3000/test-success");
         }
 
-        /// <summary>
-        /// Create a payment for a booking.
-        /// </summary>
-        /// <param name="bookingId">The ID of the booking.</param>
-        /// <param name="scheduleDetailId">The ID of the schedule detail.</param>
-        /// <returns>Returns the result of the payment creation.</returns>
-        [HttpPost("payment/zalo/create-booking-payment")]
-        [Authorize]
-        public async Task<IActionResult> CreateBookingPayment(int bookingId, int scheduleDetailId)
-        {
-            // Retrieve user ID from claims
-            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
-            {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
-            }
+        ///// <summary>
+        ///// Create a payment for a booking.
+        ///// </summary>
+        ///// <param name="bookingId">The ID of the booking.</param>
+        ///// <param name="scheduleDetailId">The ID of the schedule detail.</param>
+        ///// <returns>Returns the result of the payment creation.</returns>
+        //[HttpPost("payment/zalo/create-booking-payment")]
+        //[Authorize]
+        //public async Task<IActionResult> CreateBookingPayment(int bookingId, int scheduleDetailId)
+        //{
+        //    // Retrieve user ID from claims
+        //    var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+        //    if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+        //    {
+        //        return Unauthorized(new { Message = "Invalid user ID in token." });
+        //    }
 
-            var userId = int.Parse(accountIdClaim.Value);
+        //    var userId = int.Parse(accountIdClaim.Value);
 
-            // Call the CreatePaymentBooking method
-            var result = await _paymentServices.CreatePaymentBooking(userId, bookingId, scheduleDetailId);
+        //    // Call the CreatePaymentBooking method
+        //    var result = await _paymentServices.CreatePaymentBooking(userId, bookingId, scheduleDetailId);
 
-            if (result.IsError)
-            {
-                return BadRequest(result);
-            }
+        //    if (result.IsError)
+        //    {
+        //        return BadRequest(result);
+        //    }
 
-            return Ok(result);
-        }
+        //    return Ok(result);
+        //}
         [HttpPost("payment/payOs/create-payment-link")]
         [Authorize]
         public async Task<IActionResult> CreatePaymentLink(int bookingid)
         {
+            var operationResult = new OperationResult<string>();
+
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.UnAuthorize, "Invalid user ID in token.");
+                return HandleErrorResponse(operationResult.Errors);
             }
 
             var userId = int.Parse(accountIdClaim.Value);
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-            var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingid);
+            if (user == null)
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, $"Can't find User with Id: {userId}");
+                return HandleErrorResponse(operationResult.Errors);
+            }
+
+            var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingid, userId);
+            if (booking == null)
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, $"Can't find Booking with Id: {bookingid}");
+                return HandleErrorResponse(operationResult.Errors);
+            }
+
+            if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED.");
+                return HandleErrorResponse(operationResult.Errors);
+            }
+            int amount = 0;
+            if (booking.Status == "WAITING")
+            {
+                amount = (int)booking.Deposit; 
+            }
+            else if (booking.Status == "COMPLETED")
+            {
+                amount = (int)booking.Total; 
+            }
+
             try
             {
-                // Tạo danh sách các item từ model nếu có
-               
-                // Tạo đối tượng PaymentData với các giá trị từ model và các URL cần thiết
                 var paymentData = new PaymentData(
-                    orderCode: 4,  // Bạn có thể tạo mã đơn hàng tại đây
-                    amount: (int)booking.Total,
-                    description: "d",
+                    orderCode: 6,
+                    amount: amount, 
+                    description: "Booking Payment",
                     items: null,
-                    cancelUrl: "http://yourdomain.com/payment/cancel",  // URL khi thanh toán bị hủy
-                    returnUrl: "http://yourdomain.com/payment/return",  // URL khi thanh toán thành công
+                    cancelUrl: "http://localhost:5210/api/v1/payments/payment/fail",
+                    returnUrl: "http://localhost:5210/api/v1/payments/payment/success",
                     buyerName: user.Name,
                     buyerEmail: user.Email,
                     buyerPhone: user.Phone,
@@ -169,17 +196,19 @@ namespace MoveMate.API.Controllers
                     expiredAt: null
                 );
 
-                // Gọi hàm createPaymentLink từ PayOS với đối tượng PaymentData
-                var paymentUrl = await _payOs.createPaymentLink(paymentData);
-
-                return Ok(new { Url = paymentUrl });
+                var paymentResult = await _payOs.createPaymentLink(paymentData);
+                var paymentUrl = paymentResult.checkoutUrl;
+                operationResult = OperationResult<string>.Success(paymentUrl, MoveMate.Service.Commons.StatusCode.Ok, "Payment link created successfully.");
+                return Ok(operationResult);
             }
             catch (Exception ex)
             {
-                string error = ErrorUtil.GetErrorString("Exception", ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error);
+                // If an error occurs, add the error to OperationResult
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+                return HandleErrorResponse(operationResult.Errors);
             }
         }
+
 
 
 
