@@ -1,0 +1,44 @@
+name: deploy MoveMate
+
+# Trigger the job when code is pushed to the specified branch (main)
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: build move-mate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore ./MoveMate.API/MoveMate.API.csproj
+
+      - name: Build
+        run: dotnet build ./MoveMate.API/MoveMate.API.csproj --configuration Release --no-restore
+
+      - name: Publish .NET Application
+        run: |
+          dotnet publish ./MoveMate.API/MoveMate.API.csproj --configuration Release --output ./publish
+  #Deploy to Azure
+  docker-compose:
+    needs: build
+    name: deploy move-mate
+    runs-on: self-hosted
+    environment: docker
+    steps:
+      # Checkout code on the VPS
+      - name: Checkout code
+        uses: actions/checkout@v2 
+
+      # Build and run the application using Docker
+      - name: Run `docker compose`
+        run: docker compose up --build -d
