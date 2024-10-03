@@ -1,4 +1,5 @@
-﻿using MoveMate.Service.ViewModels;
+﻿using MoveMate.Service.ThirdPartyService.Zalo.Models;
+using MoveMate.Service.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,10 @@ namespace MoveMate.Service.ThirdPartyService.Zalo
 {
     public interface IZaloPayService
     {
-        // public Task<string> CreateOrderAsync(ZaloPayOrderRequest request);
+        public ZaloPayOrderCreate BuildZaloPayOrderCreate(string orderId, long amount, string items, string bankCode, string embedData, string callbackUrl);
+        public Task<ZaloPayOrderResult?> CreateOrder(ZaloPayOrderCreate zaloPayOrder);
+        public Task<OrderQueryResult?> QueryOrder(string appTransId);
+        public bool ValidateCallback(CallbackOrder callbackOrder);
+        public bool ValidateRedirect(RedirectOrder redirectOrder);
     }
 }

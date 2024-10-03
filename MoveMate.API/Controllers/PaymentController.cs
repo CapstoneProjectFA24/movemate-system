@@ -183,7 +183,7 @@ namespace MoveMate.API.Controllers
             try
             {
                 var paymentData = new PaymentData(
-                    orderCode: 6,
+                    orderCode: 7,
                     amount: amount, 
                     description: "Booking Payment",
                     items: null,
