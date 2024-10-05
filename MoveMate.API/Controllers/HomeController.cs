@@ -9,7 +9,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 namespace MoveMate.API.Controllers
 {
     [ApiController]
-    public class HomeController : ControllerBase
+    public class HomeController : BaseController
     {
         private readonly ILogger<PaymentController> _logger;
         private readonly ZaloPaySDK _paySdk;

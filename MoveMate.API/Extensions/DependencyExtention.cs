@@ -63,6 +63,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
             services.AddScoped<IZaloPayService, ZaloPayServices>();
+            services.AddScoped<IPayOsService,  PayOsService>();
             services.AddScoped<ZaloPaySDK>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
             // services.AddScoped<IFirebaseServices, FirebaseServices>();

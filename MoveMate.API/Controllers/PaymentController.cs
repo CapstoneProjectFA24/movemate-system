@@ -10,6 +10,7 @@ using Net.payOS;
 using Net.payOS.Types;
 using MoveMate.Service.ThirdPartyService.VNPay;
 using System.Security.Claims;
+using MoveMate.Service.ThirdPartyService.PayOs;
 
 namespace MoveMate.API.Controllers
 {
@@ -20,16 +21,18 @@ namespace MoveMate.API.Controllers
         private readonly IUserServices _userService;
         private readonly IPaymentServices _paymentServices;
         private readonly PayOS _payOs;
+        private readonly IPayOsService _payOsService;
 
         private readonly UnitOfWork _unitOfWork;
 
-        public PaymentController(IVnPayService vnPayService, IUserServices userService, IUnitOfWork unitOfWork, IPaymentServices paymentServices, PayOS payOs)
+        public PaymentController(IVnPayService vnPayService, IUserServices userService, IUnitOfWork unitOfWork, IPaymentServices paymentServices, PayOS payOs, IPayOsService payOsService)
         {
             _vnPayService = vnPayService;
             _userService = userService;
             _unitOfWork = (UnitOfWork)unitOfWork;
             _paymentServices = paymentServices;
             _payOs = payOs;
+            _payOsService = payOsService;
         }
 
 
@@ -137,78 +140,30 @@ namespace MoveMate.API.Controllers
 
         //    return Ok(result);
         //}
-        [HttpPost("payment/payOs/create-payment-link")]
-        [Authorize]
-        public async Task<IActionResult> CreatePaymentLink(int bookingid)
-        {
-            var operationResult = new OperationResult<string>();
+      
 
+
+
+        [HttpPost("payment/payOS/create")]
+        [Authorize]
+        public async Task<IActionResult> CreatePaymentLinkPayOS(int bookingId)
+        {
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.UnAuthorize, "Invalid user ID in token.");
-                return HandleErrorResponse(operationResult.Errors);
+                return Unauthorized(new { statusCode = 401, message = "Invalid user ID in token.", isError = true });
             }
 
             var userId = int.Parse(accountIdClaim.Value);
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-            if (user == null)
+            var operationResult = await _payOsService.CreatePaymentLinkAsync(bookingId, userId);
+
+            if (operationResult.IsError)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, $"Can't find User with Id: {userId}");
                 return HandleErrorResponse(operationResult.Errors);
             }
 
-            var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingid, userId);
-            if (booking == null)
-            {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, $"Can't find Booking with Id: {bookingid}");
-                return HandleErrorResponse(operationResult.Errors);
-            }
-
-            if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
-            {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED.");
-                return HandleErrorResponse(operationResult.Errors);
-            }
-            int amount = 0;
-            if (booking.Status == "WAITING")
-            {
-                amount = (int)booking.Deposit; 
-            }
-            else if (booking.Status == "COMPLETED")
-            {
-                amount = (int)booking.Total; 
-            }
-
-            try
-            {
-                var paymentData = new PaymentData(
-                    orderCode: 7,
-                    amount: amount, 
-                    description: "Booking Payment",
-                    items: null,
-                    cancelUrl: "http://localhost:5210/api/v1/payments/payment/fail",
-                    returnUrl: "http://localhost:5210/api/v1/payments/payment/success",
-                    buyerName: user.Name,
-                    buyerEmail: user.Email,
-                    buyerPhone: user.Phone,
-                    buyerAddress: null,
-                    expiredAt: null
-                );
-
-                var paymentResult = await _payOs.createPaymentLink(paymentData);
-                var paymentUrl = paymentResult.checkoutUrl;
-                operationResult = OperationResult<string>.Success(paymentUrl, MoveMate.Service.Commons.StatusCode.Ok, "Payment link created successfully.");
-                return Ok(operationResult);
-            }
-            catch (Exception ex)
-            {
-                // If an error occurs, add the error to OperationResult
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
-                return HandleErrorResponse(operationResult.Errors);
-            }
+            return Ok(operationResult);
         }
-
 
 
 
