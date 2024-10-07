@@ -25,6 +25,7 @@ using MoveMate.Service.ThirdPartyService.PayOs;
 using Net.payOS;
 using MoveMate.Service.ThirdPartyService.VNPay;
 using MoveMate.Service.ThirdPartyService.Firebase;
+using MoveMate.Service.ThirdPartyService.Zalo;
 
 
 namespace MoveMate.API.Extensions
@@ -61,8 +62,11 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
-           // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
-           // services.AddScoped<IFirebaseServices, FirebaseServices>();
+            services.AddScoped<IZaloPayService, ZaloPayServices>();
+            services.AddScoped<IPayOsService,  PayOsService>();
+            services.AddScoped<ZaloPaySDK>();
+            // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
+            // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
             return services;
         }

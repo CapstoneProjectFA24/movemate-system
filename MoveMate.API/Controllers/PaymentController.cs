@@ -10,6 +10,7 @@ using Net.payOS;
 using Net.payOS.Types;
 using MoveMate.Service.ThirdPartyService.VNPay;
 using System.Security.Claims;
+using MoveMate.Service.ThirdPartyService.PayOs;
 
 namespace MoveMate.API.Controllers
 {
@@ -20,16 +21,18 @@ namespace MoveMate.API.Controllers
         private readonly IUserServices _userService;
         private readonly IPaymentServices _paymentServices;
         private readonly PayOS _payOs;
+        private readonly IPayOsService _payOsService;
 
         private readonly UnitOfWork _unitOfWork;
 
-        public PaymentController(IVnPayService vnPayService, IUserServices userService, IUnitOfWork unitOfWork, IPaymentServices paymentServices, PayOS payOs)
+        public PaymentController(IVnPayService vnPayService, IUserServices userService, IUnitOfWork unitOfWork, IPaymentServices paymentServices, PayOS payOs, IPayOsService payOsService)
         {
             _vnPayService = vnPayService;
             _userService = userService;
             _unitOfWork = (UnitOfWork)unitOfWork;
             _paymentServices = paymentServices;
             _payOs = payOs;
+            _payOsService = payOsService;
         }
 
 
@@ -46,7 +49,7 @@ namespace MoveMate.API.Controllers
         ///         "amount": 666666
         ///     }   
         /// </remarks>
-        [HttpPost("payment/create_recharge-payment-url")]
+        [HttpPost("create-recharge-payment-url")]
         [Authorize]
         public async Task<IActionResult> Recharge([FromBody] VnPaymentRecharge model)
         {
@@ -85,7 +88,7 @@ namespace MoveMate.API.Controllers
         /// Recharge Payment
         /// </summary>
         /// <returns></returns>
-        [HttpGet("payment/recharge-callback")]
+        [HttpGet("recharge-callback")]
         public IActionResult RechagrePayment()
         {
 
@@ -108,77 +111,29 @@ namespace MoveMate.API.Controllers
             return Redirect("http://localhost:3000/test-success");
         }
 
-        /// <summary>
-        /// Create a payment for a booking.
-        /// </summary>
-        /// <param name="bookingId">The ID of the booking.</param>
-        /// <param name="scheduleDetailId">The ID of the schedule detail.</param>
-        /// <returns>Returns the result of the payment creation.</returns>
-        [HttpPost("payment/zalo/create-booking-payment")]
+        
+
+
+
+        [HttpPost("payOS/create-payment-url")]
         [Authorize]
-        public async Task<IActionResult> CreateBookingPayment(int bookingId, int scheduleDetailId)
-        {
-            // Retrieve user ID from claims
-            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
-            {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
-            }
-
-            var userId = int.Parse(accountIdClaim.Value);
-
-            // Call the CreatePaymentBooking method
-            var result = await _paymentServices.CreatePaymentBooking(userId, bookingId, scheduleDetailId);
-
-            if (result.IsError)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
-        }
-        [HttpPost("payment/payOs/create-payment-link")]
-        [Authorize]
-        public async Task<IActionResult> CreatePaymentLink(int bookingid)
+        public async Task<IActionResult> CreatePaymentLinkPayOS(int bookingId)
         {
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
+                return Unauthorized(new { statusCode = 401, message = "Invalid user ID in token.", isError = true });
             }
 
             var userId = int.Parse(accountIdClaim.Value);
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-            var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingid);
-            try
-            {
-                // Tạo danh sách các item từ model nếu có
-               
-                // Tạo đối tượng PaymentData với các giá trị từ model và các URL cần thiết
-                var paymentData = new PaymentData(
-                    orderCode: 4,  // Bạn có thể tạo mã đơn hàng tại đây
-                    amount: (int)booking.Total,
-                    description: "d",
-                    items: null,
-                    cancelUrl: "http://yourdomain.com/payment/cancel",  // URL khi thanh toán bị hủy
-                    returnUrl: "http://yourdomain.com/payment/return",  // URL khi thanh toán thành công
-                    buyerName: user.Name,
-                    buyerEmail: user.Email,
-                    buyerPhone: user.Phone,
-                    buyerAddress: null,
-                    expiredAt: null
-                );
+            var operationResult = await _payOsService.CreatePaymentLinkAsync(bookingId, userId);
 
-                // Gọi hàm createPaymentLink từ PayOS với đối tượng PaymentData
-                var paymentUrl = await _payOs.createPaymentLink(paymentData);
-
-                return Ok(new { Url = paymentUrl });
-            }
-            catch (Exception ex)
+            if (operationResult.IsError)
             {
-                string error = ErrorUtil.GetErrorString("Exception", ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, error);
+                return HandleErrorResponse(operationResult.Errors);
             }
+
+            return Ok(operationResult);
         }
 
 
@@ -187,7 +142,7 @@ namespace MoveMate.API.Controllers
         /// Payment Fail
         /// </summary>
         /// <returns></returns>
-        [HttpGet("payment/fail")]
+        [HttpGet("fail")]
 
         public IActionResult PaymentFail()
         {
@@ -204,7 +159,7 @@ namespace MoveMate.API.Controllers
         /// Get auction by Id
         /// </summary>
         /// <returns></returns>
-        [HttpGet("payment/success")]
+        [HttpGet("success")]
 
         public IActionResult PaymentSuccess()
         {

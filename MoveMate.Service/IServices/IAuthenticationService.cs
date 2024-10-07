@@ -16,5 +16,6 @@ namespace MoveMate.Service.IServices
         public Task<AccountResponse> GenerateTokenWithUserIdAsync(string userId, JWTAuth jwtAuthOptions);
         public Task<AccountTokenResponse> ReGenerateTokensAsync(AccountTokenRequest accountTokenRequest, JWTAuth jwtAuth);
         public Task<OperationResult<AccountResponse>> LoginWithEmailAsync(string email);
+        public Task<OperationResult<AccountResponse>> Login(AccountRequest request, JWTAuth jwtAuth);
     }
 }

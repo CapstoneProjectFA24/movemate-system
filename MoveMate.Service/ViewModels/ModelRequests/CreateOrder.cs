@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class AccountRequest
+    public class CreateOrder
     {
-        public string EmailOrPhone { get; set; }
-        public string Password { get; set; }
+        public string BankCode { set; get; }
     }
 }
