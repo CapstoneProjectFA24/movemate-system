@@ -26,81 +26,36 @@ namespace MoveMate.Service.Services
             this._logger = logger;
         }
 
-        public async Task<OperationResult<WalletResponse>> GetWalletByUserId(int id)
+
+        public async Task<OperationResult<WalletResponse>> GetWalletByUserIdAsync(string userId)
         {
             var result = new OperationResult<WalletResponse>();
-
             try
             {
-                // Query the user by name from the database asynchronously
-                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(id);
 
-                if (wallet == null)
+                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(int.Parse(userId));
+
+                if (wallet != null)
                 {
-                    // Handle case where user is not found
-                    result.AddError(StatusCode.NotFound, $"Wallet '{id}' not found.");
-                    return result;
+                    var walletResponse = _mapper.Map<WalletResponse>(wallet);
+                    result.Payload = walletResponse;
+                    result.Message = "Wallet retrieved successfully.";
+                }
+                else
+                {
+                    result.AddError(StatusCode.NotFound, $"Wallet for user '{userId}' not found.");
                 }
 
-                // Map the User entity to UserResponse view model
-                var walletResponse = _mapper.Map<WalletResponse>(wallet);
-
-                // Set payload and message for successful retrieval
-                result.Payload = walletResponse;
-                result.Message = "Wallet retrieved successfully.";
-
-                return result;
             }
             catch (Exception ex)
             {
-                // Log the exception
-                string error = ErrorUtil.GetErrorString("Exception", ex.Message);
-                // Log or debug the error
-                Console.WriteLine($"Error occurred: {error}");
-
-                // Add error to result
-                result.AddError(StatusCode.ServerError,  error);
-                return result;
+                _logger.LogError(ex, "An error occurred while retrieving the wallet.");
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
             }
+
+            return result;
         }
 
-        public async Task<OperationResult<Wallet>> GetWalletsByUserId(int id)
-        {
-            var result = new OperationResult<Wallet>();
-
-            try
-            {
-                // Query the user by name from the database asynchronously
-                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(id);
-
-                if (wallet == null)
-                {
-                    // Handle case where user is not found
-                    result.AddError(StatusCode.NotFound, $"Wallet '{id}' not found.");
-                    return result;
-                }
-
-                // Map the User entity to UserResponse view model
-                var walletResponse = _mapper.Map<Wallet>(wallet);
-
-                // Set payload and message for successful retrieval
-                result.Payload = walletResponse;
-                result.Message = "Wallet retrieved successfully.";
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                string error = ErrorUtil.GetErrorString("Exception", ex.Message);
-                // Log or debug the error
-                Console.WriteLine($"Error occurred: {error}");
-
-                // Add error to result
-                result.AddError(StatusCode.ServerError, error);
-                return result;
-            }
-        }
         public async Task<OperationResult<WalletResponse>> UpdateWalletBalance(int walletId, float balance)
         {
             var result = new OperationResult<WalletResponse>();

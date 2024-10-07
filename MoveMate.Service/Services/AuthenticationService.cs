@@ -21,6 +21,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Service.ViewModels.ModelResponses;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace MoveMate.Service.Services
 {
@@ -49,7 +50,7 @@ namespace MoveMate.Service.Services
             try
             {
                 // Check if user exists
-                var user = await _unitOfWork.UserRepository.GetUserAsync(accountRequest.Email);
+                var user = await _unitOfWork.UserRepository.GetUserAsync(accountRequest.EmailOrPhone);
                 if (user == null)
                 {
                     result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.CommonMessage.NotExistEmail);
@@ -185,6 +186,48 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+
+        public async Task<OperationResult<AccountResponse>> Login(AccountRequest request, JWTAuth jwtAuth)
+        {
+            var result = new OperationResult<AccountResponse>();
+
+            try
+            {
+                // Check if the input is a phone number or email
+                var user = request.EmailOrPhone.Contains("@")
+                    ? await _unitOfWork.UserRepository.GetUserAsync(request.EmailOrPhone) // Assume this is an email
+                    : await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.EmailOrPhone); // Assume this is a phone number
+
+                if (user == null)
+                {
+                    result.AddError(Service.Commons.StatusCode.NotFound, "The email or phone number does not exist.");
+                    return result;
+                }
+
+                // Validate the password
+                if (!user.Password.Equals(request.Password))
+                {
+                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid email/phone number or password.");
+                    return result;
+                }
+
+                // Map user to AccountResponse and generate tokens
+                var accountResponse = _mapper.Map<AccountResponse>(user);
+                accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
+
+                // Success: Add response to result
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while logging in.");
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+            }
+
+            return result;
+        }
+
 
 
         public async Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister)
