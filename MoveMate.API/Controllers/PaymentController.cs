@@ -49,7 +49,7 @@ namespace MoveMate.API.Controllers
         ///         "amount": 666666
         ///     }   
         /// </remarks>
-        [HttpPost("payment/create_recharge-payment-url")]
+        [HttpPost("create-recharge-payment-url")]
         [Authorize]
         public async Task<IActionResult> Recharge([FromBody] VnPaymentRecharge model)
         {
@@ -88,7 +88,7 @@ namespace MoveMate.API.Controllers
         /// Recharge Payment
         /// </summary>
         /// <returns></returns>
-        [HttpGet("payment/recharge-callback")]
+        [HttpGet("recharge-callback")]
         public IActionResult RechagrePayment()
         {
 
@@ -111,40 +111,11 @@ namespace MoveMate.API.Controllers
             return Redirect("http://localhost:3000/test-success");
         }
 
-        ///// <summary>
-        ///// Create a payment for a booking.
-        ///// </summary>
-        ///// <param name="bookingId">The ID of the booking.</param>
-        ///// <param name="scheduleDetailId">The ID of the schedule detail.</param>
-        ///// <returns>Returns the result of the payment creation.</returns>
-        //[HttpPost("payment/zalo/create-booking-payment")]
-        //[Authorize]
-        //public async Task<IActionResult> CreateBookingPayment(int bookingId, int scheduleDetailId)
-        //{
-        //    // Retrieve user ID from claims
-        //    var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-        //    if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
-        //    {
-        //        return Unauthorized(new { Message = "Invalid user ID in token." });
-        //    }
-
-        //    var userId = int.Parse(accountIdClaim.Value);
-
-        //    // Call the CreatePaymentBooking method
-        //    var result = await _paymentServices.CreatePaymentBooking(userId, bookingId, scheduleDetailId);
-
-        //    if (result.IsError)
-        //    {
-        //        return BadRequest(result);
-        //    }
-
-        //    return Ok(result);
-        //}
-      
+        
 
 
 
-        [HttpPost("payment/payOS/create")]
+        [HttpPost("payOS/create-payment-url")]
         [Authorize]
         public async Task<IActionResult> CreatePaymentLinkPayOS(int bookingId)
         {
@@ -171,7 +142,7 @@ namespace MoveMate.API.Controllers
         /// Payment Fail
         /// </summary>
         /// <returns></returns>
-        [HttpGet("payment/fail")]
+        [HttpGet("fail")]
 
         public IActionResult PaymentFail()
         {
@@ -188,7 +159,7 @@ namespace MoveMate.API.Controllers
         /// Get auction by Id
         /// </summary>
         /// <returns></returns>
-        [HttpGet("payment/success")]
+        [HttpGet("success")]
 
         public IActionResult PaymentSuccess()
         {

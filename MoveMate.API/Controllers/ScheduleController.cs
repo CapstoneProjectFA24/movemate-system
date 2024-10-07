@@ -21,7 +21,7 @@ namespace MoveMate.API.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("schedule/get-all")]
+        [HttpGet("")]
 
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllSchedule request)
@@ -38,7 +38,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("schedule/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetScheduleById(int id)
         {
             var response = await _scheduleServices.GetById(id);

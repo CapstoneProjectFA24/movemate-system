@@ -19,7 +19,7 @@ using System.Security.Claims;
 namespace MoveMate.API.Controllers
 {
     [ApiController]
-    public class AuthenticationsController : BaseController
+    public class AuthenticationController : BaseController
     {
         private IAuthenticationService _authenticationService;
         private IFirebaseServices _firebaseService;
@@ -32,7 +32,7 @@ namespace MoveMate.API.Controllers
         private readonly ILogger<ExceptionMiddleware> _logger;
 
         // private IValidator<ResetPasswordRequest> _resetPasswordValidator;
-        public AuthenticationsController(IAuthenticationService authenticationService, IOptions<JWTAuth> jwtAuthOptions,
+        public AuthenticationController(IAuthenticationService authenticationService, IOptions<JWTAuth> jwtAuthOptions,
                 IValidator<AccountRequest> accountRequestValidator,
                 IValidator<AccountTokenRequest> accountTokenRequestValidator,
                 ILogger<ExceptionMiddleware> logger, IFirebaseServices firebaseServices)
