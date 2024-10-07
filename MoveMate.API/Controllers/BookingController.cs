@@ -79,8 +79,10 @@ namespace MoveMate.API.Controllers
         ///           ]
         ///         }
         /// </remarks>
-        /// <response code="200">Booking registered successfully.</response>
-        /// <response code="400">Some Error about request data and logic data.</response>
+        /// <response code="201">Add Booking Success!</response>
+        /// <response code="400">Filed is required.</response>
+        /// <response code="400">HouseType with id: {request.HouseTypeId} not found!.</response>
+        /// <response code="400">Add Booking Failed!.</response>
         /// <response code="500">Some Error about the system.</response>
         /// <exception cref="BadRequestException">Thrown if the request data is invalid or contains logic errors.</exception>
         /// <exception cref="Exception">Thrown in case of a system error.</exception>
