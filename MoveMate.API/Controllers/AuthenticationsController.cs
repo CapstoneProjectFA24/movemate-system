@@ -47,53 +47,6 @@ namespace MoveMate.API.Controllers
             // this._resetPasswordValidator = resetPasswordValidator;
         }
 
-        #region Login API
-
-        /// <summary>
-        /// Login to access into the system by your account.
-        /// </summary>
-        /// <param name="account">
-        /// Account object contains Email property and Password property. 
-        /// Notice that the password must be hashed with MD5 algorithm before sending to Login API.
-        /// </param>
-        /// <returns>
-        /// An Object with a json format that contains Account Id, Email, Role name, and a pair token (access token, refresh token).
-        /// </returns>
-        /// <remarks>
-        ///     Sample request:
-        ///
-        ///         POST 
-        ///         {
-        ///             "email": "admin@gmail.com"
-        ///             "password": "1"
-        ///         }
-        /// </remarks>
-        /// <response code="200">Login Successfully.</response>
-        /// <response code="400">Some Error about request data and logic data.</response>
-        /// <response code="404">Some Error about request data not found.</response>
-        /// <response code="500">Some Error about the system.</response>
-        /// <exception cref="BadRequestException">Throw Error about request data and logic bussiness.</exception>
-        /// <exception cref="NotFoundException">Throw Error about request data that are not found.</exception>
-        /// <exception cref="Exception">Throw Error about the system.</exception>
-        ///[HttpPost(APIEndPointConstant.Authentication.Login)]
-        [HttpPost("Login")]
-        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> PostLoginAsync([FromBody] AccountRequest account)
-        {
-            var result = await _authenticationService.LoginAsync(account, _jwtAuthOptions.Value);
-
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-
-            return Ok(result);
-        }
-
-        #endregion
 
 
 
@@ -119,7 +72,7 @@ namespace MoveMate.API.Controllers
         /// <response code="400">Some error about request data and logic data.</response>
         /// <response code="404">Some error about request data not found.</response>
         /// <response code="500">Some error about the system.</response>
-        [HttpPost("login/email-or-phone")]
+        [HttpPost("login")]
         [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
@@ -238,50 +191,7 @@ namespace MoveMate.API.Controllers
         }
 
 
-        #region Login Phone API
-        /// <summary>
-        /// Login to access the system using your phone number.
-        /// </summary>
-        /// <param name="phoneLoginRequest">
-        /// PhoneLoginRequest object contains Phone property and Password property. 
-        /// Notice that the password must be hashed with MD5 algorithm before sending to Login API.
-        /// </param>
-        /// <returns>
-        /// An Object with a JSON format that contains Account Id, Phone, Role name, and a pair token (access token, refresh token).
-        /// </returns>
-        /// <remarks>
-        ///     Sample request:
-        ///
-        ///         POST 
-        ///         {
-        ///             "phone": "0123456789",
-        ///             "password": "1"
-        ///         }
-        /// </remarks>
-        /// <response code="200">Login Successfully.</response>
-        /// <response code="400">Some error about request data and logic data.</response>
-        /// <response code="404">Some error about request data not found.</response>
-        /// <response code="500">Some error about the system.</response>
-        /// <exception cref="BadRequestException">Throw Error about request data and logic business.</exception>
-        /// <exception cref="NotFoundException">Throw Error about request data that are not found.</exception>
-        /// <exception cref="Exception">Throw Error about the system.</exception>
-        [HttpPost("LoginPhone")]
-        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> PostLoginPhoneAsync([FromBody] PhoneLoginRequest phoneLoginRequest)
-        {
-            var result = await _authenticationService.LoginByPhoneAsync(phoneLoginRequest, _jwtAuthOptions.Value);
-
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-
-            return Ok(result);
-        }
-            #endregion
+        
 
 
             /// <summary>
@@ -316,63 +226,7 @@ namespace MoveMate.API.Controllers
             return Ok(result);
         }
 
-        //[HttpPost("verify-token")]
-        //public async Task<IActionResult> VerifyToken([FromBody] TokenRequest tokenRequest)
-        //{
-        //    var result = new OperationResult<object>
-        //    {
-        //        StatusCode = Service.Commons.StatusCode.Ok,
-        //        Message = string.Empty,
-        //        IsError = false,
-        //        Payload = null
-        //    };
-
-        //    try
-        //    {
-        //        var decodedToken = await _firebaseService.VerifyIdTokenAsync(tokenRequest.IdToken);
-
-        //        if (decodedToken != null && !string.IsNullOrEmpty(decodedToken.Uid))
-        //        {
-        //            var userId = decodedToken.Uid;
-        //            var accountResponse = await _authenticationService.GenerateTokenWithUserIdAsync(userId, _jwtAuthOptions.Value);
-
-        //            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verified and JWT generated successfully", new
-        //            {
-        //                accessToken = accountResponse.Tokens.AccessToken,
-        //                refreshToken = accountResponse.Tokens.RefreshToken
-        //            });
-        //        }
-        //        else
-        //        {
-        //            result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid token: UID not found");
-        //        }
-        //    }
-        //    catch (FirebaseAuthException ex)
-        //    {
-        //        _logger.LogError(ex, "Firebase token verification failed.");
-        //        result.AddError(Service.Commons.StatusCode.BadRequest, "Firebase token verification failed: " + ex.Message);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "An internal server error occurred during token verification.");
-        //        result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
-        //    }
-
-        //    // If there are errors, use HandleErrorResponse to return only the error messages
-        //    if (result.IsError)
-        //    {
-        //        return HandleErrorResponse(result.Errors);
-        //    }
-
-        //    // If successful, return the payload and omit unnecessary data
-        //    return Ok(new
-        //    {
-        //        statusCode = (int)result.StatusCode,
-        //        message = result.Message,
-        //        isError = result.IsError,
-        //        payload = result.Payload
-        //    });
-        //}
+       
 
 
 
