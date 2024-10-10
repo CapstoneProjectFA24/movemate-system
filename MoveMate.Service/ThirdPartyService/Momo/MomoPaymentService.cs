@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MoveMate.Repository.Repositories.UnitOfWork;
+using MoveMate.Service.Commons;
 using MoveMate.Service.ThirdPartyService.Momo.Models;
 using MoveMate.Service.Utils;
 using System;
@@ -20,28 +23,83 @@ namespace MoveMate.Service.ThirdPartyService.Momo
         private readonly MomoSettings _momoSettings;
         private readonly ILogger<MomoPaymentService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UnitOfWork _unitOfWork;
 
         public MomoPaymentService(
             IOptions<MomoSettings> momoSettings,
             ILogger<MomoPaymentService> logger,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork)
         {
             _momoSettings = momoSettings.Value;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
+            _unitOfWork = (UnitOfWork)unitOfWork;
         }
 
         public ClaimsPrincipal? CurrentUserPrincipal => _httpContextAccessor.HttpContext?.User;
 
+        public async Task<OperationResult<string>> CreatePaymentWithMomoAsync(int bookingId, int userId , string returnUrl)
+        {
+            var operationResult = new OperationResult<string>();
+
+            // Retrieve user
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, "User not found");
+                return operationResult;
+            }
+
+            // Retrieve booking
+            var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
+            if (booking == null)
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, "Booking not found");
+                return operationResult;
+            }
+
+            // Check booking status
+            if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED");
+                return operationResult;
+            }
+
+            int amount = (booking.Status == "WAITING") ? (int)booking.Deposit : (int)booking.Total;
+            var newGuid = Guid.NewGuid();
+            try
+            {
+                // Create payment request data
+                var payment = new MomoPayment
+                {
+                    Amount = amount,
+                    Info = "Booking Payment",
+                    PaymentReferenceId = newGuid.ToString(), 
+                    returnUrl = returnUrl,                   
+                };
+
+                // Generate Momo payment link
+                var paymentUrl = await CreatePaymentAsync(payment);
+
+                operationResult = OperationResult<string>.Success(paymentUrl, MoveMate.Service.Commons.StatusCode.Ok, "Payment link created successfully");
+                return operationResult;
+            }
+            catch (Exception ex)
+            {
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal server error occurred");
+                return operationResult;
+            }
+        }
+
         public async Task<string> CreatePaymentAsync(MomoPayment payment)
         {
             var ServerUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://", _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ?? throw new Exception("not have url server");
-            var requestType = "captureWallet";
+            var requestType = "payWithATM";
             var request = new MomoPaymentRequest();
             request.OrderInfo = payment.Info ?? DefaultOrderInfo;
             request.PartnerCode = _momoSettings.PartnerCode;
             request.IpnUrl = _momoSettings.IpnUrl;
-            request.RedirectUrl = $"{ServerUrl}/{_momoSettings.RedirectUrl}?returnUrl={payment.returnUrl}";
+            request.RedirectUrl = _momoSettings.RedirectUrl;
             request.Amount = payment.Amount;
             request.OrderId = payment.PaymentReferenceId;
             request.ReferenceId = $"{payment.PaymentReferenceId}";

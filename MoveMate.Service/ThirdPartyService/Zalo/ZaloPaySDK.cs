@@ -22,6 +22,14 @@ namespace MoveMate.Service.ThirdPartyService.Zalo
             _configuration = configuration;
         }
 
+        public async Task<string?> GeneratePaymentLink(string orderId, long amount, string bankCode)
+        {
+            var zaloPayOrderCreate = _zaloPayServices.BuildZaloPayOrderCreate(orderId, amount, "[]", bankCode, "{}", _configuration["ZaloPay:CallbackUrl"]);
+            var result = await _zaloPayServices.CreateOrder(zaloPayOrderCreate);
+
+            return result?.OrderUrl;
+        }
+
         public async Task<ZaloPayOrderResult?> CreateOrder(string bankCode)
         {
             var rnd = new Random();
