@@ -60,6 +60,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IHouseTypeSettingServices, HouseTypeSettingServices>();
             services.AddScoped<IServiceServices , ServiceServices>();
             services.AddScoped<IServiceDetails, ServiceDetails>();
+            services.AddScoped<IFeeSettingServices, FeeSettingServices>();
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
