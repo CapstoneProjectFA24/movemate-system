@@ -13,8 +13,8 @@ namespace MoveMate.Service.ThirdPartyService.VNPay
     {
         //Task<string> CreatePaymentUrl(HttpContext context, VnPaymentRequestModel model);
         //Task<VnPaymentResponseModel> PaymentExecute(IQueryCollection collections);
-        Task<RechagreResponseModel> RechagreExecute(IQueryCollection collections);
-        Task<string> Recharge(HttpContext context, int userId, float amount);
+        Task<OperationResult<RechagreResponseModel>> RechagreExecute(IQueryCollection collections);
+        Task<OperationResult<string>> Recharge(HttpContext context, int userId, float amount);
         //Task<OperationResult<Transaction>> DepositPayment(VnPaymentResponseModel response);
         Task<OperationResult<Transaction>> RechagrePayment(RechagreResponseModel response);
         //Task<OperationResult<bool>> PayOrderWithWalletBalance(int orderId, int userId);

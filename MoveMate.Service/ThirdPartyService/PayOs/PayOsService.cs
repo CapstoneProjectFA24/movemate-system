@@ -34,20 +34,20 @@ namespace MoveMate.Service.ThirdPartyService.PayOs
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, $"Can't find User with Id: {userId}");
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, "User not found");
                 return operationResult;
             }
 
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
             if (booking == null)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, $"Can't find Booking with Id: {bookingId}");
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, "Booking not found");
                 return operationResult;
             }
 
             if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED.");
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED");
                 return operationResult;
             }
 
@@ -72,12 +72,12 @@ namespace MoveMate.Service.ThirdPartyService.PayOs
                 var paymentResult = await _payOs.createPaymentLink(paymentData);
                 var paymentUrl = paymentResult.checkoutUrl;
 
-                operationResult = OperationResult<string>.Success(paymentUrl, MoveMate.Service.Commons.StatusCode.Ok, "Payment link created successfully.");
+                operationResult = OperationResult<string>.Success(paymentUrl, MoveMate.Service.Commons.StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+                operationResult.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal server error occurred");
                 return operationResult;
             }
         }

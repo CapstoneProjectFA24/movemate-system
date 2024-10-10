@@ -2,6 +2,7 @@
 
 public class TruckCateResponse
 {
+    public int Id { get; set; }
     public string? CategoryName { get; set; }
 
     public double? MaxLoad { get; set; }

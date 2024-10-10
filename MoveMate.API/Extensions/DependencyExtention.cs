@@ -26,6 +26,7 @@ using Net.payOS;
 using MoveMate.Service.ThirdPartyService.VNPay;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.Zalo;
+using MoveMate.Service.ThirdPartyService.Momo;
 
 
 namespace MoveMate.API.Extensions
@@ -112,6 +113,26 @@ namespace MoveMate.API.Extensions
 
             return services;
         }
+
+        //zalo pay
+        public static IServiceCollection AddZaloPayConfig(this IServiceCollection services, IConfiguration configuration)
+        {
+            
+            var zaloPaySettings = new ZaloPaySettings();
+            configuration.GetSection("ZaloPay").Bind(zaloPaySettings);
+            services.AddSingleton(zaloPaySettings); 
+            services.AddScoped<ZaloPaySDK>();
+            return services;
+        }
+
+        //momo
+        public static IServiceCollection AddMomoConfig(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<MomoSettings>(configuration.GetSection("Momo"));
+            services.AddScoped<IMomoPaymentService, MomoPaymentService>();
+            return services;
+        }
+
 
 
 

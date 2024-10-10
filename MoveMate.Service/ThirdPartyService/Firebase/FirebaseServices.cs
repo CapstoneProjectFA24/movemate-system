@@ -42,11 +42,11 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             }
             catch (FirebaseAuthException ex)
             {
-                result.AddError(StatusCode.BadRequest, ex.Message);
+                result.AddError(StatusCode.BadRequest, "Something went wrong");
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An internal server error occurred.");
+                result.AddError(StatusCode.ServerError, "An internal server error occurred");
             }
 
             return result;
