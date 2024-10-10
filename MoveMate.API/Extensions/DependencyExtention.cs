@@ -28,6 +28,7 @@ using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.Redis;
 using StackExchange.Redis;
 using MoveMate.Service.ThirdPartyService.Zalo;
+using MoveMate.Service.ThirdPartyService.Momo;
 
 
 namespace MoveMate.API.Extensions
@@ -78,6 +79,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IHouseTypeSettingServices, HouseTypeSettingServices>();
             services.AddScoped<IServiceServices , ServiceServices>();
             services.AddScoped<IServiceDetails, ServiceDetails>();
+            services.AddScoped<IFeeSettingServices, FeeSettingServices>();
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
@@ -131,6 +133,26 @@ namespace MoveMate.API.Extensions
 
             return services;
         }
+
+        //zalo pay
+        public static IServiceCollection AddZaloPayConfig(this IServiceCollection services, IConfiguration configuration)
+        {
+            
+            var zaloPaySettings = new ZaloPaySettings();
+            configuration.GetSection("ZaloPay").Bind(zaloPaySettings);
+            services.AddSingleton(zaloPaySettings); 
+            services.AddScoped<ZaloPaySDK>();
+            return services;
+        }
+
+        //momo
+        public static IServiceCollection AddMomoConfig(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<MomoSettings>(configuration.GetSection("Momo"));
+            services.AddScoped<IMomoPaymentService, MomoPaymentService>();
+            return services;
+        }
+
 
 
 

@@ -39,18 +39,18 @@ namespace MoveMate.Service.Services
                 {
                     var walletResponse = _mapper.Map<WalletResponse>(wallet);
                     result.Payload = walletResponse;
-                    result.Message = "Wallet retrieved successfully.";
+                    result.Message = "Wallet retrieved successfully";
                 }
                 else
                 {
-                    result.AddError(StatusCode.NotFound, $"Wallet for user '{userId}' not found.");
+                    result.AddError(StatusCode.NotFound, "Wallet not found");
                 }
 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving the wallet.");
-                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                result.AddError(StatusCode.ServerError, "An unexpected error occurred");
             }
 
             return result;

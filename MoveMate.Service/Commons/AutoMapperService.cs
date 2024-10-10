@@ -117,6 +117,8 @@ namespace MoveMate.Service.Commons
             CreateMap<BookingTracker, BookingTrackerResponse>()
                 .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources)); 
 
+            //Fee Setting
+            CreateMap<FeeSetting, FeeSettingResponse>();
         }
     }
 }

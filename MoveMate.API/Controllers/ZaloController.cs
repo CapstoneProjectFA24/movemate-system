@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using MoveMate.Service.ThirdPartyService.Zalo.Models;
 using MoveMate.Service.ViewModels.ModelRequests;
+using Newtonsoft.Json;
 
 namespace MoveMate.API.Controllers
 {
@@ -22,19 +23,20 @@ namespace MoveMate.API.Controllers
 
         // POST: api/payment/create-order
         [HttpPost("create-order")]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrder createOrder)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest createOrder)
         {
-            var result = await _paySdk.CreateOrder(createOrder.BankCode);
+            var paymentLink = await _paySdk.GeneratePaymentLink(createOrder.OrderId, createOrder.Amount, createOrder.BankCode);
 
-            if (result is { ReturnCode: 1 })
+            if (!string.IsNullOrEmpty(paymentLink))
             {
-                // Return the order URL and additional info as a JSON response
-                return Ok(new { orderUrl = result.OrderUrl, result });
+                _logger.LogInformation("Payment link generated: {Link}", paymentLink);
+                return Ok(new { paymentLink });
             }
 
-            _logger.LogError("Error creating order.");
+            _logger.LogError("Failed to create order.");
             return BadRequest("Failed to create order.");
         }
+
 
         // GET: api/payment/query-order/{appTransId}
         [HttpGet("query-order/{appTransId}")]

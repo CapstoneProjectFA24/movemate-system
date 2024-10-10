@@ -29,8 +29,10 @@ namespace MoveMate.Service.ThirdPartyService.VNPay
         }
 
 
-        public async Task<string> Recharge(HttpContext context, int userId, float amount)
+        public async Task<OperationResult<string>> Recharge(HttpContext context, int userId, float amount)
         {
+            var result = new OperationResult<string>();
+
             try
             {
                 var time = DateTime.Now;
@@ -40,14 +42,15 @@ namespace MoveMate.Service.ThirdPartyService.VNPay
                 var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
                 if (wallet == null)
                 {
-                    throw new NotFoundException("Wallet not found.");
+                    result.AddError(Service.Commons.StatusCode.NotFound, "Wallet not found");
+                    return result;
                 }
 
                 var userResult = await _unitOfWork.UserRepository.GetByIdAsync(wallet.UserId);
-
                 if (userResult == null)
                 {
-                    throw new NotFoundException("User not found.");
+                    result.AddError(Service.Commons.StatusCode.NotFound, "User not found");
+                    return result;
                 }
 
                 // Add VnPay request data
@@ -66,17 +69,20 @@ namespace MoveMate.Service.ThirdPartyService.VNPay
 
                 // Create payment URL
                 var paymentUrl = vnpay.CreateRequestUrl(_config["VnPay:BaseUrl"], _config["VnPay:HashSecret"]);
-                return paymentUrl;
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Payment URL generated successfully", paymentUrl);
             }
             catch (Exception ex)
-            {
-                // Log or handle the exception as needed
-                throw;
+            {           
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred");
             }
+
+            return result;
         }
 
-        public async Task<RechagreResponseModel> RechagreExecute(IQueryCollection collections)
+        public async Task<OperationResult<RechagreResponseModel>> RechagreExecute(IQueryCollection collections)
         {
+            var result = new OperationResult<RechagreResponseModel>();
+
             try
             {
                 var vnpay = new VnPayLibrary();
@@ -93,37 +99,32 @@ namespace MoveMate.Service.ThirdPartyService.VNPay
                 bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, _config["VnPay:HashSecret"]);
                 if (!checkSignature)
                 {
-                    return new RechagreResponseModel { Success = false };
+                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid payment signature");
+                    return result;
                 }
 
                 // Extract wallet ID and amount from the response
-
                 var amount = Convert.ToSingle(vnpay.GetResponseData("vnp_Amount")) / 100f;
                 var walletId = int.Parse(vnpay.GetResponseData("vnp_OrderInfo"));
-                // Get auction details asynchronously
-
 
                 // Retrieve wallet by user ID
                 var wallet = await _unitOfWork.WalletRepository.GetByIdAsync(walletId);
-
                 if (wallet == null)
                 {
-                    throw new NotFoundException("Wallet not found.");
+                    result.AddError(Service.Commons.StatusCode.NotFound, "Wallet not found");
+                    return result;
                 }
-
-
 
                 // Update Wallet balance
                 wallet.Balance += amount;
-
-                // Save the updated wallet balance
                 var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
                 if (updateResult.IsError)
                 {
-                    throw new Exception("Failed to update wallet balance.");
+                    result.AddError(Service.Commons.StatusCode.BadRequest, "Failed to update wallet balance");
+                    return result;
                 }
 
-                return new RechagreResponseModel
+                var responseModel = new RechagreResponseModel
                 {
                     Success = true,
                     UserId = wallet.Id,
@@ -131,16 +132,18 @@ namespace MoveMate.Service.ThirdPartyService.VNPay
                     BankTranNo = vnpay.GetResponseData("vnp_BankTranNo"),
                     CardType = vnpay.GetResponseData("vnp_CardType"),
                     Amount = amount,
-
                     Token = vnp_SecureHash,
                     VnPayResponseCode = vnpay.GetResponseData("vnp_ResponseCode")
                 };
+
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Payment executed successfully", responseModel);
             }
             catch (Exception ex)
-            {
-                // Log or handle the exception as needed
-                throw;
+            { 
+                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred");
             }
+
+            return result;
         }
 
 
