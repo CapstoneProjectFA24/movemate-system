@@ -55,8 +55,9 @@ namespace MoveMate.Service.ThirdPartyService.PayOs
 
             try
             {
+                long newGuid = Guid.NewGuid().GetHashCode();
                 var paymentData = new PaymentData(
-                    orderCode: 9,
+                    orderCode: newGuid,
                     amount: amount,
                     description: "Booking Payment",
                     items: null,

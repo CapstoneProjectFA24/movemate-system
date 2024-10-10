@@ -154,26 +154,40 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// FEATURE : Payment Momo
+        /// FEATURE: Payment with Momo
         /// </summary>
-        /// <returns></returns>
+        /// <param name="bookingId">Booking ID for payment</param>
+        /// <param name="returnUrl">URL to redirect after payment</param>
+        /// <returns>Returns the result of the payment link creation</returns>
+        /// <response code="200">Payment link created successfully</response>
+        /// <response code="400">Booking status must be either WAITING or COMPLETED</response>
+        /// <response code="404">User not found</response>
+        /// <response code="404">Booking not found</response>
+        /// <response code="500">An internal server error occurred</response>
         [HttpPost("momo/create-payment-url")]
-        public async Task<IActionResult> PaymentWithMomo(string returnUrl)
+        [Authorize]
+        public async Task<IActionResult> CreatePaymentWithMomo(int bookingId, string returnUrl)
         {
-            return Ok(await MomoPaymentServiceHandler(returnUrl));
-        }
-        private async Task<string> MomoPaymentServiceHandler(string returnUrl)
-        {
-            var newGuid = Guid.NewGuid();
-            return await _momoPaymentService.CreatePaymentAsync(new MomoPayment
+            // Extract user ID from claims
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
+                return Unauthorized(new { statusCode = 401, message = "Invalid user ID in token.", isError = true });
+            }
 
-                Amount = (long)20000,
-                Info = "Test Payment With Momo",
-                PaymentReferenceId = newGuid.ToString(),
-                returnUrl = returnUrl
-            });
+            var userId = int.Parse(accountIdClaim.Value);
+
+            // Call the service method to create the payment link
+            var operationResult = await _momoPaymentService.CreatePaymentWithMomoAsync(bookingId, userId, returnUrl);
+
+            if (operationResult.IsError)
+            {
+                return HandleErrorResponse(operationResult.Errors);
+            }
+
+            return Ok(operationResult);
         }
+
 
 
 
