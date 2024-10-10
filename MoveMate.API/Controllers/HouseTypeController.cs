@@ -23,11 +23,15 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
-        /// Get all house type
-        /// 
+        /// CHORE : Retrieves a paginated list of all house types.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Auctions Done</response>
+        /// <response code="200">List House Type is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
 
         // get all
@@ -41,10 +45,18 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Get house type by Id
+        /// CHORE : Retrieves a house type by its ID.
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">The ID of the house type to retrieve.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /housetype/1
+        /// </remarks>
+        /// <response code="200">Get House Type success</response>
+        /// <response code="404">House type not found</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetHouseTypeById(int id)
         {
@@ -53,14 +65,14 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Create a new house type setting.
+        /// CHORE : Creates a new house type setting.
         /// </summary>
-        /// <param name="request">The details of the auction to create.</param>
-        /// <returns>Returns the result of the auction creation.</returns>
+        /// <param name="request">The details of the house type setting to create.</param>
+        /// <returns>An IActionResult indicating the result of the creation operation.</returns>
         /// <remarks>
         /// Sample request:
         /// 
-        ///     POST
+        ///     POST /housetype/house-type-setting
         ///     {
         ///         "houseTypeId": 1,
         ///         "truckCategoryId": "1",
@@ -69,6 +81,11 @@ namespace MoveMate.API.Controllers
         ///         "numberOfTrucks": 2
         ///     }
         /// </remarks>
+        /// <response code="201">Add HouseTypeSetting Success!</response>
+        /// <response code="400">Add HouseTypeSetting Failed!</response>
+        /// <response code="404">House Type not found</response>
+        /// <response code="404">Truck Category not found</response>
+        /// <response code="500">An error occurred while creating the house type setting</response>
         [HttpPost("house-type-setting")]
         //[Authorize]
         public async Task<IActionResult> Create(CreateHouseTypeSetting request)

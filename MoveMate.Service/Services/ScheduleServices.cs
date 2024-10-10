@@ -54,7 +54,7 @@ namespace MoveMate.Service.Services
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done.", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Schedule Done", listResponse, pagin);
 
                 return result;
 
@@ -76,14 +76,14 @@ namespace MoveMate.Service.Services
 
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found Auction with Id: {id}");
+                    result.AddError(StatusCode.NotFound, "Schedule not found");
                 }
                 else
 
                 if ((bool)entity.IsActived)
                 {
                     var productResponse = _mapper.Map<ScheduleResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, $"Get Auction by Id: {id} Success!", productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Get Schedule by Id Success!", productResponse);
                 }
                 return result;
             }

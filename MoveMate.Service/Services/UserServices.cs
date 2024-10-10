@@ -55,7 +55,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List User Done.", listResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List User Done", listResponse);
 
                 return result;
             }
@@ -109,20 +109,16 @@ namespace MoveMate.Service.Services
 
             try
             {
-                // Retrieve the user and their address information using the userId
                 var userInfo = await _unitOfWork.UserInfoRepository.GetUserInfoByUserIdAsync(int.Parse(userId));
-                
-                // Check if the user's address is available
                 if (userInfo != null)
                 {
-                    // Map the UserInfo to a UserAddressResponse
                     var addressResponse = _mapper.Map<UserInfoResponse>(userInfo);
                     result.Payload = addressResponse;
-                    result.Message = "User address retrieved successfully.";
+                    result.Message = "User information retrieved successfully";
                 }
                 else
                 {
-                    result.AddError(StatusCode.NotFound, $"Address for user '{userId}' not found.");
+                    result.AddError(StatusCode.NotFound, "User info not found");
                 }
             }
             catch (Exception ex)
@@ -144,7 +140,7 @@ namespace MoveMate.Service.Services
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(userId);
                 if (existingUser == null)
                 {
-                    throw new Exception("User not found.");
+                    throw new NotFoundException("User not found");
                 }
                 var updatedUser = _mapper.Map(updateUserRequest, existingUser);
                 await _unitOfWork.UserRepository.UpdateAsync(updatedUser);
@@ -152,7 +148,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                throw new Exception("Error updating user: " + ex.Message);
+                throw new Exception("Error updating user");
             }
         }
 
