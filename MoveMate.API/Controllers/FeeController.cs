@@ -15,11 +15,15 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
-        /// FEATURE: Get all service type system
-        /// 
+        /// FEATURE : Retrieves a paginated list of all fee setting type system.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Fees Done</response>
+        /// <response code="200">List Fees is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("system")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllFeeSetting request)
         {
