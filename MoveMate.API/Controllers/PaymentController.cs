@@ -154,7 +154,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// FEATURE : Payment Momo
+        /// FEATURE: Payment with Momo
         /// </summary>
         /// <param name="bookingId">Booking ID for payment</param>
         /// <param name="returnUrl">URL to redirect after payment</param>

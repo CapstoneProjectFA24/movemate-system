@@ -38,15 +38,23 @@ namespace MoveMate.Service.ThirdPartyService.Momo
 
         public ClaimsPrincipal? CurrentUserPrincipal => _httpContextAccessor.HttpContext?.User;
 
-        public async Task<OperationResult<string>> CreatePaymentWithMomoAsync(int bookingId, int userId , string returnUrl)
+        public async Task<OperationResult<string>> CreatePaymentWithMomoAsync(int bookingId, int userId, string returnUrl)
         {
             var operationResult = new OperationResult<string>();
+
+            // Validate parameters
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                operationResult.AddError(StatusCode.BadRequest, "Return URL is required");
+                return operationResult;
+            }
 
             // Retrieve user
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, "User not found");
+                _logger.LogWarning($"User with ID {userId} not found");
+                operationResult.AddError(StatusCode.NotFound, "User not found");
                 return operationResult;
             }
 
@@ -54,14 +62,15 @@ namespace MoveMate.Service.ThirdPartyService.Momo
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
             if (booking == null)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.NotFound, "Booking not found");
+                _logger.LogWarning($"Booking with ID {bookingId} for User ID {userId} not found");
+                operationResult.AddError(StatusCode.NotFound, "Booking not found");
                 return operationResult;
             }
 
             // Check booking status
             if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED");
+                operationResult.AddError(StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED");
                 return operationResult;
             }
 
@@ -74,50 +83,51 @@ namespace MoveMate.Service.ThirdPartyService.Momo
                 {
                     Amount = amount,
                     Info = "Booking Payment",
-                    PaymentReferenceId = newGuid.ToString(), 
-                    returnUrl = returnUrl,                   
+                    PaymentReferenceId = newGuid.ToString(),
+                    returnUrl = returnUrl,
                 };
 
                 // Generate Momo payment link
                 var paymentUrl = await CreatePaymentAsync(payment);
 
-                operationResult = OperationResult<string>.Success(paymentUrl, MoveMate.Service.Commons.StatusCode.Ok, "Payment link created successfully");
+                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
             {
-                operationResult.AddError(MoveMate.Service.Commons.StatusCode.ServerError, "An internal server error occurred");
+                _logger.LogError(ex, "An internal server error occurred while creating the payment");
+                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
                 return operationResult;
             }
         }
 
         public async Task<string> CreatePaymentAsync(MomoPayment payment)
         {
-            var ServerUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://", _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ?? throw new Exception("not have url server");
+            var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://", _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ?? throw new Exception("Server URL is not available");
             var requestType = "payWithATM";
-            var request = new MomoPaymentRequest();
-            request.OrderInfo = payment.Info ?? DefaultOrderInfo;
-            request.PartnerCode = _momoSettings.PartnerCode;
-            request.IpnUrl = _momoSettings.IpnUrl;
-            request.RedirectUrl = _momoSettings.RedirectUrl;
-            request.Amount = payment.Amount;
-            request.OrderId = payment.PaymentReferenceId;
-            request.ReferenceId = $"{payment.PaymentReferenceId}";
-            request.RequestId = Guid.NewGuid().ToString();
-            request.RequestType = requestType;
-            request.ExtraData = "s";
-            request.AutoCapture = true;
-            request.Lang = "vi";
-
+            var request = new MomoPaymentRequest
+            {
+                OrderInfo = payment.Info ?? DefaultOrderInfo,
+                PartnerCode = _momoSettings.PartnerCode,
+                IpnUrl = _momoSettings.IpnUrl,
+                RedirectUrl = _momoSettings.RedirectUrl,
+                Amount = payment.Amount,
+                OrderId = payment.PaymentReferenceId,
+                ReferenceId = $"{payment.PaymentReferenceId}",
+                RequestId = Guid.NewGuid().ToString(),
+                RequestType = requestType,
+                ExtraData = "s",
+                AutoCapture = true,
+                Lang = "vi"
+            };
 
             var rawSignature = $"accessKey={_momoSettings.AccessKey}&amount={request.Amount}&extraData={request.ExtraData}&ipnUrl={request.IpnUrl}&orderId={request.OrderId}&orderInfo={request.OrderInfo}&partnerCode={request.PartnerCode}&redirectUrl={request.RedirectUrl}&requestId={request.RequestId}&requestType={requestType}";
             request.Signature = GetSignature(rawSignature, _momoSettings.SecretKey);
 
             var httpContent = new StringContent(JsonSerializerUtils.Serialize(request), Encoding.UTF8, "application/json");
-            using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             var momoResponse = await httpClient.PostAsync(_momoSettings.PaymentEndpoint, httpContent);
-            var responseContent = momoResponse.Content.ReadAsStringAsync().Result;
+            var responseContent = await momoResponse.Content.ReadAsStringAsync();
 
             if (momoResponse.IsSuccessStatusCode)
             {
@@ -129,7 +139,8 @@ namespace MoveMate.Service.ThirdPartyService.Momo
                 }
             }
 
-            throw new Exception($"[Momo payment] Error: There is some error when create payment with momo. {responseContent}");
+            _logger.LogError($"[Momo payment] Error: There was an error creating payment with Momo. Response: {responseContent}");
+            throw new Exception($"[Momo payment] Error: {responseContent}");
         }
         private static string GetSignature(string text, string key)
         {
