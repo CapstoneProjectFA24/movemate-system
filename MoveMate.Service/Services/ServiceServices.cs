@@ -53,7 +53,7 @@ namespace MoveMate.Service.Services
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Services Done.", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Services Done", listResponse, pagin);
 
                 return result;
             }
@@ -73,12 +73,12 @@ namespace MoveMate.Service.Services
 
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found Service with Id: {id}");
+                    result.AddError(StatusCode.NotFound, "Service not found");
                 }
                 else
                 {
                     var productResponse = _mapper.Map<ServicesResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, $"Get Service by Id: {id} Success!", productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Get Service by Id Success!", productResponse);
                 }
                 return result;
             }
@@ -118,7 +118,7 @@ namespace MoveMate.Service.Services
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Services Done.", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Services Done", listResponse, pagin);
 
                 return result;
             }

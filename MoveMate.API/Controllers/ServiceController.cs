@@ -16,34 +16,20 @@ namespace MoveMate.API.Controllers
             _serviceDetails = serviceDetails;
             _services = services;
         }
-        
-        
-        /// <summary>
-        /// 
-        /// Get all users
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("user")]
-        // get all
-        public async Task<IActionResult> GetAll()
-        {
-            //IEnumerable<Claim> claims = HttpContext.User.Claims;
-            // bibi dsds
-            //var response = await _serviceDetails.GetAll();
-            //var response = true;
-            
-            //return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-            return Ok("Service Details");
-        }
+
+
 
         /// <summary>
-        /// 
-        /// Get all services
-        /// 
+        /// FEATURE : Retrieves a paginated list of all service not type truck.
         /// </summary>
-        /// <returns></returns>
-        [HttpGet("")]
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Services Done</response>
+        /// <response code="200">List Service is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
+        [HttpGet("not-type-truck")]
 
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request)
@@ -56,11 +42,15 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
-        /// Get all services has type TRUCK
-        /// 
+        /// FEATURE : Retrieves a paginated list of all service type truck.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Services Done</response>
+        /// <response code="200">List Service has truck type is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("truck-category")]
 
         // get all
@@ -75,10 +65,18 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Get services by Id
+        /// FEATURE : Retrieves a service by its ID.
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">The ID of the service to retrieve.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /service/1
+        /// </remarks>
+        /// <response code="200">Get Service by Id Success!</response>
+        /// <response code="404">Service not found</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetServiceById(int id)
         {
