@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.BackgroundServices;
 
@@ -14,7 +15,7 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
             new RecurringJobOptions
             {
                 // sync time(utc +7)
-                TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"),
+                TimeZone = DateUtil.GetSEATimeZone(),
             });
 
     }

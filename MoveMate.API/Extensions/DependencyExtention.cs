@@ -25,6 +25,7 @@ using MoveMate.Service.ThirdPartyService.PayOs;
 using Net.payOS;
 using MoveMate.Service.ThirdPartyService.VNPay;
 using MoveMate.Service.ThirdPartyService.Firebase;
+using StackExchange.Redis;
 
 
 namespace MoveMate.API.Extensions
@@ -40,6 +41,23 @@ namespace MoveMate.API.Extensions
         public static IServiceCollection AddDbFactory(this IServiceCollection services)
         {
             services.AddScoped<IDbFactory, DbFactory>();
+            return services;
+        }
+        
+        public static IServiceCollection AddRedis(this IServiceCollection services)
+        {
+            services.AddServices().AddStackExchangeRedisCache(option =>
+            {
+                var builder = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+                IConfigurationRoot configuration = builder.Build();
+
+                option.Configuration = configuration.GetConnectionString("Redis");
+                //option.InstanceName = "MoveMate_";
+            });
+            //services.AddScoped<IDbFactory, DbFactory>();
             return services;
         }
 
@@ -66,8 +84,6 @@ namespace MoveMate.API.Extensions
 
             return services;
         }
-
-
         
         public static IServiceCollection AddHangfire(this IServiceCollection services)
         {
