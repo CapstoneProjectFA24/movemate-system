@@ -56,7 +56,7 @@ namespace MoveMate.Service.Services
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done.", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done", listResponse, pagin);
 
                 return result;
             }
@@ -76,12 +76,12 @@ namespace MoveMate.Service.Services
 
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found House Type with Id: {id}");
+                    result.AddError(StatusCode.NotFound,"House Type not found");
                 }
                 else
                 {
                     var productResponse = _mapper.Map<HouseTypesResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, $"Get House Type by Id: {id} Success!", productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Get House Type success", productResponse);
                 }
                 return result;
             }

@@ -29,13 +29,13 @@ namespace MoveMate.Service.Services
                 var entityHouseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync(request.HouseTypeId);
                 if (entityHouseType == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found House Type with Id: {request.HouseTypeId}");
+                    result.AddError(StatusCode.NotFound, "House Type not found");
                 }
 
                 var entityTruck = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId);
                 if (entityTruck == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found Truck Category with Id: {request.TruckCategoryId}");
+                    result.AddError(StatusCode.NotFound, "Truck Category not found");
                 }
 
                 var entityHouseTypeSetting = _mapper.Map<HouseTypeSetting>(request);
@@ -59,7 +59,7 @@ namespace MoveMate.Service.Services
             catch (Exception e)
             {
                 _logger.LogError(e, $"Error occurred in Create HouseTypeSetting service method");
-                result.AddError(StatusCode.ServerError, "An error occurred while creating the house type setting.");
+                result.AddError(StatusCode.ServerError, "An error occurred while creating the house type setting");
                 return result;
             }
         }

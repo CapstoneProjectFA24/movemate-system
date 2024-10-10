@@ -53,7 +53,7 @@ namespace MoveMate.Service.Services
                 return result;
             }
             
-            result.AddResponseStatusCode(StatusCode.Ok, "Get List User Done.", listResponse, pagin);
+            result.AddResponseStatusCode(StatusCode.Ok, "Get List Truck Category Done", listResponse, pagin);
             
             return result;
         }
@@ -72,7 +72,7 @@ namespace MoveMate.Service.Services
                 ImageUrl = img,
             }).ToList();
            
-            result.AddResponseStatusCode(StatusCode.Ok, "Get Truck Category Detail Done.", response);
+            result.AddResponseStatusCode(StatusCode.Ok, "Get Truck Category Detail Done", response);
             return result;
         }
     }

@@ -25,11 +25,15 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
-        /// Get all users
-        /// 
+        /// CHORE : Retrieves a paginated list of all users
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List User Done</response>
+        /// <response code="200">List User is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
         [Authorize(Roles = "1")]
         // get all
@@ -45,9 +49,18 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Get User Information by UserID 
+        /// CHORE : Retrieves a user info by token
         /// </summary>
-        /// <returns></returns>
+        /// <param name="id">The ID of the house type to retrieve.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /userinfo/
+        /// </remarks>
+        /// <response code="200">User information retrieved successfully</response>
+        /// <response code="404">User info not found</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("info")]
         [Authorize]
         public async Task<IActionResult> GetAddressByUserIdAsync()
@@ -67,35 +80,33 @@ namespace MoveMate.API.Controllers
                 return HandleErrorResponse(result.Errors);
             }
 
-            return Ok(result.Payload);
+            return Ok(result);
         }
 
 
-       
+
 
         /// <summary>
-        /// Update User
+        /// CHORE : Update User by token
         /// </summary>
-        /// <param name="updateUserRequest">The details of the auction to create.</param>
-        /// <param name="id">ID Auction</param>
-        /// <returns>Returns the result of the auction creation.</returns>
+        /// <param name="updateUserRequest">Update account information </param>
+        /// <returns>Returns the result of the user info</returns>
         /// <remarks>
         /// Sample request:
         /// 
         ///     POST
         ///     {
         ///         "name": "string",
-        ///         "imageUrl": "string",
-        ///         "dob": "2002-06-06T16:36:23.949Z",
-        ///         "isBanned": false,
-        ///         "expiredAt": "2025-07-25T16:36:23.949Z",
-        ///         "createdBy": "Admin",
-        ///         "modifiedBy": "Admin",       
-        ///         "isDeleted": false
+        ///         "password": "string",
+        ///         "email": "hehe@gmail.com",
+        ///         "phone": 0978635422
         ///     }   
         /// </remarks>    
+        /// <response code="200">User updated successfully</response>
+        /// <response code="404">User not found</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpPut("profile")]
-        //[Authorize(Roles = "1")]
+        [Authorize]
         public async Task<ActionResult> UpdateUserAsync([FromBody] UpdateUserRequest updateUserRequest)
         {
             try
@@ -110,7 +121,7 @@ namespace MoveMate.API.Controllers
                 }
 
                 await _userService.UpdateUserAsync(userId, updateUserRequest);
-                return Ok("User updated successfully.");
+                return Ok("User updated successfully");
             }
             catch (Exception ex)
             {

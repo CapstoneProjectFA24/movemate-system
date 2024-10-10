@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using MoveMate.Service.ThirdPartyService.Zalo.Models;
 using MoveMate.Service.ViewModels.ModelRequests;
+using Newtonsoft.Json;
 
 namespace MoveMate.API.Controllers
 {
@@ -26,15 +27,22 @@ namespace MoveMate.API.Controllers
         {
             var result = await _paySdk.CreateOrder(createOrder.BankCode);
 
-            if (result is { ReturnCode: 1 })
+            if (result != null)
             {
-                // Return the order URL and additional info as a JSON response
-                return Ok(new { orderUrl = result.OrderUrl, result });
+                // Log the complete result for debugging
+                _logger.LogInformation("ZaloPay response: {Response}", JsonConvert.SerializeObject(result));
+
+                if (result.ReturnCode == 1)
+                {
+                    // Return the order URL and additional info as a JSON response
+                    return Ok(new { orderUrl = result.OrderUrl, result });
+                }
             }
 
-            _logger.LogError("Error creating order.");
+            _logger.LogError("Error creating order. Result: {Result}", result);
             return BadRequest("Failed to create order.");
         }
+
 
         // GET: api/payment/query-order/{appTransId}
         [HttpGet("query-order/{appTransId}")]

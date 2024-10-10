@@ -31,7 +31,7 @@ namespace MoveMate.Service.ThirdPartyService.Zalo
             };
             var items = new[] { new { } };
             var orderId = rnd.Next(1000000);
-            var zaloPayOrderCreate = _zaloPayServices.BuildZaloPayOrderCreate(orderId.ToString(), 50000, JsonConvert.SerializeObject(items), bankCode, JsonConvert.SerializeObject(embedData), callback_url);
+            var zaloPayOrderCreate = _zaloPayServices.BuildZaloPayOrderCreate("123456", 50000, "[]", "SACOMBANK", "{}", "http://localhost/callback");
             var result = await _zaloPayServices.CreateOrder(zaloPayOrderCreate);
             return result;
         }

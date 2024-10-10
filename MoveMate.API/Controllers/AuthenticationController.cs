@@ -51,7 +51,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Login to access the system using either email or phone number.
+        /// FEATURE : Login to access the system using either email or phone number.
         /// </summary>
         /// <param name="loginRequest">
         /// LoginRequest object contains EmailOrPhone property and Password property. 
@@ -93,7 +93,7 @@ namespace MoveMate.API.Controllers
         #region Re-GenerateTokens API
 
         /// <summary>
-        /// Re-generate pair token from the old pair token.
+        /// FEATURE : Re-generate pair token from the old pair token.
         /// </summary>
         /// <param name="accountToken">
         /// AccountToken Object contains access token property and refresh token property.
@@ -143,7 +143,7 @@ namespace MoveMate.API.Controllers
         #region Register API
 
         /// <summary>
-        /// Register a new account in the system.
+        /// FEATURE : Register a new account in the system.
         /// </summary>
         /// <param name="customerToRegister">The customer registration information (email).</param>
         /// <returns>The created account details.</returns>
@@ -171,6 +171,22 @@ namespace MoveMate.API.Controllers
             #endregion
         }
 
+
+        /// <summary>
+        /// TEST : Register a new account in the system.
+        /// </summary>
+        /// <param name="customerToRegister">The customer registration information (email).</param>
+        /// <returns>The created account details.</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/authentications/register
+        ///     {
+        ///         "email": "user@example.com"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Registration successful.</response>
+        /// <response code="400">Validation failed or email is already registered.</response>
+        /// <response code="500">System error occurred.</response>
         [HttpPost("register")]
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
@@ -195,7 +211,7 @@ namespace MoveMate.API.Controllers
 
 
             /// <summary>
-            /// Check Customer Exists
+            /// FEATURE : Check Customer Exists
             /// </summary>
             /// <param name="checkCustomer">Check information of customer</param>
             /// <returns>Validate information customer are available</returns>
@@ -226,11 +242,25 @@ namespace MoveMate.API.Controllers
             return Ok(result);
         }
 
-       
 
 
 
 
+        /// <summary>
+        /// FEATURE : Verify token from phone authen firebase
+        /// </summary>
+        /// <param name="checkToken">Check token from firebase</param>
+        /// <returns>Validate token are available</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "idToken": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Token verification successful</response>
+        /// <response code="400">Something went wrong</response>
+        /// <response code="500">An unexpected error occurred</response>
         [HttpPost("verify-token")]
         public async Task<IActionResult> VerifyTokenV2([FromBody] TokenRequest tokenRequest)
         {
@@ -257,7 +287,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Login Google 
+        /// FEATURE : Login Google 
         /// </summary>
         /// <param name="loginGoogle">User login by Google Gmail</param>
         /// <returns>User access to the system by Google </returns>
@@ -288,12 +318,25 @@ namespace MoveMate.API.Controllers
         }
 
 
+        /// <summary>
+        /// TEST : Validate firebase cloud message token
+        /// </summary>
+        /// <param name="validateFCMTken">Check token form firebase cloud message</param>
+        /// <returns>Save information devide ID</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "idToken": "string"
+        ///     }
+        /// </remarks>        
+        /// <respomse code="400">Token cannnot be empty</respomse>
         [HttpPost("validate-fcm-token")]
         public async Task<IActionResult> ValidateFcmToken([FromBody] string token)
         {
             if (string.IsNullOrEmpty(token))
             {
-                return BadRequest(); // Optional: You can still return BadRequest if the token is empty.
+                return BadRequest("Token cannnot be empty"); 
             }
 
             // Perform token validation but do not return any response

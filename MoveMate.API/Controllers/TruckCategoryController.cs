@@ -14,13 +14,17 @@ public class TruckCategoryController : BaseController
         _truckServices = truckServices;
         _googleMapsService = googleMapsService;
     }
-    
+
     /// <summary>
-    /// 
-    /// get TruckCategory
-    /// 
+    /// CHORE : Retrieves a paginated list of all truck category.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="request">The request containing pagination and filter parameters.</param>
+    /// <returns>An IActionResult containing the operation result.</returns>
+    /// <remarks>
+    /// </remarks>
+    /// <response code="200">Get List Truck Category Done</response>
+    /// <response code="200">List TruckCate is Empty!</response>
+    /// <response code="500">Internal server error occurred</response>
     [HttpGet("")]
     // get all
     public async Task<IActionResult> GetAllCate()
@@ -32,14 +36,19 @@ public class TruckCategoryController : BaseController
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
-    
+
     /// <summary>
-    /// 
-    /// get by ID TruckCategory
-    /// 
+    /// CHORE : Retrieves a truck category by its ID.
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    /// <param name="id">The ID of the truck category to retrieve.</param>
+    /// <returns>An IActionResult containing the operation result.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     GET /housetype/1
+    /// </remarks>
+    /// <response code="200">Get Truck Category Detail Done</response>
+    /// <response code="500">Internal server error occurred</response>
     [HttpGet("{id}")]
     // get all
     public async Task<IActionResult> GetCateById(int id)

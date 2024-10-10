@@ -16,11 +16,15 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
-        /// Get all schedule
-        /// 
+        /// CHORE : Retrieves a paginated list of all schedule.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Schedule Done</response>
+        /// <response code="200">List Schedule is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
 
         // get all
@@ -34,10 +38,18 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Get schedule by Id
+        /// CHORE : Retrieves a schedule by its ID.
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">The ID of the schedule to retrieve.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /shcedule/1
+        /// </remarks>
+        /// <response code="200">Get Schedule by Id Success!</response>
+        /// <response code="404">Schedule not found</response>
+        /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetScheduleById(int id)
         {
