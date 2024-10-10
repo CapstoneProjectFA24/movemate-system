@@ -7,10 +7,10 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
 {
     public async Task StartAllBackgroundJob()
     {
-        RecurringJob.AddOrUpdate(() => Console.WriteLine("hello from hangfire"),"* * * * *");
+        RecurringJob.AddOrUpdate(() => Console.WriteLine("hello from hangfire normal"),"* * * * *");
 
         RecurringJob.AddOrUpdate("test job",
-            () => Console.WriteLine("hello from hangfire"),
+            () => Console.WriteLine("hello from hangfire test job"),
             cronExpression: "* * * * *",
             new RecurringJobOptions
             {
