@@ -11,8 +11,7 @@ namespace MoveMate.Service.IServices
 {
     public interface IWalletServices
     {
-        Task<OperationResult<WalletResponse>> GetWalletByUserId(int id);
-        Task<OperationResult<Wallet>> GetWalletsByUserId(int id);
+        Task<OperationResult<WalletResponse>> GetWalletByUserIdAsync(string userId);
         Task<OperationResult<WalletResponse>> UpdateWalletBalance(int walletId, float balance);
 
     }

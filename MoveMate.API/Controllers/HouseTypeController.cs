@@ -28,7 +28,7 @@ namespace MoveMate.API.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("get-all")]
+        [HttpGet("")]
 
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllHouseTypeRequest request)
@@ -45,7 +45,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("house-type/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetHouseTypeById(int id)
         {
             var response = await _houseTypeServices.GetById(id);

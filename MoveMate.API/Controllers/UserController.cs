@@ -30,7 +30,7 @@ namespace MoveMate.API.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("user/get-all")]
+        [HttpGet("")]
         [Authorize(Roles = "1")]
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllUserRequest request)
@@ -48,7 +48,7 @@ namespace MoveMate.API.Controllers
         /// Get User Information by UserID 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("user/info")]
+        [HttpGet("info")]
         [Authorize]
         public async Task<IActionResult> GetAddressByUserIdAsync()
         {
@@ -71,16 +71,7 @@ namespace MoveMate.API.Controllers
         }
 
 
-        [HttpPost(Name = "CreateUser")]
-        public async Task<OperationResult<UserRecord>> CreateUser(CreateUserRequest user)
-        {
-            return await _firebaseMiddleware.CreateUser(
-               user.Name,
-               user.Password,
-               user.Email,
-               user.Phone
-               );
-        }
+       
 
         /// <summary>
         /// Update User
@@ -103,7 +94,7 @@ namespace MoveMate.API.Controllers
         ///         "isDeleted": false
         ///     }   
         /// </remarks>    
-        [HttpPut("update-user")]
+        [HttpPut("profile")]
         //[Authorize(Roles = "1")]
         public async Task<ActionResult> UpdateUserAsync([FromBody] UpdateUserRequest updateUserRequest)
         {
