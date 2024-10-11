@@ -35,14 +35,11 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.Get(
+                var entities = _unitOfWork.ServiceRepository.GetAll(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder(),
-                    includeProperties: "TruckCategory,InverseParentService"
-
-                    
+                    orderBy: request.GetOrder()
                 );
                 var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
 
