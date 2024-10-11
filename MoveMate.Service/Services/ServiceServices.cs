@@ -25,9 +25,9 @@ namespace MoveMate.Service.Services
             this._logger = logger;
         }
 
-        public async Task<OperationResult<List<ServiceResponse>>> GetAll(GetAllServiceRequest request)
+        public async Task<OperationResult<List<ServicesResponse>>> GetAll(GetAllServiceRequest request)
         {
-            var result = new OperationResult<List<ServiceResponse>>();
+            var result = new OperationResult<List<ServicesResponse>>();
 
             var pagin = new Pagination();
 
@@ -39,10 +39,12 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
+                    orderBy: request.GetOrder(),
+                    includeProperties: "TruckCategory,InverseParentService"
 
+                    
                 );
-                var listResponse = _mapper.Map<List<ServiceResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
 
                 if (listResponse == null || !listResponse.Any())
                 {
