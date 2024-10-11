@@ -29,6 +29,25 @@ namespace MoveMate.Service.Commons
             HandleResponse(code, message, payload, metaData);
         }
 
+        public static OperationResult<T> Failure(StatusCode statusCode, List<string> messages)
+        {
+            var errorList = messages.Select(message => new Error
+            {
+                Code = statusCode, 
+                Message = message
+            }).ToList();
+
+            return new OperationResult<T>
+            {
+                StatusCode = statusCode,
+                Message = string.Join(", ", messages),
+                IsError = true,
+                Errors = errorList 
+            };
+        }
+
+
+
         public static OperationResult<T> Success(T payload, StatusCode statusCode = StatusCode.Ok, string? message = null)
         {
             return new OperationResult<T>

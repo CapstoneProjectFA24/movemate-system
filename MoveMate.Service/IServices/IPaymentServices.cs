@@ -11,6 +11,6 @@ namespace MoveMate.Service.IServices
 {
     public interface IPaymentServices
     {
-        Task<OperationResult<PaymentData>> CreatePaymentBooking(int userId, int bookingId, int scheduleDetailId);
+        
     }
 }
