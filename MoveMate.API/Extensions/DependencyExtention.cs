@@ -25,6 +25,8 @@ using MoveMate.Service.ThirdPartyService.PayOs;
 using Net.payOS;
 using MoveMate.Service.ThirdPartyService.VNPay;
 using MoveMate.Service.ThirdPartyService.Firebase;
+using MoveMate.Service.ThirdPartyService.Redis;
+using StackExchange.Redis;
 using MoveMate.Service.ThirdPartyService.Zalo;
 using MoveMate.Service.ThirdPartyService.Momo;
 
@@ -42,6 +44,23 @@ namespace MoveMate.API.Extensions
         public static IServiceCollection AddDbFactory(this IServiceCollection services)
         {
             services.AddScoped<IDbFactory, DbFactory>();
+            return services;
+        }
+        
+        public static IServiceCollection AddRedis(this IServiceCollection services)
+        {
+            services.AddServices().AddStackExchangeRedisCache(option =>
+            {
+                var builder = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+                IConfigurationRoot configuration = builder.Build();
+
+                option.Configuration = configuration.GetConnectionString("Redis");
+                //option.InstanceName = "MoveMate_";
+            });
+            //services.AddScoped<IDbFactory, DbFactory>();
             return services;
         }
 
@@ -67,13 +86,13 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IZaloPayService, ZaloPayServices>();
             services.AddScoped<IPayOsService,  PayOsService>();
             services.AddScoped<ZaloPaySDK>();
+
+            services.AddScoped<IRedisService, RedisService>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
             // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
             return services;
         }
-
-
         
         public static IServiceCollection AddHangfire(this IServiceCollection services)
         {
