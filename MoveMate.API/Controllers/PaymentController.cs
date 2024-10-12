@@ -43,70 +43,30 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// FEATURE : Recharge money into wallet.
-        /// </summary>
-        /// <param name="model">Customer recharge money into wallet in system </param>
-        /// <returns>Returns the result of wallet</returns>
-        /// <remarks>
-        /// Sample request:
-        /// 
-        ///     POST
-        ///     {
-        ///         "amount": 666666
-        ///     }   
-        /// </remarks>
-        /// <response code="200">Payment URL generated successfully</response>
-        /// <response code="404">User not found</response>
-        /// <response code="404">Wallet not found</response>
-        /// <response code="500">An internal server error occurred</response>
-        [HttpPost("create-recharge-payment-url")]
-        [Authorize]
-        public async Task<IActionResult> Recharge([FromBody] VnPaymentRecharge model)
-        {
-            var accountId = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-
-            if (accountId == null || string.IsNullOrEmpty(accountId.Value))
-            {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
-            }
-
-            var userId = int.Parse(accountId.Value);
-            var result = await _vnPayService.Recharge(HttpContext, userId, model.Amount);
-
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-            return Ok(result);
-        }
-
-
-
-
-        /// <summary>
         /// FEATURE : Recharge Payment
         /// </summary>
         /// <returns>Returns the result of wallet</returns>
         [HttpGet("recharge-callback")]
-        public async Task<IActionResult> RechagrePayment()
+        public async Task<IActionResult> RechagrePayment([FromQuery] VnPayPaymentCallbackCommand callback, CancellationToken cancellationToken)
         {
+            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
             var operationResult = await _vnPayService.RechagreExecute(Request.Query);
             if (operationResult.IsError || operationResult.Payload == null)
             {
-                return Redirect("http://localhost:3000/test-failed");
+                return Redirect(redirectUrl);
             }
             var response = operationResult.Payload; 
             if (response.VnPayResponseCode != "00")
             {
-                return Redirect("http://localhost:3000/test-failed");
+                return Redirect(redirectUrl);
             }
             var responsePayment = await _vnPayService.RechagrePayment(response);
             if (responsePayment.IsError)
             {
-                return Redirect("http://localhost:3000/test-failed");
+                return Redirect(redirectUrl);
             }
             
-            return Redirect("http://localhost:3000/test-success");
+            return Redirect(redirectUrl);
         }
 
 
@@ -234,12 +194,50 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("momo/callback")]
-        public async Task<IActionResult> MomoPaymentCallback(
-            [FromQuery] MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
         {
-            var test = callback.OrderId;
-            return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess}");
+
+           
+            if (callback == null)
+            {
+                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+            }
+
+            // Xử lý callback từ cả hai API
+            if (callback.OrderInfo == "order")
+            {
+                // Xử lý phản hồi cho thanh toán đơn hàng
+                return await HandleOrderPayment(callback, cancellationToken);
+                //var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
+                //return Redirect(redirectUrl);
+            }
+            else if (callback.OrderInfo == "wallet")
+            {
+               
+                // Xử lý phản hồi cho nạp tiền vào ví
+                var result = await _momoPaymentService.HandleWalletPaymentAsync(HttpContext, callback);
+
+                if (result.IsError)
+                {
+                    return HandleErrorResponse(result.Errors);
+                }
+
+                // Thêm isSuccess vào returnUrl
+                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
+                return Redirect(redirectUrl);
+            }
+
+            return NoContent();
         }
+
+        private async Task<IActionResult> HandleOrderPayment(MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        {
+            // Thêm isSuccess vào returnUrl
+            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
+            return Redirect(redirectUrl);
+        }
+
+
 
 
         /// <summary>
@@ -323,9 +321,6 @@ namespace MoveMate.API.Controllers
             // Return the successful operation result
             return Ok(operationResult);
         }
-
-
-
 
         /// <summary>
         /// TEST : Payment Fail

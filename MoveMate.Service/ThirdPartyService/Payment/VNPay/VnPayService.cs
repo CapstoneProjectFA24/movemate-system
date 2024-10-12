@@ -34,7 +34,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         }
 
 
-        public async Task<OperationResult<string>> Recharge(HttpContext context, int userId, float amount)
+        public async Task<OperationResult<string>> Recharge(HttpContext context, int userId, double amount, string returnUrl)
         {
             var result = new OperationResult<string>();
 
@@ -69,7 +69,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 vnpay.AddRequestData("vnp_Locale", _config["VnPay:Locale"]);
                 vnpay.AddRequestData("vnp_OrderInfo", wallet.Id.ToString());
                 vnpay.AddRequestData("vnp_OrderType", PaymentMethod.RECHARGE.ToString());
-                vnpay.AddRequestData("vnp_ReturnUrl", _config["VnPay:RechargeBackReturnUrl"]);
+                vnpay.AddRequestData("vnp_ReturnUrl", $"{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}");
                 vnpay.AddRequestData("vnp_TxnRef", time.Ticks.ToString());
 
                 // Create payment URL
@@ -278,7 +278,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 int amount;
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    amount = (int)booking.Deposit;
+                    amount = (int)booking.Deposit;       
                 }
                 else
                 {
@@ -302,7 +302,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 pay.AddRequestData("vnp_CreateDate", time.ToString("yyyyMMddHHmmss"));
                 pay.AddRequestData("vnp_IpAddr", UtilitiesExtensions.GetIpAddress());
                 pay.AddRequestData("vnp_OrderInfo", "Payment With Vn Pay");
-                pay.AddRequestData("vnp_OrderType", "deposit");
+                pay.AddRequestData("vnp_OrderType", "wallet");
                 pay.AddRequestData("vnp_TxnRef", newGuid.ToString());
 
                 var paymentUrl = pay.CreateRequestUrl(_vnPaySettings.PaymentEndpoint, _vnPaySettings.HashSecret);
@@ -316,6 +316,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 return operationResult;
             }
         }
+
+        
 
     }
 }

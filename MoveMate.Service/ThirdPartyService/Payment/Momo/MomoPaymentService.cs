@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Google.Rpc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoveMate.Domain.Enums;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
+using MoveMate.Service.Exceptions;
+using MoveMate.Service.IServices;
 using MoveMate.Service.ThirdPartyService.Payment.Momo.Models;
 using MoveMate.Service.Utils;
 using System;
@@ -25,16 +28,18 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
         private readonly ILogger<MomoPaymentService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UnitOfWork _unitOfWork;
+        private readonly IWalletServices _walletService;
 
         public MomoPaymentService(
             IOptions<MomoSettings> momoSettings,
             ILogger<MomoPaymentService> logger,
-            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork)
+            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IWalletServices walletServices)
         {
             _momoSettings = momoSettings.Value;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             _unitOfWork = (UnitOfWork)unitOfWork;
+            _walletService = walletServices;
         }
 
         public ClaimsPrincipal? CurrentUserPrincipal => _httpContextAccessor.HttpContext?.User;
@@ -85,9 +90,10 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var payment = new MomoPayment
                 {
                     Amount = amount,
-                    Info = "Booking Payment",
+                    Info = "order",
                     PaymentReferenceId = bookingId + "-" + newGuid,
                     returnUrl = returnUrl,
+                    ExtraData = userId.ToString()
                 };
 
                 // Generate Momo payment link
@@ -110,7 +116,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var requestType = "payWithATM";
             var request = new MomoPaymentRequest
             {
-                OrderInfo = payment.Info ?? DefaultOrderInfo,
+                OrderInfo = payment.Info,
                 PartnerCode = _momoSettings.PartnerCode,
                 IpnUrl = _momoSettings.IpnUrl,
                 RedirectUrl = $"{serverUrl}/{_momoSettings.RedirectUrl}?returnUrl={payment.returnUrl}",
@@ -119,7 +125,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 ReferenceId = $"{payment.PaymentReferenceId}",
                 RequestId = Guid.NewGuid().ToString(),
                 RequestType = requestType,
-                ExtraData = "s",
+                ExtraData = payment.ExtraData,
                 AutoCapture = true,
                 Lang = "vi",
                 orderExpireTime = 5
@@ -158,6 +164,101 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var hashBytes = hash.ComputeHash(textBytes);
 
             return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        }
+
+
+        public async Task<OperationResult<string>> AddFundsToWalletAsync(int userId, double amount, string returnUrl)
+        {
+            var operationResult = new OperationResult<string>();
+
+            // Validate parameters
+            if (amount <= 0)
+            {
+                operationResult.AddError(StatusCode.BadRequest, "Amount must be greater than zero");
+                return operationResult;
+            }
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User with ID {userId} not found");
+                operationResult.AddError(StatusCode.NotFound, "User not found");
+                return operationResult;
+            }
+
+            var newGuid = Guid.NewGuid();
+            try
+            {
+                // Create payment request data for Momo
+                var payment = new MomoPayment
+                {
+                    Amount = (int)amount,
+                    Info = "wallet",
+                    PaymentReferenceId = $"wallet-{userId}-{newGuid}",
+                    returnUrl =returnUrl,
+                    ExtraData = userId.ToString()
+                };
+
+                // Generate Momo payment link
+                var paymentUrl = await CreatePaymentAsync(payment);
+
+                // Add logic to update user's wallet if payment is successful
+                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                return operationResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An internal server error occurred while adding funds to wallet");
+                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
+                return operationResult;
+            }
+        }
+
+
+
+
+
+
+        public async Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context, MomoPaymentCallbackCommand command)
+        {
+            var result = new OperationResult<string>();
+            int userId = int.Parse(command.ExtraData);
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                result.AddError(StatusCode.NotFound, "User not found");
+                return result;
+            }
+
+            // Tìm wallet của user
+            var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+            if (wallet == null)
+            {
+                result.AddError(StatusCode.NotFound, "Wallet not found");
+                return result;
+            }
+
+            try
+            {
+                // Cập nhật số tiền vào ví từ MomoPaymentCallbackCommand.Amount
+                wallet.Balance += (float)command.Amount;
+
+                var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
+
+                if (updateResult.IsError)
+                {
+                    result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
+                    return result;
+                }
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");               
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+            }
+
+            return result;
         }
 
     }

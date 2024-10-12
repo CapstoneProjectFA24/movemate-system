@@ -15,5 +15,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo.Models
         public string? Info { get; set; }
 
         public string returnUrl { get; set; } = default!;
+        public string ExtraData { get; set; } 
     }
 }

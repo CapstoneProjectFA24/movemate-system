@@ -28,7 +28,6 @@ public class MomoPaymentCallbackCommand
     public string ExtraData { get; set; } = default!;
 
     public string Signature { get; set; } = default!;
-
     public bool IsSuccess => ResultCode == 0;
     public string returnUrl { get; set; } = default!;
 }

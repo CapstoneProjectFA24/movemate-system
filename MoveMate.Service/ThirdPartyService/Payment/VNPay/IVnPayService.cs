@@ -14,7 +14,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
     {
 
         Task<OperationResult<RechagreResponseModel>> RechagreExecute(IQueryCollection collections);
-        Task<OperationResult<string>> Recharge(HttpContext context, int userId, float amount);
+        Task<OperationResult<string>> Recharge(HttpContext context, int userId, double amount, string returnUrl);
         Task<OperationResult<Transaction>> RechagrePayment(RechagreResponseModel response);
         public Task<OperationResult<string>> CreatePaymentAsync(int bookingId, int userId, string returnUrl);
 

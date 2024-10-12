@@ -12,6 +12,7 @@ public class MomoPaymentRequest
     public string IpnUrl { get; set; } = default!;
 
     public long Amount { get; set; }
+    public string OrderType { get; set; }
 
     public string OrderId { get; set; } = default!;
 
