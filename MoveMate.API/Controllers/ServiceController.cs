@@ -20,7 +20,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// FEATURE : Retrieves a paginated list of all service not type truck.
+        /// CHORE : Retrieves a paginated list of all service not type truck.
         /// </summary>
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -32,17 +32,17 @@ namespace MoveMate.API.Controllers
         [HttpGet("not-type-truck")]
 
         // get all
-        public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request)
+        public async Task<IActionResult> GetAllNotTruck([FromQuery] GetAllServiceNotTruckRequest request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
-            var response = await _services.GetAll(request);
+            var response = await _services.GetAllNotTruck(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
         /// <summary>
-        /// FEATURE : Retrieves a paginated list of all service type truck.
+        /// CHORE : Retrieves a paginated list of all service type truck.
         /// </summary>
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -81,6 +81,27 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> GetServiceById(int id)
         {
             var response = await _services.GetById(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        
+        
+        /// <summary>
+        /// FEATURE : Retrieves a paginated list of all services.
+        /// </summary>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Services Done</response>
+        /// <response code="200-1">List Service is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
+        [HttpGet("")]
+        public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request)
+        {
+            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+            var response = await _services.GetAll(request);
+
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

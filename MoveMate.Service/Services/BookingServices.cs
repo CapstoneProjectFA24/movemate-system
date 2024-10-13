@@ -154,7 +154,7 @@ namespace MoveMate.Service.Services
                     feeDetails.AddRange(updatedFeeDetails);
                 }
 
-                // resource logic
+                // resource logic 
 
                 var tracker = new BookingTracker();
                 tracker.Type = TrackerEnums.PENDING.ToString();
