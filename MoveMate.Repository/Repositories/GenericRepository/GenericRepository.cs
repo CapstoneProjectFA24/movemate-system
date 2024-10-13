@@ -39,11 +39,13 @@ namespace MoveMate.Repository.Repositories.GenericRepository
             return entity;
         }
 
-        public Task<TEntity> UpdateAsync(TEntity entity)
+        public async Task<TEntity> UpdateAsync(TEntity entity)
         {
             _dbSet.Update(entity);
-            return Task.FromResult(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
+
 
         public virtual async Task UpdateEntityAsync(TEntity entity)
         {

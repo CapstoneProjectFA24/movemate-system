@@ -64,8 +64,8 @@ namespace MoveMate.API.Controllers
         ///     Sample request:
         ///     POST 
         ///     {
-        ///         "emailOrPhone": "admin@gmail.com", // Or "0123456789"
-        ///         "password": "1"
+        ///         "emailOrPhone": "johndoe@example.com", // Or "0123456789"
+        ///         "password": "hashedPassword123"
         ///     }
         /// </remarks>
         /// <response code="200">Login Successfully.</response>

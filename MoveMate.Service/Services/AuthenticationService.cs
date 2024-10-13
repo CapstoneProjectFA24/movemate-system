@@ -50,7 +50,7 @@ namespace MoveMate.Service.Services
             try
             {
                 // Check if user exists
-                var user = await _unitOfWork.UserRepository.GetUserAsync(accountRequest.EmailOrPhone);
+                var user = await _unitOfWork.UserRepository.GetUserAsync(accountRequest.Email);
                 if (user == null)
                 {
                     result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.CommonMessage.NotExistEmail);
@@ -195,9 +195,9 @@ namespace MoveMate.Service.Services
             try
             {
                 // Check if the input is a phone number or email
-                var user = request.EmailOrPhone.Contains("@")
-                    ? await _unitOfWork.UserRepository.GetUserAsync(request.EmailOrPhone) // Assume this is an email
-                    : await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.EmailOrPhone); // Assume this is a phone number
+                var user = request.Email.Contains("@")
+                    ? await _unitOfWork.UserRepository.GetUserAsync(request.Email) // Assume this is an email
+                    : await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Email); // Assume this is a phone number
 
                 if (user == null)
                 {
