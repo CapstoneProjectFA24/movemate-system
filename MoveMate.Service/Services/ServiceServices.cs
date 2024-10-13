@@ -63,6 +63,44 @@ namespace MoveMate.Service.Services
             }
         }
 
+        public async Task<OperationResult<List<ServicesResponse>>> GetAllNotTruck(GetAllServiceNotTruckRequest request)
+        {
+            var result = new OperationResult<List<ServicesResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.ServiceRepository.GetAll(
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder()
+                );
+                var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, "List Service is Empty!", listResponse);
+                    return result; 
+                }
+
+                pagin.PageSize = request.per_page;
+                pagin.TotalItemsCount = listResponse.Count();
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Get List Services Done", listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occurred in getAll Service Method");
+                throw;
+            }
+        }
+
         public async Task<OperationResult<ServicesResponse>> GetById(int id)
         {
             var result = new OperationResult<ServicesResponse>();
