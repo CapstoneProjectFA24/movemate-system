@@ -31,6 +31,22 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+
+
+        public async Task<User> GetUserAsyncByEmail(string email)
+        {
+            try
+            {
+                return await this._dbContext.Users.Include(x => x.Role)
+                                                     .SingleOrDefaultAsync(x => x.Email == email);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+
         public async Task<User> GetUserAsync(string email)
         {
             try

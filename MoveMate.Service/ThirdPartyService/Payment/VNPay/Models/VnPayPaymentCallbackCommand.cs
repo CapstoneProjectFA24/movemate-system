@@ -28,5 +28,6 @@ public class VnPayPaymentCallbackCommand
     public string? vnp_ResponseCode { get; set; } = default!;
     public string returnUrl { get; set; } = default!;
 
-    public bool IsSuccess => "00".Equals(vnp_ResponseCode);
+    //public bool IsSuccess => "00".Equals(vnp_ResponseCode);
+    public bool IsSuccess { get; set; }
 }

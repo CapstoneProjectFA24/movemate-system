@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ThirdPartyService.Payment.Momo;
+using MoveMate.Service.ThirdPartyService.Payment.PayOs;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay;
 using System.Security.Claims;
 
@@ -14,11 +15,13 @@ namespace MoveMate.API.Controllers
         private readonly IWalletServices _walletServices;
         private readonly IMomoPaymentService _momoPaymentService;
         private readonly IVnPayService _vpnPayService;
-        public WalletController(IWalletServices walletServices, IMomoPaymentService momoPaymentService, IVnPayService vpnPayService)
+        private readonly IPayOsService _payOsService;
+        public WalletController(IWalletServices walletServices, IMomoPaymentService momoPaymentService, IVnPayService vpnPayService, IPayOsService payOsService)
         {
             _walletServices = walletServices;
             _momoPaymentService = momoPaymentService;
             _vpnPayService = vpnPayService;
+            _payOsService = payOsService;
         }
 
         /// <summary>
@@ -86,6 +89,40 @@ namespace MoveMate.API.Controllers
 
             // Call the Momo service method to add funds to the wallet
             var result = await _momoPaymentService.AddFundsToWalletAsync(userId, amount, returnUrl);
+
+            if (result.IsError)
+            {
+                return HandleErrorResponse(result.Errors);
+            }
+
+            return Ok(result);
+        }
+
+
+        /// <summary>
+        /// Adds funds to the user's wallet.
+        /// </summary>
+        /// <param name="amount">The amount to add to the wallet.</param>
+        /// <returns>Returns the result of adding funds to the wallet.</returns>
+        /// <response code="200">Funds added successfully</response>
+        /// <response code="400">Invalid amount provided</response>
+        /// <response code="401">Invalid user ID in token</response>
+        /// <response code="500">An internal server error occurred</response>
+        [HttpPost("payOs/recharge")]
+        [Authorize]
+        public async Task<IActionResult> AddFundsToWalletPayOS([FromQuery] double amount, string returnUrl)
+        {
+            // Extract user ID from claims
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { Message = "Invalid user ID in token." });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+
+            // Call the Momo service method to add funds to the wallet
+            var result = await _payOsService.CreateRechargeLinkAsync(userId, amount, returnUrl);
 
             if (result.IsError)
             {

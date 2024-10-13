@@ -49,7 +49,7 @@ namespace MoveMate.API.Controllers
         [HttpGet("recharge-callback")]
         public async Task<IActionResult> RechagrePayment([FromQuery] VnPayPaymentCallbackCommand callback, CancellationToken cancellationToken)
         {
-            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
+            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
             var operationResult = await _vnPayService.RechagreExecute(Request.Query);
             if (operationResult.IsError || operationResult.Payload == null)
             {
@@ -112,6 +112,7 @@ namespace MoveMate.API.Controllers
             return Ok(operationResult);
         }
 
+        
 
 
 
@@ -223,7 +224,7 @@ namespace MoveMate.API.Controllers
                 }
 
                 // Thêm isSuccess vào returnUrl
-                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
+                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
                 return Redirect(redirectUrl);
             }
 
@@ -233,7 +234,7 @@ namespace MoveMate.API.Controllers
         private async Task<IActionResult> HandleOrderPayment(MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
         {
             // Thêm isSuccess vào returnUrl
-            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
+            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
             return Redirect(redirectUrl);
         }
 
@@ -249,7 +250,7 @@ namespace MoveMate.API.Controllers
         [FromQuery] VnPayPaymentCallbackCommand callback,
         CancellationToken cancellationToken)
         {
-            return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess}");
+            return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}");
         }
 
         /// <summary>
@@ -321,6 +322,45 @@ namespace MoveMate.API.Controllers
             // Return the successful operation result
             return Ok(operationResult);
         }
+
+
+
+        [HttpGet("payos/callback")]
+        public async Task<IActionResult> PayOsPaymentCallback([FromQuery] PayOsPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        {
+            // Validate callback data
+            if (callback == null)
+            {
+                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+            }
+
+            // Process the callback based on the transaction status
+            var isSuccess = callback.ResultCode == 0;
+            var returnUrl = $"{callback.returnUrl}?isSuccess={isSuccess.ToString().ToLower()}";
+
+            if (callback.Type == "order")
+            {
+             
+
+                return Redirect(returnUrl);
+            }
+            else if (callback.Type == "wallet")
+            {
+                // Handle wallet top-up processing here
+                var result = await _payOsService.HandleWalletPaymentAsync(HttpContext, callback);
+
+                if (result.IsError)
+                {
+                    return HandleErrorResponse(result.Errors);
+                }
+
+                return Redirect(returnUrl);
+            }
+
+            return NoContent();
+        }
+
+
 
         /// <summary>
         /// TEST : Payment Fail
