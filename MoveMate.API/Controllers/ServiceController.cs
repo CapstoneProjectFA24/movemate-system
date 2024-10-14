@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ViewModels.ModelRequests;
 
 namespace MoveMate.API.Controllers
@@ -10,11 +11,19 @@ namespace MoveMate.API.Controllers
     {
         private readonly IServiceDetails _serviceDetails;
         private readonly IServiceServices _services;
+        private readonly IMessageProducer _producer;
 
-        public ServiceController(IServiceDetails serviceDetails, IServiceServices services)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceDetails"></param>
+        /// <param name="services"></param>
+        /// <param name="producer"></param>
+        public ServiceController(IServiceDetails serviceDetails, IServiceServices services, IMessageProducer producer)
         {
             _serviceDetails = serviceDetails;
             _services = services;
+            _producer = producer;
         }
 
 
@@ -102,6 +111,7 @@ namespace MoveMate.API.Controllers
 
             var response = await _services.GetAll(request);
 
+            _producer.SendingMessage<String>("hello");
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

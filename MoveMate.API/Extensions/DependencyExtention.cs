@@ -29,7 +29,9 @@ using StackExchange.Redis;
 using MoveMate.Service.ThirdPartyService.Payment.Zalo;
 using MoveMate.Service.ThirdPartyService.Payment.Momo;
 using MoveMate.Service.ThirdPartyService.Payment.PayOs;
-
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
+using MoveMate.Service.ThirdPartyService.Redis.Connection;
 
 
 namespace MoveMate.API.Extensions
@@ -47,7 +49,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IDbFactory, DbFactory>();
             return services;
         }
-        
+
         public static IServiceCollection AddRedis(this IServiceCollection services)
         {
             services.AddServices().AddStackExchangeRedisCache(option =>
@@ -66,7 +68,7 @@ namespace MoveMate.API.Extensions
         }
 
         public static IServiceCollection AddServices(this IServiceCollection services)
-        { 
+        {
             services.AddHttpClient();
             //services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -75,33 +77,37 @@ namespace MoveMate.API.Extensions
             services.AddScoped<ITruckServices, TruckServices>();
             services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
-            services.AddScoped<IGoogleMapsService,GoogleMapsService>();
+            services.AddScoped<IGoogleMapsService, GoogleMapsService>();
             services.AddScoped<IHouseTypeServices, HouseTypeServices>();
             services.AddScoped<IHouseTypeSettingServices, HouseTypeSettingServices>();
-            services.AddScoped<IServiceServices , ServiceServices>();
+            services.AddScoped<IServiceServices, ServiceServices>();
             services.AddScoped<IServiceDetails, ServiceDetails>();
             services.AddScoped<IFeeSettingServices, FeeSettingServices>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IZaloPayService, ZaloPayServices>();
-            services.AddScoped<IPayOsService,  PayOsService>();
+            services.AddScoped<IPayOsService, PayOsService>();
             services.AddScoped<ZaloPaySDK>();
 
             services.AddScoped<IRedisService, RedisService>();
+            services.AddScoped<IMessageProducer, MessageProducer>();
+            services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
+            services.AddSingleton<RabbitMqWorker>();
+
+            services.AddHostedService<RabbitMqWorker>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
             // services.AddScoped<IFirebaseServices, FirebaseServices>();
 
             return services;
         }
-        
+
         public static IServiceCollection AddHangfire(this IServiceCollection services)
         {
-
             services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
 
             string connectionString = DbUtil.getConnectString();
-            
+
             services.AddHangfire(config => config
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
@@ -120,9 +126,17 @@ namespace MoveMate.API.Extensions
             return services;
         }
 
+        public static IServiceCollection AddRabbitMQ(this IServiceCollection services)
+        {
+            services.AddSingleton<IRabbitMqConnection>(new RabbitMqConnection());
+
+            return services;
+        }
+
 
         //Firebase
-        public static IServiceCollection AddFirebaseServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddFirebaseServices(this IServiceCollection services,
+            IConfiguration configuration)
         {
             // Retrieve the Firebase config file path from appsettings.json
             string firebaseConfigPath = configuration.GetSection("FirebaseSettings:ConfigFile").Value;
@@ -136,12 +150,12 @@ namespace MoveMate.API.Extensions
         }
 
         //zalo pay
-        public static IServiceCollection AddZaloPayConfig(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddZaloPayConfig(this IServiceCollection services,
+            IConfiguration configuration)
         {
-            
             var zaloPaySettings = new ZaloPaySettings();
             configuration.GetSection("ZaloPay").Bind(zaloPaySettings);
-            services.AddSingleton(zaloPaySettings); 
+            services.AddSingleton(zaloPaySettings);
             services.AddScoped<ZaloPaySDK>();
             return services;
         }
@@ -169,34 +183,33 @@ namespace MoveMate.API.Extensions
         }
 
 
-
-
         //Authen
-        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddJwtAuthentication(this IServiceCollection services,
+            IConfiguration configuration)
         {
             var jwtSettings = configuration.GetSection("JWTAuth");
             services.Configure<JWTAuth>(jwtSettings);
 
             var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
             services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
 
             return services;
         }
@@ -257,7 +270,7 @@ namespace MoveMate.API.Extensions
                     Scheme = "bearer"
                 });
 
-                    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
@@ -325,7 +338,7 @@ namespace MoveMate.API.Extensions
             //});
             // hangfire
             /*app.UseHangfireDashboard();
-            
+
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
@@ -338,7 +351,7 @@ namespace MoveMate.API.Extensions
                 Authorization = new[] { new MyAuthorizationFilter() }
             });
             app.MapHangfireDashboard();
-            
+
             BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;
         }
