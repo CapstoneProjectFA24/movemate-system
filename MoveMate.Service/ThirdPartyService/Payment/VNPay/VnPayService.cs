@@ -7,6 +7,7 @@ using MoveMate.Service.Library;
 using MoveMate.Service.Exceptions;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 
 
 namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
@@ -84,14 +85,16 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             return result;
         }
 
-        public async Task<OperationResult<RechagreResponseModel>> RechagreExecute(IQueryCollection collections)
+        public async Task<OperationResult<Transaction>> ProcessRechargePayment(IQueryCollection collections)
         {
-            var result = new OperationResult<RechagreResponseModel>();
+            var result = new OperationResult<Transaction>();
+            var transaction = await _unitOfWork.BeginTransactionAsync();
 
             try
             {
                 var vnpay = new VnPayLibrary();
 
+                // Collect and validate VnPay response data
                 foreach (var (key, value) in collections)
                 {
                     if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
@@ -100,7 +103,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     }
                 }
 
-                var vnp_SecureHash = collections.FirstOrDefault(p => p.Key == "vnp_SecureHash").Value;
+                var vnp_SecureHash = collections["vnp_SecureHash"];
                 bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, _config["VnPay:HashSecret"]);
                 if (!checkSignature)
                 {
@@ -112,7 +115,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var amount = Convert.ToSingle(vnpay.GetResponseData("vnp_Amount")) / 100f;
                 var walletId = int.Parse(vnpay.GetResponseData("vnp_OrderInfo"));
 
-                // Retrieve wallet by user ID
+                // Retrieve wallet by ID
                 var wallet = await _unitOfWork.WalletRepository.GetByIdAsync(walletId);
                 if (wallet == null)
                 {
@@ -120,128 +123,67 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     return result;
                 }
 
-                // Update Wallet balance
-                wallet.Balance += amount;
-                var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
-                if (updateResult.IsError)
+                if (vnpay.GetResponseData("vnp_ResponseCode") != "00")
                 {
-                    result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
+                    result.AddError(StatusCode.BadRequest, "Payment was not successful");
                     return result;
                 }
 
-                var responseModel = new RechagreResponseModel
-                {
-                    Success = true,
-                    UserId = wallet.Id,
-                    BankCode = vnpay.GetResponseData("vnp_BankCode"),
-                    BankTranNo = vnpay.GetResponseData("vnp_BankTranNo"),
-                    CardType = vnpay.GetResponseData("vnp_CardType"),
-                    Amount = amount,
-                    Token = vnp_SecureHash,
-                    VnPayResponseCode = vnpay.GetResponseData("vnp_ResponseCode")
-                };
-
-                result.AddResponseStatusCode(StatusCode.Ok, "Payment executed successfully", responseModel);
-            }
-            catch (Exception ex)
-            {
-                result.AddError(StatusCode.ServerError, "An internal server error occurred");
-            }
-
-            return result;
-        }
-
-
-        public async Task<OperationResult<Transaction>> RechagrePayment(RechagreResponseModel response)
-        {
-            var result = new OperationResult<Transaction>();
-            var transaction = await _unitOfWork.BeginTransactionAsync();
-
-            try
-            {
-                // Retrieve wallet by user ID
-                var wallet = await _unitOfWork.WalletRepository.GetByIdAsync(response.UserId);
-
-                if (wallet == null)
-                {
-                    result.Message = "Wallet not found";
-                    result.IsError = true;
-                    result.Errors.Add(new Error()
-                    {
-                        Code = StatusCode.NotFound,
-                        Message = "Wallet not found"
-                    });
-                    return result;
-                }
-
+                // Create a new payment transaction
                 var payment = new Transaction
                 {
                     WalletId = wallet.Id,
-                    Amount = response.Amount,
+                    Amount = amount,
                     Status = PaymentEnum.SUCCESS.ToString(),
-                    TransactionType = PaymentMethod.DEPOSIT.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
-                    Resource = response.BankCode,
+                    Resource = vnpay.GetResponseData("vnp_BankCode"),
+                    PaymentMethod = Resource.VNPay.ToString(),
                     IsDeleted = false,
                     TransactionCode = "DEP" + Utilss.RandomString(7)
                 };
 
-                // Save the payment
+                // Save the transaction
                 await _unitOfWork.TransactionRepository.AddAsync(payment);
                 var count = await _unitOfWork.SaveChangesAsync();
-
                 if (count == 0)
                 {
                     await transaction.RollbackAsync();
-                    result.Message = "Payment failed";
-                    result.IsError = true;
-                    result.Errors.Add(new Error()
-                    {
-                        Code = StatusCode.BadRequest,
-                        Message = "Payment failed"
-                    });
+                    result.AddError(StatusCode.BadRequest, "Failed to process payment");
                     return result;
                 }
 
+                // Detach the wallet entity if already being tracked to prevent conflict
+                _unitOfWork.WalletRepository.Detach(wallet);
+
                 // Update wallet balance
-                // wallet.Balance += payment.Amount;
+                wallet.Balance += amount;
                 wallet.UpdatedAt = DateTime.Now;
-
-                await _unitOfWork.WalletRepository.UpdateAsync(wallet);
+                await _unitOfWork.WalletRepository.UpdateAsyncV2(wallet);
                 var countUpdate = await _unitOfWork.SaveChangesAsync();
-
                 if (countUpdate == 0)
                 {
                     await transaction.RollbackAsync();
-                    result.Message = "Payment failed during wallet update";
-                    result.IsError = true;
-                    result.Errors.Add(new Error()
-                    {
-                        Code = StatusCode.BadRequest,
-                        Message = "Payment failed during wallet update"
-                    });
+                    result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
 
+                // Commit the transaction if everything is successful
                 await transaction.CommitAsync();
                 result.Payload = payment;
                 result.IsError = false;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                result.Message = "An error occurred: " + e.Message;
-                result.IsError = true;
-                result.Errors.Add(new Error()
-                {
-                    Code = StatusCode.ServerError,
-                    Message = "An error occurred: " + e.Message
-                });
+                result.AddError(StatusCode.ServerError, "An error occurred: " + ex.Message);
             }
 
             return result;
         }
+
+
 
         public async Task<OperationResult<string>> CreatePaymentAsync(int bookingId, int userId, string returnUrl)
         {
@@ -271,16 +213,16 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either WAITING or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSITING or COMPLETED");
                     return operationResult;
                 }
 
-                int amount;
+                int amount= 0 ;
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     amount = (int)booking.Deposit;       
                 }
-                else
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
                     amount = (int)booking.TotalReal;
                 }
@@ -302,7 +244,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 pay.AddRequestData("vnp_CreateDate", time.ToString("yyyyMMddHHmmss"));
                 pay.AddRequestData("vnp_IpAddr", UtilitiesExtensions.GetIpAddress());
                 pay.AddRequestData("vnp_OrderInfo", "Payment With Vn Pay");
-                pay.AddRequestData("vnp_OrderType", "wallet");
+                pay.AddRequestData("vnp_OrderType", "order");
                 pay.AddRequestData("vnp_TxnRef", newGuid.ToString());
 
                 var paymentUrl = pay.CreateRequestUrl(_vnPaySettings.PaymentEndpoint, _vnPaySettings.HashSecret);

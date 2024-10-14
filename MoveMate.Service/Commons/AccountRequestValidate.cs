@@ -13,13 +13,12 @@ namespace MoveMate.Service.Commons
     {
         public AccountRequestValidator()
         {
-            /*
-            RuleFor(ar => ar.EmailOrPhone)
-                .Cascade(CascadeMode.StopOnFirstFailure)A
+            RuleFor(ar => ar.Email)
+                .Cascade(CascadeMode.StopOnFirstFailure)
                 .NotNull().WithMessage("{PropertyName} cannot be null.")
                 .NotEmpty().WithMessage("{PropertyName} cannot be empty.")
                 .Must(BeValidEmailOrPhone).WithMessage("{PropertyName} must be a valid email or phone number.");
-                */
+                
 
             RuleFor(ar => ar.Password)
                 .Cascade(CascadeMode.StopOnFirstFailure)
