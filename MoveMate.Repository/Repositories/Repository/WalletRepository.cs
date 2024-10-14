@@ -22,5 +22,11 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(a => a.UserId == accountId)
                 .FirstOrDefaultAsync();
         }
+        public void Detach(Wallet entity)
+        {
+            _context.Entry(entity).State = EntityState.Detached;
+        }
+
+
     }
 }

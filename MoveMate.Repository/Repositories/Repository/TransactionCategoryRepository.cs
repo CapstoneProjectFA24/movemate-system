@@ -17,8 +17,12 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             this._dbContext = context;
         }
-        
-       
+
+        public async Task<Transaction> GetByTransactionCodeAsync(string transactionCode)
+        {
+            return await _dbSet.FirstOrDefaultAsync(t => t.TransactionCode == transactionCode);
+        }
+
 
     }
 }

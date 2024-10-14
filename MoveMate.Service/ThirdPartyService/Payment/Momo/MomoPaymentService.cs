@@ -8,6 +8,8 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Services;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.ThirdPartyService.Payment.Momo.Models;
 using MoveMate.Service.Utils;
 using System;
@@ -240,18 +242,32 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
             try
             {
-                // Cập nhật số tiền vào ví từ MomoPaymentCallbackCommand.Amount
                 wallet.Balance += (float)command.Amount;
 
                 var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
-
                 if (updateResult.IsError)
                 {
                     result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = wallet.Id,
+                    Amount = (float)command.Amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
+                    TransactionCode = command.TransId.ToString(), 
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Momo.ToString(),
+                    PaymentMethod = Resource.Momo.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                };
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");               
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
+
+                result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");
             }
             catch (Exception ex)
             {
