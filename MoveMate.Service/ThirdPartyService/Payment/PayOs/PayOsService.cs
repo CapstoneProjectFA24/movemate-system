@@ -4,6 +4,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using Net.payOS.Types;
 using Net.payOS;
+using MoveMate.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +67,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSIT or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSITING or COMPLETED");
                     return operationResult;
                 }
             string description = "";
@@ -183,7 +184,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return result;
             }
 
-            // Tìm wallet của user
             var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(user.Id);
             if (wallet == null)
             {
@@ -191,18 +191,43 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return result;
             }
 
+            // Check if this transaction has already been processed
+            var existingTransaction = await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
+            if (existingTransaction != null)
+            {
+                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.", "Already Processed");
+                return result; // Exit without updating the wallet
+            }
+
             try
             {
-                // Cập nhật số tiền vào ví từ MomoPaymentCallbackCommand.Amount
+                // Update wallet balance
                 wallet.Balance += (float)command.Amount;
 
                 var updateResult = await _walletServices.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
-
                 if (updateResult.IsError)
                 {
                     result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
+
+                // Record the transaction to prevent reprocessing
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = wallet.Id,
+                    Amount = (float)command.Amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
+                    TransactionCode = command.OrderCode, // Use the callback's TransactionCode
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.PayOS.ToString(),
+                    PaymentMethod = Resource.PayOS.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
 
                 result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");
             }
@@ -213,5 +238,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
             return result;
         }
+
     }
 }

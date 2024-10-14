@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.Models
 {
-    public enum PaymentMethod
+    public enum PaymentType
     {
         [Description("Momo Payment")]
         Momo,
@@ -20,7 +20,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Models
     public static class PaymentMethodHelper
     {
         // Helper method to get description
-        public static string GetEnumDescription(PaymentMethod method)
+        public static string GetEnumDescription(PaymentType method)
         {
             var field = method.GetType().GetField(method.ToString());
             var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));

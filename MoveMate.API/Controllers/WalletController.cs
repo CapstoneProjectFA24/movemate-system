@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.ThirdPartyService.Payment.Momo;
 using MoveMate.Service.ThirdPartyService.Payment.PayOs;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
+
 using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
@@ -64,112 +68,87 @@ namespace MoveMate.API.Controllers
             return Ok(result);
         }
 
-
         /// <summary>
-        /// Adds funds to the user's wallet.
+        /// FEATURE : Adds funds to the user's wallet using the selected payment method.
         /// </summary>
         /// <param name="amount">The amount to add to the wallet.</param>
+        /// <param name="returnUrl">The URL to return to after payment.</param>
+        /// <param name="paymentMethod">The selected payment method ("momo", "payos", "vpnpay").</param>
         /// <returns>Returns the result of adding funds to the wallet.</returns>
         /// <response code="200">Funds added successfully</response>
-        /// <response code="400">Invalid amount provided</response>
+        /// <response code="400">Invalid amount or payment method provided</response>
         /// <response code="401">Invalid user ID in token</response>
         /// <response code="500">An internal server error occurred</response>
-        [HttpPost("momo/recharge")]
-        [Authorize]
-        public async Task<IActionResult> AddFundsToWallet([FromQuery] double amount, string returnUrl)
-        {
-            // Extract user ID from claims
-            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
-            {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
-            }
-
-            var userId = int.Parse(accountIdClaim.Value);
-
-            // Call the Momo service method to add funds to the wallet
-            var result = await _momoPaymentService.AddFundsToWalletAsync(userId, amount, returnUrl);
-
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-
-            return Ok(result);
-        }
-
-
-        /// <summary>
-        /// Adds funds to the user's wallet.
-        /// </summary>
-        /// <param name="amount">The amount to add to the wallet.</param>
-        /// <returns>Returns the result of adding funds to the wallet.</returns>
-        /// <response code="200">Funds added successfully</response>
-        /// <response code="400">Invalid amount provided</response>
-        /// <response code="401">Invalid user ID in token</response>
-        /// <response code="500">An internal server error occurred</response>
-        [HttpPost("payOs/recharge")]
-        [Authorize]
-        public async Task<IActionResult> AddFundsToWalletPayOS([FromQuery] double amount, string returnUrl)
-        {
-            // Extract user ID from claims
-            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
-            {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
-            }
-
-            var userId = int.Parse(accountIdClaim.Value);
-
-            // Call the Momo service method to add funds to the wallet
-            var result = await _payOsService.CreateRechargeLinkAsync(userId, amount, returnUrl);
-
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-
-            return Ok(result);
-        }
-
-        /// <summary>
-        /// FEATURE : Recharge money into wallet.
-        /// </summary>
-        /// <param name="model">Customer recharge money into wallet in system </param>
-        /// <returns>Returns the result of wallet</returns>
         /// <remarks>
-        /// Sample request:
+        /// Example payment method details:
         /// 
-        ///     POST
-        ///     {
-        ///         "amount": 666666
-        ///     }   
+        /// - **Momo**: This method requires a user to have a Momo account linked. After selecting this option, you will be redirected to the Momo payment page for authorization.
+        /// - **PayOS**: A secure link will be generated, redirecting the user to complete the transaction with PayOS.
+        /// - **VnPay**: Requires a valid Vietnamese bank account. Upon selection, you will be redirected to VnPay's page for completing the payment.
+        /// 
+        /// For testing purposes, example payment details can be used:
+        /// 
+        /// **Momo**:
+        /// - Card Number: 9704 0000 0000 0018
+        /// - Cardholder Name: NGUYEN VAN A
+        /// - Expiry Date: 03/07
+        /// - OTP: Provided upon transaction
+        /// 
+        /// **VnPay**:
+        /// - Card Number: 9704198526191432198
+        /// - Cardholder Name: NGUYEN VAN A
+        /// - Issue Date: 07/15
+        /// - OTP: 123456
+        /// 
+        /// The `returnUrl` should be set to: https://movemate-dashboard.vercel.app/payment-status
         /// </remarks>
-        /// <response code="200">Payment URL generated successfully</response>
-        /// <response code="404">User not found</response>
-        /// <response code="404">Wallet not found</response>
-        /// <response code="500">An internal server error occurred</response>
-        [HttpPost("create-recharge-payment-url")]
+        [HttpPost("recharge")]
         [Authorize]
-        public async Task<IActionResult> Recharge([FromQuery] double amount, string returnUrl)
+        public async Task<IActionResult> AddFundsToWallet(double amount, string returnUrl, string paymentMethod)
         {
-            var accountId = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
-
-            if (accountId == null || string.IsNullOrEmpty(accountId.Value))
+            // Extract user ID from claims
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
                 return Unauthorized(new { Message = "Invalid user ID in token." });
             }
 
-            var userId = int.Parse(accountId.Value);
-            var result = await _vpnPayService.Recharge(HttpContext, userId, amount, returnUrl);
+            var userId = int.Parse(accountIdClaim.Value);
+            OperationResult<string> result;
 
+            // Attempt to parse the paymentMethod string to the PaymentMethod enum
+            if (!Enum.TryParse<MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType>(paymentMethod, true, out var parsedPaymentMethod))
+            {
+                return BadRequest(new { Message = "Invalid payment method specified." });
+            }
+
+            // Call the appropriate service based on the payment method
+            switch (parsedPaymentMethod)
+            {
+                case MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType.Momo:
+                    result = await _momoPaymentService.AddFundsToWalletAsync(userId, amount, returnUrl);
+                    break;
+
+                case MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType.PayOS:
+                    result = await _payOsService.CreateRechargeLinkAsync(userId, amount, returnUrl);
+                    break;
+
+                case MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType.VnPay:
+                    result = await _vpnPayService.Recharge(HttpContext, userId, amount, returnUrl);
+                    break;
+
+                default:
+                    return BadRequest(new { Message = "Unsupported payment method selected." });
+            }
+
+            // Check for errors in the result
             if (result.IsError)
             {
                 return HandleErrorResponse(result.Errors);
             }
+
             return Ok(result);
         }
-
     }
 
 }
