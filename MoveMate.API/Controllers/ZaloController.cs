@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MoveMate.Service.ThirdPartyService.Zalo;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-using MoveMate.Service.ThirdPartyService.Zalo.Models;
 using MoveMate.Service.ViewModels.ModelRequests;
 using Newtonsoft.Json;
+using MoveMate.Service.ThirdPartyService.Payment.Zalo;
+using MoveMate.Service.ThirdPartyService.Payment.Zalo.Models;
 
 namespace MoveMate.API.Controllers
 {

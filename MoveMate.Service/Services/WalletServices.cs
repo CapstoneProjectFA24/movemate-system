@@ -72,7 +72,7 @@ namespace MoveMate.Service.Services
                 wallet.UpdatedAt = DateTime.Now;
                 await _unitOfWork.WalletRepository.UpdateAsync(wallet);
 
-                var walletResponse = _mapper.Map<WalletResponse>(wallet); // Mapping nếu sử dụng AutoMapper
+                var walletResponse = _mapper.Map<WalletResponse>(wallet); 
                 return OperationResult<WalletResponse>.Success(walletResponse);
             }
             catch (Exception ex)

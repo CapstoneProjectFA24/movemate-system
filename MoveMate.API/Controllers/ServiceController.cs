@@ -32,11 +32,11 @@ namespace MoveMate.API.Controllers
         [HttpGet("not-type-truck")]
 
         // get all
-        public async Task<IActionResult> GetAllNotTruck([FromQuery] GetAllServiceRequest request)
+        public async Task<IActionResult> GetAllNotTruck([FromQuery] GetAllServiceNotTruckRequest request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
-            var response = await _services.GetAll(request);
+            var response = await _services.GetAllNotTruck(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }

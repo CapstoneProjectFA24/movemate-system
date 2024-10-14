@@ -9,6 +9,7 @@ namespace MoveMate.Domain.Enums
     public enum BookingEnums
     {
         PENDING,
+        DEPOSITING,
         RECOMMEND,
         APPROVED,
         WAITING,

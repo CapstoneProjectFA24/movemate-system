@@ -21,14 +21,15 @@ using MoveMate.Service.ThirdPartyService;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
 using Microsoft.Extensions.Options;
-using MoveMate.Service.ThirdPartyService.PayOs;
 using Net.payOS;
-using MoveMate.Service.ThirdPartyService.VNPay;
+using MoveMate.Service.ThirdPartyService.Payment.VNPay;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.Redis;
 using StackExchange.Redis;
-using MoveMate.Service.ThirdPartyService.Zalo;
-using MoveMate.Service.ThirdPartyService.Momo;
+using MoveMate.Service.ThirdPartyService.Payment.Zalo;
+using MoveMate.Service.ThirdPartyService.Payment.Momo;
+using MoveMate.Service.ThirdPartyService.Payment.PayOs;
+
 
 
 namespace MoveMate.API.Extensions
@@ -80,9 +81,9 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IServiceServices , ServiceServices>();
             services.AddScoped<IServiceDetails, ServiceDetails>();
             services.AddScoped<IFeeSettingServices, FeeSettingServices>();
-            services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
+            services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IZaloPayService, ZaloPayServices>();
             services.AddScoped<IPayOsService,  PayOsService>();
             services.AddScoped<ZaloPaySDK>();
@@ -150,6 +151,20 @@ namespace MoveMate.API.Extensions
         {
             services.Configure<MomoSettings>(configuration.GetSection("Momo"));
             services.AddScoped<IMomoPaymentService, MomoPaymentService>();
+            return services;
+        }
+
+        //vnpay
+        public static IServiceCollection AddVNPConfig(this IServiceCollection services, IConfiguration configuration)
+        {
+            // Bind VnPaySettings configuration from appsettings.json and register it as a singleton
+            var vnPaySettings = new VnPaySettings();
+            configuration.GetSection("VNPay").Bind(vnPaySettings);
+            services.AddSingleton(vnPaySettings);
+
+            // Register the VnPayService, which depends on VnPaySettings
+            services.AddScoped<IVnPayService, VnPayService>();
+
             return services;
         }
 
