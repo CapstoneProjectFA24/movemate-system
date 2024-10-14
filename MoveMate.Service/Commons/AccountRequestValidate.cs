@@ -18,6 +18,7 @@ namespace MoveMate.Service.Commons
                 .NotNull().WithMessage("{PropertyName} cannot be null.")
                 .NotEmpty().WithMessage("{PropertyName} cannot be empty.")
                 .Must(BeValidEmailOrPhone).WithMessage("{PropertyName} must be a valid email or phone number.");
+                
 
             RuleFor(ar => ar.Password)
                 .Cascade(CascadeMode.StopOnFirstFailure)
