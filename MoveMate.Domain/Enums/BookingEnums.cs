@@ -12,6 +12,8 @@ namespace MoveMate.Domain.Enums
         DEPOSITING,
         RECOMMEND,
         APPROVED,
+        REVIEWED,
+        COMMING,
         WAITING,
         ASSIGNED,
         ACCEPT,

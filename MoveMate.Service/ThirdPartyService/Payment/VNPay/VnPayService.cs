@@ -8,6 +8,7 @@ using MoveMate.Service.Exceptions;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
+using MoveMate.Service.ThirdPartyService.Payment.VNPay.Models;
 
 
 namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
@@ -217,14 +218,17 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     return operationResult;
                 }
 
-                int amount= 0 ;
+                int amount = 0;
+                string type = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    amount = (int)booking.Deposit;       
+                    amount = (int)booking.Deposit;
+                    type = PaymentMethod.DEPOSIT.ToString();
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
                     amount = (int)booking.TotalReal;
+                    type = PaymentMethod.PAYMENT.ToString();
                 }
                 var newGuid = Guid.NewGuid();
                 var time = DateTime.Now;
@@ -234,7 +238,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                                               ?? throw new Exception("Server URL is not available");
 
                 var pay = new VnPayLibrary();
-                pay.AddRequestData("vnp_ReturnUrl", $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}");
+                pay.AddRequestData("vnp_ReturnUrl", $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}");
                 pay.AddRequestData("vnp_Version", _vnPaySettings.Version);
                 pay.AddRequestData("vnp_Command", _vnPaySettings.Command);
                 pay.AddRequestData("vnp_TmnCode", _vnPaySettings.TmnCode);
@@ -243,8 +247,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 pay.AddRequestData("vnp_Amount", (amount * 100).ToString());
                 pay.AddRequestData("vnp_CreateDate", time.ToString("yyyyMMddHHmmss"));
                 pay.AddRequestData("vnp_IpAddr", UtilitiesExtensions.GetIpAddress());
-                pay.AddRequestData("vnp_OrderInfo", "Payment With Vn Pay");
-                pay.AddRequestData("vnp_OrderType", "order");
+                pay.AddRequestData("vnp_OrderInfo", bookingId.ToString());
+                pay.AddRequestData("vnp_OrderType", type);
                 pay.AddRequestData("vnp_TxnRef", newGuid.ToString());
 
                 var paymentUrl = pay.CreateRequestUrl(_vnPaySettings.PaymentEndpoint, _vnPaySettings.HashSecret);
@@ -254,12 +258,121 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             }
             catch (Exception ex)
             {
+                // Log the full exception for troubleshooting
+                Console.WriteLine($"An error occurred in CreatePaymentAsync: {ex}");
                 operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
                 return operationResult;
             }
         }
 
-        
+        public async Task<OperationResult<string>> HandleOrderPaymentAsync(IQueryCollection collections, VnPayPaymentCallbackCommand callback)
+        {
+            var result = new OperationResult<string>();
+          
+            try
+            {
+                var vnpay = new VnPayLibrary();
+                foreach (var (key, value) in collections)
+                {
+                    if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
+                    {
+                        vnpay.AddResponseData(key, value.ToString());
+                    }
+                }
+
+                var vnp_SecureHash = collections["vnp_SecureHash"];
+                bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, _config["VnPay:HashSecret"]);
+                if (!checkSignature)
+                {
+                    result.AddError(StatusCode.BadRequest, "Invalid payment signature");
+                    return result;
+                }
+
+                // Get transaction information from the response
+                var amount = Convert.ToSingle(vnpay.GetResponseData("vnp_Amount")) / 100f;
+                var transactionId = vnpay.GetResponseData("vnp_TxnRef");
+                int bookingId;
+                if (!int.TryParse(callback.vnp_OrderInfo, out bookingId))
+                {
+                    result.AddError(StatusCode.BadRequest, "Invalid booking ID");
+                    return result;
+                }
+                int userId = callback.userId;
+
+                var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, "Booking not found");
+                    return result;
+                }
+
+                var payment = new Domain.Models.Payment
+                {
+                    BookingId = bookingId,
+                    Amount = amount,
+                    Success = true,
+                    BankCode = Resource.VNPay.ToString()
+                };
+
+                await _unitOfWork.PaymentRepository.AddAsync(payment);
+                await _unitOfWork.SaveChangesAsync();
+                string transType = "";
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
+                }
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                {
+                    transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                }
+
+                // Check the response status
+                if (vnpay.GetResponseData("vnp_ResponseCode") != "00")
+                {
+                    result.AddError(StatusCode.BadRequest, "Payment was not successful");
+                    return result;
+                }
+
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {
+                    PaymentId = payment.Id,
+                    Amount = amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = transType,
+                    TransactionCode = callback.vnp_TransactionNo.ToString(),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.VNPay.ToString(),
+                    PaymentMethod = Resource.VNPay.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
+
+                if (booking.IsReviewOnline == false)
+                {
+                    booking.Status = BookingEnums.REVIEWED.ToString();
+                }
+                else if (booking.IsReviewOnline == true)
+                {
+                    booking.Status = BookingEnums.COMMING.ToString();
+                }
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+
+                result = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, "Payment handled successfully");
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception for troubleshooting
+                Console.WriteLine($"An error occurred in HandleOrderPaymentAsync: {ex}");
+                result.AddError(StatusCode.ServerError, "An internal server error occurred");
+            }
+
+            return result;
+        }
+
 
     }
 }
