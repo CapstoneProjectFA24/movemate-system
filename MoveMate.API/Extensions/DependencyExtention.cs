@@ -32,6 +32,7 @@ using MoveMate.Service.ThirdPartyService.Payment.PayOs;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
 using MoveMate.Service.ThirdPartyService.Redis.Connection;
+using Index = MoveMate.Service.ThirdPartyService.RabbitMQ.Config.Index;
 
 
 namespace MoveMate.API.Extensions
@@ -93,9 +94,9 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<IMessageProducer, MessageProducer>();
             services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
-            services.AddSingleton<RabbitMqWorker>();
+            services.AddSingleton<Index>();
 
-            services.AddHostedService<RabbitMqWorker>();
+            services.AddHostedService<Index>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
             // services.AddScoped<IFirebaseServices, FirebaseServices>();
 

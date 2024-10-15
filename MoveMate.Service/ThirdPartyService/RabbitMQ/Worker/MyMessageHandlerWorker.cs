@@ -2,7 +2,7 @@
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ;
 
-public class MyMessageHandler
+public class MyMessageHandlerWorker
 {
     
     [Consumer("chanel-1")]

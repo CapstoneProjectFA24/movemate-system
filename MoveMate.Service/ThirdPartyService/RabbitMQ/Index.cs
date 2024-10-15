@@ -3,18 +3,18 @@ using MoveMate.Service.ThirdPartyService.Redis.Connection;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
 
-public class RabbitMqWorker : BackgroundService
+public class Index : BackgroundService
 {
     private readonly IRabbitMqConsumer _consumer;
 
-    public RabbitMqWorker(IRabbitMqConsumer consumer)
+    public Index(IRabbitMqConsumer consumer)
     {
         _consumer = consumer;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _consumer.StartConsuming<MyMessageHandler>();
+        _consumer.StartConsuming<MyMessageHandlerWorker>();
 
         return Task.CompletedTask;
     }
