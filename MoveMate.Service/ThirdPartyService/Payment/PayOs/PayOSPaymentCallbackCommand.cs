@@ -11,6 +11,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
     {
         public string Code { get; set; }
         public string Id { get; set; }
+        public int BookingId { get; set; }
         public bool Cancel { get; set; }
         public int ResultCode { get; set; } = default!;
         public string Status { get; set; }
