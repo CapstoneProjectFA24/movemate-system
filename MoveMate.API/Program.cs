@@ -52,6 +52,7 @@ namespace MoveMate.API
             builder.Services.AddZaloPayConfig(builder.Configuration);
             builder.Services.AddMomoConfig(builder.Configuration);
             builder.Services.AddVNPConfig(builder.Configuration);
+            builder.Services.AddRabbitMQ();
 
             // CORS Policy
             builder.Services.AddCors(cors => cors.AddPolicy(
