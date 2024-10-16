@@ -159,17 +159,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 _unitOfWork.WalletRepository.Detach(wallet);
 
                 // Update wallet balance
-                wallet.Balance += amount;
-                wallet.UpdatedAt = DateTime.Now;
-                await _unitOfWork.WalletRepository.UpdateAsyncV2(wallet);
-                var countUpdate = await _unitOfWork.SaveChangesAsync();
-                if (countUpdate == 0)
+                wallet.Balance += (float)amount;
+
+                var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
+                if (updateResult.IsError)
                 {
-                    await transaction.RollbackAsync();
                     result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
-
                 // Commit the transaction if everything is successful
                 await transaction.CommitAsync();
                 result.Payload = payment;

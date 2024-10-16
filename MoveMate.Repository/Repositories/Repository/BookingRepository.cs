@@ -19,6 +19,10 @@ namespace MoveMate.Repository.Repositories.Repository
         public virtual async Task<Booking?> GetByIdAsyncV1(int id, string includeProperties = "")
         {
             IQueryable<Booking> query = _dbSet;
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
 
             // Include BookingTrackers and their related TrackerResources (fix typo here)
             query = query.Include(b => b.BookingTrackers)

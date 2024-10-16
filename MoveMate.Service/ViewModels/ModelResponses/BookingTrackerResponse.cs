@@ -11,6 +11,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
     public class BookingTrackerResponse
     {
         [FirestoreProperty]
+        public int Id { get; set; }
+        [FirestoreProperty]
         public int BookingId { get; set; }
         [FirestoreProperty]
         public string Time { get; set; }
