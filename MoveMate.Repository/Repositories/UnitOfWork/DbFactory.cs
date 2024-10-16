@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.API.Utils;
 using MoveMate.Domain.DBContext;
+using RabbitMQ.Client;
+
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
@@ -16,6 +18,8 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
     {
         private MoveMateDbContext _dbContext;
       //  private RedisConnectionProvider _redisConnectionProvider;
+
+       
         public DbFactory()
         {
             

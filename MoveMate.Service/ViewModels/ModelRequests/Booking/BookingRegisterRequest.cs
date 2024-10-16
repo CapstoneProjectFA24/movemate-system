@@ -66,8 +66,20 @@ public class BookingRegisterRequest
     [JsonIgnore]
     public bool? IsDeposited { get; set; } = false;
 
+    public bool? IsReviewOnline { get; set; } = true;
+
     public virtual ICollection<ResourceRequest> ResourceList { get; set; } = new List<ResourceRequest>();
 
+
+    public bool IsBookingAtValid()
+    {
+        if (BookingAt.HasValue)
+        {
+            return BookingAt.Value >= DateTime.Now;
+        }
+        
+        return false;
+    }
 
 
 }

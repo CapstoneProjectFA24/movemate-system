@@ -45,5 +45,12 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true)
                 .ToListAsync();
         }
+        
+        public List<FeeSetting> GetTruckFeeSettings(int cateTruckId)
+        {
+            return  _context.Set<FeeSetting>()
+                .Where(f => f.Type == TypeServiceEnums.TRUCK.ToString() && f.IsActived == true && f.TruckCategoryId == cateTruckId && f.ServiceId == null)
+                .ToList();
+        }
     }
 }

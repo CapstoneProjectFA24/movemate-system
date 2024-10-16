@@ -22,12 +22,13 @@ public class VnPayPaymentCallbackCommand
     public string? vnp_TxnRef { get; set; } = default!;
 
     public string? vnp_OrderInfo { get; set; } = default!;
+    public string? vnp_OrderType { get; set; } = default!;
 
     public string? vnp_SecureHash { get; set; } = default!;
 
     public string? vnp_ResponseCode { get; set; } = default!;
     public string returnUrl { get; set; } = default!;
+    public int userId { get; set; } = default!;
 
-    //public bool IsSuccess => "00".Equals(vnp_ResponseCode);
-    public bool IsSuccess { get; set; }
+    public bool IsSuccess => "00".Equals(vnp_ResponseCode);
 }

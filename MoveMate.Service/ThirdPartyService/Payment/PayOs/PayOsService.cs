@@ -4,6 +4,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using Net.payOS.Types;
 using Net.payOS;
+using MoveMate.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +67,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSIT or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSITING or COMPLETED");
                     return operationResult;
                 }
             string description = "";
@@ -82,21 +83,22 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 description = "order-payment";
             }
 
-            
-            long newGuid = Guid.NewGuid().GetHashCode(); // Use your method for generating newGuid
 
-            // Generate a unique order code
-            long orderCode = PaymentUtils.GenerateOrderCode(bookingId, newGuid);
+            long newGuid = Guid.NewGuid().GetHashCode();
+            do
+            {
+                newGuid = Guid.NewGuid().GetHashCode();
+            } while (newGuid <= 0);
             try
             {
-                
+                var urlReturn = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}";
                 var paymentData = new PaymentData(
-                    orderCode: orderCode,
+                    orderCode: newGuid,
                     amount: amount,
                     description: description,
                     items: null,
                     cancelUrl: "https://movemate-dashboard.vercel.app/payment-status?isSuccess=false",
-                    returnUrl: serverUrl+ "/api/v1/payments/payos/callback",
+                    returnUrl: urlReturn,
                     buyerName: user.Name,
                     buyerEmail: user.Email,
                     buyerPhone: user.Phone,
@@ -148,7 +150,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: (int)amount,
-                    description: "Wallet",
+                    description: "Recharge into wallet",
                     items: null,
                     cancelUrl: "https://movemate-dashboard.vercel.app/payment-status?isSuccess=false",
                     returnUrl: urlReturn,
@@ -183,7 +185,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return result;
             }
 
-            // Tìm wallet của user
             var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(user.Id);
             if (wallet == null)
             {
@@ -191,18 +192,43 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return result;
             }
 
+            // Check if this transaction has already been processed
+            var existingTransaction = await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
+            if (existingTransaction != null)
+            {
+                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.", "Already Processed");
+                return result; // Exit without updating the wallet
+            }
+
             try
             {
-                // Cập nhật số tiền vào ví từ MomoPaymentCallbackCommand.Amount
+                // Update wallet balance
                 wallet.Balance += (float)command.Amount;
 
                 var updateResult = await _walletServices.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
-
                 if (updateResult.IsError)
                 {
                     result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
+
+                // Record the transaction to prevent reprocessing
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = wallet.Id,
+                    Amount = (float)command.Amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
+                    TransactionCode = command.OrderCode, // Use the callback's TransactionCode
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.PayOS.ToString(),
+                    PaymentMethod = Resource.PayOS.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
 
                 result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");
             }
@@ -213,5 +239,93 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
             return result;
         }
+
+        public async Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context, PayOsPaymentCallbackCommand command)
+        {
+            var result = new OperationResult<string>();
+
+            // Retrieve user by email from the callback command
+            var user = await _unitOfWork.UserRepository.GetUserAsyncByEmail(command.BuyerEmail);
+            if (user == null)
+            {
+                result.AddError(StatusCode.NotFound, "User not found");
+                return result;
+            }
+
+            int bookingId = command.BookingId;
+            var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, user.Id);
+            if (booking == null)
+            {        
+                result.AddError(StatusCode.NotFound, "Booking not found");
+                return result;
+            }
+            var existingTransaction = await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
+            if (existingTransaction != null)
+            {
+                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.", "Already Processed");
+                return result; // Exit without updating the wallet
+            }
+
+            try
+            {
+                var payment = new Domain.Models.Payment
+                {
+                    BookingId = bookingId,
+                    Amount = (double)command.Amount,
+                    Success = true,
+                    BankCode = Resource.PayOS.ToString()
+                };
+
+                await _unitOfWork.PaymentRepository.AddAsync(payment);
+                await _unitOfWork.SaveChangesAsync();
+                string transType = "";
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
+                }
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                {
+                    transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                }
+
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {
+                    PaymentId = payment.Id,
+                    Amount = (float)command.Amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = transType,
+                    TransactionCode = command.OrderCode.ToString(),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.PayOS.ToString(),
+                    PaymentMethod = Resource.PayOS.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
+
+                if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    booking.Status = BookingEnums.REVIEWED.ToString();
+                }
+                else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    booking.Status = BookingEnums.COMMING.ToString();
+                }
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+
+                result = OperationResult<string>.Success($"{command.returnUrl}?isSuccess=true", StatusCode.Ok, "Payment handled successfully");
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+            }
+
+            return result;
+        }
+
+
     }
 }
