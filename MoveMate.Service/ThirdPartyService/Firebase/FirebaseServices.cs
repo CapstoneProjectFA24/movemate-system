@@ -6,16 +6,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Cloud.Firestore;
 using MoveMate.Service.Commons;
+using MoveMate.Service.Exceptions;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
     public class FirebaseServices : IFirebaseServices
     {
         private static FirebaseApp _firebaseApp;
+        private readonly FirestoreDb _dbFirestore;
 
         public FirebaseServices(string authJsonFile)
         {
+            string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+            _dbFirestore = FirestoreDb.Create("movemate-bb487");
+
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
             {
@@ -86,6 +93,58 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 return false;
             }
         }
-    }
 
+        public async Task<string> Save<T>(T saveObj, long id, string collectionName)
+        {
+            try
+            {
+                DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
+                await docRef.SetAsync(saveObj);
+                return (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving document: {e.Message}");
+                throw;
+            }
+        }
+
+        public async Task<T> GetByKey<T>(string key, string collectionName)
+        {
+            try
+            {
+                DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(key);
+                DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+
+                if (snapshot.Exists)
+                {
+                    return snapshot.ConvertTo<T>();
+                }
+                else
+                {
+                    throw new NotFoundException(
+                        $"Document with key '{key}' not found in collection '{collectionName}'.");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error getting document: {e.Message}");
+                throw;
+            }
+        }
+
+        public async Task<bool> Delete(string key, string collectionName)
+        {
+            try
+            {
+                await _dbFirestore.Collection(collectionName).Document(key).DeleteAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error deleting document: {e.Message}");
+                throw;
+            }
+        }
+    }
 }

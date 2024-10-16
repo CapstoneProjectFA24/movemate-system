@@ -15,6 +15,7 @@ using Hangfire;
 using Microsoft.Extensions.Logging.Abstractions;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.Services
@@ -24,12 +25,15 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<BookingServices> _logger;
+        private readonly IMessageProducer _producer;
 
-        public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger)
+
+        public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger, IMessageProducer producer)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
+            _producer = producer;
         }
         
     // FEATURE    
@@ -186,6 +190,9 @@ namespace MoveMate.Service.Services
                 {
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
+                    
+                    _producer.SendingMessage("movemate.booking_assgin_reiview", entity.Id);
+                    
                     result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
                 }
                 else
