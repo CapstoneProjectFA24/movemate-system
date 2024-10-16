@@ -56,20 +56,25 @@ namespace MoveMate.API.Controllers
         ///           "estimatedDistance": "3",
         ///           "houseTypeId": 1,
         ///           "note": "string",
-        ///           "estimatedDeliveryTime": "3",
-        ///           "isRoundTrip": true,
+        ///           "isReviewOnline": true,
+        ///           "isRoundTrip": false,
         ///           "isManyItems": true,
-        ///           "roomNumber": "1",
-        ///           "floorsNumber": "2",
+        ///           "roomNumber": "3",
+        ///           "floorsNumber": "3",
         ///           "serviceDetails": [
         ///             {
-        ///               "id": 1,
+        ///               "id": 52,
+        ///               "isQuantity": true,
+        ///               "quantity": 1
+        ///             },
+        ///             {
+        ///               "id": 35,
         ///               "isQuantity": true,
         ///               "quantity": 1
         ///             }
         ///           ],
         ///           "truckCategoryId": 1,
-        ///           "bookingAt": "2024-09-27T04:05:29.705Z",
+        ///           "bookingAt": "2024-10-16T05:26:28.452Z",
         ///           "resourceList": [
         ///             {
         ///               "type": "IMG",
