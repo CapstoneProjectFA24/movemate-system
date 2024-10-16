@@ -6,23 +6,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Google.Cloud.Firestore;
+using Google.Cloud.Firestore.V1;
+using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
+using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
     public class FirebaseServices : IFirebaseServices
     {
-        private static FirebaseApp _firebaseApp;
+        private static FirebaseApp? _firebaseApp;
         private readonly FirestoreDb _dbFirestore;
+        private readonly IMapper _mapper;
 
-        public FirebaseServices(string authJsonFile)
+        public FirebaseServices(string authJsonFile, IMapper mapper)
         {
-            string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
-            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
-            _dbFirestore = FirestoreDb.Create("movemate-bb487");
-
+            _mapper = mapper;
+           
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
             {
@@ -33,6 +36,12 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
                 _firebaseApp = FirebaseApp.Create(appOptions);
             }
+            
+            string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
+            
+            _dbFirestore = FirestoreDb.Create("movemate-bb487");
+
         }
 
 
@@ -101,6 +110,27 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(saveObj);
                 return (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving document: {e.Message}");
+                throw;
+            }
+        }
+        
+        public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
+        {
+            try
+            {
+                var save = _mapper.Map<BookingResponse>(saveObj);
+                
+                DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
+                await docRef.SetAsync(save);
+                var saved = (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
+                
+                Console.WriteLine($"SaveBooking message to firebase: {id}, time: {saved}");
+
+                return saved; 
             }
             catch (Exception e)
             {

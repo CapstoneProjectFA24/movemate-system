@@ -71,5 +71,15 @@ public class BookingRegisterRequest
     public virtual ICollection<ResourceRequest> ResourceList { get; set; } = new List<ResourceRequest>();
 
 
+    public bool IsBookingAtValid()
+    {
+        if (BookingAt.HasValue)
+        {
+            return BookingAt.Value >= DateTime.Now;
+        }
+        
+        return false;
+    }
+
 
 }

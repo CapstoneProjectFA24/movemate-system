@@ -15,6 +15,7 @@ using Hangfire;
 using Microsoft.Extensions.Logging.Abstractions;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.Utils;
 
@@ -26,19 +27,23 @@ namespace MoveMate.Service.Services
         private IMapper _mapper;
         private readonly ILogger<BookingServices> _logger;
         private readonly IMessageProducer _producer;
+        private readonly IFirebaseServices _firebaseServices;
 
-
-        public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger, IMessageProducer producer)
+        public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger,
+            IMessageProducer producer, IFirebaseServices firebaseServices)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
             _producer = producer;
+            _firebaseServices = firebaseServices;
         }
-        
-    // FEATURE    
+
+        // FEATURE    
         // GET ALL
+
         #region FEATURE: GetAll booking in the system.
+
         public async Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request)
         {
             var result = new OperationResult<List<BookingResponse>>();
@@ -76,10 +81,13 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
+
         #endregion
-        
+
         // GET BY ID
+
         #region FEATURE: GetById a booking in the system.
+
         public async Task<OperationResult<BookingResponse>> GetById(int id)
         {
             var result = new OperationResult<BookingResponse>();
@@ -107,15 +115,24 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
+
         #endregion
-        
+
         // REGISTER
+
         #region FEATURE: Register a new booking in the system.
+
         public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request)
         {
             var result = new OperationResult<BookingResponse>();
             string status = BookingEnums.PENDING.ToString();
 
+            /*if (!request.IsBookingAtValid())
+            {
+                result.AddError(StatusCode.BadRequest, $"BookingAt is not null and whether the value is greater than or equal to the current time");
+                return result;
+            }*/
+            
             try
             {
                 var existingHouseType =
@@ -190,9 +207,9 @@ namespace MoveMate.Service.Services
                 {
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
-                    
-                    _producer.SendingMessage("movemate.booking_assgin_reiview", entity.Id);
-                    
+
+                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
+                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
                 }
                 else
@@ -210,8 +227,9 @@ namespace MoveMate.Service.Services
         }
 
         #endregion
-        
+
         // VAlUA
+
         #region FEATURE: VAlUATION a booking.
 
         public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
@@ -232,11 +250,20 @@ namespace MoveMate.Service.Services
             var serviceDetails = new List<ServiceDetail>();
             var feeDetails = new List<FeeDetail>();
 
-            var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
-                request.HouseTypeId,
-                request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
-            totalFee += totalServices;
-            serviceDetails.AddRange(listServiceDetails);
+            try
+            {
+                var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
+                    request.HouseTypeId,
+                    request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
+                totalFee += totalServices;
+                serviceDetails.AddRange(listServiceDetails);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
 
             var response = new BookingValuationResponse();
 
@@ -247,10 +274,13 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
         #endregion
-        
+
         // CANCEL
+
         #region FEATURE: Cancel a booking in the system.
+
         public async Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest request)
         {
             var result = new OperationResult<BookingResponse>();
@@ -286,10 +316,11 @@ namespace MoveMate.Service.Services
         }
 
         #endregion
-        
-    //TEST
+
+        //TEST
 
         #region TEST: ValuationDistanceBooking for a new booking in the system.
+
         public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(
             BookingValuationRequest request)
         {
@@ -324,7 +355,8 @@ namespace MoveMate.Service.Services
 
                 // logic fee 
                 var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
+                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId,
+                        request.TruckCategoryId);
 
                 var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
                     double.Parse(request.EstimatedDistance), kmUnitFees, quantity ?? 1);
@@ -346,9 +378,11 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
         #endregion
-        
+
         #region TEST: ValuationFloorBooking for a new booking in the system.
+
         public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(
             BookingValuationRequest request)
         {
@@ -383,7 +417,8 @@ namespace MoveMate.Service.Services
 
                 // logic fee 
                 var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId);
+                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId,
+                        request.TruckCategoryId);
 
                 var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
                     int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
@@ -405,10 +440,11 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
         #endregion
 
-    // CRONJOB
-        
+        // CRONJOB
+
         #region CRONJOB: CheckAndCancelBooking a booking in the system.
 
         public async Task CheckAndCancelBooking(int bookingId)
@@ -422,13 +458,17 @@ namespace MoveMate.Service.Services
                 booking.CancelReason = "Is expired, Cancel by System";
                 _unitOfWork.BookingRepository.Update(booking);
                 _unitOfWork.Save();
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+
             }
         }
+
         #endregion
-        
-    // PRIVATE
-        
+
+        // PRIVATE
+
         #region PRIVATE: ApplyPercentFeesAsync for a new booking in the system.
+
         private async Task<(double updatedTotal, List<FeeDetail> feeDetails)> ApplyPercentFeesAsync(double total)
         {
             var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentFeeSettingsAsync();
@@ -456,9 +496,11 @@ namespace MoveMate.Service.Services
 
             return (totalAmount, feeDetails);
         }
+
         #endregion
-        
+
         #region PRIVATE: AddFeeDetails for a new booking in the system.
+
         private (double totalFee, List<FeeDetail> feeDetails) AddFeeDetails(IEnumerable<FeeSetting> feeSettings)
         {
             double totalFee = 0;
@@ -480,9 +522,11 @@ namespace MoveMate.Service.Services
 
             return (totalFee, feeDetails);
         }
+
         #endregion
-        
+
         #region PRIVATE: CalculateAndAddFees for a new booking in the system.
+
         private async Task<(double totalFee, List<FeeDetail> feeNullDetails)> CalculateAndAddFees(DateTime dateBooking)
         {
             double totalFee = 0;
@@ -514,8 +558,9 @@ namespace MoveMate.Service.Services
 
             return (totalFee, feeNullDetails);
         }
+
         #endregion
-        
+
         #region PRIVATE: CalculateDistanceFee for a new booking in the system.
 
         private (double totalFee, List<FeeDetail> feeDetails) CalculateDistanceFee(int truckCategoryId,
@@ -614,16 +659,19 @@ namespace MoveMate.Service.Services
             totalFee = totalFee * quantity;
             return (totalFee, feeDetails);
         }
+
         #endregion
-        
+
         #region PRIVATE: SeparateFeeSettingsByUnit for a new booking in the system.
-        
+
         private (List<FeeSetting>? nullUnitFees, List<FeeSetting>? kmUnitFees, List<FeeSetting>? floorUnitFees)
-            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings, int HouseTypeId)
+            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings, int HouseTypeId, int CateTruckId)
         {
             var nullUnitFees = new List<FeeSetting>();
             var kmUnitFees = new List<FeeSetting>();
             var floorUnitFees = new List<FeeSetting>();
+
+            feeSettings.AddRange(_unitOfWork.FeeSettingRepository.GetTruckFeeSettings(CateTruckId));
 
             foreach (var fee in feeSettings)
             {
@@ -647,9 +695,11 @@ namespace MoveMate.Service.Services
 
             return (nullUnitFees, kmUnitFees, floorUnitFees);
         }
+
         #endregion
-        
+
         #region PRIVATE: CalculateBaseFee for a new booking in the system.
+
         private (double totalNullFee, List<FeeDetail> feeNullDetails) CalculateBaseFee(List<FeeSetting>? nullUnitFees,
             int quantity)
         {
@@ -687,9 +737,11 @@ namespace MoveMate.Service.Services
             // Trả về tổng phí và danh sách FeeDetail
             return (totalFee, feeDetails);
         }
+
         #endregion
-        
+
         #region PRIVATE: CalculateFloorFeeV2 for a new booking in the system.
+
         private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFeeV2(int truckCategoryId,
             int numberOfFloors,
             List<FeeSetting>? feeSettings, int quantity)
@@ -772,9 +824,11 @@ namespace MoveMate.Service.Services
 
             return (totalFee, feeDetails);
         }
+
         #endregion
-        
+
         #region PRIVATE: CalculateServiceFees for a new booking in the system.
+
         private async Task<(double totalServices, List<ServiceDetail> serviceDetails)> CalculateServiceFees(
             List<ServiceDetailRequest> serviceDetailRequests,
             int houseTypeId,
@@ -799,32 +853,43 @@ namespace MoveMate.Service.Services
 
                 // Set var
                 var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate;
+                var price = service.Amount * quantity - service.Amount * quantity * (service.DiscountRate / 100);
 
-                if (service.Amount == 0d)
+                if (service.Type == TypeServiceEnums.TRUCK.ToString() ||
+                    service.Type == TypeServiceEnums.PORTER.ToString())
                 {
                     // Logic fee 
 
                     var amount = 0d;
                     var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId);
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId, truckCategoryId);
 
-                    // FEE FLOOR
-                    var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
-                        int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
-                    amount += floorTotalFee;
+                    switch (service.Type)
+                    {
+                        case null:
 
-                    // FEE DISTANCE
-                    var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
-                        double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
-                    amount += totalTruckFee;
+                            break;
+                        case "TRUCK":
+                            // FEE DISTANCE
+                            var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
+                                double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
+                            amount += totalTruckFee;
+                            break;
+                        case "PORTER":
+                            // FEE FLOOR
+                            var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
+                                int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
+                            amount += floorTotalFee;
+
+                            break;
+                    }
 
                     // FEE BASE
                     var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
                     amount += nullTotalFee;
 
                     amount = (double)(amount -
-                                      amount * service.DiscountRate / 100) !;
+                                      amount * (service.DiscountRate ?? 0) / 100) !;
 
                     totalServices += amount;
 
@@ -854,8 +919,9 @@ namespace MoveMate.Service.Services
 
             return (totalServices, serviceDetails);
         }
+
         #endregion
-    //
-  
+
+        //
     }
 }

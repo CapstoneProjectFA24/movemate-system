@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Text;
+using AutoMapper;
 using Hangfire;
 using Hangfire.SqlServer;
 using Hangfire.Storage.SQLite;
@@ -143,7 +144,7 @@ namespace MoveMate.API.Extensions
             string firebaseConfigPath = configuration.GetSection("FirebaseSettings:ConfigFile").Value;
 
             // Register FirebaseServices as a singleton to ensure only one instance is created
-            services.AddSingleton<IFirebaseServices>(sp => new FirebaseServices(firebaseConfigPath));
+            services.AddSingleton<IFirebaseServices>(sp => new FirebaseServices(firebaseConfigPath,  sp.GetRequiredService<IMapper>()));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 

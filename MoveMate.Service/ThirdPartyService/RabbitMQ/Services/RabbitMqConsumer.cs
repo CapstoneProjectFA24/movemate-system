@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
 using RabbitMQ.Client;
@@ -13,13 +15,20 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 {
     private readonly IRabbitMqConnection _connection;
     private readonly IModel _channel;
+    private readonly ILogger<RabbitMqConsumer> _logger;
+    private readonly int _maxRetryAttempts;
+    private readonly string? _deadLetterQueue;
 
-    public RabbitMqConsumer(IRabbitMqConnection connection)
+    public RabbitMqConsumer(IRabbitMqConnection connection, ILogger<RabbitMqConsumer> logger,
+        IConfiguration configuration)
     {
         _connection = connection;
+        _logger = logger;
         _channel = _connection.Connection.CreateModel();
+        _maxRetryAttempts = configuration.GetValue<int>("RabbitMQ:MaxRetryAttempts");
+        _deadLetterQueue = configuration.GetValue<string>("RabbitMQ:DeadLetterQueue");
     }
-    
+
     public void StartConsuming<T>() where T : class
     {
         var methods = typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.Public);
@@ -34,7 +43,7 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
             }
         }
     }
-    
+
     private void DeclareQueueIfNotExists(string queueName)
     {
         try
@@ -49,27 +58,84 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
                 autoDelete: false);
         }
     }
-    
+
     private void StartListening(string queueName, MethodInfo method, object instance)
     {
-        //DeclareQueueIfNotExists(queueName);
-        
+        DeclareQueueIfNotExists(queueName);
+
         var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var jsonString = Encoding.UTF8.GetString(body);
 
-            // Deserialize message to the expected type (if necessary)
-            var message = JsonSerializer.Deserialize<object>(jsonString); // Use the correct type here
+            try
+            {
+                var expectedType = method.GetParameters()[0].ParameterType;
+                
+                var message = JsonSerializer.Deserialize(jsonString, expectedType);
+                
+                if (message != null && expectedType.IsInstanceOfType(message))
+                {
+                    method.Invoke(instance, new object[] { message });
+                    _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                }
+                else
+                {
+                    _logger.LogError("Deserialized message type mismatch. Expected: {ExpectedType}, Actual: {ActualType}",
+                        expectedType.Name, message?.GetType().Name);
+                    _channel.BasicNack(deliveryTag: ea.DeliveryTag, multiple: false, requeue: true);
+                }
 
-            // Invoke the method with the deserialized message
-            method.Invoke(instance, new object[] { message });
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing message from queue {QueueName}", queueName);
+                
+                int retryCount = GetRetryCount(ea);
+                if (retryCount >= _maxRetryAttempts)
+                {
+                    MoveToDeadLetterQueue(ea, queueName);
+                }
+                else
+                {
+                    RetryMessage(ea, retryCount);
+                }
+            }
         };
 
         _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false);
         //DeclareQueueIfNotExists(queueName);
         _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+    }
+
+    private int GetRetryCount(BasicDeliverEventArgs ea)
+    {
+        if (ea.BasicProperties.Headers != null &&
+            ea.BasicProperties.Headers.TryGetValue("x-retry-count", out var retryHeader))
+        {
+            return Convert.ToInt32(retryHeader);
+        }
+
+        return 0;
+    }
+
+    private void RetryMessage(BasicDeliverEventArgs ea, int currentRetryCount)
+    {
+        var properties = ea.BasicProperties;
+        properties.Headers ??= new Dictionary<string, object>();
+        properties.Headers["x-retry-count"] = currentRetryCount + 1;
+        
+        _channel.BasicPublish(exchange: "", routingKey: ea.RoutingKey, basicProperties: properties, body: ea.Body);
+        _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+    }
+
+    private void MoveToDeadLetterQueue(BasicDeliverEventArgs ea, string queueName)
+    {
+        _channel.BasicPublish(exchange: "", routingKey: _deadLetterQueue, basicProperties: ea.BasicProperties,
+            body: ea.Body);
+        _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
     }
 
     public void Dispose()
