@@ -76,10 +76,10 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 return operationResult;
             }
 
-            int amount=  0; 
+            int amount=  0;
             if (booking.Status == BookingEnums.DEPOSITING.ToString())
             {
-                amount = (int)booking.Deposit;
+                amount = (int)booking.Deposit;          
             }
             else if (booking.Status == BookingEnums.COMPLETED.ToString()) 
             {
@@ -276,6 +276,90 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
             return result;
         }
+
+
+        public async Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context, MomoPaymentCallbackCommand callback)
+        {
+            var operationResult = new OperationResult<string>();
+
+            try
+            {
+                var orderIdParts = callback.OrderId.Split('-');
+                if (!int.TryParse(orderIdParts[0], out int bookingId))
+                {
+                    _logger.LogWarning($"Invalid OrderId format: {callback.OrderId}");
+                    operationResult.AddError(StatusCode.BadRequest, "Invalid OrderId format");
+                    return operationResult;
+                }
+                var userId = int.Parse(callback.ExtraData);
+                var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
+                if (booking == null)
+                {
+                    _logger.LogWarning($"Booking with ID {bookingId} for User ID {userId} not found");
+                    operationResult.AddError(StatusCode.NotFound, "Booking not found");
+                    return operationResult;
+                }
+              
+                var payment = new Domain.Models.Payment
+                {
+                    BookingId = bookingId,
+                    Amount = (double)callback.Amount,
+                    Success = true, 
+                    BankCode = Resource.Momo.ToString()
+                };
+
+                await _unitOfWork.PaymentRepository.AddAsync(payment);
+                await _unitOfWork.SaveChangesAsync();
+                string transType = "";
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
+                }
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                {
+                    transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                }
+
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {
+                    PaymentId = payment.Id,            
+                    Amount = (float)callback.Amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = transType,
+                    TransactionCode = callback.TransId.ToString(),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Momo.ToString(),
+                    PaymentMethod = Resource.Momo.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
+
+                if (booking.IsReviewOnline == false)
+                {
+                    booking.Status = BookingEnums.REVIEWED.ToString();
+                }
+                else if (booking.IsReviewOnline == true)
+                {
+                    booking.Status = BookingEnums.COMMING.ToString();
+                }
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+
+                operationResult = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, "Payment handled successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An internal server error occurred while handling the order payment");
+                operationResult.AddError(StatusCode.ServerError, $"An internal server error occurred: {ex.Message}");
+            }
+
+            return operationResult;
+        }
+
+
 
     }
 }

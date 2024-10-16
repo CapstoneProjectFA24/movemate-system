@@ -42,86 +42,7 @@ namespace MoveMate.API.Controllers
         }
 
 
-        /// <summary>
-        /// FEATURE : Recharge Payment
-        /// </summary>
-        /// <returns>Returns the result of wallet</returns>
-        [HttpGet("recharge-callback")]
-        public async Task<IActionResult> RechargeCallback([FromQuery] VnPayPaymentCallbackCommand callback, CancellationToken cancellationToken)
-        {
-            var operationResult = await _vnPayService.ProcessRechargePayment(Request.Query);
-            var returnUrl = $"{callback.returnUrl}?isSuccess={(!operationResult.IsError).ToString().ToLower()}";
 
-            if (operationResult.IsError)
-            {
-                return Redirect(returnUrl);
-            }
-
-            return Redirect(returnUrl);
-        }
-
-      
-
-        /// <summary>
-        /// FEATURE : Momo callback
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("momo/callback")]
-        public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
-        {
-
-           
-            if (callback == null)
-            {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
-            }
-
-            if (callback.OrderInfo == "order")
-            {           
-                return await HandleOrderPayment(callback, cancellationToken);
-                //var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess}";
-                //return Redirect(redirectUrl);
-            }
-            else if (callback.OrderInfo == "wallet")
-            {
-               
-                // Xử lý phản hồi cho nạp tiền vào ví
-                var result = await _momoPaymentService.HandleWalletPaymentAsync(HttpContext, callback);
-
-                if (result.IsError)
-                {
-                    return HandleErrorResponse(result.Errors);
-                }
-
-                // Thêm isSuccess vào returnUrl
-                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
-                return Redirect(redirectUrl);
-            }
-
-            return NoContent();
-        }
-
-        private async Task<IActionResult> HandleOrderPayment(MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
-        {
-            // Thêm isSuccess vào returnUrl
-            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
-            return Redirect(redirectUrl);
-        }
-
-
-
-
-        /// <summary>
-        /// FEATURE : Momo callback
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("vnpay-callback")]
-        public async Task<IActionResult> VnPayPaymentCallback(
-        [FromQuery] VnPayPaymentCallbackCommand callback,
-        CancellationToken cancellationToken)
-        {
-            return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}");
-        }
 
         /// <summary>
         /// FEATURE : Payment with selected method
@@ -211,6 +132,92 @@ namespace MoveMate.API.Controllers
         }
 
 
+
+
+        /// <summary>
+        /// FEATURE : Recharge Payment
+        /// </summary>
+        /// <returns>Returns the result of wallet</returns>
+        [HttpGet("recharge-callback")]
+        public async Task<IActionResult> RechargeCallback([FromQuery] VnPayPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        {
+            var operationResult = await _vnPayService.ProcessRechargePayment(Request.Query);
+            var returnUrl = $"{callback.returnUrl}?isSuccess={(!operationResult.IsError).ToString().ToLower()}";
+
+            if (operationResult.IsError)
+            {
+                return Redirect(returnUrl);
+            }
+
+            return Redirect(returnUrl);
+        }
+
+      
+
+        /// <summary>
+        /// FEATURE : Momo callback
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("momo/callback")]
+        public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        {     
+            if (callback == null)
+            {
+                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+            }
+
+            if (callback.OrderInfo == "order")
+            {
+                var result = await _momoPaymentService.HandleOrderPaymentAsync(HttpContext, callback);
+
+                if (result.IsError)
+                {
+                    return HandleErrorResponse(result.Errors);
+                }
+                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
+                return Redirect(redirectUrl);
+            }
+            else if (callback.OrderInfo == "wallet")
+            {
+                var result = await _momoPaymentService.HandleWalletPaymentAsync(HttpContext, callback);
+                if (result.IsError)
+                {
+                    return HandleErrorResponse(result.Errors);
+                }
+                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
+                return Redirect(redirectUrl);
+            }
+
+            return NoContent();
+        }
+
+
+        /// <summary>
+        /// FEATURE : Momo callback
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("vnpay-callback")]
+        public async Task<IActionResult> VnPayPaymentCallback(
+        [FromQuery] VnPayPaymentCallbackCommand callback,
+        CancellationToken cancellationToken)
+        {
+            if (callback == null)
+            {
+                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+            }
+
+            var result = await _vnPayService.HandleOrderPaymentAsync(Request.Query, callback);
+
+            if (result.IsError)
+                {
+                    return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}");
+                }
+             var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
+                return Redirect(redirectUrl);
+            
+        }
+
+
         /// <summary>
         /// FEATURE : Recharge into wallet by PayOS
         /// </summary>
@@ -244,8 +251,12 @@ namespace MoveMate.API.Controllers
 
             if (callback.Type == "order")
             {
+                var result = await _payOsService.HandleOrderPaymentAsync(HttpContext, callback);
 
-
+                if (result.IsError)
+                {
+                    Redirect(returnUrl);
+                }              
                 return Redirect(returnUrl);
             }
             if (callback.Type == "wallet")
@@ -256,9 +267,8 @@ namespace MoveMate.API.Controllers
                 if (result.IsError)
                 {
                     return HandleErrorResponse(result.Errors);
-                }
-                var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
-                return Redirect(redirectUrl);
+                }       
+                return Redirect(returnUrl);
                 
             }
 
