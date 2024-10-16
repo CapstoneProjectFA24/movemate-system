@@ -100,8 +100,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string FeeInfo { get; set; }
 
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
-
-        //public List<BookingDetailsResponse> BookingDetails { get; set; }
+        [FirestoreProperty]
+        public List<BookingDetailsResponse> BookingDetails { get; set; }
         [FirestoreProperty]
         public List<BookingTrackerResponse> BookingTrackers { get; set; }
         [FirestoreProperty]

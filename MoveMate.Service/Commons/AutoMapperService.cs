@@ -47,6 +47,7 @@ namespace MoveMate.Service.Commons
                 ;
 
             //Booking
+            CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<Booking, BookingResponse>()
                 .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers)); 
             CreateMap<Booking, BookingRegisterResponse>();
@@ -106,7 +107,7 @@ namespace MoveMate.Service.Commons
             CreateMap<TruckCategory, TruckCategoryResponse>();
 
             // Free
-            //CreateMap<FeeDetail, FeeDetailResponse>();
+            CreateMap<FeeDetail, FeeDetailResponse>();
             //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
             
             // Resource
