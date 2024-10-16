@@ -6,6 +6,12 @@ namespace MoveMate.Service.ViewModels.ModelResponses;
 public class FeeDetailResponse
 {
     [FirestoreProperty]
+    public int Id { get; set; }
+    [FirestoreProperty]
+    public int? BookingId { get; set; }
+    [FirestoreProperty]
+    public int? FeeSettingId { get; set; }
+    [FirestoreProperty]
     public string? Name { get; set; }
     [FirestoreProperty]
     public string? Description { get; set; }

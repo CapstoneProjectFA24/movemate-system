@@ -58,7 +58,8 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
+                    orderBy: request.GetOrder(),
+                    includeProperties: "BookingDetails,FeeDetails,BookingTrackers.TrackerSources,ServiceDetails"
                 );
                 var listResponse = _mapper.Map<List<BookingResponse>>(entities);
 
@@ -95,7 +96,7 @@ namespace MoveMate.Service.Services
             {
                 var booking =
                     await _unitOfWork.BookingRepository.GetByIdAsyncV1(id,
-                        includeProperties: "BookingTrackers, TrackerSources");
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,ServiceDetails");
 
                 if (booking == null)
                 {
