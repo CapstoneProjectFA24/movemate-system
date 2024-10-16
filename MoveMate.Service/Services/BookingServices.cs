@@ -132,7 +132,7 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.BadRequest, $"BookingAt is not null and whether the value is greater than or equal to the current time");
                 return result;
             }*/
-            
+
             try
             {
                 var existingHouseType =
@@ -459,7 +459,6 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 _unitOfWork.Save();
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
-
             }
         }
 
