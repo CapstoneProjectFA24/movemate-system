@@ -8,28 +8,30 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
 public class AssginReiewWorker
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<AssginReiewWorker> _logger;
-
-    public AssginReiewWorker(IServiceScopeFactory serviceScopeFactory, ILogger<AssginReiewWorker> logger)
+    private readonly IServiceProvider _serviceProvider;
+    public AssginReiewWorker(ILogger<AssginReiewWorker> logger, IServiceProvider serviceProvider)
     {
-        _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
     [Consumer("movemate.booking_assign_review")]
-    public async Task HandleMessage(int message)
+    public async Task  HandleMessage(int message)
     {
         try
         {
-            using (var scope = _serviceScopeFactory.CreateScope())
+            // Tạo một scope mới để quản lý lifecycle của các dependency
+            using (var scope = _serviceProvider.CreateScope())
             {
-                var unitOfWork =(UnitOfWork) scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var unitOfWork = (UnitOfWork) scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
 
+                // Thực hiện xử lý booking
                 var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
                 Console.WriteLine($"Booking info: {booking}");
 
+                // Xử lý dữ liệu tại đây, sử dụng mapper nếu cần
             }
         }
         catch (Exception e)
