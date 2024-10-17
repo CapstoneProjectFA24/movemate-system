@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ThirdPartyService;
 
@@ -27,6 +28,7 @@ public class TruckCategoryController : BaseController
     /// <response code="200">List TruckCate is Empty!</response>
     /// <response code="500">Internal server error occurred</response>
     [HttpGet("")]
+    [Authorize]
     // get all
     public async Task<IActionResult> GetAllCate()
     {
@@ -51,6 +53,7 @@ public class TruckCategoryController : BaseController
     /// <response code="200">Get Truck Category Detail Done</response>
     /// <response code="500">Internal server error occurred</response>
     [HttpGet("{id}")]
+    [Authorize]
     // get all
     public async Task<IActionResult> GetCateById(int id)
     {

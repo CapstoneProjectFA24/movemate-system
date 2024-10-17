@@ -26,6 +26,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("")]
+        [Authorize]
 
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllBookingRequest request)
@@ -97,6 +98,7 @@ namespace MoveMate.API.Controllers
 
         // Post - register booking
         [HttpPost("register-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
@@ -129,6 +131,7 @@ namespace MoveMate.API.Controllers
 
         // Post - valuation distance booking
         [HttpPost("valuation-distance-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationDistanceBooking(BookingValuationRequest request)
         {
@@ -147,6 +150,7 @@ namespace MoveMate.API.Controllers
 
         // Post - valuation distance booking
         [HttpPost("valuation-floor-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
         {
@@ -164,6 +168,7 @@ namespace MoveMate.API.Controllers
 
         // Post - valuation distance booking
         [HttpPost("valuation-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
         {
@@ -178,6 +183,7 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetBookingById(int id)
         {
             var response = await _bookingServices.GetById(id);
@@ -190,6 +196,7 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("cancel-booking/{id}")]
+        [Authorize]
         public async Task<IActionResult> CancelBookingById(BookingCancelRequest request)
         {
             var response = await _bookingServices.CancelBooking(request);
@@ -203,6 +210,7 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("user/confirm-round-trip/{id}")]
+        [Authorize]
         public async Task<IActionResult> UserConfirmRoundTrip(int id)
         {
             var response = await _bookingServices.UserConfirmRoundTrip(id);

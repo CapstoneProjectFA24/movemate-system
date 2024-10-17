@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
@@ -26,6 +27,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200">List Schedule is Empty!</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
+        [Authorize]
 
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllSchedule request)
@@ -51,6 +53,7 @@ namespace MoveMate.API.Controllers
         /// <response code="404">Schedule not found</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetScheduleById(int id)
         {
             var response = await _scheduleServices.GetById(id);

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
@@ -25,6 +26,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200">List Fees is Empty!</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("system")]
+        [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] GetAllFeeSetting request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
