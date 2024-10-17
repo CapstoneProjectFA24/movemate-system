@@ -52,6 +52,7 @@ namespace MoveMate.API.Extensions
             return services;
         }
 
+        // REDIS
         public static IServiceCollection AddRedis(this IServiceCollection services)
         {
             services.AddServices().AddStackExchangeRedisCache(option =>
@@ -61,8 +62,9 @@ namespace MoveMate.API.Extensions
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
                 IConfigurationRoot configuration = builder.Build();
+                var redisConnectionString = configuration.GetConnectionString("Redis");
 
-                option.Configuration = configuration.GetConnectionString("Redis");
+                option.Configuration = redisConnectionString;
                 //option.InstanceName = "MoveMate_";
             });
             //services.AddScoped<IDbFactory, DbFactory>();
@@ -92,10 +94,14 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IPayOsService, PayOsService>();
             services.AddScoped<ZaloPaySDK>();
 
+            services.AddScoped<IAssignJobService, AssignJobService>();
+
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("14.225.204.144:6379"));
             services.AddScoped<IRedisService, RedisService>();
+
             services.AddScoped<IMessageProducer, MessageProducer>();
             services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
-            services.AddSingleton<Index>();
+            services.AddScoped<Index>();
 
             services.AddHostedService<Index>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
@@ -106,7 +112,7 @@ namespace MoveMate.API.Extensions
 
         public static IServiceCollection AddHangfire(this IServiceCollection services)
         {
-            services.AddSingleton<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
+            services.AddScoped<IBackgroundServiceHangFire, BackgroundServiceHangFire>();
 
             string connectionString = DbUtil.getConnectString();
 
@@ -144,7 +150,8 @@ namespace MoveMate.API.Extensions
             string firebaseConfigPath = configuration.GetSection("FirebaseSettings:ConfigFile").Value;
 
             // Register FirebaseServices as a singleton to ensure only one instance is created
-            services.AddSingleton<IFirebaseServices>(sp => new FirebaseServices(firebaseConfigPath,  sp.GetRequiredService<IMapper>()));
+            services.AddSingleton<IFirebaseServices>(sp =>
+                new FirebaseServices(firebaseConfigPath, sp.GetRequiredService<IMapper>()));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 

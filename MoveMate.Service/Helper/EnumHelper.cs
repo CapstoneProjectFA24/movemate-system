@@ -22,7 +22,7 @@ namespace MoveMate.Service.Helper
             foreach (var field in typeof(T).GetFields())
             {
                 if (Attribute.GetCustomAttribute(field,
-                typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
+                        typeof(DescriptionAttribute)) is DescriptionAttribute attribute)
                 {
                     if (attribute.Description.ToUpper() == description.ToUpper())
                         return (T)field.GetValue(null);
@@ -33,6 +33,7 @@ namespace MoveMate.Service.Helper
                         return (T)field.GetValue(null);
                 }
             }
+
             throw new ArgumentException("Not found.", nameof(description));
         }
 
@@ -64,5 +65,4 @@ namespace MoveMate.Service.Helper
             return !t.IsEnum ? null : Enum.GetValues(t).Cast<Enum>().Select(x => x.DescriptionAttr()).ToList();
         }
     }
-
 }

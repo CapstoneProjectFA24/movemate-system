@@ -15,6 +15,7 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<PromotionServices> _logger;
+
         public PromotionServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PromotionServices> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;

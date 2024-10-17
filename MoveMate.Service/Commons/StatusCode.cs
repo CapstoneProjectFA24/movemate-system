@@ -18,7 +18,7 @@ namespace MoveMate.Service.Commons
         Forbidden = 403,
         InvalidInput = 422,
         UnknownError = 520,
-        FirebaseAuthError = 600,        // Specific Firebase authentication error
-        ValidationError = 422           // Data validation error
+        FirebaseAuthError = 600, // Specific Firebase authentication error
+        ValidationError = 422 // Data validation error
     }
 }

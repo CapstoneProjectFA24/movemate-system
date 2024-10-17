@@ -27,6 +27,5 @@ namespace MoveMate.Domain.Enums
         CONFIRM,
         COMPLETED,
         CANCEL
-
     }
 }

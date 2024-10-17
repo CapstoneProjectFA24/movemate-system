@@ -4,7 +4,6 @@ using MoveMate.Service.Exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MoveMate.Service.Commons;
-
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -42,7 +41,8 @@ namespace MoveMate.API.Middleware
                 NotFoundException _ => Microsoft.AspNetCore.Http.StatusCodes.Status404NotFound,
                 BadRequestException _ => Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest,
                 ConflictException _ => Microsoft.AspNetCore.Http.StatusCodes.Status409Conflict,
-                JsonReaderException _ => Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest, // Consider BadRequest for JSON errors
+                JsonReaderException _ => Microsoft.AspNetCore.Http.StatusCodes
+                    .Status400BadRequest, // Consider BadRequest for JSON errors
                 _ => Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError
             };
 

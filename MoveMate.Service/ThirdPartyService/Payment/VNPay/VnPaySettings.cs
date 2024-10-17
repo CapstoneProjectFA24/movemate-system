@@ -10,5 +10,4 @@ public class VnPaySettings
     public string Version { get; set; } = default!;
     public string PaymentEndpoint { get; set; } = default!;
     public string CallbackUrl { get; set; } = default!;
-
 }

@@ -19,6 +19,7 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<WalletServices> _logger;
+
         public WalletServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<WalletServices> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
@@ -32,7 +33,6 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<WalletResponse>();
             try
             {
-
                 var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(int.Parse(userId));
 
                 if (wallet != null)
@@ -45,7 +45,6 @@ namespace MoveMate.Service.Services
                 {
                     result.AddError(StatusCode.NotFound, "Wallet not found");
                 }
-
             }
             catch (Exception ex)
             {
@@ -72,7 +71,7 @@ namespace MoveMate.Service.Services
                 wallet.UpdatedAt = DateTime.Now;
                 await _unitOfWork.WalletRepository.UpdateAsync(wallet);
 
-                var walletResponse = _mapper.Map<WalletResponse>(wallet); 
+                var walletResponse = _mapper.Map<WalletResponse>(wallet);
                 return OperationResult<WalletResponse>.Success(walletResponse);
             }
             catch (Exception ex)
@@ -81,6 +80,5 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
-
     }
 }

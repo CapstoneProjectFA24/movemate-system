@@ -67,6 +67,7 @@ namespace MoveMate.Service.Utils
             List<DateTime> holidays = GetVietnamHolidays(date.Year);
             return holidays.Any(holiday => holiday.Date == date.Date);
         }
+
         public static long GetTimeStamp(DateTime date)
         {
             return (long)(date.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds;
@@ -107,7 +108,7 @@ namespace MoveMate.Service.Utils
         {
             return new DateTime(year, 4, 18);
         }
-        
+
         public static DateTime GetCurrentSEATime()
         {
             TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
@@ -122,7 +123,7 @@ namespace MoveMate.Service.Utils
             DateTime convertedTime = TimeZoneInfo.ConvertTime(value, tz);
             return convertedTime;
         }
-        
+
         public static TimeZoneInfo GetSEATimeZone()
         {
             TimeZoneInfo tz;
@@ -136,8 +137,8 @@ namespace MoveMate.Service.Utils
                 // Fallback to IANA time zone for Linux/Docker
                 tz = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
             }
+
             return tz;
         }
-
     }
 }

@@ -28,6 +28,7 @@ namespace MoveMate.Service.Utils
                 {
                     orderCode = -orderCode; // Make it positive if necessary
                 }
+
                 // Step 4: Limit orderCode to be less than 10000000000
                 const long maxOrderCode = 10000000000;
                 if (orderCode >= maxOrderCode)

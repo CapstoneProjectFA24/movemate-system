@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class WalletRepository : GenericRepository<Wallet>, IWalletRepository
@@ -22,11 +23,10 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(a => a.UserId == accountId)
                 .FirstOrDefaultAsync();
         }
+
         public void Detach(Wallet entity)
         {
             _context.Entry(entity).State = EntityState.Detached;
         }
-
-
     }
 }

@@ -14,9 +14,10 @@ namespace MoveMate.API.Controllers
     {
         private readonly IHouseTypeServices _houseTypeServices;
         private readonly IHouseTypeSettingServices _houseTypeSettingServices;
-       
 
-        public HouseTypeController(IHouseTypeServices houseTypeServices, IHouseTypeSettingServices houseTypeSettingServices)
+
+        public HouseTypeController(IHouseTypeServices houseTypeServices,
+            IHouseTypeSettingServices houseTypeSettingServices)
         {
             _houseTypeServices = houseTypeServices;
             _houseTypeSettingServices = houseTypeSettingServices;

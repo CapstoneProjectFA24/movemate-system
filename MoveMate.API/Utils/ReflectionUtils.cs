@@ -11,7 +11,8 @@ namespace MoveMate.API.Utils
     {
         public static void DoWithFields<T>(T source, Action<FieldInfo> action)
         {
-            foreach (var field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (var field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic |
+                                                      BindingFlags.Instance))
             {
                 action(field);
             }
@@ -27,7 +28,8 @@ namespace MoveMate.API.Utils
                 if (newValue != null && field.FieldType == newValue.GetType())
                 {
                     var fieldName = field.Name;
-                    var existingField = target.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var existingField = target.GetType().GetField(fieldName,
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                     if (existingField != null)
                     {
@@ -46,5 +48,3 @@ namespace MoveMate.API.Utils
         }
     }
 }
-
-

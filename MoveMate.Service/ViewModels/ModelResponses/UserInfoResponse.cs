@@ -14,5 +14,4 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? PermanentAddress { get; set; }
         public string? TemporaryResidenceAddress { get; set; }
     }
-
 }

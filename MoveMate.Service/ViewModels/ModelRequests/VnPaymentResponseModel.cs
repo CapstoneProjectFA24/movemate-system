@@ -1,11 +1,9 @@
-﻿
-using MoveMate.Domain.Enums;
+﻿using MoveMate.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 
 
 public class VnPaymentResponseModel
@@ -20,6 +18,7 @@ public class VnPaymentResponseModel
     public string Token { get; set; }
     public string VnPayResponseCode { get; set; }
 }
+
 public class RechagreResponseModel
 {
     public bool Success { get; set; }
@@ -31,6 +30,7 @@ public class RechagreResponseModel
     public string Token { get; set; }
     public string VnPayResponseCode { get; set; }
 }
+
 public class VnPaymentRequestModel
 {
     //public int AuctionId { get; set; }
@@ -59,4 +59,3 @@ public record PaymentRequestCreateModel
     public float Amount { get; init; }
     public PaymentMethod Type { get; init; }
 }
-

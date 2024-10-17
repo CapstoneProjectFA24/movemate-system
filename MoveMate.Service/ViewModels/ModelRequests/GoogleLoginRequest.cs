@@ -11,5 +11,4 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string Email { get; set; }
         public string ClientId { get; set; }
     }
-
 }

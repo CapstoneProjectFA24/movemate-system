@@ -5,10 +5,10 @@ using MoveMate.Service.Commons;
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
 
-public class GetAllTruckRequest: PaginationRequest<Truck>
+public class GetAllTruckRequest : PaginationRequest<Truck>
 {
     public string? SearchByCategory { get; set; }
-    
+
     public override Expression<Func<Truck, bool>> GetExpressions()
     {
         if (!string.IsNullOrWhiteSpace(SearchByCategory))
@@ -20,11 +20,10 @@ public class GetAllTruckRequest: PaginationRequest<Truck>
                 .Where(s => s.HasValue)
                 .Select(s => s.Value)
                 .ToArray();
-            
+
             Expression = Expression.And(entity => cateList.Cast<int?>().Contains(entity.TruckCategoryId));
-
         }
-        return Expression;
 
+        return Expression;
     }
 }

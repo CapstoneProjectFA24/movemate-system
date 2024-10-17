@@ -2,6 +2,7 @@
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.ViewModels.ModelRequests;
 
 namespace MoveMate.API.Controllers
@@ -12,6 +13,7 @@ namespace MoveMate.API.Controllers
         private readonly IServiceDetails _serviceDetails;
         private readonly IServiceServices _services;
         private readonly IMessageProducer _producer;
+        private readonly IRedisService _redisService;
 
         /// <summary>
         /// 
@@ -19,14 +21,15 @@ namespace MoveMate.API.Controllers
         /// <param name="serviceDetails"></param>
         /// <param name="services"></param>
         /// <param name="producer"></param>
-        public ServiceController(IServiceDetails serviceDetails, IServiceServices services, IMessageProducer producer)
+        /// <param name="redisService"></param>
+        public ServiceController(IServiceDetails serviceDetails, IServiceServices services, IMessageProducer producer,
+            IRedisService redisService)
         {
             _serviceDetails = serviceDetails;
             _services = services;
             _producer = producer;
+            _redisService = redisService;
         }
-
-
 
         /// <summary>
         /// CHORE : Retrieves a paginated list of all service not type truck.
@@ -92,8 +95,8 @@ namespace MoveMate.API.Controllers
             var response = await _services.GetById(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
-        
+
+
         /// <summary>
         /// FEATURE : Retrieves a paginated list of all services.
         /// </summary>
@@ -112,6 +115,14 @@ namespace MoveMate.API.Controllers
             var response = await _services.GetAll(request);
 
             _producer.SendingMessage<String>("hello");
+            string queueKey = "myQueue";
+
+            await _redisService.EnqueueAsync(queueKey, "Hello, World! my queue");
+            var key = DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + "mykey";
+            await _redisService.SetDataAsync(key, "Hello, World! my key");
+
+            await _redisService.EnqueueWithExpiryAsync("testqueue", "test");
+
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

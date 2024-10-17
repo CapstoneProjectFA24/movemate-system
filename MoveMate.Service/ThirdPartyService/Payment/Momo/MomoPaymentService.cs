@@ -46,7 +46,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
         public ClaimsPrincipal? CurrentUserPrincipal => _httpContextAccessor.HttpContext?.User;
 
-        public async Task<OperationResult<string>> CreatePaymentWithMomoAsync(int bookingId, int userId, string returnUrl)
+        public async Task<OperationResult<string>> CreatePaymentWithMomoAsync(int bookingId, int userId,
+            string returnUrl)
         {
             var operationResult = new OperationResult<string>();
 
@@ -56,6 +57,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 operationResult.AddError(StatusCode.BadRequest, "Return URL is required");
                 return operationResult;
             }
+
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
@@ -63,6 +65,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 operationResult.AddError(StatusCode.NotFound, "User not found");
                 return operationResult;
             }
+
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
             if (booking == null)
             {
@@ -70,21 +73,25 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 operationResult.AddError(StatusCode.NotFound, "Booking not found");
                 return operationResult;
             }
-            if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
+
+            if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
+                booking.Status != BookingEnums.COMPLETED.ToString())
             {
-                operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSITING or COMPLETED");
+                operationResult.AddError(StatusCode.BadRequest,
+                    "Booking status must be either DEPOSITING or COMPLETED");
                 return operationResult;
             }
 
-            int amount=  0;
+            int amount = 0;
             if (booking.Status == BookingEnums.DEPOSITING.ToString())
             {
-                amount = (int)booking.Deposit;          
+                amount = (int)booking.Deposit;
             }
-            else if (booking.Status == BookingEnums.COMPLETED.ToString()) 
+            else if (booking.Status == BookingEnums.COMPLETED.ToString())
             {
                 amount = (int)booking.TotalReal;
             }
+
             var newGuid = Guid.NewGuid();
             try
             {
@@ -101,7 +108,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 // Generate Momo payment link
                 var paymentUrl = await CreatePaymentAsync(payment);
 
-                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                operationResult =
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
@@ -114,7 +122,10 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
         public async Task<string> CreatePaymentAsync(MomoPayment payment)
         {
-            var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://", _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ?? throw new Exception("Server URL is not available");
+            var serverUrl =
+                string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
+                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
+                throw new Exception("Server URL is not available");
             var requestType = "payWithATM";
             var request = new MomoPaymentRequest
             {
@@ -131,12 +142,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 AutoCapture = true,
                 Lang = "vi",
                 orderExpireTime = 5
-        };
+            };
 
-            var rawSignature = $"accessKey={_momoSettings.AccessKey}&amount={request.Amount}&extraData={request.ExtraData}&ipnUrl={request.IpnUrl}&orderId={request.OrderId}&orderInfo={request.OrderInfo}&partnerCode={request.PartnerCode}&redirectUrl={request.RedirectUrl}&requestId={request.RequestId}&requestType={requestType}";
+            var rawSignature =
+                $"accessKey={_momoSettings.AccessKey}&amount={request.Amount}&extraData={request.ExtraData}&ipnUrl={request.IpnUrl}&orderId={request.OrderId}&orderInfo={request.OrderInfo}&partnerCode={request.PartnerCode}&redirectUrl={request.RedirectUrl}&requestId={request.RequestId}&requestType={requestType}";
             request.Signature = GetSignature(rawSignature, _momoSettings.SecretKey);
 
-            var httpContent = new StringContent(JsonSerializerUtils.Serialize(request), Encoding.UTF8, "application/json");
+            var httpContent =
+                new StringContent(JsonSerializerUtils.Serialize(request), Encoding.UTF8, "application/json");
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             var momoResponse = await httpClient.PostAsync(_momoSettings.PaymentEndpoint, httpContent);
             var responseContent = await momoResponse.Content.ReadAsStringAsync();
@@ -151,7 +164,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 }
             }
 
-            _logger.LogError($"[Momo payment] Error: There was an error creating payment with Momo. Response: {responseContent}");
+            _logger.LogError(
+                $"[Momo payment] Error: There was an error creating payment with Momo. Response: {responseContent}");
             throw new Exception($"[Momo payment] Error: {responseContent}");
         }
 
@@ -197,7 +211,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     Amount = (int)amount,
                     Info = "wallet",
                     PaymentReferenceId = $"wallet-{userId}-{newGuid}",
-                    returnUrl =returnUrl,
+                    returnUrl = returnUrl,
                     ExtraData = userId.ToString()
                 };
 
@@ -205,7 +219,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var paymentUrl = await CreatePaymentAsync(payment);
 
                 // Add logic to update user's wallet if payment is successful
-                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                operationResult =
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
@@ -217,11 +232,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
         }
 
 
-
-
-
-
-        public async Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context, MomoPaymentCallbackCommand command)
+        public async Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context,
+            MomoPaymentCallbackCommand command)
         {
             var result = new OperationResult<string>();
             int userId = int.Parse(command.ExtraData);
@@ -250,13 +262,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
+
                 var transaction = new MoveMate.Domain.Models.Transaction
                 {
                     WalletId = wallet.Id,
                     Amount = (float)command.Amount,
                     Status = PaymentEnum.SUCCESS.ToString(),
                     TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
-                    TransactionCode = command.TransId.ToString(), 
+                    TransactionCode = command.TransId.ToString(),
                     CreatedAt = DateTime.Now,
                     Resource = Resource.Momo.ToString(),
                     PaymentMethod = Resource.Momo.ToString(),
@@ -278,7 +291,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
         }
 
 
-        public async Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context, MomoPaymentCallbackCommand callback)
+        public async Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context,
+            MomoPaymentCallbackCommand callback)
         {
             var operationResult = new OperationResult<string>();
 
@@ -291,6 +305,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     operationResult.AddError(StatusCode.BadRequest, "Invalid OrderId format");
                     return operationResult;
                 }
+
                 var userId = int.Parse(callback.ExtraData);
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
                 if (booking == null)
@@ -299,12 +314,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     operationResult.AddError(StatusCode.NotFound, "Booking not found");
                     return operationResult;
                 }
-              
+
                 var payment = new Domain.Models.Payment
                 {
                     BookingId = bookingId,
                     Amount = (double)callback.Amount,
-                    Success = true, 
+                    Success = true,
                     BankCode = Resource.Momo.ToString()
                 };
 
@@ -322,7 +337,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
                 var transaction = new MoveMate.Domain.Models.Transaction
                 {
-                    PaymentId = payment.Id,            
+                    PaymentId = payment.Id,
                     Amount = (float)callback.Amount,
                     Status = PaymentEnum.SUCCESS.ToString(),
                     TransactionType = transType,
@@ -345,10 +360,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
                 }
+
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                operationResult = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, "Payment handled successfully");
+                operationResult = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok,
+                    "Payment handled successfully");
             }
             catch (Exception ex)
             {
@@ -358,8 +375,5 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
             return operationResult;
         }
-
-
-
     }
 }

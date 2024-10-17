@@ -12,12 +12,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 {
     public interface IVnPayService
     {
-
         Task<OperationResult<Transaction>> ProcessRechargePayment(IQueryCollection collections);
-        Task<OperationResult<string>> Recharge(HttpContext context, int userId, double amount, string returnUrl);  
+        Task<OperationResult<string>> Recharge(HttpContext context, int userId, double amount, string returnUrl);
         public Task<OperationResult<string>> CreatePaymentAsync(int bookingId, int userId, string returnUrl);
-        public Task<OperationResult<string>> HandleOrderPaymentAsync(IQueryCollection collections, VnPayPaymentCallbackCommand callback);
 
-
+        public Task<OperationResult<string>> HandleOrderPaymentAsync(IQueryCollection collections,
+            VnPayPaymentCallbackCommand callback);
     }
 }

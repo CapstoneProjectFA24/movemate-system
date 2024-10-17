@@ -29,8 +29,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
         private readonly PayOS _payOs;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWalletServices _walletServices;
-       
-        public PayOsService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PayOsService> logger, PayOS payOS, IWalletServices walletServices, IHttpContextAccessor httpContextAccessor)
+
+        public PayOsService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PayOsService> logger, PayOS payOS,
+            IWalletServices walletServices, IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = (UnitOfWork)unitOfWork;
             _mapper = mapper;
@@ -38,7 +39,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             _payOs = payOS;
             _walletServices = walletServices;
             _httpContextAccessor = httpContextAccessor;
-           
         }
 
         public async Task<OperationResult<string>> CreatePaymentLinkAsync(int bookingId, int userId, string returnUrl)
@@ -46,8 +46,10 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             var operationResult = new OperationResult<string>();
 
 
-
-            var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://", _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ?? throw new Exception("Server URL is not available");
+            var serverUrl =
+                string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
+                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
+                throw new Exception("Server URL is not available");
 
 
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
@@ -65,11 +67,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             }
 
             if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
-                if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
+                if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
+                    booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSITING or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest,
+                        "Booking status must be either DEPOSITING or COMPLETED");
                     return operationResult;
                 }
+
             string description = "";
             int amount = 0;
             if (booking.Status == BookingEnums.DEPOSITING.ToString())
@@ -77,7 +82,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 amount = (int)booking.Deposit;
                 description = "order-deposit";
             }
-            else if(booking.Status == BookingEnums.COMPLETED.ToString())
+            else if (booking.Status == BookingEnums.COMPLETED.ToString())
             {
                 amount = (int)booking.TotalReal;
                 description = "order-payment";
@@ -89,9 +94,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             {
                 newGuid = Guid.NewGuid().GetHashCode();
             } while (newGuid <= 0);
+
             try
             {
-                var urlReturn = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}";
+                var urlReturn =
+                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: amount,
@@ -103,13 +110,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     buyerEmail: user.Email,
                     buyerPhone: user.Phone,
                     buyerAddress: null,
-                expiredAt: null
+                    expiredAt: null
                 );
 
                 var paymentResult = await _payOs.createPaymentLink(paymentData);
                 var paymentUrl = paymentResult.checkoutUrl;
 
-                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                operationResult =
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
@@ -137,16 +145,22 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 operationResult.AddError(StatusCode.NotFound, "User not found");
                 return operationResult;
             }
-            var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://", _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ?? throw new Exception("Server URL is not available");
+
+            var serverUrl =
+                string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
+                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
+                throw new Exception("Server URL is not available");
 
             long newGuid = Guid.NewGuid().GetHashCode();
             do
             {
                 newGuid = Guid.NewGuid().GetHashCode();
             } while (newGuid <= 0);
+
             try
             {
-                var urlReturn = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&Type=wallet&BuyerEmail={user.Email}&Amount={amount}";
+                var urlReturn =
+                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&Type=wallet&BuyerEmail={user.Email}&Amount={amount}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: (int)amount,
@@ -158,13 +172,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     buyerEmail: user.Email,
                     buyerPhone: user.Phone,
                     buyerAddress: null,
-                expiredAt: null
+                    expiredAt: null
                 );
 
                 var paymentResult = await _payOs.createPaymentLink(paymentData);
                 var paymentUrl = paymentResult.checkoutUrl;
 
-                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                operationResult =
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
@@ -174,7 +189,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             }
         }
 
-        public async Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context, PayOsPaymentCallbackCommand command)
+        public async Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context,
+            PayOsPaymentCallbackCommand command)
         {
             var result = new OperationResult<string>();
             string email = command.BuyerEmail;
@@ -193,10 +209,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             }
 
             // Check if this transaction has already been processed
-            var existingTransaction = await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
+            var existingTransaction =
+                await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
             if (existingTransaction != null)
             {
-                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.", "Already Processed");
+                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.",
+                    "Already Processed");
                 return result; // Exit without updating the wallet
             }
 
@@ -240,7 +258,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             return result;
         }
 
-        public async Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context, PayOsPaymentCallbackCommand command)
+        public async Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context,
+            PayOsPaymentCallbackCommand command)
         {
             var result = new OperationResult<string>();
 
@@ -255,14 +274,17 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             int bookingId = command.BookingId;
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, user.Id);
             if (booking == null)
-            {        
+            {
                 result.AddError(StatusCode.NotFound, "Booking not found");
                 return result;
             }
-            var existingTransaction = await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
+
+            var existingTransaction =
+                await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
             if (existingTransaction != null)
             {
-                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.", "Already Processed");
+                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.",
+                    "Already Processed");
                 return result; // Exit without updating the wallet
             }
 
@@ -313,10 +335,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
                 }
+
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                result = OperationResult<string>.Success($"{command.returnUrl}?isSuccess=true", StatusCode.Ok, "Payment handled successfully");
+                result = OperationResult<string>.Success($"{command.returnUrl}?isSuccess=true", StatusCode.Ok,
+                    "Payment handled successfully");
             }
             catch (Exception ex)
             {
@@ -325,7 +349,5 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
             return result;
         }
-
-
     }
 }

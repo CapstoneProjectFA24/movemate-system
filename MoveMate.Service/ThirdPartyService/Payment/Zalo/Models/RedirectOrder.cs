@@ -1,4 +1,5 @@
 ﻿namespace MoveMate.Service.ThirdPartyService.Payment.Zalo.Models;
+
 public class RedirectOrder
 {
     public int Appid { get; set; }

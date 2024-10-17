@@ -30,23 +30,22 @@ public abstract class PaginationRequest<T> where T : class
     public string? SortColumn { get; set; } = "CreatedAt";
 
     public SortDirection SortDir { get; set; } = SortDirection.Desc;
- 
+
     protected Expression<Func<T, bool>> Expression = PredicateBuilder.New<T>(true);
-    
+
     public abstract Expression<Func<T, bool>> GetExpressions();
 
     public Func<IQueryable<T>, IOrderedQueryable<T>>? GetOrder()
     {
         if (string.IsNullOrWhiteSpace(SortColumn)) return null;
-        
+
         return query => query.OrderBy($"{SortColumn} {SortDir.ToString().ToLower()}");
     }
 
     public string? GetDynamicOrder()
     {
         if (string.IsNullOrWhiteSpace(SortColumn)) return null;
-        
+
         return $"{SortColumn} {SortDir.ToString().ToLower()}";
     }
-    
 }

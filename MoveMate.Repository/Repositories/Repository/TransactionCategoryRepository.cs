@@ -8,11 +8,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Domain.DBContext;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class TransactionRepository : GenericRepository<Transaction>, ITransactionRepository
     {
         private MoveMateDbContext _dbContext;
+
         public TransactionRepository(MoveMateDbContext context) : base(context)
         {
             this._dbContext = context;
@@ -22,7 +24,5 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             return await _dbSet.FirstOrDefaultAsync(t => t.TransactionCode == transactionCode);
         }
-
-
     }
 }

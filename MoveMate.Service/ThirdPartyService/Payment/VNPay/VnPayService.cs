@@ -24,7 +24,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly VnPaySettings _vnPaySettings;
 
-        public VnPayService(IConfiguration config, IUserServices userService, IBookingServices bookingServices, IWalletServices walletService, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, VnPaySettings vnPaySettings)
+        public VnPayService(IConfiguration config, IUserServices userService, IBookingServices bookingServices,
+            IWalletServices walletService, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor,
+            VnPaySettings vnPaySettings)
         {
             _config = config;
             _userService = userService;
@@ -36,7 +38,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         }
 
 
-        public async Task<OperationResult<string>> Recharge(HttpContext context, int userId, double amount, string returnUrl)
+        public async Task<OperationResult<string>> Recharge(HttpContext context, int userId, double amount,
+            string returnUrl)
         {
             var result = new OperationResult<string>();
 
@@ -71,7 +74,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 vnpay.AddRequestData("vnp_Locale", _config["VnPay:Locale"]);
                 vnpay.AddRequestData("vnp_OrderInfo", wallet.Id.ToString());
                 vnpay.AddRequestData("vnp_OrderType", PaymentMethod.RECHARGE.ToString());
-                vnpay.AddRequestData("vnp_ReturnUrl", $"{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}");
+                vnpay.AddRequestData("vnp_ReturnUrl",
+                    $"{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}");
                 vnpay.AddRequestData("vnp_TxnRef", time.Ticks.ToString());
 
                 // Create payment URL
@@ -167,6 +171,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
                     return result;
                 }
+
                 // Commit the transaction if everything is successful
                 await transaction.CommitAsync();
                 result.Payload = payment;
@@ -180,7 +185,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
             return result;
         }
-
 
 
         public async Task<OperationResult<string>> CreatePaymentAsync(int bookingId, int userId, string returnUrl)
@@ -209,9 +213,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     return operationResult;
                 }
 
-                if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
+                if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
+                    booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest, "Booking status must be either DEPOSITING or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest,
+                        "Booking status must be either DEPOSITING or COMPLETED");
                     return operationResult;
                 }
 
@@ -227,15 +233,17 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     amount = (int)booking.TotalReal;
                     type = PaymentMethod.PAYMENT.ToString();
                 }
+
                 var newGuid = Guid.NewGuid();
                 var time = DateTime.Now;
 
                 var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
-                                              _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent())
-                                              ?? throw new Exception("Server URL is not available");
+                                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent())
+                                ?? throw new Exception("Server URL is not available");
 
                 var pay = new VnPayLibrary();
-                pay.AddRequestData("vnp_ReturnUrl", $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}");
+                pay.AddRequestData("vnp_ReturnUrl",
+                    $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}");
                 pay.AddRequestData("vnp_Version", _vnPaySettings.Version);
                 pay.AddRequestData("vnp_Command", _vnPaySettings.Command);
                 pay.AddRequestData("vnp_TmnCode", _vnPaySettings.TmnCode);
@@ -250,7 +258,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 var paymentUrl = pay.CreateRequestUrl(_vnPaySettings.PaymentEndpoint, _vnPaySettings.HashSecret);
 
-                operationResult = OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                operationResult =
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
                 return operationResult;
             }
             catch (Exception ex)
@@ -262,10 +271,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             }
         }
 
-        public async Task<OperationResult<string>> HandleOrderPaymentAsync(IQueryCollection collections, VnPayPaymentCallbackCommand callback)
+        public async Task<OperationResult<string>> HandleOrderPaymentAsync(IQueryCollection collections,
+            VnPayPaymentCallbackCommand callback)
         {
             var result = new OperationResult<string>();
-          
+
             try
             {
                 var vnpay = new VnPayLibrary();
@@ -294,6 +304,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.BadRequest, "Invalid booking ID");
                     return result;
                 }
+
                 int userId = callback.userId;
 
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
@@ -355,10 +366,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
                 }
+
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                result = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, "Payment handled successfully");
+                result = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok,
+                    "Payment handled successfully");
             }
             catch (Exception ex)
             {
@@ -369,7 +382,5 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
             return result;
         }
-
-
     }
 }

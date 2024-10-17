@@ -10,8 +10,6 @@ namespace MoveMate.Service.Exeptions
     {
         public OptimisticException(string message) : base(message)
         {
-
         }
     }
-
 }

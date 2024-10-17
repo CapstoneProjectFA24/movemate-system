@@ -15,11 +15,11 @@ namespace MoveMate.Repository.Repositories.GenericRepository
         Task<TEntity> AddAsync(TEntity entity);
 
         IEnumerable<TEntity> Get(
-           Expression<Func<TEntity, bool>> filter = null,
-           Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
-           string includeProperties = "",
-           int? pageIndex = null,
-           int? pageSize = null);
+            Expression<Func<TEntity, bool>> filter = null,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
+            string includeProperties = "",
+            int? pageIndex = null,
+            int? pageSize = null);
 
         PagedResult<TEntity> GetWithPagination(
             Expression<Func<TEntity, bool>> filter = null,
@@ -27,6 +27,7 @@ namespace MoveMate.Repository.Repositories.GenericRepository
             string includeProperties = "",
             int? pageIndex = null,
             int? pageSize = null);
+
         Task<TEntity> UpdateAsync(TEntity entity);
         Task UpdateEntityAsync(TEntity entity);
         void Update(TEntity entity);
@@ -35,11 +36,18 @@ namespace MoveMate.Repository.Repositories.GenericRepository
         Task AddRangeAsync(List<TEntity> entities);
         void SoftRemoveRange(List<TEntity> entities);
         TEntity Remove(TEntity entity);
-        public IQueryable<TEntity> FilterAll(bool? isAscending, string? orderBy = null, Expression<Func<TEntity, bool>>? predicate = null, string[]? includeProperties = null, int pageIndex = 0, int pageSize = 10);
-        public IQueryable<TEntity> GetAllWithoutPaging(bool? isAscending, string? orderBy = null, Expression<Func<TEntity, bool>>? predicate = null, string[]? includeProperties = null);
-        IQueryable<TEntity> FilterByExpression(Expression<Func<TEntity, bool>> predicate, string[]? includeProperties = null);
 
-        Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>>? predicate, params Expression<Func<TEntity, object>>[]? includeProperties);
+        public IQueryable<TEntity> FilterAll(bool? isAscending, string? orderBy = null,
+            Expression<Func<TEntity, bool>>? predicate = null, string[]? includeProperties = null, int pageIndex = 0,
+            int pageSize = 10);
 
+        public IQueryable<TEntity> GetAllWithoutPaging(bool? isAscending, string? orderBy = null,
+            Expression<Func<TEntity, bool>>? predicate = null, string[]? includeProperties = null);
+
+        IQueryable<TEntity> FilterByExpression(Expression<Func<TEntity, bool>> predicate,
+            string[]? includeProperties = null);
+
+        Task<TEntity?> FindSingleAsync(Expression<Func<TEntity, bool>>? predicate,
+            params Expression<Func<TEntity, object>>[]? includeProperties);
     }
 }
