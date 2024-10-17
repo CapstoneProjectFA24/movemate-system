@@ -889,7 +889,7 @@ namespace MoveMate.Service.Services
                     amount += nullTotalFee;
 
                     amount = (double)(amount -
-                                      amount * (service.DiscountRate ?? 0) / 100) !;
+                                      amount * (service.DiscountRate ?? 0) / 100)!;
 
                     totalServices += amount;
 
@@ -967,10 +967,10 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.COMPLETED.ToString();
                         break;
                     case var status when status == BookingDetailStatus.COMPLETED.ToString():
-                        if (booking.IsRoundTrip == true && booking.IsRoundTripCompleted == false)
+                        if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
                         {
                             nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
-                            booking.IsRoundTripCompleted = true; 
+                            bookingDetail.IsRoundTripCompleted = true;
                         }
                         break;
 
@@ -1043,15 +1043,15 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.COMPLETED.ToString();
                         break;
                     case var status when status == BookingDetailStatus.COMPLETED.ToString():
-                        if (booking.IsRoundTripCompleted == false)
+                        if (booking.IsUserConfirm == true && booking.IsRoundTrip == false)
                         {
                             nextStatus = BookingDetailStatus.CONFIRM.ToString();
-                            booking.IsRoundTripCompleted = true;
+                            booking.IsRoundTrip = true;
+                            bookingDetail.IsRoundTripCompleted = true;
                         }
                         break;
                     case var status when status == BookingDetailStatus.CONFIRM.ToString():
                         nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
-                        booking.IsRoundTrip = true;
                         break;
                     case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
                         nextStatus = BookingDetailStatus.ARRIVED.ToString();
@@ -1120,7 +1120,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        
+
 
         public async Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId)
         {
@@ -1135,12 +1135,12 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                //var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
-                //if (booking == null)
-                //{
-                //    result.AddError(StatusCode.NotFound, "Booking not found.");
-                //    return result;
-                //}
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    return result;
+                }
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -1164,7 +1164,7 @@ namespace MoveMate.Service.Services
                     case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
                         nextStatus = BookingDetailStatus.IN_TRANSIT.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.IN_TRANSIT.ToString():                   
+                    case var status when status == BookingDetailStatus.IN_TRANSIT.ToString():
                         nextStatus = BookingDetailStatus.DELIVERED.ToString();
                         break;
 
@@ -1174,6 +1174,17 @@ namespace MoveMate.Service.Services
                     case var status when status == BookingDetailStatus.UNLOAD.ToString():
                         nextStatus = BookingDetailStatus.COMPLETED.ToString();
                         break;
+                    case var status when status == BookingDetailStatus.COMPLETED.ToString():
+                        if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
+                        {
+                            nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
+                            bookingDetail.IsRoundTripCompleted = true;
+                        }
+                        break;
+
+                    case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
+                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                        break;
 
                     default:
                         result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
@@ -1182,7 +1193,98 @@ namespace MoveMate.Service.Services
 
                 bookingDetail.Status = nextStatus;
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
-                //_unitOfWork.BookingRepository.Update(booking);
+                _unitOfWork.BookingRepository.Update(booking);
+
+                await _unitOfWork.SaveChangesAsync();
+
+                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating booking status");
+                throw;
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId)
+        {
+            var result = new OperationResult<BookingDetailsResponse>();
+
+            try
+            {
+                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
+                if (bookingDetail == null)
+                {
+                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    return result;
+                }
+
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    return result;
+                }
+                string nextStatus = bookingDetail.Status;
+
+                switch (bookingDetail.Status)
+                {
+                    case var status when status == BookingDetailStatus.WAITING.ToString():
+                        nextStatus = BookingDetailStatus.ASSIGNED.ToString();
+                        break;
+
+                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
+                        nextStatus = BookingDetailStatus.ENROUTE.ToString();
+                        break;
+
+                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
+                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                        break;
+
+                    case var status when status == BookingDetailStatus.ARRIVED.ToString():
+                        nextStatus = BookingDetailStatus.IN_PROGRESS.ToString();
+                        break;
+
+                    case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
+                        nextStatus = BookingDetailStatus.IN_TRANSIT.ToString();
+                        break;
+                    case var status when status == BookingDetailStatus.IN_TRANSIT.ToString():
+                        nextStatus = BookingDetailStatus.DELIVERED.ToString();
+                        break;
+
+                    case var status when status == BookingDetailStatus.DELIVERED.ToString():
+                        nextStatus = BookingDetailStatus.UNLOAD.ToString();
+                        break;
+                    case var status when status == BookingDetailStatus.UNLOAD.ToString():
+                        nextStatus = BookingDetailStatus.COMPLETED.ToString();
+                        break;
+                    case var status when status == BookingDetailStatus.COMPLETED.ToString():
+                        if (booking.IsUserConfirm == true && booking.IsRoundTrip == false)
+                        {
+                            nextStatus = BookingDetailStatus.CONFIRM.ToString();
+                            bookingDetail.IsRoundTripCompleted = true;
+                            booking.IsRoundTrip = true;
+                        }
+                        break;
+                    case var status when status == BookingDetailStatus.CONFIRM.ToString():
+                        nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
+                        break;
+
+                    case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
+                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                        break;
+
+                    default:
+                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        return result;
+                }
+
+                bookingDetail.Status = nextStatus;
+                _unitOfWork.BookingDetailRepository.Update(bookingDetail);
+                _unitOfWork.BookingRepository.Update(booking);
 
                 await _unitOfWork.SaveChangesAsync();
 
@@ -1406,5 +1508,35 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<BookingResponse>> UserConfirmRoundTrip(int bookingId)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    return result;
+                }
+
+                booking.IsUserConfirm = true;
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+                var response = _mapper.Map<BookingResponse>(booking);
+                result.AddResponseStatusCode(StatusCode.Ok, "Confirm round trip successfully.", response);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirm round trip");
+                throw;
+            }
+            return result;
+        }
+
+
     }
 }

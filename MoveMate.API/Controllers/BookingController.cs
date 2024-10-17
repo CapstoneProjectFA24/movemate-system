@@ -181,6 +181,18 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        
+
+        /// <summary>
+        /// TEST: User confirm round trip  
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("user/confirm-round-trip/{id}")]
+        public async Task<IActionResult> UserConfirmRoundTrip(int id)
+        {
+            var response = await _bookingServices.UserConfirmRoundTrip(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
     }
 }
