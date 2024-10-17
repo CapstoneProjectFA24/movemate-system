@@ -200,11 +200,16 @@ namespace MoveMate.Service.Services
                 entity.Total = total;
                 entity.UserId = int.Parse(userId);
 
-                if (request.BookingAt != null)
+                DateTime now = DateTime.Now;
+
+                if ((request.BookingAt.Value - now).TotalHours <= 3 && (request.BookingAt.Value - now).TotalHours >= 0)
                 {
-                    
+                    entity.TypeBooking = TypeBookingEnums.NOW.ToString();
                 }
-                entity.TypeBooking = TypeBookingEnums.NOW.ToString();
+                else
+                {
+                    entity.TypeBooking = TypeBookingEnums.DELAY.ToString();
+                }
 
                 await _unitOfWork.BookingRepository.AddAsync(entity);
                 var checkResult = _unitOfWork.Save();
@@ -354,7 +359,8 @@ namespace MoveMate.Service.Services
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
+                    result.AddError(StatusCode.NotFound,
+                        $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
@@ -416,7 +422,8 @@ namespace MoveMate.Service.Services
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
+                    result.AddError(StatusCode.NotFound,
+                        $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
