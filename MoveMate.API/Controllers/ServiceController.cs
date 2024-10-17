@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
@@ -42,7 +43,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200">List Service is Empty!</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("not-type-truck")]
-
+        [Authorize]
         // get all
         public async Task<IActionResult> GetAllNotTruck([FromQuery] GetAllServiceNotTruckRequest request)
         {
@@ -64,7 +65,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200">List Service has truck type is Empty!</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("truck-category")]
-
+        [Authorize]
         // get all
         public async Task<IActionResult> GetAllServiceTruck([FromQuery] GetAllServiceTruckType request)
         {
@@ -90,6 +91,7 @@ namespace MoveMate.API.Controllers
         /// <response code="404">Service not found</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetServiceById(int id)
         {
             var response = await _services.GetById(id);
@@ -108,6 +110,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200-1">List Service is Empty!</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
+        [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
