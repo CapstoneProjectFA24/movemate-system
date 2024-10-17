@@ -13,7 +13,7 @@ namespace MoveMate.Service.IServices
     {
         public Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request);
         public Task<OperationResult<BookingResponse>> GetById(int id);
-        Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request);
+        Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request, string userId);
         Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(BookingValuationRequest request);
         Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(BookingValuationRequest request);
 

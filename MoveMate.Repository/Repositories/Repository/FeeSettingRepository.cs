@@ -34,6 +34,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<FeeSetting>> GetOBHFeeSettingsAsync()
         {
+
+            string outside = TypeFeeEnums.OUTSIDE_BUSINESS_HOURS.ToString();
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Type == TypeFeeEnums.OUTSIDE_BUSINESS_HOURS.ToString() && f.IsActived == true)
                 .ToListAsync();

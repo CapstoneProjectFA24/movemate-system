@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
@@ -25,6 +26,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("")]
+        [Authorize]
 
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllBookingRequest request)
@@ -64,12 +66,12 @@ namespace MoveMate.API.Controllers
         ///           "floorsNumber": "3",
         ///           "serviceDetails": [
         ///             {
-        ///               "id": 52,
+        ///               "serviceId": 52,
         ///               "isQuantity": true,
         ///               "quantity": 1
         ///             },
         ///             {
-        ///               "id": 35,
+        ///               "serviceId": 35,
         ///               "isQuantity": true,
         ///               "quantity": 1
         ///             }
@@ -96,12 +98,22 @@ namespace MoveMate.API.Controllers
 
         // Post - register booking
         [HttpPost("register-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
-            var response = await _bookingServices.RegisterBooking(request);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value).ToString();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Message = "Invalid user ID in token." });
+            }
+
+            var response = await _bookingServices.RegisterBooking(request, userId);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
@@ -117,6 +129,7 @@ namespace MoveMate.API.Controllers
 
         // Post - valuation distance booking
         [HttpPost("valuation-distance-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationDistanceBooking(BookingValuationRequest request)
         {
@@ -135,6 +148,7 @@ namespace MoveMate.API.Controllers
 
         // Post - valuation distance booking
         [HttpPost("valuation-floor-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
         {
@@ -152,6 +166,7 @@ namespace MoveMate.API.Controllers
 
         // Post - valuation distance booking
         [HttpPost("valuation-booking")]
+        [Authorize]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
         {
@@ -166,6 +181,7 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetBookingById(int id)
         {
             var response = await _bookingServices.GetById(id);
@@ -178,6 +194,7 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("cancel-booking/{id}")]
+        [Authorize]
         public async Task<IActionResult> CancelBookingById(BookingCancelRequest request)
         {
             var response = await _bookingServices.CancelBooking(request);
@@ -191,11 +208,11 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("user/confirm-round-trip/{id}")]
+        [Authorize]
         public async Task<IActionResult> UserConfirmRoundTrip(int id)
         {
             var response = await _bookingServices.UserConfirmRoundTrip(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-
     }
 }
