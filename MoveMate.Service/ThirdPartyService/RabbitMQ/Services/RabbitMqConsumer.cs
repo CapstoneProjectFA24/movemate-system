@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
@@ -18,12 +19,13 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
     private readonly ILogger<RabbitMqConsumer> _logger;
     private readonly int _maxRetryAttempts;
     private readonly string? _deadLetterQueue;
-
+    private readonly IServiceProvider _serviceProvider;
     public RabbitMqConsumer(IRabbitMqConnection connection, ILogger<RabbitMqConsumer> logger,
-        IConfiguration configuration)
+        IConfiguration configuration, IServiceProvider serviceProvider)
     {
         _connection = connection;
         _logger = logger;
+        _serviceProvider = serviceProvider;
         _channel = _connection.Connection.CreateModel();
         _maxRetryAttempts = configuration.GetValue<int>("RabbitMQ:MaxRetryAttempts");
         _deadLetterQueue = configuration.GetValue<string>("RabbitMQ:DeadLetterQueue");
@@ -31,18 +33,26 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     public void StartConsuming<T>() where T : class
     {
-        var methods = typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.Public);
-
-        foreach (var method in methods)
+        // Tạo một scope mới
+        using (var scope = _serviceProvider.CreateScope())
         {
-            var consumerAttribute = method.GetCustomAttribute<ConsumerAttribute>();
-            if (consumerAttribute != null)
+            // Lấy dịch vụ T từ scope
+            var worker = scope.ServiceProvider.GetRequiredService<T>();
+            var methods = typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.Public);
+
+            foreach (var method in methods)
             {
-                string queueName = consumerAttribute.QueueName;
-                StartListening(queueName, method, Activator.CreateInstance<T>());
+                var consumerAttribute = method.GetCustomAttribute<ConsumerAttribute>();
+                if (consumerAttribute != null)
+                {
+                    string queueName = consumerAttribute.QueueName;
+                    // Sử dụng worker đã lấy từ scope, thay vì khởi tạo mới
+                    StartListening(queueName, method, worker);
+                }
             }
         }
     }
+
 
     private void DeclareQueueIfNotExists(string queueName)
     {
@@ -61,6 +71,7 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     private void StartListening(string queueName, MethodInfo method, object instance)
     {
+        
         DeclareQueueIfNotExists(queueName);
 
         var consumer = new EventingBasicConsumer(_channel);
