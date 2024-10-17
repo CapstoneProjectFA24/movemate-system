@@ -102,8 +102,6 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
-        [Authorize]
-
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
@@ -216,6 +214,5 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.UserConfirmRoundTrip(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-
     }
 }
