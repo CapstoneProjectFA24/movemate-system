@@ -49,21 +49,9 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string FloorsNumber { get; set; }
         [FirestoreProperty] public bool IsManyItems { get; set; }
 
-        public string EstimatedTotalWeight { get; set; }
-
         public bool IsCancel { get; set; }
 
         public string CancelReason { get; set; }
-
-        public string EstimatedWeight { get; set; }
-
-        public string EstimatedHeight { get; set; }
-
-        public string EstimatedWidth { get; set; }
-
-        public string EstimatedLength { get; set; }
-
-        public string EstimatedVolume { get; set; }
 
         public bool IsPorter { get; set; }
         [FirestoreProperty] public bool IsRoundTrip { get; set; }
@@ -71,6 +59,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public double TotalFee { get; set; }
 
         public string FeeInfo { get; set; }
+        [FirestoreProperty]
+        public bool? IsReviewOnline { get; set; }
 
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<BookingDetailsResponse> BookingDetails { get; set; }

@@ -183,5 +183,7 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.CancelBooking(request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        
     }
 }
