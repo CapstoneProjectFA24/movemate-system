@@ -20,9 +20,10 @@ public class AssginReiewWorker
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    [Consumer("movemate.booking_assign_review_local")]
+    [Consumer("movemate.booking_assign_review")]
     public async Task  HandleMessage(int message)
     {
+        await Task.Delay(TimeSpan.FromSeconds(3));
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
