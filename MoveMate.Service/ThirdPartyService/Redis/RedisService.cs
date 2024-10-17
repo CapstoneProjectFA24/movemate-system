@@ -80,31 +80,75 @@ public class RedisService : IRedisService
     public async Task EnqueueAsync<T>(string queueKey, T value, TimeSpan? expiry = null)
     {
         var jsonData = JsonSerializer.Serialize(value);
+        var expiryTime = expiry ?? TimeSpan.FromHours(20); 
 
+        try
+        {
+            var existingItems = await _database.ListRangeAsync(queueKey);
+            
+            foreach (var item in existingItems)
+            {
+                var existingValue = JsonSerializer.Deserialize<T>(item);
+                if (EqualityComparer<T>.Default.Equals(existingValue, value))
+                {
+                    Console.WriteLine($"Duplicate item found in queue '{queueKey}'. Item not enqueued: {jsonData}");
+                    return;
+                }
+            }
+            
+            await _database.ListRightPushAsync(queueKey, jsonData);
+            Console.WriteLine($"Successfully enqueued data to queue '{queueKey}': {jsonData}");
+            
+            var expiryResult = await _database.KeyExpireAsync(queueKey, expiryTime);
+            if (expiryResult)
+            {
+                Console.WriteLine($"Successfully set expiry for queue '{queueKey}' to {expiryTime.TotalHours} hours.");
+            }
+            else
+            {
+                Console.WriteLine($"Failed to set expiry for queue '{queueKey}'.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while enqueueing to queue '{queueKey}': {ex.Message}");
+        }
+    }
+    
+    public async Task EnqueueMultipleAsync<T>(string queueKey, IEnumerable<T> values, TimeSpan? expiry = null)
+    {
         var expiryTime = expiry ?? TimeSpan.FromHours(20);
 
-        await _database.ListRightPushAsync(queueKey, jsonData);
-
-        await _database.KeyExpireAsync(queueKey, expiryTime);
-    }
-
-
-    public async Task EnqueueMultipleAsync<T>(string queueKey, IEnumerable<T> values)
-    {
-        var batch = _database.CreateBatch();
-
-        var tasks = new List<Task>();
-
-        foreach (var value in values)
+        try
         {
-            var jsonData = JsonSerializer.Serialize(value);
+            var existingItems = await _database.ListRangeAsync(queueKey);
+            var existingValues = existingItems.Select(item => JsonSerializer.Deserialize<T>(item)).ToHashSet();
 
-            tasks.Add(batch.ListRightPushAsync(queueKey, jsonData));
+            foreach (var value in values)
+            {
+                if (existingValues.Contains(value))
+                {
+                    Console.WriteLine($"Duplicate item found in queue '{queueKey}'. Item not enqueued: {JsonSerializer.Serialize(value)}");
+                    continue; 
+                }
+                
+                await EnqueueAsync(queueKey, value, expiryTime);
+            }
+            
+            var expiryResult = await _database.KeyExpireAsync(queueKey, expiryTime);
+            if (expiryResult)
+            {
+                Console.WriteLine($"Successfully set expiry for queue '{queueKey}' to {expiryTime.TotalHours} hours.");
+            }
+            else
+            {
+                Console.WriteLine($"Failed to set expiry for queue '{queueKey}'.");
+            }
         }
-
-        batch.Execute();
-
-        await Task.WhenAll(tasks);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while enqueueing to queue '{queueKey}': {ex.Message}");
+        }
     }
 
     public async Task<T?> DequeueAsync<T>(string queueKey)

@@ -15,6 +15,7 @@ using Hangfire;
 using Microsoft.Extensions.Logging.Abstractions;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
+using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.Utils;
@@ -123,7 +124,8 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: Register a new booking in the system.
 
-        public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request)
+        public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request,
+            string userId)
         {
             var result = new OperationResult<BookingResponse>();
             string status = BookingEnums.PENDING.ToString();
@@ -196,7 +198,12 @@ namespace MoveMate.Service.Services
                 entity.TotalFee = totalFee;
                 entity.TotalReal = total;
                 entity.Total = total;
+                entity.UserId = int.Parse(userId);
 
+                if (request.BookingAt != null)
+                {
+                    
+                }
                 entity.TypeBooking = TypeBookingEnums.NOW.ToString();
 
                 await _unitOfWork.BookingRepository.AddAsync(entity);
@@ -210,7 +217,7 @@ namespace MoveMate.Service.Services
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
 
-                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
                 }
@@ -343,11 +350,11 @@ namespace MoveMate.Service.Services
             foreach (var serviceDetailRequest in request.ServiceDetails)
             {
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
@@ -405,11 +412,11 @@ namespace MoveMate.Service.Services
             foreach (var serviceDetailRequest in request.ServiceDetails)
             {
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
@@ -844,12 +851,12 @@ namespace MoveMate.Service.Services
             {
                 // Check Service
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
 
                 if (service == null)
                 {
-                    throw new Exception(
-                        $"Service with id: {serviceDetailRequest.Id} not found!"); // Consider throwing an exception for better error handling
+                    throw new NotFoundException(
+                        $"Service with id: {serviceDetailRequest.ServiceId} not found!"); // Consider throwing an exception for better error handling
                 }
 
                 // Set var
@@ -899,7 +906,7 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = amount,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
+                        IsQuantity = service.IsQuantity,
                     };
 
                     serviceDetails.Add(serviceDetail);
@@ -911,7 +918,7 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = price,
-                        IsQuantity = serviceDetailRequest.IsQuantity,
+                        IsQuantity = service.IsQuantity,
                     };
 
                     serviceDetails.Add(serviceDetail);
@@ -944,6 +951,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, "Booking not found.");
                     return result;
                 }
+
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -973,6 +981,7 @@ namespace MoveMate.Service.Services
                             nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
                             bookingDetail.IsRoundTripCompleted = true;
                         }
+
                         break;
 
                     case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
@@ -980,7 +989,8 @@ namespace MoveMate.Service.Services
                         break;
 
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1001,6 +1011,7 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
         public async Task<OperationResult<BookingDetailsResponse>> DriverUpdateRoundTripBooking(int bookingId)
         {
             var result = new OperationResult<BookingDetailsResponse>();
@@ -1020,6 +1031,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, "Booking not found.");
                     return result;
                 }
+
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -1050,6 +1062,7 @@ namespace MoveMate.Service.Services
                             booking.IsRoundTrip = true;
                             bookingDetail.IsRoundTripCompleted = true;
                         }
+
                         break;
                     case var status when status == BookingDetailStatus.CONFIRM.ToString():
                         nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
@@ -1058,7 +1071,8 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.ARRIVED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1090,6 +1104,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, "BookingDetail not found.");
                     return result;
                 }
+
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -1102,9 +1117,11 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.FAILED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
+
                 bookingDetail.Status = nextStatus;
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 await _unitOfWork.SaveChangesAsync();
@@ -1120,7 +1137,6 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
 
 
         public async Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId)
@@ -1142,6 +1158,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, "Booking not found.");
                     return result;
                 }
+
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -1181,6 +1198,7 @@ namespace MoveMate.Service.Services
                             nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
                             bookingDetail.IsRoundTripCompleted = true;
                         }
+
                         break;
 
                     case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
@@ -1188,7 +1206,8 @@ namespace MoveMate.Service.Services
                         break;
 
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1229,6 +1248,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, "Booking not found.");
                     return result;
                 }
+
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -1269,6 +1289,7 @@ namespace MoveMate.Service.Services
                             bookingDetail.IsRoundTripCompleted = true;
                             booking.IsRoundTrip = true;
                         }
+
                         break;
                     case var status when status == BookingDetailStatus.CONFIRM.ToString():
                         nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
@@ -1279,7 +1300,8 @@ namespace MoveMate.Service.Services
                         break;
 
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1333,7 +1355,8 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.REVIEWED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1392,7 +1415,8 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.REVIEWED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1443,7 +1467,8 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.REFUNDED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1490,7 +1515,8 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.REVIEWED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest,
+                            "Cannot update to the next status from the current status.");
                         return result;
                 }
 
@@ -1528,16 +1554,14 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingResponse>(booking);
                 result.AddResponseStatusCode(StatusCode.Ok, "Confirm round trip successfully.", response);
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error confirm round trip");
                 throw;
             }
+
             return result;
         }
-
-
     }
 }
