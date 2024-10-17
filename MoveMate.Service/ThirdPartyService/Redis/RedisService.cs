@@ -89,23 +89,31 @@ public class RedisService : IRedisService
     }
 
 
-    public async Task EnqueueMultipleAsync<T>(string queueKey, IEnumerable<T> values)
+    public async Task EnqueueMultipleAsync<T>(string queueKey, IEnumerable<T> values, TimeSpan? expiry = null)
     {
         var batch = _database.CreateBatch();
-
         var tasks = new List<Task>();
-
+        
         foreach (var value in values)
         {
             var jsonData = JsonSerializer.Serialize(value);
-
             tasks.Add(batch.ListRightPushAsync(queueKey, jsonData));
         }
 
         batch.Execute();
-
+        
         await Task.WhenAll(tasks);
+
+        if (expiry.HasValue)
+        {
+            await _database.KeyExpireAsync(queueKey, expiry);
+        }
+        else
+        {
+            await _database.KeyExpireAsync(queueKey, TimeSpan.FromHours(20));
+        }
     }
+
 
     public async Task<T?> DequeueAsync<T>(string queueKey)
     {

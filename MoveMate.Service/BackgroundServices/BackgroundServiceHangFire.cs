@@ -9,15 +9,19 @@ namespace MoveMate.Service.BackgroundServices;
 
 public class BackgroundServiceHangFire : IBackgroundServiceHangFire
 {
-    //private readonly ILogger<BackgroundServiceHangFire> _logger;
-    //private readonly IRedisService _redisService;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILogger<BackgroundServiceHangFire> _logger;
 
-    public BackgroundServiceHangFire(IServiceScopeFactory serviceScopeFactory)
+    private readonly IRedisService _redisService;
+
+    //private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly UnitOfWork _unitOfWork;
+
+    public BackgroundServiceHangFire(ILogger<BackgroundServiceHangFire> logger, IRedisService redisService,
+        IUnitOfWork unitOfWork)
     {
-        //_logger = logger;
-        //_redisService = redisService;
-        _serviceScopeFactory = serviceScopeFactory;
+        _logger = logger;
+        _redisService = redisService;
+        _unitOfWork = (UnitOfWork)unitOfWork;
     }
 
     public async Task StartAllBackgroundJob()
@@ -33,22 +37,18 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
                 TimeZone = DateUtil.GetSEATimeZone(),
             });
 
-        /*BackgroundJob.Enqueue(() => AddReviewerJob());
+        BackgroundJob.Enqueue(() => AddReviewerJob());
         RecurringJob.AddOrUpdate(
             "add-reviewer-job",
             () => AddReviewerJob(),
-            "0 1 * * *");*/
+            "0 1 * * *");
     }
 
-    /*public async Task AddReviewerJob()
+    public async Task AddReviewerJob()
     {
-        using (var scope = _serviceScopeFactory.CreateScope())
-        {
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<UnitOfWork>();
-            var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-
-            List<int> listReviewer =  await unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
-            await redisService.EnqueueMultipleAsync("", listReviewer);
-        }
-    }*/
+        List<int> listReviewer = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
+        string redisKey = DateUtil.GetKeyReview();
+        
+        await _redisService.EnqueueMultipleAsync(redisKey, listReviewer);
+    }
 }

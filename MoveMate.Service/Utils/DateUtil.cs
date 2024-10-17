@@ -140,5 +140,14 @@ namespace MoveMate.Service.Utils
 
             return tz;
         }
+
+        public static String GetKeyReview()
+        {
+            string dateKey = DateTime.Now.ToString("yyyyMMdd"); 
+        
+            string redisKey = $"reviewerQueue_{dateKey}";
+
+            return redisKey;
+        }
     }
 }
