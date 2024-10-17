@@ -4,7 +4,6 @@
     {
         public static class CommonMessage
         {
-
             public const string NotExistEmail = "Email does not exist in the system.";
             public const string AlreadyExistEmail = "Email already exists in the system.";
             public const string AlreadyExistCitizenNumber = "Citizen number already exists in the system.";
@@ -34,7 +33,6 @@
             public const string AlreadyExistPartnerProduct = "Mapping product already exists in the system.";
             public const string NotExistPartnerProduct = "Mapping product does not exist in the system.";
             public const string UserDeviceIdNotExist = "User device id does not exist in the system.";
-
         }
 
         public static class LoginMessage
@@ -60,13 +58,13 @@
         {
             public const string InvalidAccessToken = "Access token is invalid.";
             public const string NotExpiredAccessToken = "Access token has not yet expired.";
-            public const string NotExistAuthenticationToken = "You do not have the authentication tokens in the system.";
+
+            public const string NotExistAuthenticationToken =
+                "You do not have the authentication tokens in the system.";
+
             public const string NotExistRefreshToken = "Refresh token does not exist in the system.";
             public const string NotMatchAccessToken = "Your access token does not match the registered access token.";
             public const string ExpiredRefreshToken = "Refresh token expired.";
         }
-
-        
-
     }
 }

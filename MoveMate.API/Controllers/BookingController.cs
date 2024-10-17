@@ -25,7 +25,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("")]
-        
+
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllBookingRequest request)
         {
@@ -35,8 +35,9 @@ namespace MoveMate.API.Controllers
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         #region FEATURE: Register a new booking in the system.
+
         /// <summary>
         ///
         /// FEATURE: Register a new booking in the system.
@@ -56,20 +57,25 @@ namespace MoveMate.API.Controllers
         ///           "estimatedDistance": "3",
         ///           "houseTypeId": 1,
         ///           "note": "string",
-        ///           "estimatedDeliveryTime": "3",
-        ///           "isRoundTrip": true,
+        ///           "isReviewOnline": true,
+        ///           "isRoundTrip": false,
         ///           "isManyItems": true,
-        ///           "roomNumber": "1",
-        ///           "floorsNumber": "2",
+        ///           "roomNumber": "3",
+        ///           "floorsNumber": "3",
         ///           "serviceDetails": [
         ///             {
-        ///               "id": 1,
+        ///               "id": 52,
+        ///               "isQuantity": true,
+        ///               "quantity": 1
+        ///             },
+        ///             {
+        ///               "id": 35,
         ///               "isQuantity": true,
         ///               "quantity": 1
         ///             }
         ///           ],
         ///           "truckCategoryId": 1,
-        ///           "bookingAt": "2024-09-27T04:05:29.705Z",
+        ///           "bookingAt": "2024-10-16T05:26:28.452Z",
         ///           "resourceList": [
         ///             {
         ///               "type": "IMG",
@@ -80,13 +86,14 @@ namespace MoveMate.API.Controllers
         ///         }
         /// </remarks>
         /// <response code="201">Add Booking Success!</response>
-        /// <response code="400">Filed is required.</response>
-        /// <response code="400">HouseType with id: {request.HouseTypeId} not found!.</response>
-        /// <response code="400">Add Booking Failed!.</response>
+        /// <response code="400-v1">Filed is required.</response>
+        /// <response code="400-v2">HouseType with id: {request.HouseTypeId} not found!.</response>
+        /// <response code="400-v3">Add Booking Failed!.</response>
+        /// <response code="400-v4">BookingAt is not null and whether the value is greater than or equal to the current tim.</response>
         /// <response code="500">Some Error about the system.</response>
         /// <exception cref="BadRequestException">Thrown if the request data is invalid or contains logic errors.</exception>
         /// <exception cref="Exception">Thrown in case of a system error.</exception>
-        
+
         // Post - register booking
         [HttpPost("register-booking")]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
@@ -94,11 +101,11 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
-            var response =  await _bookingServices.RegisterBooking(request);
-            
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            var response = await _bookingServices.RegisterBooking(request);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
         #endregion
 
         /// <summary>
@@ -107,54 +114,50 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         ///
-        
+
         // Post - valuation distance booking
         [HttpPost("valuation-distance-booking")]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationDistanceBooking(BookingValuationRequest request)
         {
-            var response =  await _bookingServices.ValuationDistanceBooking(request);
-            
-            
-            
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            var response = await _bookingServices.ValuationDistanceBooking(request);
 
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
         ///
         /// TEST: valuation floor booking, test by vinh
         /// </summary>
         /// <returns></returns>
         ///
-        
+
         // Post - valuation distance booking
         [HttpPost("valuation-floor-booking")]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
         {
-            var response =  await _bookingServices.ValuationFloorBooking(request);
-            
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            var response = await _bookingServices.ValuationFloorBooking(request);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
         ///
         /// FEATURE: valuation floor booking, dev by vinh
         /// </summary>
         /// <returns></returns>
         ///
-        
+
         // Post - valuation distance booking
         [HttpPost("valuation-booking")]
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
         {
-            var response =  await _bookingServices.ValuationBooking(request);
-            
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+            var response = await _bookingServices.ValuationBooking(request);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
         /// <summary>
@@ -168,7 +171,7 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.GetById(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
         /// FEATURE: Set booking to Cancel by Id
         /// </summary>

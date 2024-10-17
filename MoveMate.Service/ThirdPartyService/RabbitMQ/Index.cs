@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 using MoveMate.Service.ThirdPartyService.Redis.Connection;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
@@ -15,7 +16,7 @@ public class Index : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _consumer.StartConsuming<MyMessageHandlerWorker>();
-        _consumer.StartConsuming<AssginReiviewWorker>();
+        _consumer.StartConsuming<AssginReiewWorker>();
         return Task.CompletedTask;
     }
 }

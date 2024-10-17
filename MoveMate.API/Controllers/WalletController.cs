@@ -8,7 +8,6 @@ using MoveMate.Service.ThirdPartyService.Payment.Momo;
 using MoveMate.Service.ThirdPartyService.Payment.PayOs;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
-
 using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
@@ -20,7 +19,9 @@ namespace MoveMate.API.Controllers
         private readonly IMomoPaymentService _momoPaymentService;
         private readonly IVnPayService _vpnPayService;
         private readonly IPayOsService _payOsService;
-        public WalletController(IWalletServices walletServices, IMomoPaymentService momoPaymentService, IVnPayService vpnPayService, IPayOsService payOsService)
+
+        public WalletController(IWalletServices walletServices, IMomoPaymentService momoPaymentService,
+            IVnPayService vpnPayService, IPayOsService payOsService)
         {
             _walletServices = walletServices;
             _momoPaymentService = momoPaymentService;
@@ -117,7 +118,8 @@ namespace MoveMate.API.Controllers
             OperationResult<string> result;
 
             // Attempt to parse the paymentMethod string to the PaymentMethod enum
-            if (!Enum.TryParse<MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType>(paymentMethod, true, out var parsedPaymentMethod))
+            if (!Enum.TryParse<MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType>(paymentMethod, true,
+                    out var parsedPaymentMethod))
             {
                 return BadRequest(new { Message = "Invalid payment method specified." });
             }
@@ -150,5 +152,4 @@ namespace MoveMate.API.Controllers
             return Ok(result);
         }
     }
-
 }

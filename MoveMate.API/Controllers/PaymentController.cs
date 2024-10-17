@@ -30,7 +30,9 @@ namespace MoveMate.API.Controllers
 
         private readonly UnitOfWork _unitOfWork;
 
-        public PaymentController(IVnPayService vnPayService, IUserServices userService, IUnitOfWork unitOfWork, IPaymentServices paymentServices, PayOS payOs, IPayOsService payOsService, IMomoPaymentService momoPaymentService)
+        public PaymentController(IVnPayService vnPayService, IUserServices userService, IUnitOfWork unitOfWork,
+            IPaymentServices paymentServices, PayOS payOs, IPayOsService payOsService,
+            IMomoPaymentService momoPaymentService)
         {
             _vnPayService = vnPayService;
             _userService = userService;
@@ -40,8 +42,6 @@ namespace MoveMate.API.Controllers
             _payOsService = payOsService;
             _momoPaymentService = momoPaymentService;
         }
-
-
 
 
         /// <summary>
@@ -80,19 +80,39 @@ namespace MoveMate.API.Controllers
             // Validate booking ID
             if (bookingId <= 0)
             {
-                return HandleErrorResponse(new List<Error> { new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Booking ID is required and must be greater than zero." } });
+                return HandleErrorResponse(new List<Error>
+                {
+                    new Error
+                    {
+                        Code = MoveMate.Service.Commons.StatusCode.BadRequest,
+                        Message = "Booking ID is required and must be greater than zero."
+                    }
+                });
             }
 
             // Validate return URL
             if (string.IsNullOrEmpty(returnUrl))
             {
-                return HandleErrorResponse(new List<Error> { new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Return URL is required." } });
+                return HandleErrorResponse(new List<Error>
+                {
+                    new Error
+                    {
+                        Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Return URL is required."
+                    }
+                });
             }
 
             // Convert string to PaymentMethod enum
             if (!Enum.TryParse(typeof(PaymentType), selectedMethod, true, out var paymentMethod))
             {
-                return HandleErrorResponse(new List<Error> { new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Payment method is required and must be a valid value." } });
+                return HandleErrorResponse(new List<Error>
+                {
+                    new Error
+                    {
+                        Code = MoveMate.Service.Commons.StatusCode.BadRequest,
+                        Message = "Payment method is required and must be a valid value."
+                    }
+                });
             }
 
             // Retrieve the user ID from the claims
@@ -109,7 +129,8 @@ namespace MoveMate.API.Controllers
             switch ((PaymentType)paymentMethod)
             {
                 case PaymentType.Momo:
-                    operationResult = await _momoPaymentService.CreatePaymentWithMomoAsync(bookingId, userId, returnUrl);
+                    operationResult =
+                        await _momoPaymentService.CreatePaymentWithMomoAsync(bookingId, userId, returnUrl);
                     break;
                 case PaymentType.VnPay:
                     operationResult = await _vnPayService.CreatePaymentAsync(bookingId, userId, returnUrl);
@@ -118,7 +139,14 @@ namespace MoveMate.API.Controllers
                     operationResult = await _payOsService.CreatePaymentLinkAsync(bookingId, userId, returnUrl);
                     break;
                 default:
-                    return HandleErrorResponse(new List<Error> { new Error { Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Unsupported payment method selected." } });
+                    return HandleErrorResponse(new List<Error>
+                    {
+                        new Error
+                        {
+                            Code = MoveMate.Service.Commons.StatusCode.BadRequest,
+                            Message = "Unsupported payment method selected."
+                        }
+                    });
             }
 
             // Handle potential errors from the operation result
@@ -132,14 +160,13 @@ namespace MoveMate.API.Controllers
         }
 
 
-
-
         /// <summary>
         /// FEATURE : Recharge Payment
         /// </summary>
         /// <returns>Returns the result of wallet</returns>
         [HttpGet("recharge-callback")]
-        public async Task<IActionResult> RechargeCallback([FromQuery] VnPayPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        public async Task<IActionResult> RechargeCallback([FromQuery] VnPayPaymentCallbackCommand callback,
+            CancellationToken cancellationToken)
         {
             var operationResult = await _vnPayService.ProcessRechargePayment(Request.Query);
             var returnUrl = $"{callback.returnUrl}?isSuccess={(!operationResult.IsError).ToString().ToLower()}";
@@ -152,15 +179,15 @@ namespace MoveMate.API.Controllers
             return Redirect(returnUrl);
         }
 
-      
 
         /// <summary>
         /// FEATURE : Momo callback
         /// </summary>
         /// <returns></returns>
         [HttpGet("momo/callback")]
-        public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback, CancellationToken cancellationToken)
-        {     
+        public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback,
+            CancellationToken cancellationToken)
+        {
             if (callback == null)
             {
                 return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
@@ -174,6 +201,7 @@ namespace MoveMate.API.Controllers
                 {
                     return HandleErrorResponse(result.Errors);
                 }
+
                 var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
                 return Redirect(redirectUrl);
             }
@@ -184,6 +212,7 @@ namespace MoveMate.API.Controllers
                 {
                     return HandleErrorResponse(result.Errors);
                 }
+
                 var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
                 return Redirect(redirectUrl);
             }
@@ -198,8 +227,8 @@ namespace MoveMate.API.Controllers
         /// <returns></returns>
         [HttpGet("vnpay-callback")]
         public async Task<IActionResult> VnPayPaymentCallback(
-        [FromQuery] VnPayPaymentCallbackCommand callback,
-        CancellationToken cancellationToken)
+            [FromQuery] VnPayPaymentCallbackCommand callback,
+            CancellationToken cancellationToken)
         {
             if (callback == null)
             {
@@ -209,12 +238,12 @@ namespace MoveMate.API.Controllers
             var result = await _vnPayService.HandleOrderPaymentAsync(Request.Query, callback);
 
             if (result.IsError)
-                {
-                    return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}");
-                }
-             var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
-                return Redirect(redirectUrl);
-            
+            {
+                return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}");
+            }
+
+            var redirectUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
+            return Redirect(redirectUrl);
         }
 
 
@@ -236,14 +265,16 @@ namespace MoveMate.API.Controllers
         /// <response code="404">Wallet not found</response>
         /// <response code="500">An internal server error occurred</response>
         [HttpGet("payos/callback")]
-        public async Task<IActionResult> PayOsPaymentCallback([FromQuery] PayOsPaymentCallbackCommand callback, CancellationToken cancellationToken)
+        public async Task<IActionResult> PayOsPaymentCallback([FromQuery] PayOsPaymentCallbackCommand callback,
+            CancellationToken cancellationToken)
         {
             // Validate callback data
             if (callback == null)
             {
                 return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
             }
-            bool IsSuccess = false; 
+
+            bool IsSuccess = false;
             if (callback.Status == "CANCELED")
             {
                 IsSuccess = false;
@@ -252,6 +283,7 @@ namespace MoveMate.API.Controllers
             {
                 IsSuccess = true;
             }
+
             var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}";
 
             if (callback.Type == "order")
@@ -261,9 +293,11 @@ namespace MoveMate.API.Controllers
                 if (result.IsError)
                 {
                     Redirect(returnUrl);
-                }              
+                }
+
                 return Redirect(returnUrl);
             }
+
             if (callback.Type == "wallet")
             {
                 // Handle wallet top-up processing here
@@ -272,14 +306,13 @@ namespace MoveMate.API.Controllers
                 if (result.IsError)
                 {
                     return HandleErrorResponse(result.Errors);
-                }       
+                }
+
                 return Redirect(returnUrl);
-                
             }
 
             return Redirect(returnUrl);
         }
-
 
 
         /// <summary>
@@ -287,7 +320,6 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("fail")]
-
         public IActionResult PaymentFail()
         {
             var response = new OperationResult<bool>()
@@ -304,7 +336,6 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("success")]
-
         public IActionResult PaymentSuccess()
         {
             var response = new OperationResult<bool>()

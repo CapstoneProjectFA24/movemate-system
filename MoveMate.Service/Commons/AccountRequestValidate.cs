@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.Commons
 {
-
     public class AccountRequestValidator : AbstractValidator<AccountRequest>
     {
         public AccountRequestValidator()
@@ -18,7 +17,7 @@ namespace MoveMate.Service.Commons
                 .NotNull().WithMessage("{PropertyName} cannot be null.")
                 .NotEmpty().WithMessage("{PropertyName} cannot be empty.")
                 .Must(BeValidEmailOrPhone).WithMessage("{PropertyName} must be a valid email or phone number.");
-                
+
 
             RuleFor(ar => ar.Password)
                 .Cascade(CascadeMode.StopOnFirstFailure)
@@ -58,7 +57,4 @@ namespace MoveMate.Service.Commons
             return phoneNumber.All(char.IsDigit) && phoneNumber.Length >= 10 && phoneNumber.Length <= 15;
         }
     }
-
-
-
 }

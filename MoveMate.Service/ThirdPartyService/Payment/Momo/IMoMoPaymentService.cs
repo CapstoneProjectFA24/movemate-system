@@ -13,7 +13,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
     {
         public Task<OperationResult<string>> CreatePaymentWithMomoAsync(int bookingId, int userId, string returnUrl);
         public Task<OperationResult<string>> AddFundsToWalletAsync(int userId, double amount, string returnUrl);
-        public Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context, MomoPaymentCallbackCommand command);
-        public Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context, MomoPaymentCallbackCommand callback);
+
+        public Task<OperationResult<string>> HandleWalletPaymentAsync(HttpContext context,
+            MomoPaymentCallbackCommand command);
+
+        public Task<OperationResult<string>> HandleOrderPaymentAsync(HttpContext context,
+            MomoPaymentCallbackCommand callback);
     }
 }

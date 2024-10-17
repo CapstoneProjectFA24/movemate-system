@@ -1,43 +1,30 @@
-﻿
-using Microsoft.Extensions.Configuration;
-using MoveMate.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MoveMate.API.Utils;
 using MoveMate.Domain.DBContext;
-using RabbitMQ.Client;
-
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
     public class DbFactory : Disposable, IDbFactory
     {
         private MoveMateDbContext _dbContext;
-      //  private RedisConnectionProvider _redisConnectionProvider;
 
-       
         public DbFactory()
         {
-            
         }
 
         public MoveMateDbContext InitDbContext()
         {
             if (_dbContext == null)
             {
-
                 string connectionString = DbUtil.getConnectString();
-                
+
                 var optionsBuilder = new DbContextOptionsBuilder<MoveMateDbContext>();
                 optionsBuilder.UseSqlServer(connectionString);
                 optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-        
+
                 _dbContext = new MoveMateDbContext(optionsBuilder.Options);
             }
+
             return _dbContext;
         }
 

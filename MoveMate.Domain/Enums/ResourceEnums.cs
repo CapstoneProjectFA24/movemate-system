@@ -4,5 +4,4 @@ public enum ResourceEnums
 {
     VIDEO,
     IMG
-        
 }

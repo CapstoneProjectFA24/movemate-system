@@ -11,7 +11,6 @@ using System.Security.Claims;
 namespace MoveMate.API.Controllers
 {
     [ApiController]
-
     public class UserController : BaseController
     {
         private readonly IUserServices _userService;
@@ -45,7 +44,6 @@ namespace MoveMate.API.Controllers
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-
 
 
         /// <summary>
@@ -82,8 +80,6 @@ namespace MoveMate.API.Controllers
 
             return Ok(result);
         }
-
-
 
 
         /// <summary>

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class BookingDetailRepository : GenericRepository<BookingDetail>, IBookingDetailRepository
@@ -19,7 +20,7 @@ namespace MoveMate.Repository.Repositories.Repository
         public async Task<BookingDetail> GetBookingDetailAsyncByBookingId(int bookingId)
         {
             return await _context.Set<BookingDetail>()
-                .Include(b => b.User) 
+                .Include(b => b.User)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId);
         }
     }

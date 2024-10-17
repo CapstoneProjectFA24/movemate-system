@@ -19,7 +19,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public override Expression<Func<FeeSetting, bool>> GetExpressions()
         {
-
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
@@ -36,7 +35,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.Name == Name);
             }
 
-            Expression = Expression.And(u => u.IsActived == true);  
+            Expression = Expression.And(u => u.IsActived == true);
             Expression = Expression.And(i => i.Type == TypeFeeEnums.SYSTEM.ToString());
 
             return Expression;

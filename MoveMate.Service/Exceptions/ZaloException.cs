@@ -36,7 +36,7 @@
         /// </summary>
         /// <param name="exceptionCode"></param>
         /// <param name="exceptionMessage"></param>
-        public ZaloException(string exceptionCode, string exceptionMessage) 
+        public ZaloException(string exceptionCode, string exceptionMessage)
             : base(exceptionMessage)
         {
             ExceptionCode = exceptionCode;

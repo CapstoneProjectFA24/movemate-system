@@ -18,7 +18,7 @@ namespace MoveMate.API.Middleware
             string password,
             string email,
             string phoneNumber
-            )
+        )
         {
             var operationResult = new OperationResult<UserRecord>();
             try

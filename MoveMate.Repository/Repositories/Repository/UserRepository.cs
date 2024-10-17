@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using System.Linq.Expressions;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
@@ -19,12 +20,13 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             _dbContext = context;
         }
+
         public async Task<User> GetUserAsync(int accountId)
         {
             try
             {
                 return await this._dbContext.Users.Include(x => x.Role)
-                                                     .SingleOrDefaultAsync(x => x.Id == accountId );
+                    .SingleOrDefaultAsync(x => x.Id == accountId);
             }
             catch (Exception ex)
             {
@@ -38,7 +40,7 @@ namespace MoveMate.Repository.Repositories.Repository
             try
             {
                 return await this._dbContext.Users.Include(x => x.Role)
-                                                     .SingleOrDefaultAsync(x => x.Email == email);
+                    .SingleOrDefaultAsync(x => x.Email == email);
             }
             catch (Exception ex)
             {
@@ -52,7 +54,7 @@ namespace MoveMate.Repository.Repositories.Repository
             try
             {
                 return await this._dbContext.Users.Include(x => x.Role)
-                                                     .SingleOrDefaultAsync(x => x.Email == email );
+                    .SingleOrDefaultAsync(x => x.Email == email);
             }
             catch (Exception ex)
             {
@@ -70,13 +72,14 @@ namespace MoveMate.Repository.Repositories.Repository
             try
             {
                 return await this._dbContext.Users.Include(x => x.Role)
-                                                     .SingleOrDefaultAsync(x => x.Phone == phone);
+                    .SingleOrDefaultAsync(x => x.Phone == phone);
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
+
         public async Task<User?> FindByEmailAsync(string email)
         {
             return await this._dbContext.Users
@@ -84,6 +87,12 @@ namespace MoveMate.Repository.Repositories.Repository
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
-       
+        public async Task<List<int>> FindAllUserByRoleIdAsync(int roleId)
+        {
+            return await _dbContext.Users
+                .Where(u => u.RoleId == roleId)
+                .Select(u => u.Id)
+                .ToListAsync();
+        }
     }
 }

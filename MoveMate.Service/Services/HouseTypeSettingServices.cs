@@ -13,7 +13,9 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<HouseTypeSettingServices> _logger;
-        public HouseTypeSettingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<HouseTypeSettingServices> logger)
+
+        public HouseTypeSettingServices(IUnitOfWork unitOfWork, IMapper mapper,
+            ILogger<HouseTypeSettingServices> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -47,7 +49,8 @@ namespace MoveMate.Service.Services
 
                 if (checkResult > 0)
                 {
-                    result.AddResponseStatusCode(StatusCode.Created, "Add HouseTypeSetting Success!", true); // Return status 201
+                    result.AddResponseStatusCode(StatusCode.Created, "Add HouseTypeSetting Success!",
+                        true); // Return status 201
                 }
                 else
                 {

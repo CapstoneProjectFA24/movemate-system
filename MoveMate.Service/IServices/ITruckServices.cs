@@ -11,7 +11,6 @@ namespace MoveMate.Service.IServices
 {
     public interface ITruckServices
     {
-        
         public Task<OperationResult<List<TruckResponse>>> GetAll(GetAllTruckRequest request);
 
         public Task<OperationResult<List<TruckCateResponse>>> GetAllCate();

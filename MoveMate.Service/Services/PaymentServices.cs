@@ -1,5 +1,4 @@
 ﻿using MoveMate.Service.IServices;
-
 using Net.payOS;
 using System;
 using System.Collections.Generic;
@@ -22,10 +21,5 @@ namespace MoveMate.Service.Services
             _unitOfWork = (UnitOfWork)unitOfWork;
             _payOS = payOS;
         }
-
-       
-
-
     }
-
 }

@@ -10,7 +10,6 @@ namespace MoveMate.Service.Exeptions
     {
         public NotAcceptableStatusException(string message) : base(message)
         {
-
         }
     }
 }

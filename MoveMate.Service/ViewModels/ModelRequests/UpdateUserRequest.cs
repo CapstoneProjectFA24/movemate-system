@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class UpdateUserRequest
-    { 
+    {
         public string Name { get; set; }
         public string Password { get; set; }
         public string Email { get; set; }

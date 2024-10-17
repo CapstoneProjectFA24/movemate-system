@@ -25,7 +25,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         public FirebaseServices(string authJsonFile, IMapper mapper)
         {
             _mapper = mapper;
-           
+
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
             {
@@ -36,12 +36,11 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
                 _firebaseApp = FirebaseApp.Create(appOptions);
             }
-            
+
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
-            
-            _dbFirestore = FirestoreDb.Create("movemate-bb487");
 
+            _dbFirestore = FirestoreDb.Create("movemate-bb487");
         }
 
 
@@ -117,20 +116,20 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
-        
+
         public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
         {
             try
             {
                 var save = _mapper.Map<BookingResponse>(saveObj);
-                
+
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);
                 var saved = (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
-                
+
                 Console.WriteLine($"SaveBooking message to firebase: {id}, time: {saved}");
 
-                return saved; 
+                return saved;
             }
             catch (Exception e)
             {

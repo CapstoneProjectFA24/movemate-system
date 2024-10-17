@@ -19,7 +19,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public override Expression<Func<User, bool>> GetExpressions()
         {
-
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
@@ -35,6 +34,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             {
                 Expression = Expression.And(u => u.Name == Name);
             }
+
             if (!string.IsNullOrWhiteSpace(RoleId.ToString()))
             {
                 Expression = Expression.And(u => u.RoleId == RoleId);
@@ -43,12 +43,10 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             if (!string.IsNullOrWhiteSpace(Status))
             {
                 var statuses = Status.Split(',')
-                                 .Select(s => int.TryParse(s, out var statusValue) ? (int?)statusValue : null)
-                                 .Where(s => s.HasValue)
-                                 .Select(s => s.Value)
-                                 .ToArray();
-
-               
+                    .Select(s => int.TryParse(s, out var statusValue) ? (int?)statusValue : null)
+                    .Where(s => s.HasValue)
+                    .Select(s => s.Value)
+                    .ToArray();
             }
 
             Expression = Expression.And(u => u.IsDeleted == false);

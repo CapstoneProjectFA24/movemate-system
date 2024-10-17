@@ -38,6 +38,7 @@ namespace MoveMate.Service.Library
         }
 
         #region Request
+
         public string CreateRequestUrl(string baseUrl, string vnpHashSecret)
         {
             var data = new StringBuilder();
@@ -61,9 +62,11 @@ namespace MoveMate.Service.Library
 
             return baseUrl;
         }
+
         #endregion
 
         #region Response process
+
         public bool ValidateSignature(string inputHash, string secretKey)
         {
             var rspRaw = GetResponseData();
@@ -97,8 +100,8 @@ namespace MoveMate.Service.Library
 
             return data.ToString();
         }
-        #endregion
 
+        #endregion
     }
 
     public class Utilss
@@ -160,6 +163,7 @@ namespace MoveMate.Service.Library
 
         private const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const int baseNumber = 34;
+
         public static string GenerateOrderCode(string farmHubCode)
         {
             DateTime startDate = new DateTime(DateTime.Now.Year, 1, 1);
@@ -181,6 +185,7 @@ namespace MoveMate.Service.Library
                     codeChars[i] = '0';
                 }
             }
+
             for (int i = 2; i < 6; i++)
             {
                 long randomNumber = ticksPerCharacter * i + random.Next((int)ticksPerCharacter);
@@ -203,5 +208,4 @@ namespace MoveMate.Service.Library
             return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
         }
     }
-
 }

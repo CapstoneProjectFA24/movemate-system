@@ -18,6 +18,7 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<ServiceServices> _logger;
+
         public ServiceServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ServiceServices> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
@@ -84,7 +85,7 @@ namespace MoveMate.Service.Services
                 if (listResponse == null || !listResponse.Any())
                 {
                     result.AddResponseStatusCode(StatusCode.Ok, "List Service is Empty!", listResponse);
-                    return result; 
+                    return result;
                 }
 
                 pagin.PageSize = request.per_page;
@@ -106,7 +107,8 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<ServicesResponse>();
             try
             {
-                var entity = await _unitOfWork.ServiceRepository.GetByIdAsyncV1(id, includeProperties: "InverseParentService");
+                var entity =
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(id, includeProperties: "InverseParentService");
 
                 if (entity == null)
                 {
@@ -117,6 +119,7 @@ namespace MoveMate.Service.Services
                     var productResponse = _mapper.Map<ServicesResponse>(entity);
                     result.AddResponseStatusCode(StatusCode.Ok, "Get Service by Id Success!", productResponse);
                 }
+
                 return result;
             }
             catch (Exception ex)
@@ -142,7 +145,6 @@ namespace MoveMate.Service.Services
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
                     includeProperties: "TruckCategory"
-
                 );
                 var listResponse = _mapper.Map<List<ServiceResponse>>(entities);
 
@@ -165,6 +167,5 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
-
     }
 }

@@ -10,5 +10,4 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
         public string IdToken { get; set; }
     }
-
 }

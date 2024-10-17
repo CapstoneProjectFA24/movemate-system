@@ -76,7 +76,6 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

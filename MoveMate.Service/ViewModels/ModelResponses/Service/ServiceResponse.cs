@@ -22,7 +22,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string Type { get; set; }
 
         public int DiscountRate { get; set; }
-        
+
         public bool? IsQuantity { get; set; }
 
         public int? QuantityMax { get; set; }

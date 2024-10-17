@@ -16,18 +16,22 @@ namespace MoveMate.Domain.Specifications
             {
                 Query = Query.Where(spec.Criteria);
             }
+
             if (spec.OrderBy != null)
             {
                 Query = Query.OrderBy(spec.OrderBy);
             }
+
             if (spec.OrderByDescending != null)
             {
                 Query = Query.OrderByDescending(spec.OrderByDescending);
             }
+
             if (spec.isPagingEnabled != null)
             {
                 Query = Query.Skip(spec.Skip).Take(spec.Take);
             }
+
             Query = spec.Includes.Aggregate(Query, (current, include) => current.Include(include));
             return Query;
         }

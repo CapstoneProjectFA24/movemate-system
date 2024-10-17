@@ -2,7 +2,6 @@
 
 public class OrderQuery : IBaseFormRequest
 {
-
     public int AppId { set; get; }
     public string AppTransId { set; get; }
     public string Mac { set; get; }

@@ -25,7 +25,7 @@ namespace MoveMate.Service.Services
             this._mapper = mapper;
             this._logger = logger;
         }
-       
+
         public async Task<OperationResult<List<FeeSettingResponse>>> GetAll(GetAllFeeSetting request)
         {
             var result = new OperationResult<List<FeeSettingResponse>>();

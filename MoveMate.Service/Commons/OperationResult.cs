@@ -10,10 +10,12 @@ namespace MoveMate.Service.Commons
         public bool IsError { get; set; }
 
         public T? Payload { get; set; }
-        
+
         public object? MetaData { get; set; }
+
         //public Pagination? Pagination { get; set; }
         public List<Error> Errors { get; set; } = new List<Error>();
+
         public void AddError(StatusCode code, string message)
         {
             HandleError(code, message);
@@ -24,7 +26,7 @@ namespace MoveMate.Service.Commons
             string message,
             T? payload,
             object? metaData = null
-            )
+        )
         {
             HandleResponse(code, message, payload, metaData);
         }
@@ -33,7 +35,7 @@ namespace MoveMate.Service.Commons
         {
             var errorList = messages.Select(message => new Error
             {
-                Code = statusCode, 
+                Code = statusCode,
                 Message = message
             }).ToList();
 
@@ -42,13 +44,13 @@ namespace MoveMate.Service.Commons
                 StatusCode = statusCode,
                 Message = string.Join(", ", messages),
                 IsError = true,
-                Errors = errorList 
+                Errors = errorList
             };
         }
 
 
-
-        public static OperationResult<T> Success(T payload, StatusCode statusCode = StatusCode.Ok, string? message = null)
+        public static OperationResult<T> Success(T payload, StatusCode statusCode = StatusCode.Ok,
+            string? message = null)
         {
             return new OperationResult<T>
             {
@@ -67,29 +69,27 @@ namespace MoveMate.Service.Commons
             Message = message;
             Payload = payload;
             MetaData ??= metaData;
-
-
         }
 
         public void AddUnknownError(string message)
         {
             HandleError(StatusCode.UnknownError, message);
         }
-        
+
         public void ResetIsErrorFlag()
         {
             IsError = false;
         }
 
-        private void HandleResponse(StatusCode code, string message, T? payload, Pagination? pagination = null, object? metaData = null )
+        private void HandleResponse(StatusCode code, string message, T? payload, Pagination? pagination = null,
+            object? metaData = null)
         {
             StatusCode = code;
             IsError = false;
             Message = message;
             Payload = payload;
-           // Pagination = pagination ?? new Pagination(0,1,1);
+            // Pagination = pagination ?? new Pagination(0,1,1);
             MetaData ??= metaData;
-
         }
 
         private void HandleError(StatusCode code, string message)
@@ -103,5 +103,4 @@ namespace MoveMate.Service.Commons
             HandleError(StatusCode.UnknownError, foodIdAndSupplierIdCannotBeTheSame);
         }
     }
-
 }

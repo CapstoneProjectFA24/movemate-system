@@ -25,6 +25,7 @@
 		<PackageReference Include="payOS" Version="1.0.6" />
 		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
 		<PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.16" />
 		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
 		<PackageReference Include="Fluid.Core" Version="2.7.0" />
 		<PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.7.0" />

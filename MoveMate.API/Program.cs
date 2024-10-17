@@ -57,13 +57,11 @@ namespace MoveMate.API
             // CORS Policy
             builder.Services.AddCors(cors => cors.AddPolicy(
                 name: CorsConstants.PolicyName,
-                policy =>
-                {
-                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-                }));
-            
+                policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); }));
+
             // Fluent Validation
-            builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<AccountRequestValidator>());
+            builder.Services.AddFluentValidation(fv =>
+                fv.RegisterValidatorsFromAssemblyContaining<AccountRequestValidator>());
             builder.Services.AddValidatorsFromAssemblyContaining<AccountTokenValidator>();
 
 

@@ -25,7 +25,8 @@ namespace MoveMate.API.Controllers
         [HttpPost("create-order")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest createOrder)
         {
-            var paymentLink = await _paySdk.GeneratePaymentLink(createOrder.OrderId, createOrder.Amount, createOrder.BankCode);
+            var paymentLink =
+                await _paySdk.GeneratePaymentLink(createOrder.OrderId, createOrder.Amount, createOrder.BankCode);
 
             if (!string.IsNullOrEmpty(paymentLink))
             {

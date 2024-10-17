@@ -18,7 +18,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public override Expression<Func<HouseType, bool>> GetExpressions()
         {
-
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();

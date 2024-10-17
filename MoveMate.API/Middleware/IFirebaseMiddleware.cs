@@ -6,10 +6,11 @@ namespace MoveMate.API.Middleware
     public interface IFirebaseMiddleware
     {
         Task<OperationResult<UserRecord>> RetrieveUser(string email);
+
         Task<OperationResult<UserRecord>> CreateUser(
             string username,
             string password,
-            string email,         
+            string email,
             string phoneNumber);
     }
 }

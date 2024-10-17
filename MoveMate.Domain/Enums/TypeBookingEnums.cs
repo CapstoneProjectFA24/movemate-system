@@ -4,5 +4,4 @@ public enum TypeBookingEnums
 {
     NOW,
     DELAY
-    
 }

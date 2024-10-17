@@ -10,23 +10,16 @@ namespace MoveMate.Service.ViewModels.ModelResponses
     [FirestoreData]
     public class BookingTrackerResponse
     {
-        [FirestoreProperty]
-        public int Id { get; set; }
-        [FirestoreProperty]
-        public int BookingId { get; set; }
-        [FirestoreProperty]
-        public string Time { get; set; }
-        [FirestoreProperty]
-        public string Type { get; set; }
+        [FirestoreProperty] public int Id { get; set; }
+        [FirestoreProperty] public int BookingId { get; set; }
+        [FirestoreProperty] public string Time { get; set; }
+        [FirestoreProperty] public string Type { get; set; }
 
         public string Location { get; set; }
 
         public string Point { get; set; }
-        [FirestoreProperty]
-        public string Description { get; set; }
-        [FirestoreProperty]
-        public string Status { get; set; }
-        [FirestoreProperty]
-        public List<TrackerSourceResponse> TrackerSources { get; set; }
+        [FirestoreProperty] public string Description { get; set; }
+        [FirestoreProperty] public string Status { get; set; }
+        [FirestoreProperty] public List<TrackerSourceResponse> TrackerSources { get; set; }
     }
 }

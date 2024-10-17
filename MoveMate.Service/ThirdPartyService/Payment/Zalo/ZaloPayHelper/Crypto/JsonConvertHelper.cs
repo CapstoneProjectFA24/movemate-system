@@ -22,6 +22,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo.ZaloPayHelper.Crypto
                 Formatting = Formatting.Indented
             });
         }
+
         public static T? DeserializeObject<T>(string value)
         {
             var contractResolver = new DefaultContractResolver

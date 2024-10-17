@@ -128,11 +128,12 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<BookingResponse>();
             string status = BookingEnums.PENDING.ToString();
 
-            /*if (!request.IsBookingAtValid())
+            if (!request.IsBookingAtValid())
             {
-                result.AddError(StatusCode.BadRequest, $"BookingAt is not null and whether the value is greater than or equal to the current time");
+                result.AddError(StatusCode.BadRequest,
+                    $"BookingAt is not null and whether the value is greater than or equal to the current time.");
                 return result;
-            }*/
+            }
 
             try
             {

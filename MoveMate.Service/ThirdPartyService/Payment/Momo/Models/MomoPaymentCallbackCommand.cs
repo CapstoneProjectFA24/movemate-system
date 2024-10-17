@@ -1,6 +1,5 @@
 ﻿namespace MoveMate.Service.ThirdPartyService.Payment.Momo.Models;
 
-
 public class MomoPaymentCallbackCommand
 {
     public string PartnerCode { get; set; } = default!;

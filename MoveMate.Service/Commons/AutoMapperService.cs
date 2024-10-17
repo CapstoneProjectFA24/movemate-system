@@ -49,14 +49,12 @@ namespace MoveMate.Service.Commons
             //Booking
             CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<Booking, BookingResponse>()
-                .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers)); 
+                .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
             CreateMap<Booking, BookingRegisterResponse>();
             //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
             //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
             //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
             //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
-
-
 
 
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
@@ -69,7 +67,7 @@ namespace MoveMate.Service.Commons
                     opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
                 .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
                 .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
-            
+
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
@@ -109,14 +107,14 @@ namespace MoveMate.Service.Commons
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
             //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
-            
+
             // Resource
             CreateMap<ResourceRequest, TrackerSource>();
             CreateMap<TrackerSource, TrackerSourceResponse>();
 
             //Tracker
             CreateMap<BookingTracker, BookingTrackerResponse>()
-                .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources)); 
+                .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources));
 
             //Fee Setting
             CreateMap<FeeSetting, FeeSettingResponse>();

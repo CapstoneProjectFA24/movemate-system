@@ -15,6 +15,7 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<ServiceDetails> _logger;
+
         public ServiceDetails(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ServiceDetails> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;

@@ -4,7 +4,6 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ;
 
 public class MyMessageHandlerWorker
 {
-    
     [Consumer("chanel-1")]
     public void HandleMessage(object message)
     {

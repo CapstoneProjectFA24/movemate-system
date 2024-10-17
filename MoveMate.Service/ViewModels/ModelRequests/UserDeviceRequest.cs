@@ -9,6 +9,5 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class UserDeviceRequest
     {
         public string FCMToken { get; set; }
-       
     }
 }
