@@ -41,14 +41,19 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
         RecurringJob.AddOrUpdate(
             "add-reviewer-job",
             () => AddReviewerJob(),
-            "0 1 * * *");
+            "0 1 * * *",
+            new RecurringJobOptions
+            {
+                // sync time(utc +7)
+                TimeZone = DateUtil.GetSEATimeZone(),
+            });
     }
 
     public async Task AddReviewerJob()
     {
         List<int> listReviewer = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
         string redisKey = DateUtil.GetKeyReview();
-        
+
         await _redisService.EnqueueMultipleAsync(redisKey, listReviewer);
     }
 }

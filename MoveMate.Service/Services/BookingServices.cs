@@ -124,7 +124,8 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: Register a new booking in the system.
 
-        public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request)
+        public async Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request,
+            string userId)
         {
             var result = new OperationResult<BookingResponse>();
             string status = BookingEnums.PENDING.ToString();
@@ -197,7 +198,12 @@ namespace MoveMate.Service.Services
                 entity.TotalFee = totalFee;
                 entity.TotalReal = total;
                 entity.Total = total;
+                entity.UserId = int.Parse(userId);
 
+                if (request.BookingAt != null)
+                {
+                    
+                }
                 entity.TypeBooking = TypeBookingEnums.NOW.ToString();
 
                 await _unitOfWork.BookingRepository.AddAsync(entity);
@@ -344,11 +350,11 @@ namespace MoveMate.Service.Services
             foreach (var serviceDetailRequest in request.ServiceDetails)
             {
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
@@ -406,11 +412,11 @@ namespace MoveMate.Service.Services
             foreach (var serviceDetailRequest in request.ServiceDetails)
             {
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.Id} not found!");
+                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
@@ -845,12 +851,12 @@ namespace MoveMate.Service.Services
             {
                 // Check Service
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.Id, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
 
                 if (service == null)
                 {
                     throw new NotFoundException(
-                        $"Service with id: {serviceDetailRequest.Id} not found!"); // Consider throwing an exception for better error handling
+                        $"Service with id: {serviceDetailRequest.ServiceId} not found!"); // Consider throwing an exception for better error handling
                 }
 
                 // Set var

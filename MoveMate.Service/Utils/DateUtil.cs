@@ -85,7 +85,7 @@ namespace MoveMate.Service.Utils
 
         public static bool IsOutsideBusinessHours(DateTime date)
         {
-            TimeSpan startBusinessHours = new TimeSpan(8, 0, 0); // 08:00 AM
+                TimeSpan startBusinessHours = new TimeSpan(8, 0, 0); // 08:00 AM
             TimeSpan endBusinessHours = new TimeSpan(17, 0, 0); // 05:00 PM
 
             return date.TimeOfDay < startBusinessHours ||

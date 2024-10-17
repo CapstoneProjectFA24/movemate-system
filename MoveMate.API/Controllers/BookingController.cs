@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
@@ -64,12 +65,12 @@ namespace MoveMate.API.Controllers
         ///           "floorsNumber": "3",
         ///           "serviceDetails": [
         ///             {
-        ///               "id": 52,
+        ///               "serviceId": 52,
         ///               "isQuantity": true,
         ///               "quantity": 1
         ///             },
         ///             {
-        ///               "id": 35,
+        ///               "serviceId": 35,
         ///               "isQuantity": true,
         ///               "quantity": 1
         ///             }
@@ -99,9 +100,20 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
+        [Authorize]
+
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
-            var response = await _bookingServices.RegisterBooking(request);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value).ToString();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Message = "Invalid user ID in token." });
+            }
+
+            var response = await _bookingServices.RegisterBooking(request, userId);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
