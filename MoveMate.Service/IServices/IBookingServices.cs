@@ -29,7 +29,8 @@ namespace MoveMate.Service.IServices
 
         Task<OperationResult<BookingDetailsResponse>> ReviewerCompletedBooking(int bookingId);
         Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId);
-
+        Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId);
+        Task<OperationResult<BookingResponse>> UserConfirmRoundTrip(int bookingId);
 
     }
 }

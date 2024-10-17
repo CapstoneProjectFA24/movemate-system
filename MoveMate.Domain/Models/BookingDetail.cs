@@ -18,6 +18,7 @@ public partial class BookingDetail
     public string? StaffType { get; set; }
 
     public bool? IsResponsible { get; set; }
+    public bool? IsRoundTripCompleted { get; set; } = false;
 
     public virtual Booking? Booking { get; set; }
 

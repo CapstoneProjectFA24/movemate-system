@@ -99,12 +99,13 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             {
                 var urlReturn =
                     $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}";
+                var urlCancel = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: amount,
                     description: description,
                     items: null,
-                    cancelUrl: "https://movemate-dashboard.vercel.app/payment-status?isSuccess=false",
+                    cancelUrl: urlCancel,
                     returnUrl: urlReturn,
                     buyerName: user.Name,
                     buyerEmail: user.Email,

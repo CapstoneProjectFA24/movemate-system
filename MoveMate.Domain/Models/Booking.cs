@@ -79,7 +79,7 @@ public partial class Booking
 
     public bool? IsReviewOnline { get; set; }
 
-    public bool? IsRoundTripCompleted { get; set; } = false;
+    public bool? IsUserConfirm { get; set; } = false;
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
