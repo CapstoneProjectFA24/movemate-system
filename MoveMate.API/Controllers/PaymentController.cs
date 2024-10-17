@@ -243,11 +243,16 @@ namespace MoveMate.API.Controllers
             {
                 return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
             }
-
-            // Process the callback based on the transaction status
-            //var isSuccess = callback.ResultCode == 0;
-            
-            var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}";
+            bool IsSuccess = false; 
+            if (callback.Status == "CANCELED")
+            {
+                IsSuccess = false;
+            }
+            else if (callback.Status == "PAID")
+            {
+                IsSuccess = true;
+            }
+            var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}";
 
             if (callback.Type == "order")
             {
@@ -272,7 +277,7 @@ namespace MoveMate.API.Controllers
                 
             }
 
-            return NoContent();
+            return Redirect(returnUrl);
         }
 
 

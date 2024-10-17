@@ -26,6 +26,19 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+
+        /// <summary>
+        /// TEST: Driver update status booking details without round trip at begin 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("driver/update-round-trip/{id}")]
+        public async Task<IActionResult> DriverUpdateRoundTripBooking(int id)
+        {
+            var response = await _bookingServices.DriverUpdateRoundTripBooking(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
         /// <summary>
         /// TEST: Porter update status booking details happy case 
         /// </summary>
@@ -35,6 +48,19 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> PorterUpdateStatusBooking(int id)
         {
             var response = await _bookingServices.PorterUpdateStatusBooking(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// TEST: Porter update status booking details happy case 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("porter/update-round-trip/{id}")]
+        public async Task<IActionResult> PorterUpdateRoundTripBooking(int id)
+        {
+            var response = await _bookingServices.PorterRoundTripBooking(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
@@ -50,17 +76,6 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        /// <summary>
-        /// TEST: Driver update status booking details without round trip at begin 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpPut("driver/update-round-trip/{id}")]
-        public async Task<IActionResult> DriverUpdateRoundTripBooking(int id)
-        {
-            var response = await _bookingServices.DriverUpdateRoundTripBooking(id);
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
 
         /// <summary>
         /// TEST: Reviewer update status booking details by review offline  
