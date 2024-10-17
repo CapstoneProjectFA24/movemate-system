@@ -105,7 +105,7 @@ namespace MoveMate.API.Controllers
         /// </remarks>
         [HttpPost("recharge")]
         [Authorize]
-        public async Task<IActionResult> AddFundsToWallet(double amount, string returnUrl, string paymentMethod)
+        public async Task<IActionResult> AddFundsToWallet(double amount, string returnUrl, string selectedMethod)
         {
             // Extract user ID from claims
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
@@ -118,7 +118,7 @@ namespace MoveMate.API.Controllers
             OperationResult<string> result;
 
             // Attempt to parse the paymentMethod string to the PaymentMethod enum
-            if (!Enum.TryParse<MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType>(paymentMethod, true,
+            if (!Enum.TryParse<MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType>(selectedMethod, true,
                     out var parsedPaymentMethod))
             {
                 return BadRequest(new { Message = "Invalid payment method specified." });

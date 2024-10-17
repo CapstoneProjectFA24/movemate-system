@@ -118,6 +118,7 @@ public partial class MoveMateDbContext : DbContext
         {
             entity.Property(e => e.StaffType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
+            entity.Property(e => e.FailedReason).HasMaxLength(255);
 
             entity.HasOne(d => d.Booking).WithMany(p => p.BookingDetails)
                 .HasForeignKey(d => d.BookingId)

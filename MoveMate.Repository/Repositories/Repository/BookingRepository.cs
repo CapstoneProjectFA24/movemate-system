@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -64,5 +66,25 @@ namespace MoveMate.Repository.Repositories.Repository
             query = query.Where(b => b.Id == bookingId && b.UserId == userId);
             return await query.FirstOrDefaultAsync();
         }
+
+        public virtual async Task<Booking?> GetAsync(
+    Expression<Func<Booking, bool>> filter,
+    Func<IQueryable<Booking>, IIncludableQueryable<Booking, object>>? include = null)
+        {
+            IQueryable<Booking> query = _dbSet;
+
+            // Apply the include function if provided
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            // Apply the filter expression
+            query = query.Where(filter);
+
+            // Execute the query and return the result
+            return await query.FirstOrDefaultAsync();
+        }
+
     }
 }

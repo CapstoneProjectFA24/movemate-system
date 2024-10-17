@@ -70,9 +70,9 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("report-fail/{id}")]
-        public async Task<IActionResult> ReportFail(int id)
+        public async Task<IActionResult> ReportFail(int id, [FromBody] string failedReason)
         {
-            var response = await _bookingServices.ReportFail(id);
+            var response = await _bookingServices.ReportFail(id, failedReason);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 

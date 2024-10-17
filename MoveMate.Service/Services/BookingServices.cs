@@ -18,6 +18,9 @@ using MoveMate.Domain.Models;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.Utils;
+using Microsoft.EntityFrameworkCore;
+using MoveMate.Service.ViewModels.ModelRequests.Booking;
+using Catel.Collections;
 
 namespace MoveMate.Service.Services
 {
@@ -987,9 +990,7 @@ namespace MoveMate.Service.Services
                 bookingDetail.Status = nextStatus;
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
-
                 await _unitOfWork.SaveChangesAsync();
-
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
             }
@@ -1078,7 +1079,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId)
+        public async Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId, string failedReason)
         {
             var result = new OperationResult<BookingDetailsResponse>();
 
@@ -1096,10 +1097,11 @@ namespace MoveMate.Service.Services
                 {
                     case var status when status == BookingDetailStatus.ASSIGNED.ToString():
                         nextStatus = BookingDetailStatus.FAILED.ToString();
+                        bookingDetail.FailedReason = failedReason;
                         break;
-
                     case var status when status == BookingDetailStatus.ENROUTE.ToString():
                         nextStatus = BookingDetailStatus.FAILED.ToString();
+                        bookingDetail.FailedReason = failedReason;
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status.");
@@ -1108,7 +1110,6 @@ namespace MoveMate.Service.Services
                 bookingDetail.Status = nextStatus;
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 await _unitOfWork.SaveChangesAsync();
-
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
             }
@@ -1538,6 +1539,104 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+
+        public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingId, BookingUpdateRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                // Retrieve the existing booking with its related entities
+                var existingBooking = await _unitOfWork.BookingRepository
+                    .GetAsync(b => b.Id == bookingId,
+                              include: b => b.Include(b => b.ServiceDetails)
+                                             .Include(b => b.FeeDetails));
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    return result;
+                }
+
+                // Check if there is any basic booking information to update
+                if (request != null)
+                {
+                    ReflectionUtils.UpdateFields(request, existingBooking);
+                }
+
+                // Update or Add ServiceDetails
+                if (request?.ServiceDetails != null)
+                {
+                    foreach (var detail in request.ServiceDetails)
+                    {
+                        var existingDetail = existingBooking.ServiceDetails.FirstOrDefault(d => d.Id == detail.Id);
+
+                        if (existingDetail != null)
+                        {
+                            // Update existing service detail
+                            ReflectionUtils.UpdateFields(detail, existingDetail);
+                        }
+                        else
+                        {
+                            // Add new service detail
+                            existingBooking.ServiceDetails.Add(new ServiceDetail
+                            {
+                                Id = detail.Id,
+                                Quantity = detail.Quantity
+                                // Add other necessary properties here
+                            });
+                        }
+                    }
+                }
+
+                // Update or Add FeeDetails
+                if (request?.FeeDetails != null)
+                {
+                    foreach (var detail in request.FeeDetails)
+                    {
+                        var existingDetail = existingBooking.FeeDetails.FirstOrDefault(d => d.Id == detail.Id);
+
+                        if (existingDetail != null)
+                        {
+                            // Update existing fee detail
+                            ReflectionUtils.UpdateFields(detail, existingDetail);
+                        }
+                        else
+                        {
+                            // Add new fee detail
+                            existingBooking.FeeDetails.Add(new FeeDetail
+                            {
+                                Id = detail.Id,
+                                Quantity = detail.Quantity
+                                // Add other necessary properties here
+                            });
+                        }
+                    }
+                }
+
+                // Mark the booking entity as modified
+                _unitOfWork.BookingRepository.Update(existingBooking);
+
+                // Save changes to the database
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                    var response = _mapper.Map<BookingResponse>(existingBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Booking updated successfully!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Update failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
 
     }
 }

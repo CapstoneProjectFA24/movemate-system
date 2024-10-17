@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MoveMate.Domain.Models;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponse;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
@@ -58,6 +59,7 @@ namespace MoveMate.Service.Commons
 
 
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
+            CreateMap<ServiceDetailRequest, ServiceDetail>();
             CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<BookingTracker, BookingTrackerResponse>();
             CreateMap<HouseType, HouseTypeResponse>();
@@ -67,6 +69,9 @@ namespace MoveMate.Service.Commons
                     opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
                 .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
                 .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
+            CreateMap<BookingUpdateRequest, Booking>()
+                .ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
+                .ForMember(dest => dest.FeeDetails, opt => opt.MapFrom(src => src.FeeDetails));
 
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
@@ -106,6 +111,7 @@ namespace MoveMate.Service.Commons
 
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
+            CreateMap<FeeDetailRequest, FeeDetail>();
             //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
 
             // Resource

@@ -4,6 +4,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.API.Controllers
@@ -183,6 +184,20 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.CancelBooking(request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+        /// <summary>
+        /// TEST: User confirm round trip  
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-booking/{id}")]
+        public async Task<IActionResult> UserConfirmRoundTrip(int id, [FromBody] BookingUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateBookingAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
 
         /// <summary>

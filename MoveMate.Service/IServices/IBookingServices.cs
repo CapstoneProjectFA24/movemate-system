@@ -1,5 +1,6 @@
 ﻿using MoveMate.Service.Commons;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace MoveMate.Service.IServices
 
         Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest id);
         Task<OperationResult<BookingDetailsResponse>> DriverUpdateStatusBooking(int bookingId);
-        Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId);
+        Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId, string failedReason);
         Task<OperationResult<BookingDetailsResponse>> DriverUpdateRoundTripBooking(int bookingId);
         Task<OperationResult<BookingDetailsResponse>> ReviewerOnlineUpdateStatusBooking(int bookingId);
         Task<OperationResult<BookingDetailsResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId);
@@ -31,6 +32,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId);
         Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId);
         Task<OperationResult<BookingResponse>> UserConfirmRoundTrip(int bookingId);
+        Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingId, BookingUpdateRequest request);
 
     }
 }
