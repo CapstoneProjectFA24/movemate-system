@@ -21,10 +21,10 @@ namespace MoveMate.Service.Services
 {
     public class UserService : IUserServices
     {
-
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<UserService> _logger;
+
         public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
@@ -78,10 +78,12 @@ namespace MoveMate.Service.Services
                 {
                     throw new NotFoundException(MessageConstant.CommonMessage.NotExistAccountId);
                 }
+
                 if (existedAccount.Email.Equals(email) == false)
                 {
                     throw new BadRequestException(MessageConstant.AccountMessage.AccountIdNotBelongYourAccount);
                 }
+
                 UserResponse getAccountResponse = this._mapper.Map<UserResponse>(existedAccount);
                 return getAccountResponse;
             }
@@ -136,12 +138,13 @@ namespace MoveMate.Service.Services
             int userId = int.Parse(id);
 
             try
-            {         
+            {
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(userId);
                 if (existingUser == null)
                 {
                     throw new NotFoundException("User not found");
                 }
+
                 var updatedUser = _mapper.Map(updateUserRequest, existingUser);
                 await _unitOfWork.UserRepository.UpdateAsync(updatedUser);
                 var checkResult = _unitOfWork.Save();
@@ -151,7 +154,5 @@ namespace MoveMate.Service.Services
                 throw new Exception("Error updating user");
             }
         }
-
-
     }
 }

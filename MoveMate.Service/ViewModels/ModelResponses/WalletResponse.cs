@@ -13,6 +13,5 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public float Balance { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
     }
 }

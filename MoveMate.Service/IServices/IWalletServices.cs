@@ -13,6 +13,5 @@ namespace MoveMate.Service.IServices
     {
         Task<OperationResult<WalletResponse>> GetWalletByUserIdAsync(string userId);
         Task<OperationResult<WalletResponse>> UpdateWalletBalance(int walletId, float balance);
-
     }
 }

@@ -13,9 +13,5 @@ namespace MoveMate.API.Controllers
         {
             _truckServices = truckServices;
         }
-        
-       
-        
-        
     }
 }

@@ -9,6 +9,7 @@ public class TruckCategoryController : BaseController
 {
     private readonly ITruckServices _truckServices;
     private readonly IGoogleMapsService _googleMapsService;
+
     public TruckCategoryController(ITruckServices truckServices, IGoogleMapsService googleMapsService)
     {
         _truckServices = truckServices;
@@ -32,7 +33,7 @@ public class TruckCategoryController : BaseController
         //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
         var response = await _truckServices.GetAllCate();
-        _googleMapsService.GetDistanceAndDuration("9.922823, 106.333055","10.772132, 106.653129");
+        _googleMapsService.GetDistanceAndDuration("9.922823, 106.333055", "10.772132, 106.653129");
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
@@ -56,7 +57,7 @@ public class TruckCategoryController : BaseController
         //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
         var response = await _truckServices.GetCateById(id);
-        
+
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
 }

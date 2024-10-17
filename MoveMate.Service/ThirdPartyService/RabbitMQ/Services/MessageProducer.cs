@@ -40,20 +40,18 @@ public class MessageProducer : IMessageProducer, IDisposable
             try
             {
                 _channel.BasicPublish("", channel, body: body);
-                success = true; 
+                success = true;
             }
             catch (Exception ex)
             {
                 attempt++;
                 if (attempt >= RetryCount)
                 {
-                    
                     Console.WriteLine($"Failed to send message after {RetryCount} attempts: {ex.Message}");
-                    throw; 
+                    throw;
                 }
                 else
                 {
-                    
                     Console.WriteLine($"Attempt {attempt} failed, retrying in {DelayMilliseconds} ms: {ex.Message}");
                     Thread.Sleep(DelayMilliseconds);
                 }

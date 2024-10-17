@@ -12,7 +12,7 @@ namespace MoveMate.Service.IServices
     public interface IServiceServices
     {
         public Task<OperationResult<List<ServicesResponse>>> GetAll(GetAllServiceRequest request);
-        
+
         public Task<OperationResult<List<ServicesResponse>>> GetAllNotTruck(GetAllServiceNotTruckRequest request);
 
         public Task<OperationResult<List<ServiceResponse>>> GetAllServiceTruck(GetAllServiceTruckType request);

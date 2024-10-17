@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class ServiceRepository : GenericRepository<Service>, IServiceRepository
@@ -25,7 +26,8 @@ namespace MoveMate.Repository.Repositories.Repository
             IQueryable<Service> query = _dbSet;
 
             // Apply includes
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
             {
                 query = query.Include(includeProperty.Trim());
             }
@@ -38,7 +40,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-        
+
         public virtual IEnumerable<Service> GetAll(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
@@ -46,12 +48,12 @@ namespace MoveMate.Repository.Repositories.Repository
             int? pageSize = null)
         {
             IQueryable<Service> query = _dbSet;
-            
+
             if (filter != null)
             {
                 query = query.Where(filter);
             }
-            
+
             query = query.Include(s => s.InverseParentService)
                 .ThenInclude(ts => ts.TruckCategory);
 
@@ -65,16 +67,17 @@ namespace MoveMate.Repository.Repositories.Repository
             {
                 // Ensure the pageIndex and pageSize are valid
                 int validPageIndex = pageIndex.Value > 0 ? pageIndex.Value - 1 : 0;
-                int validPageSize = pageSize.Value > 0 ? pageSize.Value : 10; // Assuming a default pageSize of 10 if an invalid value is passed
+                int validPageSize =
+                    pageSize.Value > 0
+                        ? pageSize.Value
+                        : 10; // Assuming a default pageSize of 10 if an invalid value is passed
                 if (pageSize.Value > 0)
                 {
                     query = query.Skip(validPageIndex * validPageSize).Take(validPageSize);
                 }
-
             }
 
             return query.ToList();
-
         }
     }
 }

@@ -7,7 +7,6 @@ using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelResponses;
 using Newtonsoft.Json;
 using MoveMate.Service.Commons;
-
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -22,6 +21,7 @@ namespace MoveMate.API.Authorization
     public class PermissionAuthorizeAttribute : AuthorizeAttribute, IAuthorizationFilter
     {
         private string[] _roles;
+
         public PermissionAuthorizeAttribute(params string[] roles)
         {
             this._roles = roles;
@@ -29,16 +29,17 @@ namespace MoveMate.API.Authorization
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-
             if (context.HttpContext.User.Identity.IsAuthenticated)
             {
                 IUserServices accountService = context.HttpContext.RequestServices.GetService<IUserServices>();
                 var currentController = context.RouteData.Values["controller"];
                 var currentActionName = context.RouteData.Values["action"];
                 string email = context.HttpContext.User.Claims.First(x => x.Type.ToLower() == ClaimTypes.Email).Value;
-                string accountId = context.HttpContext.User.Claims.First(x => x.Type.ToLower() == JwtRegisteredClaimNames.Sid).Value;
+                string accountId = context.HttpContext.User.Claims
+                    .First(x => x.Type.ToLower() == JwtRegisteredClaimNames.Sid).Value;
 
-                UserResponse existedAccount = accountService.GetAccountAsync(int.Parse(accountId), context.HttpContext.User.Claims).Result;
+                UserResponse existedAccount = accountService
+                    .GetAccountAsync(int.Parse(accountId), context.HttpContext.User.Claims).Result;
                 //if (existedAccount.IsConfirmed == false && currentController.ToString().ToLower().Equals("accounts") && currentActionName.ToString().ToLower().Equals("updateaccount") ||
                 //    existedAccount.IsConfirmed == false && currentController.ToString().ToLower().Equals("stores") && currentActionName.ToString().ToLower().Equals("getstoreprofile"))
                 //{
@@ -67,12 +68,15 @@ namespace MoveMate.API.Authorization
                         StatusCode = 401,
                         Value = new
                         {
-                            Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API because your account has been deleted."))
+                            Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(
+                                ErrorUtil.GetErrorString("Unauthorized",
+                                    "You are not allowed to access this API because your account has been deleted."))
                         }
                     };
                 }
 
-                var expiredClaim = long.Parse(context.HttpContext.User.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+                var expiredClaim = long.Parse(context.HttpContext.User.Claims
+                    .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
                 var expiredDate = DateUtil.ConvertUnixTimeToDateTime(expiredClaim);
                 if (expiredDate <= DateTime.UtcNow)
                 {
@@ -81,7 +85,8 @@ namespace MoveMate.API.Authorization
                         StatusCode = 401,
                         Value = new
                         {
-                            Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
+                            Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(
+                                ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
                         }
                     };
                 }
@@ -95,7 +100,9 @@ namespace MoveMate.API.Authorization
                             StatusCode = 403,
                             Value = new
                             {
-                                Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(ErrorUtil.GetErrorString("Forbidden", "You are not allowed to access this function!"))
+                                Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(
+                                    ErrorUtil.GetErrorString("Forbidden",
+                                        "You are not allowed to access this function!"))
                             }
                         };
                     }
@@ -112,7 +119,8 @@ namespace MoveMate.API.Authorization
                     StatusCode = 401,
                     Value = new
                     {
-                        Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
+                        Message = JsonConvert.DeserializeObject<List<ErrorDetail>>(
+                            ErrorUtil.GetErrorString("Unauthorized", "You are not allowed to access this API."))
                     }
                 };
             }

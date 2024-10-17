@@ -8,16 +8,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Domain.DBContext;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class TruckCategoryRepository : GenericRepository<TruckCategory>, ITruckCategoryRepository
     {
         private MoveMateDbContext _dbContext;
+
         public TruckCategoryRepository(MoveMateDbContext context) : base(context)
         {
             this._dbContext = context;
         }
-        
+
         public async Task<List<string>> GetFirstTruckImagesByCategoryIdAsync(int truckCategoryId)
         {
             // Truy vấn lấy xe tải đầu tiên thuộc TruckCategory đó

@@ -8,14 +8,17 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
     {
         private readonly MoveMateDbContext _dbContext;
+
         public NotificationRepository(MoveMateDbContext context) : base(context)
         {
         }
+
         public async Task<Notification?> FirstOrDefaultAsync(int accountId, string deviceId)
         {
             try

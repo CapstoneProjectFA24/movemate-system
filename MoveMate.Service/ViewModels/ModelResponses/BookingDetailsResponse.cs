@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Cloud.Firestore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,16 +7,15 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
+    [FirestoreData]
     public class BookingDetailsResponse
     {
-        public int? UserId { get; set; }
-
-        //public int? BookingId { get; set; }
-
-        public string? Status { get; set; }
-
-        public double? Price { get; set; }
-
-        public string? StaffType { get; set; }
+        [FirestoreProperty] public int Id { get; set; }
+        [FirestoreProperty] public int? UserId { get; set; }
+        [FirestoreProperty] public int? BookingId { get; set; }
+        [FirestoreProperty] public string? Status { get; set; }
+        [FirestoreProperty] public double? Price { get; set; }
+        [FirestoreProperty] public string? StaffType { get; set; }
+        [FirestoreProperty] public bool? IsResponsible { get; set; }
     }
 }

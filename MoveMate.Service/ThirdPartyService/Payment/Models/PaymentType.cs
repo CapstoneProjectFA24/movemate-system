@@ -9,12 +9,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Models
 {
     public enum PaymentType
     {
-        [Description("Momo Payment")]
-        Momo,
-        [Description("VnPay Payment")]
-        VnPay,
-        [Description("PayOS Payment")]
-        PayOS
+        [Description("Momo Payment")] Momo,
+        [Description("VnPay Payment")] VnPay,
+        [Description("PayOS Payment")] PayOS
     }
 
     public static class PaymentMethodHelper

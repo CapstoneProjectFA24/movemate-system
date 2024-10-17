@@ -10,8 +10,6 @@ namespace MoveMate.Service.Exeptions
     {
         public DataIntegrityViolationException(string message) : base(message)
         {
-
         }
-    
-}
+    }
 }

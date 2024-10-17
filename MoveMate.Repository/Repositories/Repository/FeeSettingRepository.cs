@@ -17,39 +17,40 @@ namespace MoveMate.Repository.Repositories.Repository
         public FeeSettingRepository(MoveMateDbContext context) : base(context)
         {
         }
-        
+
         public async Task<List<FeeSetting>> GetCommonFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Type == TypeFeeEnums.COMMON.ToString() && f.IsActived == true)
                 .ToListAsync();
         }
-        
+
         public async Task<List<FeeSetting>> GetWeekendFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Type == TypeFeeEnums.WEEKEND.ToString() && f.IsActived == true)
                 .ToListAsync();
         }
-        
+
         public async Task<List<FeeSetting>> GetOBHFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Type == TypeFeeEnums.OUTSIDE_BUSINESS_HOURS.ToString() && f.IsActived == true)
                 .ToListAsync();
         }
-        
+
         public async Task<List<FeeSetting>> GetPercentFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true)
                 .ToListAsync();
         }
-        
+
         public List<FeeSetting> GetTruckFeeSettings(int cateTruckId)
         {
-            return  _context.Set<FeeSetting>()
-                .Where(f => f.Type == TypeServiceEnums.TRUCK.ToString() && f.IsActived == true && f.TruckCategoryId == cateTruckId && f.ServiceId == null)
+            return _context.Set<FeeSetting>()
+                .Where(f => f.Type == TypeServiceEnums.TRUCK.ToString() && f.IsActived == true &&
+                            f.TruckCategoryId == cateTruckId && f.ServiceId == null)
                 .ToList();
         }
     }

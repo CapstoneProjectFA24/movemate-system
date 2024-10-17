@@ -17,7 +17,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo.ZaloPayHelper.Crypto
 
     public class HmacHelper
     {
-        public static string Compute(string key = "", string message = "", ZaloPayHMAC algorithm = ZaloPayHMAC.HMACSHA256)
+        public static string Compute(string key = "", string message = "",
+            ZaloPayHMAC algorithm = ZaloPayHMAC.HMACSHA256)
         {
             byte[] keyByte = Encoding.UTF8.GetBytes(key);
             byte[] messageBytes = Encoding.UTF8.GetBytes(message);

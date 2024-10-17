@@ -18,7 +18,7 @@ public class DbUtil
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-                
+
             IConfigurationRoot configuration = builder.Build();
             finalConnectionString = configuration.GetConnectionString("MyDB");
         }

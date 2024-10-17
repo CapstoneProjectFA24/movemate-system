@@ -1,4 +1,5 @@
 ﻿namespace MoveMate.Service.ThirdPartyService.Payment.Momo.Models
+
 ;
 
 public class MomoPaymentResponse

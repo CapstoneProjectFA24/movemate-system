@@ -48,8 +48,6 @@ namespace MoveMate.API.Controllers
         }
 
 
-
-
         /// <summary>
         /// FEATURE : Login to access the system using either email or phone number.
         /// </summary>
@@ -193,7 +191,6 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register([FromBody] CustomerToRegister customerToRegister)
         {
-
             var response = await _authenticationService.RegisterV2(customerToRegister);
 
             if (response.IsError)
@@ -203,33 +200,29 @@ namespace MoveMate.API.Controllers
 
             // Format response similar to your desired output structure
             return Ok(response);
-
         }
 
 
-        
-
-
-            /// <summary>
-            /// FEATURE : Check Customer Exists
-            /// </summary>
-            /// <param name="checkCustomer">Check information of customer</param>
-            /// <returns>Validate information customer are available</returns>
-            /// <remarks>
-            /// Sample request:
-            ///     POST 
-            ///     {
-            ///         "email": "user@example.com",
-            ///         "phone": "string",
-            ///         "name": "string",
-            ///         "password": "string"
-            ///     }
-            /// </remarks>
-            /// <response code="200">Customer information is available.</response>
-            /// <response code="400">Email already exists.</response>
-            /// <response code="400">Phone already exists.</response>
-            /// <response code="500">An unexpected error occurred.</response>
-            [HttpPost("check-exists")]
+        /// <summary>
+        /// FEATURE : Check Customer Exists
+        /// </summary>
+        /// <param name="checkCustomer">Check information of customer</param>
+        /// <returns>Validate information customer are available</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     POST 
+        ///     {
+        ///         "email": "user@example.com",
+        ///         "phone": "string",
+        ///         "name": "string",
+        ///         "password": "string"
+        ///     }
+        /// </remarks>
+        /// <response code="200">Customer information is available.</response>
+        /// <response code="400">Email already exists.</response>
+        /// <response code="400">Phone already exists.</response>
+        /// <response code="500">An unexpected error occurred.</response>
+        [HttpPost("check-exists")]
         public async Task<IActionResult> CheckCustomerExists([FromBody] CustomerToRegister customer)
         {
             var result = await _authenticationService.CheckCustomerExistsAsync(customer);
@@ -241,9 +234,6 @@ namespace MoveMate.API.Controllers
 
             return Ok(result);
         }
-
-
-
 
 
         /// <summary>
@@ -308,13 +298,14 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
             var result = new OperationResult<AccountResponse>();
-         
-                var loginResult = await _authenticationService.LoginWithEmailAsync(request.Email);
-                if (loginResult.IsError)
-                {
-                    return HandleErrorResponse(loginResult.Errors);
-                }
-                return Ok(loginResult);
+
+            var loginResult = await _authenticationService.LoginWithEmailAsync(request.Email);
+            if (loginResult.IsError)
+            {
+                return HandleErrorResponse(loginResult.Errors);
+            }
+
+            return Ok(loginResult);
         }
 
 
@@ -336,13 +327,13 @@ namespace MoveMate.API.Controllers
         {
             if (string.IsNullOrEmpty(token))
             {
-                return BadRequest("Token cannnot be empty"); 
+                return BadRequest("Token cannnot be empty");
             }
 
             // Perform token validation but do not return any response
             await _firebaseService.ValidateFcmToken(token);
 
-          
+
             return NoContent();
         }
     }

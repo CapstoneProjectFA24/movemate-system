@@ -4,29 +4,40 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Domain.Enums
-{
+namespace MoveMate.Domain.Enums;
+
     public enum BookingEnums
     {
         PENDING,
         DEPOSITING,
-        RECOMMEND,
+        ASSIGNED,
         APPROVED,
         REVIEWED,
         COMMING,
         WAITING,
+        IN_PROGRESS,
+        COMPLETED,
+        CANCEL,
+        REFUNDED
+    }
+
+    public enum BookingDetailStatus
+    {
+        WAITING,
         ASSIGNED,
-        ACCEPT,
+        ENROUTE,
         ARRIVED,
-        PACKING,
-        LOADING,
-        IN_TRANSIT,
-        DELIVERED,
-        UNLOADED,
+        IN_PROGRESS,
+        COMPLETED,
+        FAILED,
         ROUND_TRIP,
         CONFIRM,
-        COMPLETED,
-        CANCEL
-
+        SUGGESTED,
+        CANCELLED,
+        REFUNDED,
+        REVIEWED,
+        IN_TRANSIT,
+        DELIVERED,
+        UNLOAD
     }
-}
+

@@ -21,6 +21,5 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public int? DurationTime { get; set; }
 
         public double? Amount { get; set; }
-
     }
 }

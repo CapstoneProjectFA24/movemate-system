@@ -1,6 +1,6 @@
 ﻿namespace MoveMate.Service.ThirdPartyService.Payment.VNPay.Models;
 
-public class VnPayPaymentCallbackCommand 
+public class VnPayPaymentCallbackCommand
 {
     public string? vnp_TransactionStatus { get; set; } = default!;
 

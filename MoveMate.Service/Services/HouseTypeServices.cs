@@ -21,6 +21,7 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<HouseTypeServices> _logger;
+
         public HouseTypeServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<HouseTypeServices> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
@@ -43,7 +44,6 @@ namespace MoveMate.Service.Services
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
-
                 );
                 var listResponse = _mapper.Map<List<HouseTypeResponse>>(entities);
 
@@ -72,17 +72,19 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<HouseTypesResponse>();
             try
             {
-                var entity = await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(id, includeProperties: "HouseTypeSettings");
+                var entity =
+                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(id, includeProperties: "HouseTypeSettings");
 
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound,"House Type not found");
+                    result.AddError(StatusCode.NotFound, "House Type not found");
                 }
                 else
                 {
                     var productResponse = _mapper.Map<HouseTypesResponse>(entity);
                     result.AddResponseStatusCode(StatusCode.Ok, "Get House Type success", productResponse);
                 }
+
                 return result;
             }
             catch (Exception ex)
@@ -91,8 +93,5 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
-
-       
-
     }
 }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+
 namespace MoveMate.Repository.Repositories.Repository
 {
     public class HouseTypeRepository : GenericRepository<HouseType>, IHouseTypeRepository
@@ -21,7 +22,8 @@ namespace MoveMate.Repository.Repositories.Repository
             IQueryable<HouseType> query = _dbSet;
 
             // Apply includes
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
             {
                 query = query.Include(includeProperty.Trim());
             }

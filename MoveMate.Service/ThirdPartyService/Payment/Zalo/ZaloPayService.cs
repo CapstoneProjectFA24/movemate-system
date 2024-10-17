@@ -28,10 +28,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo
             _appId = int.Parse(config["ZaloPay:AppId"]);
             _key1 = config["ZaloPay:Key1"];
             _httpClient = new HttpClient { BaseAddress = new Uri(BaseUrl) };
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=UTF-8");
+            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type",
+                "application/json; charset=UTF-8");
         }
 
-        public ZaloPayOrderCreate BuildZaloPayOrderCreate(string orderId, long amount, string items, string bankCode, string embedData, string callbackUrl)
+        public ZaloPayOrderCreate BuildZaloPayOrderCreate(string orderId, long amount, string items, string bankCode,
+            string embedData, string callbackUrl)
         {
             var appTransId = DateTime.Now.ToString("yyMMdd") + "_" + orderId;
             var data = $"{_appId}|{appTransId}|{amount}|{embedData}|{items}";
@@ -53,7 +55,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo
 
         public async Task<ZaloPayOrderResult?> CreateOrder(ZaloPayOrderCreate orderCreate)
         {
-            var content = new StringContent(JsonConvert.SerializeObject(orderCreate), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(orderCreate), Encoding.UTF8,
+                "application/json");
             var response = await _httpClient.PostAsync(CreateOrderUrl, content);
             var responseString = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<ZaloPayOrderResult>(responseString);
@@ -88,7 +91,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo
 
         public bool ValidateRedirect(RedirectOrder redirectOrder)
         {
-            var checksumData = $"{redirectOrder.Appid}|{redirectOrder.Apptransid}|{redirectOrder.Pmcid}|{redirectOrder.Bankcode}|{redirectOrder.Amount}|{redirectOrder.Discountamount}|{redirectOrder.Status}";
+            var checksumData =
+                $"{redirectOrder.Appid}|{redirectOrder.Apptransid}|{redirectOrder.Pmcid}|{redirectOrder.Bankcode}|{redirectOrder.Amount}|{redirectOrder.Discountamount}|{redirectOrder.Status}";
             var mac = HmacHelper.Compute(_key2, checksumData);
             return mac.Equals(redirectOrder.Checksum);
         }

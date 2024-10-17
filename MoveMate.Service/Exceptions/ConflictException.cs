@@ -10,7 +10,6 @@ namespace MoveMate.Service.Exceptions
     {
         public ConflictException(string message) : base(message)
         {
-
         }
     }
 }

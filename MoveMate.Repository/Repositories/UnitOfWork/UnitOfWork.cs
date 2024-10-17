@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.Repository;
 using MoveMate.Domain.DBContext;
+
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
     public class UnitOfWork : IUnitOfWork
@@ -19,15 +20,15 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private LoyalUserDetailRepository _loyalUserDetailRepository;
         private LoyalUserSettingRepository _loyalUserSettingRepository;
         private BookingRepository _bookingRepository;
-        private BookingDetailRepository _bookingDetailRepository;      
+        private BookingDetailRepository _bookingDetailRepository;
         private BookingStaffDailyRepository _bookingStaffDailyRepository;
         private BookingTrackerRepository _bookingTrackerRepository;
         private FeeDetailRepository _feeDetailRepository;
-        private FeeSettingRepository _feeSettingRepository;     
+        private FeeSettingRepository _feeSettingRepository;
         private HouseTypeRepository _houseTypeRepository;
         private HouseTypeSettingRepository _houseTypeSettingRepository;
         private NotificationRepository _notificationRepository;
-        private PaymentRepository _paymentRepository;   
+        private PaymentRepository _paymentRepository;
         private VoucherRepository _voucherRepository;
         private PromotionCategoryRepository _promotionCategoryRepository;
         private UserRepository _userRepository;
@@ -35,7 +36,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private ScheduleRepository _scheduleRepository;
         private ScheduleDetailRepository _scheduleDetailRepository;
         private ServiceRepository _serviceRepository;
-        private ServiceDetailsRepository _serviceDetailsRepository;      
+        private ServiceDetailsRepository _serviceDetailsRepository;
         private TokenRepository _tokenRepository;
         private TrackerSourceRepository _trackerSourceRepository;
         private TransactionRepository _transactionRepository;
@@ -69,6 +70,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
                 {
                     _loyalUserRepository = new LoyalUserRepository(_dbContext);
                 }
+
                 return _loyalUserRepository;
             }
         }
@@ -81,6 +83,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
                 {
                     _loyalUserDetailRepository = new LoyalUserDetailRepository(_dbContext);
                 }
+
                 return _loyalUserDetailRepository;
             }
         }
@@ -89,10 +92,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_userInfoRepository == null)
+                if (_userInfoRepository == null)
                 {
                     _userInfoRepository = new UserInfoRepository(_dbContext);
                 }
+
                 return _userInfoRepository;
             }
         }
@@ -101,10 +105,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_loyalUserSettingRepository == null)
+                if (_loyalUserSettingRepository == null)
                 {
                     _loyalUserSettingRepository = new LoyalUserSettingRepository(_dbContext);
                 }
+
                 return _loyalUserSettingRepository;
             }
         }
@@ -113,10 +118,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_bookingRepository == null)
+                if (_bookingRepository == null)
                 {
                     _bookingRepository = new BookingRepository(_dbContext);
                 }
+
                 return _bookingRepository;
             }
         }
@@ -126,10 +132,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_bookingDetailRepository == null)
+                if (_bookingDetailRepository == null)
                 {
                     _bookingDetailRepository = new BookingDetailRepository(_dbContext);
                 }
+
                 return _bookingDetailRepository;
             }
         }
@@ -138,10 +145,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_bookingStaffDailyRepository == null)
+                if (_bookingStaffDailyRepository == null)
                 {
                     _bookingStaffDailyRepository = new BookingStaffDailyRepository(_dbContext);
                 }
+
                 return _bookingStaffDailyRepository;
             }
         }
@@ -150,10 +158,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_bookingTrackerRepository == null)
+                if (_bookingTrackerRepository == null)
                 {
-                    _bookingTrackerRepository = new BookingTrackerRepository(_dbContext);   
+                    _bookingTrackerRepository = new BookingTrackerRepository(_dbContext);
                 }
+
                 return _bookingTrackerRepository;
             }
         }
@@ -162,10 +171,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_feeDetailRepository == null)
+                if (_feeDetailRepository == null)
                 {
                     _feeDetailRepository = new FeeDetailRepository(_dbContext);
                 }
+
                 return _feeDetailRepository;
             }
         }
@@ -174,24 +184,25 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_feeSettingRepository == null)
+                if (_feeSettingRepository == null)
                 {
                     _feeSettingRepository = new FeeSettingRepository(_dbContext);
                 }
+
                 return _feeSettingRepository;
             }
         }
 
-     
 
         public HouseTypeRepository HouseTypeRepository
         {
             get
             {
-                if(_houseTypeRepository == null)
+                if (_houseTypeRepository == null)
                 {
                     _houseTypeRepository = new HouseTypeRepository(_dbContext);
                 }
+
                 return _houseTypeRepository;
             }
         }
@@ -204,6 +215,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
                 {
                     _houseTypeSettingRepository = new HouseTypeSettingRepository(_dbContext);
                 }
+
                 return _houseTypeSettingRepository;
             }
         }
@@ -213,10 +225,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_notificationRepository == null)
+                if (_notificationRepository == null)
                 {
                     _notificationRepository = new NotificationRepository(_dbContext);
                 }
+
                 return _notificationRepository;
             }
         }
@@ -225,23 +238,25 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_paymentRepository == null)
+                if (_paymentRepository == null)
                 {
-                    _paymentRepository = new PaymentRepository(_dbContext); 
+                    _paymentRepository = new PaymentRepository(_dbContext);
                 }
+
                 return _paymentRepository;
             }
         }
 
-       
+
         public VoucherRepository VoucherRepository
         {
             get
             {
-                if(_voucherRepository == null)
+                if (_voucherRepository == null)
                 {
                     _voucherRepository = new VoucherRepository(_dbContext);
                 }
+
                 return _voucherRepository;
             }
         }
@@ -250,23 +265,24 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_promotionCategoryRepository == null)
+                if (_promotionCategoryRepository == null)
                 {
                     _promotionCategoryRepository = new PromotionCategoryRepository(_dbContext);
                 }
+
                 return _promotionCategoryRepository;
             }
         }
 
         public RoleRepository RoleRepository
         {
-
             get
             {
-                if(_roleRepository == null)
+                if (_roleRepository == null)
                 {
                     _roleRepository = new RoleRepository(_dbContext);
                 }
+
                 return _roleRepository;
             }
         }
@@ -275,10 +291,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_scheduleRepository == null)
+                if (_scheduleRepository == null)
                 {
                     _scheduleRepository = new ScheduleRepository(_dbContext);
                 }
+
                 return _scheduleRepository;
             }
         }
@@ -287,10 +304,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_scheduleDetailRepository == null)
+                if (_scheduleDetailRepository == null)
                 {
                     _scheduleDetailRepository = new ScheduleDetailRepository(_dbContext);
                 }
+
                 return _scheduleDetailRepository;
             }
         }
@@ -299,10 +317,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_serviceRepository == null)
+                if (_serviceRepository == null)
                 {
                     _serviceRepository = new ServiceRepository(_dbContext);
                 }
+
                 return _serviceRepository;
             }
         }
@@ -311,24 +330,25 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_serviceDetailsRepository == null)
+                if (_serviceDetailsRepository == null)
                 {
                     _serviceDetailsRepository = new ServiceDetailsRepository(_dbContext);
                 }
+
                 return _serviceDetailsRepository;
             }
         }
 
-       
 
         public TokenRepository TokenRepository
         {
             get
             {
-                if(_tokenRepository == null)
+                if (_tokenRepository == null)
                 {
                     _tokenRepository = new TokenRepository(_dbContext);
                 }
+
                 return _tokenRepository;
             }
         }
@@ -337,10 +357,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_trackerSourceRepository == null)
+                if (_trackerSourceRepository == null)
                 {
                     _trackerSourceRepository = new TrackerSourceRepository(_dbContext);
                 }
+
                 return _trackerSourceRepository;
             }
         }
@@ -349,10 +370,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_transactionRepository == null)
+                if (_transactionRepository == null)
                 {
                     _transactionRepository = new TransactionRepository(_dbContext);
                 }
+
                 return _transactionRepository;
             }
         }
@@ -361,10 +383,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_truckRepository == null)
+                if (_truckRepository == null)
                 {
                     _truckRepository = new TruckRepository(_dbContext);
                 }
+
                 return _truckRepository;
             }
         }
@@ -373,10 +396,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_truckCategoryRepository == null)
+                if (_truckCategoryRepository == null)
                 {
                     _truckCategoryRepository = new TruckCategoryRepository(_dbContext);
                 }
+
                 return _truckCategoryRepository;
             }
         }
@@ -385,10 +409,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_truckImgRepository == null)
+                if (_truckImgRepository == null)
                 {
                     _truckImgRepository = new TruckImgRepository(_dbContext);
                 }
+
                 return _truckImgRepository;
             }
         }
@@ -397,10 +422,11 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_userRepository == null)
+                if (_userRepository == null)
                 {
-                    _userRepository = new UserRepository(_dbContext);   
+                    _userRepository = new UserRepository(_dbContext);
                 }
+
                 return _userRepository;
             }
         }
@@ -409,14 +435,14 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             get
             {
-                if(_walletRepository == null)
+                if (_walletRepository == null)
                 {
                     _walletRepository = new WalletRepository(_dbContext);
                 }
+
                 return _walletRepository;
             }
         }
-
 
 
         public void Commit()
@@ -428,7 +454,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             await this._dbContext.SaveChangesAsync();
         }
-        
+
         public int Save()
         {
             return _dbContext.SaveChanges();
@@ -438,7 +464,5 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         {
             return await _dbContext.SaveChangesAsync();
         }
-
-        
     }
 }

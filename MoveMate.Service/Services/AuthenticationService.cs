@@ -1,13 +1,9 @@
 ﻿using AutoMapper;
-
 using Microsoft.IdentityModel.Tokens;
-
-
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-
 using Microsoft.Extensions.Logging;
 using MoveMate.Service.IServices;
 using MoveMate.Repository.Repositories.UnitOfWork;
@@ -60,7 +56,8 @@ namespace MoveMate.Service.Services
                 // Validate the password
                 if (!user.Password.Equals(accountRequest.Password))
                 {
-                    result.AddError(Service.Commons.StatusCode.BadRequest, MessageConstant.LoginMessage.InvalidEmailOrPassword);
+                    result.AddError(Service.Commons.StatusCode.BadRequest,
+                        MessageConstant.LoginMessage.InvalidEmailOrPassword);
                     return result;
                 }
 
@@ -81,7 +78,8 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<AccountTokenResponse> ReGenerateTokensAsync(AccountTokenRequest accountTokenRequest, JWTAuth jwtAuth)
+        public async Task<AccountTokenResponse> ReGenerateTokensAsync(AccountTokenRequest accountTokenRequest,
+            JWTAuth jwtAuth)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             var secretKeyBytes = Encoding.UTF8.GetBytes(jwtAuth.Key);
@@ -95,13 +93,17 @@ namespace MoveMate.Service.Services
                 ClockSkew = TimeSpan.Zero
             };
 
-            var tokenVerification = jwtTokenHandler.ValidateToken(accountTokenRequest.AccessToken, tokenValidationParameters, out var validatedToken);
-            if (validatedToken is JwtSecurityToken jwtSecurityToken && !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512, StringComparison.InvariantCultureIgnoreCase))
+            var tokenVerification = jwtTokenHandler.ValidateToken(accountTokenRequest.AccessToken,
+                tokenValidationParameters, out var validatedToken);
+            if (validatedToken is JwtSecurityToken jwtSecurityToken &&
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512,
+                    StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new BadRequestException(MessageConstant.ReGenerationMessage.InvalidAccessToken);
             }
 
-            var utcExpiredDate = long.Parse(tokenVerification.Claims.First(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+            var utcExpiredDate =
+                long.Parse(tokenVerification.Claims.First(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
             var expiredDate = DateUtil.ConvertUnixTimeToDateTime(utcExpiredDate);
 
             var tokenExpiryInMinutes = int.Parse(_configuration["TokenSettings:TokenExpiryInMinutes"]);
@@ -115,7 +117,8 @@ namespace MoveMate.Service.Services
                 AccessToken = jwtTokenHandler.WriteToken(jwtTokenHandler.CreateToken(new SecurityTokenDescriptor
                 {
                     Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes), SecurityAlgorithms.HmacSha512),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes),
+                        SecurityAlgorithms.HmacSha512),
                     Subject = new ClaimsIdentity(tokenVerification.Claims)
                 })),
                 RefreshToken = GenerateRefreshToken()
@@ -133,12 +136,12 @@ namespace MoveMate.Service.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-            new Claim(JwtRegisteredClaimNames.Sub, accountResponse.Email),
-            new Claim(JwtRegisteredClaimNames.Email, accountResponse.Email),
-            new Claim(JwtRegisteredClaimNames.Sid, accountResponse.Id.ToString()),
-            new Claim(ClaimTypes.Role, accountResponse.RoleId.ToString()), // Use ClaimTypes.Role for roles
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        }),
+                    new Claim(JwtRegisteredClaimNames.Sub, accountResponse.Email),
+                    new Claim(JwtRegisteredClaimNames.Email, accountResponse.Email),
+                    new Claim(JwtRegisteredClaimNames.Sid, accountResponse.Id.ToString()),
+                    new Claim(ClaimTypes.Role, accountResponse.RoleId.ToString()), // Use ClaimTypes.Role for roles
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                }),
                 Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
                 SigningCredentials = credentials
             };
@@ -157,7 +160,8 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<AccountResponse>> LoginByPhoneAsync(PhoneLoginRequest request, JWTAuth jwtAuth)
+        public async Task<OperationResult<AccountResponse>> LoginByPhoneAsync(PhoneLoginRequest request,
+            JWTAuth jwtAuth)
         {
             var result = new OperationResult<AccountResponse>();
 
@@ -169,12 +173,14 @@ namespace MoveMate.Service.Services
                     result.AddError(Service.Commons.StatusCode.NotFound, "The phone number does not exist.");
                     return result;
                 }
+
                 if (!user.Password.Equals(request.Password))
                 {
                     result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid phone number or password.");
                     return result;
-                }          
-                var accountResponse = _mapper.Map<AccountResponse>(user);              
+                }
+
+                var accountResponse = _mapper.Map<AccountResponse>(user);
                 accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
                 result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
             }
@@ -197,7 +203,8 @@ namespace MoveMate.Service.Services
                 // Check if the input is a phone number or email
                 var user = request.Email.Contains("@")
                     ? await _unitOfWork.UserRepository.GetUserAsync(request.Email) // Assume this is an email
-                    : await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Email); // Assume this is a phone number
+                    : await _unitOfWork.UserRepository
+                        .GetUserByPhoneAsync(request.Email); // Assume this is a phone number
 
                 if (user == null)
                 {
@@ -229,7 +236,6 @@ namespace MoveMate.Service.Services
         }
 
 
-
         public async Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister)
         {
             var result = new OperationResult<RegisterResponse>();
@@ -242,7 +248,9 @@ namespace MoveMate.Service.Services
                     result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
                     return result;
                 }
-                var existingUserByPhone = await _unitOfWork.UserRepository.GetUserByPhoneAsync(customerToRegister.Phone);
+
+                var existingUserByPhone =
+                    await _unitOfWork.UserRepository.GetUserByPhoneAsync(customerToRegister.Phone);
                 if (existingUserByPhone != null)
                 {
                     result.AddResponseStatusCode(StatusCode.BadRequest, "Phone number is already registered.", null);
@@ -270,7 +278,8 @@ namespace MoveMate.Service.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during user registration.");
-                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.", null);
+                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.",
+                    null);
                 return result;
             }
         }
@@ -316,6 +325,7 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
+
         public async Task<OperationResult<object>> CheckCustomerExistsAsync(CustomerToRegister customer)
         {
             var result = new OperationResult<object>();
@@ -329,6 +339,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, "Email already exists.");
                     return result;
                 }
+
                 var phoneExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Phone == customer.Phone);
                 if (phoneExists)
                 {
@@ -348,7 +359,6 @@ namespace MoveMate.Service.Services
         }
 
 
-
         private string GenerateRefreshToken()
         {
             var random = new byte[32];
@@ -360,8 +370,8 @@ namespace MoveMate.Service.Services
         }
 
         public async Task<AccountResponse> GenerateTokenWithUserIdAsync(string userId, JWTAuth jwtAuthOptions)
-        {  
-            var jwtTokenHandler = new JwtSecurityTokenHandler(); 
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtAuthOptions.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
             var tokenExpiryInMinutes = int.Parse(_configuration["TokenSettings:TokenExpiryInMinutes"]);
@@ -369,9 +379,9 @@ namespace MoveMate.Service.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-            new Claim(JwtRegisteredClaimNames.Sub, userId), 
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
-        }),
+                    new Claim(JwtRegisteredClaimNames.Sub, userId),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                }),
                 Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
                 SigningCredentials = credentials
             };
@@ -418,9 +428,6 @@ namespace MoveMate.Service.Services
         }
 
 
-
-
-
         private async Task<AccountTokenResponse> GenerateJwtTokenAsync(User user, string jwtAuthKey)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
@@ -447,6 +454,5 @@ namespace MoveMate.Service.Services
                 RefreshToken = GenerateRefreshToken()
             };
         }
-
     }
 }

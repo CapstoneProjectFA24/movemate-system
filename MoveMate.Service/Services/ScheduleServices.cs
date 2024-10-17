@@ -18,6 +18,7 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<ScheduleServices> _logger;
+
         public ScheduleServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ScheduleServices> logger)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
@@ -41,7 +42,6 @@ namespace MoveMate.Service.Services
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
                     includeProperties: "ScheduleDetails"
-
                 );
                 var listResponse = _mapper.Map<List<ScheduleResponse>>(entities);
 
@@ -57,8 +57,6 @@ namespace MoveMate.Service.Services
                 result.AddResponseStatusCode(StatusCode.Ok, "Get List Schedule Done", listResponse, pagin);
 
                 return result;
-
-                
             }
             catch (Exception e)
             {
@@ -72,19 +70,19 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<ScheduleResponse>();
             try
             {
-                var entity = await _unitOfWork.ScheduleRepository.GetByIdAsyncV1(id, includeProperties: "ScheduleDetails");
+                var entity =
+                    await _unitOfWork.ScheduleRepository.GetByIdAsyncV1(id, includeProperties: "ScheduleDetails");
 
                 if (entity == null)
                 {
                     result.AddError(StatusCode.NotFound, "Schedule not found");
                 }
-                else
-
-                if ((bool)entity.IsActived)
+                else if ((bool)entity.IsActived)
                 {
                     var productResponse = _mapper.Map<ScheduleResponse>(entity);
                     result.AddResponseStatusCode(StatusCode.Ok, "Get Schedule by Id Success!", productResponse);
                 }
+
                 return result;
             }
             catch (Exception ex)
@@ -93,10 +91,5 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
-
     }
-
-
-
-
 }

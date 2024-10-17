@@ -34,6 +34,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo.ZaloPayHelper.Crypto
 
             return hash;
         }
+
         public static string EncryptV1(string data, string publicKey)
         {
             string hash = "";
@@ -50,6 +51,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo.ZaloPayHelper.Crypto
 
             return hash;
         }
+
         public static string Encrypt(string plainText, X509Certificate2 cert)
         {
             RSACryptoServiceProvider publicKey = (RSACryptoServiceProvider)cert.PublicKey.Key;
