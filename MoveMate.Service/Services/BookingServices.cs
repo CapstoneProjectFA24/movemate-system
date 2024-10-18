@@ -195,16 +195,23 @@ namespace MoveMate.Service.Services
                 entity.ServiceDetails = serviceDetails;
                 entity.FeeDetails = feeDetails;
 
+                var deposit = total * 30 / 100;
+                entity.Deposit = deposit;
                 entity.TotalFee = totalFee;
                 entity.TotalReal = total;
                 entity.Total = total;
                 entity.UserId = int.Parse(userId);
+                
+                DateTime now = DateTime.Now;
 
-                if (request.BookingAt != null)
+                if ((request.BookingAt.Value - now).TotalHours <= 3 && (request.BookingAt.Value - now).TotalHours >= 0)
                 {
-                    
+                    entity.TypeBooking = TypeBookingEnums.NOW.ToString();
                 }
-                entity.TypeBooking = TypeBookingEnums.NOW.ToString();
+                else
+                {
+                    entity.TypeBooking = TypeBookingEnums.DELAY.ToString();
+                }
 
                 await _unitOfWork.BookingRepository.AddAsync(entity);
                 var checkResult = _unitOfWork.Save();
@@ -217,7 +224,7 @@ namespace MoveMate.Service.Services
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
 
-                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
                 }
@@ -354,7 +361,8 @@ namespace MoveMate.Service.Services
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
+                    result.AddError(StatusCode.NotFound,
+                        $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
@@ -416,7 +424,8 @@ namespace MoveMate.Service.Services
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Service with id: {serviceDetailRequest.ServiceId} not found!");
+                    result.AddError(StatusCode.NotFound,
+                        $"Service with id: {serviceDetailRequest.ServiceId} not found!");
                     return result;
                 }
 
