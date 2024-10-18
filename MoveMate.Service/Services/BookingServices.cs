@@ -918,7 +918,7 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = amount,
-                        IsQuantity = service.IsQuantity,
+                       
                     };
 
                     serviceDetails.Add(serviceDetail);
@@ -930,7 +930,7 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = price,
-                        IsQuantity = service.IsQuantity,
+                       
                     };
 
                     serviceDetails.Add(serviceDetail);
@@ -1683,8 +1683,7 @@ namespace MoveMate.Service.Services
                         Name = service.Name, // Assign Name from Service
                         Description = service.Description, // Assign Description from Service
                         Price = service.Amount, // Assign Price from Service
-                        Quantity = detailRequest.Quantity,
-                        IsQuantity = detailRequest.IsQuantity,
+                        Quantity = detailRequest.Quantity,                     
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };

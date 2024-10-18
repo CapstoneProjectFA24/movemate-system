@@ -90,7 +90,6 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.DeliveryAddress).HasMaxLength(255);
             entity.Property(e => e.DeliveryPoint).HasMaxLength(255);
-            entity.Property(e => e.EstimatedDeliveryTime).HasMaxLength(255);
             entity.Property(e => e.EstimatedDistance).HasMaxLength(255);
             entity.Property(e => e.FeeInfo).HasMaxLength(255);
             entity.Property(e => e.FloorsNumber).HasMaxLength(255);
@@ -117,9 +116,9 @@ public partial class MoveMateDbContext : DbContext
 
         modelBuilder.Entity<BookingDetail>(entity =>
         {
+            entity.Property(e => e.FailedReason).HasMaxLength(255);
             entity.Property(e => e.StaffType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
-            entity.Property(e => e.FailedReason).HasMaxLength(255);
 
             entity.HasOne(d => d.Booking).WithMany(p => p.BookingDetails)
                 .HasForeignKey(d => d.BookingId)
@@ -135,7 +134,9 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("BookingStaffDaily");
 
             entity.Property(e => e.AddressCurrent).HasMaxLength(255);
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(255);
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.User).WithMany(p => p.BookingStaffDailies)
                 .HasForeignKey(d => d.UserId)
@@ -320,6 +321,7 @@ public partial class MoveMateDbContext : DbContext
         {
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.WorkingDays).HasColumnType("datetime");
 
             entity.HasOne(d => d.Schedule).WithMany(p => p.ScheduleDetails)
                 .HasForeignKey(d => d.ScheduleId)
@@ -355,6 +357,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Booking).WithMany(p => p.ServiceDetails)
@@ -370,6 +373,8 @@ public partial class MoveMateDbContext : DbContext
         {
             entity.ToTable("Token");
 
+            entity.Property(e => e.ExpirationDate).HasColumnType("datetime");
+            entity.Property(e => e.RefreshExpirationDate).HasColumnType("datetime");
             entity.Property(e => e.RefreshToken).HasMaxLength(255);
             entity.Property(e => e.Token1)
                 .HasMaxLength(255)
@@ -422,7 +427,7 @@ public partial class MoveMateDbContext : DbContext
 
         modelBuilder.Entity<TripAccuracy>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC07F19BFB10");
+            entity.HasKey(e => e.Id).HasName("PK__TripAccu__3214EC07BB0CB087");
 
             entity.ToTable("TripAccuracy");
 
@@ -492,6 +497,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.CodeIntroduce).HasMaxLength(255);
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.Dob).HasColumnType("datetime");
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.Gender).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);

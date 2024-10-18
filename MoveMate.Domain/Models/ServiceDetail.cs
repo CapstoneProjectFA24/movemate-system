@@ -15,8 +15,6 @@ public partial class ServiceDetail
 
     public double? Price { get; set; }
 
-    public bool? IsQuantity { get; set; }
-
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
@@ -24,6 +22,8 @@ public partial class ServiceDetail
     public string? Description { get; set; }
 
     public string? Name { get; set; }
+
+    public string? Type { get; set; }
 
     public virtual Booking? Booking { get; set; }
 
