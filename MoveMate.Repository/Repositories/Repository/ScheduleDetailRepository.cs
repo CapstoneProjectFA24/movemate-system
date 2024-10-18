@@ -15,5 +15,17 @@ namespace MoveMate.Repository.Repositories.Repository
         public ScheduleDetailRepository(MoveMateDbContext context) : base(context)
         {
         }
+
+        public List<ScheduleDetail> GetScheduleDetailsByDate(DateTime specificDate)
+        {
+            IQueryable<ScheduleDetail> query = _dbSet;
+            var scheduleDetails = query
+                .Where(sd => sd.WorkingDays.HasValue && sd.WorkingDays.Value.Date == specificDate.Date)
+                .OrderBy(sd => sd.EndDate) 
+                .ToList();
+
+            return scheduleDetails;
+        }
+
     }
 }

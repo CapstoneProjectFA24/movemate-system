@@ -58,15 +58,19 @@ public class AssginDriverWorker
                     booking.BookingDetails.Add(driverDetail);
                 
                     booking.Status = BookingDetailStatus.ASSIGNED.ToString();
-                    
+
+                    var endtime = booking.BookingAt!.Value.AddHours(float.Parse(booking.EstimatedDeliveryTime ?? "3.0"));
                     var workDate = new ScheduleDetail()
                     {
                         UserId = driver.UserId,
                         WorkingDays = DateTime.Now,
-                        
-                    }
+                        StartDate = booking.BookingAt,
+                        EndDate = endtime
+
+                    };
                     
                     //save BookingStaffDaily
+                    await unitOfWork.ScheduleDetailRepository.AddAsync(workDate);
                     unitOfWork.BookingStaffDailyRepository.UpdateRange(checkBookingStaffDaily);
 
                 }
