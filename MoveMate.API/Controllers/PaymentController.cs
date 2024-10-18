@@ -279,15 +279,22 @@ namespace MoveMate.API.Controllers
             }
 
             bool IsSuccess = false;
+            if (callback.IsSuccess == true)
+            {
+                IsSuccess = true;
+            }       
             if (callback.Status == "CANCELED")
             {
                 IsSuccess = false;
             }
-            else if (callback.Status == "PAID")
+            if (callback.Status == "PAID")
             {
                 IsSuccess = true;
             }
-
+            if (callback.IsSuccess == false)
+            {
+                IsSuccess = false;
+            }
             var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}";
 
             if (callback.Type == "order")

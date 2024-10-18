@@ -5,6 +5,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.API.Controllers
@@ -201,6 +202,44 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+
+        /// <summary>
+        /// TEST: User Update booking information
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-information-booking/{id}")]
+        public async Task<IActionResult> UpdateInformationBooking(int id, [FromBody] BookingBasicInfoUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateBasicInfoAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+
+        /// <summary>
+        /// TEST: User Update Fee Detail of booking
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-fee-booking/{id}")]
+        public async Task<IActionResult> UpdateFeeBooking(int id, [FromBody] BookingFeeDetailsUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateFeeDetailsAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// TEST: User Update Service Detail of booking 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-service-booking/{id}")]
+        public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateServiceDetailsAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
 
         /// <summary>
         /// TEST: User confirm round trip  

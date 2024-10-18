@@ -81,6 +81,14 @@ public partial class Booking
 
     public bool? IsUserConfirm { get; set; } = false;
 
+    public DateTime? ReviewAt { get; set; }
+
+    public int? DriverNumber { get; set; }
+
+    public int? PorterNumber { get; set; }
+
+    public int? TruckNumber { get; set; }
+
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
     public virtual ICollection<BookingTracker> BookingTrackers { get; set; } = new List<BookingTracker>();
