@@ -27,7 +27,7 @@ public partial class Booking
 
     public double? TotalReal { get; set; }
 
-    public string? EstimatedDeliveryTime { get; set; }
+    public double? EstimatedDeliveryTime { get; set; }
 
     public bool? IsDeposited { get; set; }
 
@@ -79,7 +79,15 @@ public partial class Booking
 
     public bool? IsReviewOnline { get; set; }
 
-    public bool? IsUserConfirm { get; set; } = false;
+    public bool? IsUserConfirm { get; set; }
+
+    public DateTime? ReviewAt { get; set; }
+
+    public int? DriverNumber { get; set; }
+
+    public int? PorterNumber { get; set; }
+
+    public int? TruckNumber { get; set; }
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 

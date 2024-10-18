@@ -19,6 +19,9 @@ using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.Utils;
+using Microsoft.EntityFrameworkCore;
+using MoveMate.Service.ViewModels.ModelRequests.Booking;
+using Catel.Collections;
 
 namespace MoveMate.Service.Services
 {
@@ -915,7 +918,7 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = amount,
-                        IsQuantity = service.IsQuantity,
+                       
                     };
 
                     serviceDetails.Add(serviceDetail);
@@ -927,7 +930,7 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = price,
-                        IsQuantity = service.IsQuantity,
+                       
                     };
 
                     serviceDetails.Add(serviceDetail);
@@ -1006,9 +1009,7 @@ namespace MoveMate.Service.Services
                 bookingDetail.Status = nextStatus;
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
-
                 await _unitOfWork.SaveChangesAsync();
-
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
             }
@@ -1101,7 +1102,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId)
+        public async Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId, string failedReason)
         {
             var result = new OperationResult<BookingDetailsResponse>();
 
@@ -1120,10 +1121,11 @@ namespace MoveMate.Service.Services
                 {
                     case var status when status == BookingDetailStatus.ASSIGNED.ToString():
                         nextStatus = BookingDetailStatus.FAILED.ToString();
+                        bookingDetail.FailedReason = failedReason;
                         break;
-
                     case var status when status == BookingDetailStatus.ENROUTE.ToString():
                         nextStatus = BookingDetailStatus.FAILED.ToString();
+                        bookingDetail.FailedReason = failedReason;
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -1134,7 +1136,6 @@ namespace MoveMate.Service.Services
                 bookingDetail.Status = nextStatus;
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 await _unitOfWork.SaveChangesAsync();
-
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
             }
@@ -1568,6 +1569,206 @@ namespace MoveMate.Service.Services
             {
                 _logger.LogError(ex, "Error confirm round trip");
                 throw;
+            }
+            return result;
+        }
+
+
+        public async Task<OperationResult<BookingResponse>> UpdateFeeDetailsAsync(int bookingId, BookingFeeDetailsUpdateRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                // Retrieve the existing booking
+                var existingBooking = await _unitOfWork.BookingRepository
+                    .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.FeeDetails));
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    return result;
+                }
+
+                // Create and add new FeeDetail objects
+                foreach (var detailRequest in request.FeeDetails)
+                {
+                    // Retrieve the FeeSetting entity by FeeSettingId
+                    var feeSetting = await _unitOfWork.FeeSettingRepository.GetByIdAsync((int)detailRequest.FeeSettingId);
+
+                    if (feeSetting == null)
+                    {
+                        result.AddError(StatusCode.NotFound, "FeeSetting not found!");
+                        return result;
+                    }
+
+                    var newFeeDetail = new FeeDetail
+                    {
+                        BookingId = bookingId,
+                        FeeSettingId = detailRequest.FeeSettingId,
+                        Name = feeSetting.Name, 
+                        Description = feeSetting.Description, 
+                        Amount = feeSetting.Amount, 
+                        Quantity = detailRequest.Quantity
+                    };
+
+                    // Add the new FeeDetail to the booking
+                    existingBooking.FeeDetails.Add(newFeeDetail);
+                }
+
+
+                // Save changes to the database
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                    // Reload the booking to include the updated FeeDetails in the response
+                    existingBooking = await _unitOfWork.BookingRepository
+                       .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails)
+                                                                           .Include(b => b.FeeDetails)
+                                                                           .Include(b => b.BookingDetails)
+                                                                           .Include(b => b.BookingTrackers)
+                                                                           );
+
+                    var response = _mapper.Map<BookingResponse>(existingBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Fee details added successfully!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Adding fee details failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+
+        public async Task<OperationResult<BookingResponse>> UpdateServiceDetailsAsync(int bookingId, BookingServiceDetailsUpdateRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                // Retrieve the existing booking
+                var existingBooking = await _unitOfWork.BookingRepository
+                    .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails));
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    return result;
+                }
+
+                // Create and add new ServiceDetail objects
+                foreach (var detailRequest in request.ServiceDetails)
+                {
+                    // Retrieve the Service entity by ServiceId
+                    var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)detailRequest.ServiceId);
+
+                    if (service == null)
+                    {
+                        result.AddError(StatusCode.NotFound, $"Service with id {detailRequest.ServiceId} not found!");
+                        return result;
+                    }
+
+                    var newServiceDetail = new ServiceDetail
+                    {
+                        BookingId = bookingId,
+                        ServiceId = detailRequest.ServiceId,
+                        Name = service.Name, // Assign Name from Service
+                        Description = service.Description, // Assign Description from Service
+                        Price = service.Amount, // Assign Price from Service
+                        Quantity = detailRequest.Quantity,                     
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    // Add the new ServiceDetail to the booking
+                    existingBooking.ServiceDetails.Add(newServiceDetail);
+                }
+
+                // Save changes to the database
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                    // Reload the booking to include the updated ServiceDetails in the response
+                    existingBooking = await _unitOfWork.BookingRepository
+                        .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails)
+                                                                            .Include(b => b.FeeDetails)
+                                                                            .Include(b => b.BookingDetails)
+                                                                            .Include(b => b.BookingTrackers)
+                                                                            );
+
+                    var response = _mapper.Map<BookingResponse>(existingBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Service details added successfully!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Adding service details failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<BookingResponse>> UpdateBasicInfoAsync(int bookingId, BookingBasicInfoUpdateRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                // Retrieve the existing booking by ID
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    return result;
+                }
+
+                // Use ReflectionUtils to update properties of the existing booking with the request data
+                ReflectionUtils.UpdateProperties(request, existingBooking);
+
+                // Update the 'UpdatedAt' field manually
+                existingBooking.UpdatedAt = DateTime.UtcNow;
+
+                // Save changes
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                    // Reload the booking to include the updated ServiceDetails in the response
+                    existingBooking = await _unitOfWork.BookingRepository
+                        .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails)
+                                                                            .Include(b => b.FeeDetails)
+                                                                            .Include(b => b.BookingDetails)
+                                                                            .Include(b => b.BookingTrackers)
+                                                                            );
+
+                    var response = _mapper.Map<BookingResponse>(existingBooking);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, "Booking basic info updated successfully!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Failed to update booking basic info.");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
             }
 
             return result;

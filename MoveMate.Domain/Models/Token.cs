@@ -15,9 +15,9 @@ public partial class Token
 
     public string? TokenType { get; set; }
 
-    public DateOnly? ExpirationDate { get; set; }
+    public DateTime? ExpirationDate { get; set; }
 
-    public DateOnly? RefreshExpirationDate { get; set; }
+    public DateTime? RefreshExpirationDate { get; set; }
 
     public bool? IsMobile { get; set; }
 

@@ -28,33 +28,62 @@ public class AssginDriverWorker
         {
             using (var scope = _serviceScopeFactory.CreateScope())
             {
-                var unitOfWork = (UnitOfWork) scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-                
+
+
                 var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
 
                 string redisKey = DateUtil.GetKeyReview();
-                var reviewerId = await redisService.DequeueAsync<int>(redisKey);
 
-                var reviewer = new BookingDetail()
+                var date = DateUtil.GetShard(booking.BookingAt);
+
+                var checkBookingStaffDaily =
+                    await unitOfWork.BookingStaffDailyRepository.GetStaffActiveNowBookingStaffDailies(4);
+
+                if (checkBookingStaffDaily.Count > 0)
                 {
-                    BookingId = message,
-                    Status = BookingDetailStatus.ASSIGNED.ToString(),
-                    UserId = reviewerId,
-                    StaffType = RoleEnums.REVIEWER.ToString(),
-                };
-                
-                booking.BookingDetails.Add(reviewer);
-                
-                booking.Status = BookingDetailStatus.ASSIGNED.ToString();
+                    var driver = checkBookingStaffDaily.FirstOrDefault();
+
+                    var driverDetail = new BookingDetail()
+                    {
+                        BookingId = message,
+                        Status = BookingDetailStatus.ASSIGNED.ToString(),
+                        UserId = driver!.UserId,
+                        StaffType = RoleEnums.DRIVER.ToString(),
+                    };
+
+                    driver.Status = BookingStaffDailyEnums.BUSSY.ToString();
+
+                    booking.BookingDetails.Add(driverDetail);
+
+                    booking.Status = BookingDetailStatus.ASSIGNED.ToString();
+
+                    var endtime = booking.BookingAt!.Value.AddHours(booking.EstimatedDeliveryTime ?? 3);
+                    var workDate = new ScheduleDetail()
+                    {
+                        UserId = driver.UserId,
+                        WorkingDays = DateTime.Now,
+                        StartDate = booking.BookingAt,
+                        EndDate = endtime
+                    };
+
+                    //save BookingStaffDaily
+                    await unitOfWork.ScheduleDetailRepository.AddAsync(workDate);
+                    unitOfWork.BookingStaffDailyRepository.UpdateRange(checkBookingStaffDaily);
+                }
+                else
+                {
+                    // logic nếu ko đủ
+                    //khó quá à
+                }
+
+
                 unitOfWork.BookingRepository.Update(booking);
                 unitOfWork.Save();
-                
-                redisService.EnqueueAsync(redisKey, reviewerId);
-                
-                Console.WriteLine($"Booking info: {booking}");
-                
+
+                Console.WriteLine($"Booking assign_driver info: {booking.Id}");
             }
         }
         catch (Exception e)
@@ -62,6 +91,7 @@ public class AssginDriverWorker
             _logger.LogError(e, "Error processing booking review for message {Message}", message);
             throw;
         }
+
         Console.WriteLine($"Received booking_assign_driver message: {message}");
     }
 }
