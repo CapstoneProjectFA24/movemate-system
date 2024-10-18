@@ -1,4 +1,6 @@
-﻿namespace MoveMate.Service.Commons
+﻿using MoveMate.Domain.Models;
+
+namespace MoveMate.Service.Commons
 {
     public static class MessageConstant
     {
@@ -47,12 +49,6 @@
             public const string AccountNoLongerActive = "Your account is no longer active.";
         }
 
-        public static class VerificationMessage
-        {
-            public const string NotAuthenticatedEmailBefore = "Email has not been previously authenticated.";
-            public const string ExpiredOTPCode = "OTP code has expired.";
-            public const string NotMatchOTPCode = "Your OTP code does not match the previously sent OTP code.";
-        }
 
         public static class ReGenerationMessage
         {
@@ -66,5 +62,46 @@
             public const string NotMatchAccessToken = "Your access token does not match the registered access token.";
             public const string ExpiredRefreshToken = "Refresh token expired.";
         }
+
+
+        public static class FailMessage
+        {
+
+            public const string ServerError = "An unexpected error occurred";
+
+
+            public const string GetListUserFail = "List user is empty!";
+            public const string NotFoundUser = "User not found!";
+            public const string NotFoundUserInfo = "User info not found";
+            public const string UpdateUserFail = "Update user failed";
+            public const string LoginByPhoneFail = "The phone number does not exist";
+            public const string LoginByEmailFail = "The email or phone number does not exist";
+            public const string PasswordFail = "Invalid email/phone number or password";
+            public const string EmailExist = "Email is already registered";
+            public const string PhoneExist = "Phone number is already registered";
+
+            //Booking
+            public const string NotFoundBooking = "Booking not found";
+        }
+
+
+        public static class SuccessMessage
+        {
+            public const string LoginSuccess = "Login successful";
+
+
+            public const string CheckUserInfo = "Customer information is available";
+            public const string RegisterSuccess = "User registered successfully";
+            public const string GetListUserSuccess = "Get list user done";
+            public const string UserInformationRetrieved = "User information retrieved successfully";
+
+            //Booking
+            public const string GetListBookingEmpty = "List booking is empty!";
+            public const string GetListBookingSuccess = "Get list booking done";
+            
+        }
+
+
+
     }
 }

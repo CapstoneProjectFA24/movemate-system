@@ -66,21 +66,21 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, "List Booking is Empty!", listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingEmpty, listResponse);
                     return result;
                 }
 
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done.", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingSuccess, listResponse, pagin);
 
                 return result;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error occurred in getAll Service Method");
-                throw;
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
             }
         }
 
@@ -101,7 +101,8 @@ namespace MoveMate.Service.Services
 
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found Booking with Id: {id}");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
                 }
                 else
                 {
