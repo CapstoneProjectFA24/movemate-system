@@ -19,7 +19,7 @@ public partial class BookingDetail
 
     public bool? IsResponsible { get; set; }
 
-    public bool? IsRoundTripCompleted { get; set; } = false;
+    public bool? IsRoundTripCompleted { get; set; }
 
     public string? FailedReason { get; set; }
 
