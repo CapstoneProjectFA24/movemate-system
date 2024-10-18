@@ -15,6 +15,7 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class BookingRepository : GenericRepository<Booking>, IBookingRepository
     {
+        
         public BookingRepository(MoveMateDbContext context) : base(context)
         {
         }

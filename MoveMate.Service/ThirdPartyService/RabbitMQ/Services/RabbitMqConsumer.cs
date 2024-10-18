@@ -20,6 +20,7 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
     private readonly int _maxRetryAttempts;
     private readonly string? _deadLetterQueue;
     private readonly IServiceProvider _serviceProvider;
+
     public RabbitMqConsumer(IRabbitMqConnection connection, ILogger<RabbitMqConsumer> logger,
         IConfiguration configuration, IServiceProvider serviceProvider)
     {
@@ -33,10 +34,8 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     public void StartConsuming<T>() where T : class
     {
-        // Tạo một scope mới
         using (var scope = _serviceProvider.CreateScope())
         {
-            // Lấy dịch vụ T từ scope
             var worker = scope.ServiceProvider.GetRequiredService<T>();
             var methods = typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.Public);
 
@@ -46,13 +45,11 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
                 if (consumerAttribute != null)
                 {
                     string queueName = consumerAttribute.QueueName;
-                    // Sử dụng worker đã lấy từ scope, thay vì khởi tạo mới
                     StartListening(queueName, method, worker);
                 }
             }
         }
     }
-
 
     private void DeclareQueueIfNotExists(string queueName)
     {
@@ -71,9 +68,6 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     private void StartListening(string queueName, MethodInfo method, object instance)
     {
-        
-        DeclareQueueIfNotExists(queueName);
-
         var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += (model, ea) =>
         {
@@ -116,7 +110,7 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         };
 
         _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false);
-        //DeclareQueueIfNotExists(queueName);
+
         _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
     }
 
@@ -156,9 +150,9 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
     /// <returns></returns>
     public T? GetMessageFromQueue<T>(string queueName) where T : class
     {
-        DeclareQueueIfNotExists(queueName); // Đảm bảo queue tồn tại
+        DeclareQueueIfNotExists(queueName);
 
-        var result = _channel.BasicGet(queueName, autoAck: false); // Lấy message từ queue mà không auto ack
+        var result = _channel.BasicGet(queueName, autoAck: false);
 
         if (result != null)
         {
@@ -168,25 +162,23 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
             try
             {
-                // Deserialize JSON message into the expected type
                 var message = JsonSerializer.Deserialize<T>(jsonString);
 
                 if (message != null)
                 {
-                    _channel.BasicAck(result.DeliveryTag, false); // Xác nhận đã nhận message thành công
-                    return message; // Trả về đối tượng message
+                    _channel.BasicAck(result.DeliveryTag, false);
+                    return message;
                 }
                 else
                 {
                     _logger.LogError("Failed to deserialize message from queue {QueueName}.", queueName);
-                    _channel.BasicNack(result.DeliveryTag, false, requeue: true); // Nack và requeue nếu thất bại
+                    _channel.BasicNack(result.DeliveryTag, false, requeue: true);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message from queue {QueueName}.", queueName);
 
-                // Retry logic
                 int retryCount = GetRetryCount(result.BasicProperties);
                 if (retryCount >= _maxRetryAttempts)
                 {
@@ -199,7 +191,7 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
             }
         }
 
-        return null; // Queue trống hoặc không xử lý được message
+        return null;
     }
 
     private int GetRetryCount(IBasicProperties basicProperties)
@@ -221,16 +213,15 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
         _channel.BasicPublish(exchange: "", routingKey: result.RoutingKey, basicProperties: properties,
             body: result.Body);
-        _channel.BasicAck(result.DeliveryTag, false); // Ack message ban đầu để không giữ lại trong queue
+        _channel.BasicAck(result.DeliveryTag, false);
     }
 
     private void MoveToDeadLetterQueue(BasicGetResult result, string queueName)
     {
         _channel.BasicPublish(exchange: "", routingKey: _deadLetterQueue, basicProperties: result.BasicProperties,
             body: result.Body);
-        _channel.BasicAck(result.DeliveryTag, false); // Ack message để không giữ lại trong queue chính
+        _channel.BasicAck(result.DeliveryTag, false);
     }
-
 
     public void Dispose()
     {
