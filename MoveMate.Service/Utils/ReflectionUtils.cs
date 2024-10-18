@@ -18,33 +18,36 @@ namespace MoveMate.Service.Utils
             }
         }
 
-        public static void UpdateProperties<TSource, TTarget>(TSource source, TTarget target)
+        public static void UpdateProperties<TSource, TDestination>(TSource source, TDestination destination)
         {
-            DoWithProperties(source, property =>
+            var sourceProperties = typeof(TSource).GetProperties();
+            foreach (var property in sourceProperties)
             {
-                var newValue = property.GetValue(source);
-
-                // Ensure the property is not null and can be set (has both getter and setter)
-                if (newValue != null && property.CanRead && property.CanWrite)
+                if (property.CanRead)
                 {
-                    var propertyName = property.Name;
-                    var targetProperty = target.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-
-                    if (targetProperty != null && targetProperty.CanWrite)
+                    if(property.Name != "Id")
                     {
-                        // Ensure the types match or can be implicitly converted
-                        if (targetProperty.PropertyType == property.PropertyType)
+                        var value = property.GetValue(source);
+                        if (value != null)
                         {
-                            targetProperty.SetValue(target, newValue);
-                        }
-                        // Convert boolean to string if necessary
-                        else if (newValue is bool boolValue && targetProperty.PropertyType == typeof(string))
-                        {
-                            targetProperty.SetValue(target, boolValue.ToString());
+                            var destProperty = typeof(TDestination).GetProperty(property.Name);
+                            if (destProperty != null && destProperty.CanWrite)
+                            {
+                                // Check if the types are compatible
+                                if (destProperty.PropertyType.IsAssignableFrom(value.GetType()))
+                                {
+                                    destProperty.SetValue(destination, value);
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException($"Property type mismatch for {property.Name}");
+                                }
+                            }
                         }
                     }
                 }
-            });
+                   
+            }
         }
     }
 }

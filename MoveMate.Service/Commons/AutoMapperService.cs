@@ -50,7 +50,11 @@ namespace MoveMate.Service.Commons
             //Booking
             CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<Booking, BookingResponse>()
+                .ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
+                .ForMember(dest => dest.FeeDetails, opt => opt.MapFrom(src => src.FeeDetails))
+                .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
                 .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
+
             CreateMap<Booking, BookingRegisterResponse>();
             //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
             //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
@@ -69,8 +73,11 @@ namespace MoveMate.Service.Commons
                     opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
                 .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
                 .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
-            CreateMap<BookingBasicInfoUpdateRequest, Booking>();
-
+            CreateMap<BookingBasicInfoUpdateRequest, Booking>()
+                .ForMember(dest => dest.ServiceDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.FeeDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.BookingDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.BookingTrackers, opt => opt.Ignore());
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
