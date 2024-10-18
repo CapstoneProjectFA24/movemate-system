@@ -94,5 +94,18 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Select(u => u.Id)
                 .ToListAsync();
         }
+        
+        public async Task<User> GetDriverAsync(int accountId)
+        {
+            try
+            {
+                return await this._dbContext.Users.Include(x => x.Role)
+                    .SingleOrDefaultAsync(x => x.Id == accountId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

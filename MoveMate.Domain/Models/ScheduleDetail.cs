@@ -11,7 +11,7 @@ public partial class ScheduleDetail
 
     public int? ScheduleId { get; set; }
 
-    public DateOnly? WorkingDays { get; set; }
+    public DateTime? WorkingDays { get; set; }
 
     public DateTime? StartDate { get; set; }
 
