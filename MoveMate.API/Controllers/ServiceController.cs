@@ -5,6 +5,7 @@ using MoveMate.Service.Services;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.API.Controllers
 {
@@ -120,12 +121,16 @@ namespace MoveMate.API.Controllers
             _producer.SendingMessage<String>("hello");
             string queueKey = "myQueue";
 
-            await _redisService.EnqueueAsync(queueKey, "Hello, World! my queue");
+            await _redisService.EnqueueAsync(queueKey,response.Payload);
             var key = DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + "mykey";
-            await _redisService.SetDataAsync(key, "Hello, World! my key");
+            //await _redisService.SetDataAsync(key, "Hello, World! my key");
 
             await _redisService.EnqueueWithExpiryAsync("testqueue", "test");
 
+            await _redisService.SetDataAsync(key, response.Payload);
+
+            var check = await _redisService.GetDataAsync<List<ServicesResponse>>(key);
+                
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }
