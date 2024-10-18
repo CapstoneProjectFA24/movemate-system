@@ -195,11 +195,13 @@ namespace MoveMate.Service.Services
                 entity.ServiceDetails = serviceDetails;
                 entity.FeeDetails = feeDetails;
 
+                var deposit = total * 30 / 100;
+                entity.Deposit = deposit;
                 entity.TotalFee = totalFee;
                 entity.TotalReal = total;
                 entity.Total = total;
                 entity.UserId = int.Parse(userId);
-
+                
                 DateTime now = DateTime.Now;
 
                 if ((request.BookingAt.Value - now).TotalHours <= 3 && (request.BookingAt.Value - now).TotalHours >= 0)
