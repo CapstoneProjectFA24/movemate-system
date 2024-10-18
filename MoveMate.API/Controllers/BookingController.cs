@@ -68,12 +68,10 @@ namespace MoveMate.API.Controllers
         ///           "serviceDetails": [
         ///             {
         ///               "serviceId": 52,
-        ///               "isQuantity": true,
         ///               "quantity": 1
         ///             },
         ///             {
         ///               "serviceId": 35,
-        ///               "isQuantity": true,
         ///               "quantity": 1
         ///             }
         ///           ],

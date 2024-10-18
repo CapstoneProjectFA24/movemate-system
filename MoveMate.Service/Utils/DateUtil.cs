@@ -141,10 +141,22 @@ namespace MoveMate.Service.Utils
             return tz;
         }
 
+        public static String GetShardNow()
+        {
+            string dateKey = DateTime.Now.ToString("yyyyMMdd");
+            return dateKey;
+        }
+        
+        public static String GetShard(DateTime? time)
+        {
+            string dateKey =  time.HasValue ? time.Value.ToString("yyyyMMdd") : GetShardNow();
+            return dateKey;
+        }
+
+
         public static String GetKeyReview()
         {
-            string dateKey = DateTime.Now.ToString("yyyyMMdd"); 
-        
+            string dateKey = GetShardNow();
             string redisKey = $"reviewerQueue_{dateKey}";
 
             return redisKey;
