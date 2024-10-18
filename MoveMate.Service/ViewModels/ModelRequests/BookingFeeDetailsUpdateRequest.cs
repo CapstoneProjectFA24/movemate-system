@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class FeeDetailRequest
+    public class BookingFeeDetailsUpdateRequest
     {
-        public int? FeeSettingId { get; set; }
-        public int? Quantity { get; set; }
+        public int BookingId { get; set; }
+        public List<FeeDetailRequest> FeeDetails { get; set; } = new List<FeeDetailRequest>();
     }
 }

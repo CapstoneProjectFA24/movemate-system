@@ -4,41 +4,43 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace MoveMate.Service.Utils
 {
     public static class ReflectionUtils
     {
-        public static void DoWithFields<T>(T source, Action<FieldInfo> action)
+        public static void DoWithProperties<T>(T source, Action<PropertyInfo> action)
         {
-            foreach (var field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (var property in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                action(field);
+                action(property);
             }
         }
 
-        public static void UpdateFields<TSource, TTarget>(TSource source, TTarget target)
+        public static void UpdateProperties<TSource, TTarget>(TSource source, TTarget target)
         {
-            DoWithFields(source, field =>
+            DoWithProperties(source, property =>
             {
-                var newValue = field.GetValue(source);
+                var newValue = property.GetValue(source);
 
-                // Ensure the field is not null and the types match
-                if (newValue != null && field.FieldType == newValue.GetType())
+                // Ensure the property is not null and can be set (has both getter and setter)
+                if (newValue != null && property.CanRead && property.CanWrite)
                 {
-                    var fieldName = field.Name;
-                    var existingField = target.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    var propertyName = property.Name;
+                    var targetProperty = target.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-                    if (existingField != null)
+                    if (targetProperty != null && targetProperty.CanWrite)
                     {
-                        // Convert boolean to string if necessary
-                        if (newValue is bool boolValue && existingField.FieldType == typeof(string))
+                        // Ensure the types match or can be implicitly converted
+                        if (targetProperty.PropertyType == property.PropertyType)
                         {
-                            existingField.SetValue(target, boolValue.ToString());
+                            targetProperty.SetValue(target, newValue);
                         }
-                        else
+                        // Convert boolean to string if necessary
+                        else if (newValue is bool boolValue && targetProperty.PropertyType == typeof(string))
                         {
-                            existingField.SetValue(target, newValue);
+                            targetProperty.SetValue(target, boolValue.ToString());
                         }
                     }
                 }
@@ -46,3 +48,4 @@ namespace MoveMate.Service.Utils
         }
     }
 }
+

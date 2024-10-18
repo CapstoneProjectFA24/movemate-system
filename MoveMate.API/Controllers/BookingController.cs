@@ -187,18 +187,42 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: User confirm round trip  
+        /// TEST: User Update booking information
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("reviewer/update-booking/{id}")]
-        public async Task<IActionResult> UserConfirmRoundTrip(int id, [FromBody] BookingUpdateRequest request)
+        [HttpPut("reviewer/update-information-booking/{id}")]
+        public async Task<IActionResult> UpdateInformationBooking(int id, [FromBody] BookingBasicInfoUpdateRequest request)
         {
-            var response = await _bookingServices.UpdateBookingAsync(id, request);
+            var response = await _bookingServices.UpdateBasicInfoAsync(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
 
+
+        /// <summary>
+        /// TEST: User Update Fee Detail of booking
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-fee-booking/{id}")]
+        public async Task<IActionResult> UpdateFeeBooking(int id, [FromBody] BookingFeeDetailsUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateFeeDetailsAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// TEST: User Update Service Detail of booking 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-service-booking/{id}")]
+        public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateServiceDetailsAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
 
         /// <summary>
         /// TEST: User confirm round trip  

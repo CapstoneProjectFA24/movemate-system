@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests.Booking
 {
-    public class BookingUpdateRequest
+    public class BookingBasicInfoUpdateRequest
     {
         public int Id { get; set; }
         public int? UserId { get; set; }
@@ -30,6 +30,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests.Booking
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
         public string? Review { get; set; }
+        //public DateTime? ReviewAt { get; set; }
         public string? Bonus { get; set; }
         public string? TypeBooking { get; set; }
         public string? RoomNumber { get; set; }
@@ -46,9 +47,5 @@ namespace MoveMate.Service.ViewModels.ModelRequests.Booking
         public DateTime? BookingAt { get; set; }
         public bool? IsReviewOnline { get; set; }
         public bool? IsUserConfirm { get; set; }
-
-        // Collections for detailed information
-        public List<ServiceDetailRequest> ServiceDetails { get; set; } = new List<ServiceDetailRequest>();
-        public List<FeeDetailRequest> FeeDetails { get; set; } = new List<FeeDetailRequest>();
     }
 }

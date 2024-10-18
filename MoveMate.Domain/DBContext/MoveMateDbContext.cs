@@ -99,6 +99,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.PickupPoint).HasMaxLength(255);
             entity.Property(e => e.ReportedReason).HasMaxLength(255);
             entity.Property(e => e.Review).HasMaxLength(255);
+            entity.Property(e => e.ReviewAt).HasColumnType("datetime");
             entity.Property(e => e.RoomNumber).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.TypeBooking).HasMaxLength(255);
