@@ -175,5 +175,52 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
+        
+        // SubCollection
+        public async Task SaveSubcollection<T>(T saveObj, long parentId, string parentCollectionName, string subcollectionName, long subId)
+        {
+            try
+            {
+                DocumentReference parentDocRef = _dbFirestore.Collection(parentCollectionName).Document(parentId.ToString());
+
+                DocumentReference subDocRef = parentDocRef.Collection(subcollectionName).Document(subId.ToString());
+
+                await subDocRef.SetAsync(saveObj);
+                Console.WriteLine($"Subcollection document saved with ID: {subId}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving subcollection document: {e.Message}");
+                throw;
+            }
+        }
+        
+        public async Task<T> GetSubcollectionByKey<T>(long parentId, string parentCollectionName, string subcollectionName, string subKey)
+        {
+            try
+            {
+                DocumentReference parentDocRef = _dbFirestore.Collection(parentCollectionName).Document(parentId.ToString());
+
+                DocumentReference subDocRef = parentDocRef.Collection(subcollectionName).Document(subKey);
+
+                DocumentSnapshot snapshot = await subDocRef.GetSnapshotAsync();
+
+                if (snapshot.Exists)
+                {
+                    return snapshot.ConvertTo<T>();
+                }
+                else
+                {
+                    throw new NotFoundException($"Document with key '{subKey}' not found in subcollection '{subcollectionName}'.");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error getting subcollection document: {e.Message}");
+                throw;
+            }
+        }
+
+
     }
 }

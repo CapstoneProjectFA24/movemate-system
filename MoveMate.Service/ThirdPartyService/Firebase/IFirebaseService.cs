@@ -29,5 +29,12 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public Task<T> GetByKey<T>(string key, string collectionName);
         public Task<bool> Delete(string key, string collectionName);
+
+        public Task SaveSubcollection<T>(T saveObj, long parentId, string parentCollectionName,
+            string subcollectionName,
+            long subId);
+
+        public Task<T> GetSubcollectionByKey<T>(long parentId, string parentCollectionName, string subcollectionName,
+            string subKey);
     }
 }

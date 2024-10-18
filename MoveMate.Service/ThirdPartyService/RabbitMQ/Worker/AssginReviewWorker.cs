@@ -10,19 +10,20 @@ using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
-public class AssginReiewWorker
+public class AssginReviewWorker
 {
-    private readonly ILogger<AssginReiewWorker> _logger;
+    private readonly ILogger<AssginReviewWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    public AssginReiewWorker(ILogger<AssginReiewWorker> logger, IServiceScopeFactory serviceScopeFactory)
+    public AssginReviewWorker(ILogger<AssginReviewWorker> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    [Consumer("movemate.booking_assign_review_local")]
+    [Consumer("movemate.booking_assign_review")]
     public async Task  HandleMessage(int message)
     {
+        await Task.Delay(TimeSpan.FromSeconds(3));
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
