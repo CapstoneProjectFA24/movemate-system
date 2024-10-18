@@ -23,7 +23,7 @@ public partial class User
 
     public string? AvatarUrl { get; set; }
 
-    public DateOnly? Dob { get; set; }
+    public DateTime? Dob { get; set; }
 
     public bool? IsBanned { get; set; }
 
