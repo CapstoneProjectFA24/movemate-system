@@ -47,5 +47,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests.Booking
         public DateTime? BookingAt { get; set; }
         public bool? IsReviewOnline { get; set; }
         public bool? IsUserConfirm { get; set; }
+
     }
 }

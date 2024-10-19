@@ -235,7 +235,7 @@ namespace MoveMate.API.Controllers
         [HttpPut("reviewer/update-service-booking/{id}")]
         public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
         {
-            var response = await _bookingServices.UpdateServiceDetailsAsync(id, request);
+            var response = await _bookingServices.UpdateBookingAsync(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
