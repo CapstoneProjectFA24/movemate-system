@@ -8,7 +8,12 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class BookingServiceDetailsUpdateRequest
     {
-        public int BookingId { get; set; }
+
+        public string? PickupAddress { get; set; }
+        public string? PickupPoint { get; set; }
+        public string? TypeBooking { get; set; }
+        public string? RoomNumber { get; set; }
+        public string? FloorsNumber { get; set; }
         public List<ServiceDetailRequest> ServiceDetails { get; set; } = new List<ServiceDetailRequest>();
     }
 }

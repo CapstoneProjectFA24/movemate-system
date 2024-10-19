@@ -1666,96 +1666,101 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingResponse>> UpdateServiceDetailsAsync(int bookingId, BookingServiceDetailsUpdateRequest request)
+        public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingId, BookingServiceDetailsUpdateRequest request)
         {
             var result = new OperationResult<BookingResponse>();
 
             try
             {
-                // Retrieve the existing booking
+                // Lấy thông tin booking hiện tại từ cơ sở dữ liệu
                 var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails));
 
                 if (existingBooking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    result.AddError(StatusCode.NotFound, $"Booking với id {bookingId} không tồn tại.");
                     return result;
                 }
 
-                // Create and add new ServiceDetail objects or update existing ones
+
+                ReflectionUtils.UpdateProperties(request, existingBooking);
+
+
+                existingBooking.Status = BookingEnums.REVIEWED.ToString();
+                existingBooking.UpdatedAt = DateTime.UtcNow;
+
+                // Cập nhật chi tiết dịch vụ
                 foreach (var detailRequest in request.ServiceDetails)
                 {
-                    // Validate quantity
-                    if (detailRequest.Quantity < 0)
-                    {
-                        result.AddError(StatusCode.BadRequest, $"Quantity must be greater than or equal to 0 for ServiceId {detailRequest.ServiceId}.");
-                        return result; // Exit early if the quantity is invalid
-                    }
-
-                    // Retrieve the Service entity by ServiceId
+                    // Kiểm tra dịch vụ có tồn tại hay không
                     var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)detailRequest.ServiceId);
 
                     if (service == null)
                     {
-                        result.AddError(StatusCode.NotFound, $"Service with id {detailRequest.ServiceId} not found!");
+                        result.AddError(StatusCode.NotFound, $"Service với id {detailRequest.ServiceId} không tồn tại.");
                         return result;
                     }
 
-                    // Check if the ServiceDetail already exists for this ServiceId
+                    // Kiểm tra chi tiết dịch vụ hiện có, nếu có thì cập nhật, nếu không có thì thêm mới
                     var existingServiceDetail = existingBooking.ServiceDetails
                         .FirstOrDefault(sd => sd.ServiceId == detailRequest.ServiceId);
 
                     if (existingServiceDetail != null)
                     {
-                        // Update the existing ServiceDetail's quantity and other fields if necessary
-                        existingServiceDetail.Quantity = detailRequest.Quantity; // Update quantity
-                        existingServiceDetail.Price = service.Amount; // Update price if needed
-                        existingServiceDetail.UpdatedAt = DateTime.UtcNow; // Update timestamp
+                        // Cập nhật chi tiết dịch vụ hiện có
+                        existingServiceDetail.Quantity = detailRequest.Quantity;
+                        existingServiceDetail.Price = service.Amount;
+                        existingServiceDetail.UpdatedAt = DateTime.UtcNow;
                     }
                     else
                     {
-                        // Create a new ServiceDetail if it does not exist
+                        // Thêm mới chi tiết dịch vụ
                         var newServiceDetail = new ServiceDetail
                         {
                             BookingId = bookingId,
                             ServiceId = detailRequest.ServiceId,
-                            Name = service.Name, 
-                            Description = service.Description,           
-                            Price = service.Amount, 
+                            Name = service.Name,
+                            Description = service.Description,
+                            Price = service.Amount,
                             Quantity = detailRequest.Quantity,
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow
                         };
 
-                        // Add the new ServiceDetail to the booking
                         existingBooking.ServiceDetails.Add(newServiceDetail);
                     }
                 }
 
-                // Save changes to the database
+                // Cập nhật dữ liệu vào cơ sở dữ liệu
                 _unitOfWork.BookingRepository.Update(existingBooking);
                 var saveResult = await _unitOfWork.SaveChangesAsync();
 
                 if (saveResult > 0)
                 {
-                    // Reload the booking to include the updated ServiceDetails in the response
-                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    // Lấy lại thông tin booking sau khi cập nhật
+                    existingBooking = await _unitOfWork.BookingRepository
+                        .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails)
+                                                                         .Include(b => b.FeeDetails)
+                                                                         .Include(b => b.BookingDetails)
+                                                                         .Include(b => b.BookingTrackers)
+                                                                         );
 
-                    var response = _mapper.Map<BookingResponse>(updatedBooking);
-                    result.AddResponseStatusCode(StatusCode.Ok, "Service details updated successfully!", response);
+                    var response = _mapper.Map<BookingResponse>(existingBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Cập nhật booking thành công!", response);
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Adding service details failed.");
+                    result.AddError(StatusCode.BadRequest, "Cập nhật booking thất bại.");
                 }
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+                result.AddError(StatusCode.ServerError, $"Có lỗi xảy ra: {ex.Message}");
             }
 
             return result;
         }
+
 
         public async Task<OperationResult<BookingResponse>> UpdateBasicInfoAsync(int bookingId, BookingBasicInfoUpdateRequest request)
         {
