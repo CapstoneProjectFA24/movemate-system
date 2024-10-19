@@ -13,7 +13,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class GetAllBookingRequest : PaginationRequest<MoveMate.Domain.Models.Booking>
     {
         public string? Search { get; set; }
-        public string? UserName { get; set; }
+        public int? UserId { get; set; }
         public string? Status { get; set; }
 
         public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
@@ -29,9 +29,9 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(queryExpression);
             }
 
-            if (!string.IsNullOrWhiteSpace(UserName))
+            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
             {
-                Expression = Expression.And(u => u.User.Name == UserName);
+                Expression = Expression.And(u => u.User.Id == UserId);
             }
 
 

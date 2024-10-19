@@ -22,6 +22,7 @@ using MoveMate.Service.Utils;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using Catel.Collections;
+using Newtonsoft.Json;
 
 namespace MoveMate.Service.Services
 {
@@ -69,21 +70,21 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, "List Booking is Empty!", listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingEmpty, listResponse);
                     return result;
                 }
 
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done.", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingSuccess, listResponse, pagin);
 
                 return result;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error occurred in getAll Service Method");
-                throw;
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
             }
         }
 
@@ -104,20 +105,21 @@ namespace MoveMate.Service.Services
 
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Can't found Booking with Id: {id}");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
                 }
                 else
                 {
                     var productResponse = _mapper.Map<BookingResponse>(booking);
-                    result.AddResponseStatusCode(StatusCode.Ok, $"Get Booking by Id: {id} Success!", productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetBookingIdSuccess , productResponse);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred in Get Service By Id service method for ID: {id}");
-                throw;
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.ServerError);
+                return result;
             }
         }
 
@@ -135,8 +137,7 @@ namespace MoveMate.Service.Services
 
             if (!request.IsBookingAtValid())
             {
-                result.AddError(StatusCode.BadRequest,
-                    $"BookingAt is not null and whether the value is greater than or equal to the current time.");
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidBookingAt);
                 return result;
             }
 
@@ -148,7 +149,7 @@ namespace MoveMate.Service.Services
                 // check houseType
                 if (existingHouseType == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                     return result;
                 }
 
@@ -229,11 +230,11 @@ namespace MoveMate.Service.Services
 
                     _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
-                    result.AddResponseStatusCode(StatusCode.Created, "Add Booking Success!", response);
+                    result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.RegisterBookingSuccess , response);
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Add Booking Failed!");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RegisterBookingFail);
                 }
 
                 return result;
@@ -261,7 +262,7 @@ namespace MoveMate.Service.Services
             // check houseType
             if (existingHouseType == null)
             {
-                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                 return result;
             }
 
@@ -289,7 +290,7 @@ namespace MoveMate.Service.Services
             response.Amount = totalFee;
             response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
 
-            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
 
             return result;
         }
@@ -310,7 +311,7 @@ namespace MoveMate.Service.Services
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"booking with id: {request.Id} not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -323,7 +324,7 @@ namespace MoveMate.Service.Services
                 //
                 var response = _mapper.Map<BookingResponse>(entity);
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Cancel Success!", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking, response);
 
                 return result;
             }
@@ -351,7 +352,7 @@ namespace MoveMate.Service.Services
             // check houseType
             if (existingHouseType == null)
             {
-                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                 return result;
             }
 
@@ -364,8 +365,7 @@ namespace MoveMate.Service.Services
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound,
-                        $"Service with id: {serviceDetailRequest.ServiceId} not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
                 }
 
@@ -394,7 +394,7 @@ namespace MoveMate.Service.Services
 
             response.Amount = totalFee;
 
-            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
 
             return result;
         }
@@ -414,7 +414,7 @@ namespace MoveMate.Service.Services
             // check houseType
             if (existingHouseType == null)
             {
-                result.AddError(StatusCode.NotFound, $"HouseType with id: {request.HouseTypeId} not found!");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                 return result;
             }
 
@@ -427,8 +427,7 @@ namespace MoveMate.Service.Services
 
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound,
-                        $"Service with id: {serviceDetailRequest.ServiceId} not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
                 }
 
@@ -457,7 +456,7 @@ namespace MoveMate.Service.Services
 
             response.Amount = totalFee;
 
-            result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
 
             return result;
         }
@@ -868,7 +867,7 @@ namespace MoveMate.Service.Services
                 if (service == null)
                 {
                     throw new NotFoundException(
-                        $"Service with id: {serviceDetailRequest.ServiceId} not found!"); // Consider throwing an exception for better error handling
+                        MessageConstant.FailMessage.NotFoundService); // Consider throwing an exception for better error handling
                 }
 
                 // Set var
@@ -953,14 +952,14 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1001,8 +1000,7 @@ namespace MoveMate.Service.Services
                         break;
 
                     default:
-                        result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1011,7 +1009,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess , response);
             }
             catch (Exception ex)
             {
@@ -1031,14 +1029,14 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1081,8 +1079,7 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.ARRIVED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1091,7 +1088,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1111,7 +1108,7 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
@@ -1128,8 +1125,7 @@ namespace MoveMate.Service.Services
                         bookingDetail.FailedReason = failedReason;
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1137,7 +1133,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1158,14 +1154,14 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1217,7 +1213,7 @@ namespace MoveMate.Service.Services
 
                     default:
                         result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                            MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1228,7 +1224,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1248,14 +1244,14 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1311,7 +1307,7 @@ namespace MoveMate.Service.Services
 
                     default:
                         result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                            MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1322,7 +1318,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1343,7 +1339,7 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
@@ -1365,8 +1361,7 @@ namespace MoveMate.Service.Services
                         nextStatus = BookingDetailStatus.REVIEWED.ToString();
                         break;
                     default:
-                        result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1375,7 +1370,7 @@ namespace MoveMate.Service.Services
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1396,7 +1391,7 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
@@ -1426,7 +1421,7 @@ namespace MoveMate.Service.Services
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                            MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1435,7 +1430,7 @@ namespace MoveMate.Service.Services
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1455,7 +1450,7 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
@@ -1478,7 +1473,7 @@ namespace MoveMate.Service.Services
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                            MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1487,7 +1482,7 @@ namespace MoveMate.Service.Services
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1507,7 +1502,7 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, "BookingDetail not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
@@ -1526,7 +1521,7 @@ namespace MoveMate.Service.Services
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
-                            "Cannot update to the next status from the current status.");
+                            MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
@@ -1535,7 +1530,7 @@ namespace MoveMate.Service.Services
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, "Status updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
@@ -1555,7 +1550,7 @@ namespace MoveMate.Service.Services
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Booking not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1563,7 +1558,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingResponse>(booking);
-                result.AddResponseStatusCode(StatusCode.Ok, "Confirm round trip successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserConfirm, response);
             }
             catch (Exception ex)
             {
@@ -1586,7 +1581,7 @@ namespace MoveMate.Service.Services
 
                 if (existingBooking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1598,7 +1593,7 @@ namespace MoveMate.Service.Services
 
                     if (feeSetting == null)
                     {
-                        result.AddError(StatusCode.NotFound, "FeeSetting not found!");
+                        result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundFeeSetting);
                         return result;
                     }
 
@@ -1773,5 +1768,120 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                // Retrieve the existing booking by ID
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+              
+                if (existingBooking.Status == BookingEnums.ASSIGNED.ToString())
+                {
+                    existingBooking.Status = BookingEnums.WAITING.ToString();
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                    return result;
+                }
+
+                existingBooking.ReviewAt = request.ReviewAt;
+                existingBooking.UpdatedAt = DateTime.UtcNow;
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                   
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    var response = _mapper.Map<BookingResponse>(updatedBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess, response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<BookingResponse>> UserConfirmReviewAt(int bookingId, StatusRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+
+                switch (request.Status)
+                {
+                    case "ASSIGNED":
+                        if (existingBooking.Status != BookingEnums.WAITING.ToString())
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            return result;
+                        }
+                        existingBooking.Status = BookingEnums.ASSIGNED.ToString();
+                        break;
+
+                    case "DEPOSITING":
+                        if (existingBooking.Status != BookingEnums.WAITING.ToString())
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            return result;
+                        }
+                        existingBooking.Status = BookingEnums.DEPOSITING.ToString();
+                        break;
+
+                    default:
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidStatus);
+                        return result;
+                }
+
+                existingBooking.UpdatedAt = DateTime.UtcNow;
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    var response = _mapper.Map<BookingResponse>(updatedBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess, response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+
+
     }
 }

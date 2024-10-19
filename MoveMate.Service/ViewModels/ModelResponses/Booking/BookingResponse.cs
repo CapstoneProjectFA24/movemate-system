@@ -61,7 +61,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string FeeInfo { get; set; }
         [FirestoreProperty]
         public bool? IsReviewOnline { get; set; }
-        //public DateTime ReviewAt { get; set; }
+        public string? ReviewAt { get; set; }
 
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<BookingDetailsResponse> BookingDetails { get; set; }

@@ -70,6 +70,8 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
                 .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
             CreateMap<BookingBasicInfoUpdateRequest, Booking>();
+            CreateMap<ReviewAtRequest, Booking>();
+            CreateMap<StatusRequest, Booking>();
 
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
