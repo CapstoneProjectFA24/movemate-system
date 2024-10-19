@@ -68,6 +68,14 @@ namespace MoveMate.Service.Commons
         {
 
             public const string ServerError = "An unexpected error occurred";
+            public const string TokenEmpty = "Token cannnot be empty";
+            public const string ReturnUrl = "Return URL is required";
+            public const string PaymentMethod = "Payment method is required and must be a valid value";
+            public const string Callback = "Invalid callback data";
+            public const string UnsupportPayment = "Unsupported payment method selected";
+
+            //User
+            public const string UserIdInvalid = "Invalid user ID in token";
 
 
             public const string GetListUserFail = "List user is empty!";
@@ -86,6 +94,7 @@ namespace MoveMate.Service.Commons
             public const string IsValidBookingAt = "BookingAt is not null and whether the value is greater than or equal to the current time";
             public const string RegisterBookingFail = "Add booking failed";
             public const string CanNotUpdateStatus = "Cannot update to the next status from the current status";
+            public const string BookingIdInputFail = "Booking ID is required and must be greater than 0";
 
 
             //House type
@@ -111,8 +120,9 @@ namespace MoveMate.Service.Commons
 
         public static class SuccessMessage
         {
-            public const string LoginSuccess = "Login successful";
 
+            public const string LoginSuccess = "Login successful";
+            public const string VerifyToken = "Token verification successful";
 
             public const string CheckUserInfo = "Customer information is available";
             public const string RegisterSuccess = "User registered successfully";
