@@ -69,7 +69,7 @@ namespace MoveMate.API.Controllers
 
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
             }
 
             var result = await _userService.GetUserInfoByUserIdAsync(userId);
@@ -113,7 +113,7 @@ namespace MoveMate.API.Controllers
 
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized(new { Message = "Invalid user ID in token." });
+                    return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
                 }
 
                 await _userService.UpdateUserAsync(userId, updateUserRequest);
