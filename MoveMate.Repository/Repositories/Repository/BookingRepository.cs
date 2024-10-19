@@ -69,23 +69,24 @@ namespace MoveMate.Repository.Repositories.Repository
         }
 
         public virtual async Task<Booking?> GetAsync(
-    Expression<Func<Booking, bool>> filter,
-    Func<IQueryable<Booking>, IIncludableQueryable<Booking, object>>? include = null)
+     Expression<Func<Booking, bool>> filter,
+     Func<IQueryable<Booking>, IIncludableQueryable<Booking, object>>? include = null)
         {
             IQueryable<Booking> query = _dbSet;
 
-            // Apply the include function if provided
+            // Apply include if provided
             if (include != null)
             {
                 query = include(query);
             }
 
-            // Apply the filter expression
+            // Apply the filter expression to the query
             query = query.Where(filter);
 
-            // Execute the query and return the result
-            return await query.FirstOrDefaultAsync();
+            // Execute the query and return the first result or null if no matches
+            return await query.AsNoTracking().FirstOrDefaultAsync(); // Note: Using AsNoTracking to avoid unintended tracking
         }
+
 
     }
 }

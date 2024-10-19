@@ -37,6 +37,6 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request);
         Task<OperationResult<BookingResponse>> UpdateBasicInfoAsync(int bookingId, BookingBasicInfoUpdateRequest request);
         Task<OperationResult<BookingResponse>> UpdateFeeDetailsAsync(int bookingId, BookingFeeDetailsUpdateRequest request);
-        Task<OperationResult<BookingResponse>> UpdateServiceDetailsAsync(int bookingId, BookingServiceDetailsUpdateRequest request);
+        Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingId, BookingServiceDetailsUpdateRequest request);
     }
 }
