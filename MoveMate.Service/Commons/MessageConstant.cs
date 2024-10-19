@@ -95,6 +95,8 @@ namespace MoveMate.Service.Commons
             public const string RegisterBookingFail = "Add booking failed";
             public const string CanNotUpdateStatus = "Cannot update to the next status from the current status";
             public const string BookingIdInputFail = "Booking ID is required and must be greater than 0";
+            public const string BookingUpdateFail = "Update booking failed";
+            public const string InvalidStatus = "Invalid status provided or cannot transition from the current status";
 
 
             //House type
@@ -138,6 +140,7 @@ namespace MoveMate.Service.Commons
             public const string CancelBooking = "Cancel booking successed";
             public const string UpdateStatusSuccess = "Status updated successfully";
             public const string UserConfirm = "Confirm round trip successfully";
+            public const string BookingUpdateSuccess = "Update booking failed";
 
             //FeeSetting
             public const string GetListFeeSettingEmpty = "List fee setting is empty!";

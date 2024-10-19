@@ -251,5 +251,29 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.UserConfirmRoundTrip(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// TEST: Reviewer change review at 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/review-at/{id}")]
+        public async Task<IActionResult> ReviewerChangeReviewAt(int id ,[FromBody] ReviewAtRequest request)
+        {
+            var response = await _bookingServices.ReviewChangeReviewAt(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// TEST: User confirm change review at 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("user/confirm-review-at/{id}")]
+        public async Task<IActionResult> UserConfirmChangeReviewAt(int id, [FromBody] StatusRequest request)
+        {
+            var response = await _bookingServices.UserConfirmReviewAt(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
