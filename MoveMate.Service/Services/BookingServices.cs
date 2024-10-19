@@ -1780,7 +1780,7 @@ namespace MoveMate.Service.Services
 
                 if (existingBooking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Booking with id not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
               
@@ -1790,7 +1790,7 @@ namespace MoveMate.Service.Services
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                     return result;
                 }
 
@@ -1804,11 +1804,11 @@ namespace MoveMate.Service.Services
                    
                     var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
-                    result.AddResponseStatusCode(StatusCode.Ok, "Booking ReviewAt field updated successfully!", response);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess, response);
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Failed to update the ReviewAt field in booking.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
                 }
             }
             catch (Exception ex)
@@ -1829,7 +1829,7 @@ namespace MoveMate.Service.Services
 
                 if (existingBooking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -1838,7 +1838,7 @@ namespace MoveMate.Service.Services
                     case "ASSIGNED":
                         if (existingBooking.Status != BookingEnums.WAITING.ToString())
                         {
-                            result.AddError(StatusCode.BadRequest, "Booking must have status 'WAITING' before changing to 'ASSIGNED'.");
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                             return result;
                         }
                         existingBooking.Status = BookingEnums.ASSIGNED.ToString();
@@ -1847,14 +1847,14 @@ namespace MoveMate.Service.Services
                     case "DEPOSITING":
                         if (existingBooking.Status != BookingEnums.WAITING.ToString())
                         {
-                            result.AddError(StatusCode.BadRequest, "Booking must have status 'WAITING' before changing to 'DEPOSITING'.");
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                             return result;
                         }
                         existingBooking.Status = BookingEnums.DEPOSITING.ToString();
                         break;
 
                     default:
-                        result.AddError(StatusCode.BadRequest, "Invalid status provided or cannot transition from the current status.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidStatus);
                         return result;
                 }
 
@@ -1866,11 +1866,11 @@ namespace MoveMate.Service.Services
                 {
                     var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
-                    result.AddResponseStatusCode(StatusCode.Ok, "Booking status updated successfully!", response);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess, response);
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Failed to update the booking status.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
                 }
             }
             catch (Exception ex)
