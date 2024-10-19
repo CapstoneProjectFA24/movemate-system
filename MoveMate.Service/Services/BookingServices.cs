@@ -19,6 +19,7 @@ using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.Utils;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using Catel.Collections;
@@ -1663,97 +1664,152 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingId, BookingServiceDetailsUpdateRequest request)
         {
             var result = new OperationResult<BookingResponse>();
-
             try
             {
-                // Lấy thông tin booking hiện tại từ cơ sở dữ liệu
+                // Fetch the existing booking from the database
                 var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails));
 
                 if (existingBooking == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Booking với id {bookingId} không tồn tại.");
+                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} does not exist.");
                     return result;
                 }
 
-
+                // Update properties from the request to the existing booking
                 ReflectionUtils.UpdateProperties(request, existingBooking);
 
-
-                existingBooking.Status = BookingEnums.REVIEWED.ToString();
+                // Update last modified date
                 existingBooking.UpdatedAt = DateTime.UtcNow;
 
-                // Cập nhật chi tiết dịch vụ
-                foreach (var detailRequest in request.ServiceDetails)
-                {
-                    // Kiểm tra dịch vụ có tồn tại hay không
-                    var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)detailRequest.ServiceId);
+                // Calculate service fees and details
+                double total = await CalculateServiceFeesAndDetails(existingBooking, request);
 
-                    if (service == null)
-                    {
-                        result.AddError(StatusCode.NotFound, $"Service với id {detailRequest.ServiceId} không tồn tại.");
-                        return result;
-                    }
+                // Update booking fields
+                UpdateBookingFields(existingBooking, request, total);
 
-                    // Kiểm tra chi tiết dịch vụ hiện có, nếu có thì cập nhật, nếu không có thì thêm mới
-                    var existingServiceDetail = existingBooking.ServiceDetails
-                        .FirstOrDefault(sd => sd.ServiceId == detailRequest.ServiceId);
-
-                    if (existingServiceDetail != null)
-                    {
-                        // Cập nhật chi tiết dịch vụ hiện có
-                        existingServiceDetail.Quantity = detailRequest.Quantity;
-                        existingServiceDetail.Price = service.Amount;
-                        existingServiceDetail.UpdatedAt = DateTime.UtcNow;
-                    }
-                    else
-                    {
-                        // Thêm mới chi tiết dịch vụ
-                        var newServiceDetail = new ServiceDetail
-                        {
-                            BookingId = bookingId,
-                            ServiceId = detailRequest.ServiceId,
-                            Name = service.Name,
-                            Description = service.Description,
-                            Price = service.Amount,
-                            Quantity = detailRequest.Quantity,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        };
-
-                        existingBooking.ServiceDetails.Add(newServiceDetail);
-                    }
-                }
-
-                // Cập nhật dữ liệu vào cơ sở dữ liệu
+                // Update booking in the database
                 _unitOfWork.BookingRepository.Update(existingBooking);
                 var saveResult = await _unitOfWork.SaveChangesAsync();
 
+                // Check if the update was successful
                 if (saveResult > 0)
                 {
-                    // Lấy lại thông tin booking sau khi cập nhật
-                    existingBooking = await _unitOfWork.BookingRepository
-                        .GetAsync(b => b.Id == bookingId, include: b => b.Include(b => b.ServiceDetails)
-                                                                         .Include(b => b.FeeDetails)
-                                                                         .Include(b => b.BookingDetails)
-                                                                         .Include(b => b.BookingTrackers)
-                                                                         );
-
+                    // Retrieve the updated booking information
+                    existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
                     var response = _mapper.Map<BookingResponse>(existingBooking);
-                    result.AddResponseStatusCode(StatusCode.Ok, "Cập nhật booking thành công!", response);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Booking updated successfully!", response);
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Cập nhật booking thất bại.");
+                    result.AddError(StatusCode.BadRequest, "Failed to update booking.");
                 }
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, $"Có lỗi xảy ra: {ex.Message}");
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
             }
 
             return result;
         }
+
+        private async Task<double> CalculateServiceFeesAndDetails(Booking existingBooking, BookingServiceDetailsUpdateRequest request)
+        {
+            double total = 0;
+            var serviceDetails = new List<ServiceDetail>();
+            var feeDetails = new List<FeeDetail>();
+
+            // Existing logic to determine values
+            var houseTypeId = request.HouseTypeId ?? existingBooking.HouseTypeId;
+            var truckCategoryId = request.TruckCategoryId != 0 ? request.TruckCategoryId : existingBooking.ServiceDetails.FirstOrDefault()?.Service?.TruckCategoryId ?? 0;
+            var floorsNumber = !string.IsNullOrEmpty(request.FloorsNumber) ? request.FloorsNumber : existingBooking.FloorsNumber;
+            var estimatedDistance = !string.IsNullOrEmpty(request.EstimatedDistance) ? request.EstimatedDistance : existingBooking.EstimatedDistance;
+
+            // Calculate service fees
+            var (totalServices, listServiceDetails, driverNumber, porterNumber) = await CalculateServiceFees(
+                request.ServiceDetails, (int)houseTypeId, truckCategoryId, floorsNumber, estimatedDistance);
+
+            total += totalServices;
+
+            // Add or update service details
+            foreach (var newService in listServiceDetails)
+            {
+                AddOrUpdateService(existingBooking.ServiceDetails, newService);
+            }
+
+            // Calculate and add fees
+            var (totalFee, feeCommonDetails) = await CalculateAndAddFees(request.UpdatedAt);
+
+            // Add fees while avoiding duplicates
+            foreach (var newFee in feeCommonDetails)
+            {
+                AddFeeIfNotExists(existingBooking.FeeDetails, newFee);
+            }
+
+            // Check for round trip and apply additional calculations
+            if (request.IsRoundTrip.HasValue && request.IsRoundTrip.Value)
+            {
+                (double updatedTotal, List<FeeDetail> updatedFeeDetails) = await ApplyPercentFeesAsync(total);
+                total += updatedTotal;
+                feeDetails.AddRange(updatedFeeDetails);
+            }
+
+            // Update the booking's service and fee details
+            existingBooking.ServiceDetails = serviceDetails;
+            existingBooking.FeeDetails = feeDetails;
+
+            return total;
+        }
+
+
+
+        private void UpdateBookingFields(Booking existingBooking, BookingServiceDetailsUpdateRequest request, double total)
+        {
+            existingBooking.TotalFee = total; // update total fees
+            existingBooking.TotalReal = total; // update real total
+            existingBooking.Deposit = total * 0.30; // 30% deposit
+
+            // Determine booking type
+            DateTime now = DateTime.UtcNow;
+            if ((request.UpdatedAt - now).TotalHours <= 3 && (request.UpdatedAt - now).TotalHours >= 0)
+            {
+                existingBooking.TypeBooking = TypeBookingEnums.NOW.ToString();
+            }
+            else
+            {
+                existingBooking.TypeBooking = TypeBookingEnums.DELAY.ToString();
+            }
+        }
+
+        public void AddOrUpdateService(ICollection<ServiceDetail> serviceDetails, ServiceDetail newService)
+        {
+            var existingService = serviceDetails.FirstOrDefault(s => s.ServiceId == newService.ServiceId);
+            if (existingService != null)
+            {
+                // Update existing service quantity
+                existingService.Quantity = newService.Quantity;
+            }
+            else
+            {
+                // Add new service if it doesn't exist
+                serviceDetails.Add(newService);
+            }
+        }
+
+        public void AddFeeIfNotExists(ICollection<FeeDetail> feeDetails, FeeDetail newFee)
+        {
+            var existingFeeIds = new int?[] { 14, 15, 16 };  
+            var existingFee = feeDetails.FirstOrDefault(f => existingFeeIds.Contains(f.FeeSettingId));
+
+            if (existingFee == null)
+            {
+                // Add new fee only if it doesn't already exist
+                feeDetails.Add(newFee);
+            }
+        }
+
+
+
 
 
         public async Task<OperationResult<BookingResponse>> UpdateBasicInfoAsync(int bookingId, BookingBasicInfoUpdateRequest request)

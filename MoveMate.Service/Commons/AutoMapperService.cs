@@ -61,7 +61,8 @@ namespace MoveMate.Service.Commons
             //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
             //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
 
-
+            CreateMap<BookingServiceDetailsUpdateRequest, Booking>()
+                .ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails));
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
             CreateMap<ServiceDetailRequest, ServiceDetail>();
             CreateMap<BookingDetail, BookingDetailsResponse>();
