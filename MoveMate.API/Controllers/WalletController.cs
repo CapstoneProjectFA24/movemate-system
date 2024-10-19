@@ -57,7 +57,7 @@ namespace MoveMate.API.Controllers
 
             if (string.IsNullOrEmpty(userId))
             {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
             }
 
             var result = await _walletServices.GetWalletByUserIdAsync(userId);
@@ -111,7 +111,7 @@ namespace MoveMate.API.Controllers
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
-                return Unauthorized(new { Message = "Invalid user ID in token." });
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
             }
 
             var userId = int.Parse(accountIdClaim.Value);
@@ -121,7 +121,7 @@ namespace MoveMate.API.Controllers
             if (!Enum.TryParse<MoveMate.Service.ThirdPartyService.Payment.Models.PaymentType>(selectedMethod, true,
                     out var parsedPaymentMethod))
             {
-                return BadRequest(new { Message = "Invalid payment method specified." });
+                return BadRequest(new { Message = MessageConstant.FailMessage.PaymentMethod });
             }
 
             // Call the appropriate service based on the payment method
@@ -140,7 +140,7 @@ namespace MoveMate.API.Controllers
                     break;
 
                 default:
-                    return BadRequest(new { Message = "Unsupported payment method selected." });
+                    return BadRequest(new { Message = MessageConstant.FailMessage.UnsupportPayment });
             }
 
             // Check for errors in the result

@@ -85,7 +85,7 @@ namespace MoveMate.API.Controllers
                     new Error
                     {
                         Code = MoveMate.Service.Commons.StatusCode.BadRequest,
-                        Message = "Booking ID is required and must be greater than zero."
+                        Message = MessageConstant.FailMessage.BookingIdInputFail
                     }
                 });
             }
@@ -97,7 +97,7 @@ namespace MoveMate.API.Controllers
                 {
                     new Error
                     {
-                        Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Return URL is required."
+                        Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = MessageConstant.FailMessage.ReturnUrl
                     }
                 });
             }
@@ -110,7 +110,7 @@ namespace MoveMate.API.Controllers
                     new Error
                     {
                         Code = MoveMate.Service.Commons.StatusCode.BadRequest,
-                        Message = "Payment method is required and must be a valid value."
+                        Message = MessageConstant.FailMessage.PaymentMethod
                     }
                 });
             }
@@ -119,7 +119,7 @@ namespace MoveMate.API.Controllers
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
-                return Unauthorized(new { statusCode = 401, message = "Invalid user ID in token.", isError = true });
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
             }
 
             var userId = int.Parse(accountIdClaim.Value);
@@ -192,7 +192,7 @@ namespace MoveMate.API.Controllers
         {
             if (callback == null)
             {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+                return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
             if (callback.OrderInfo == "order")
@@ -235,7 +235,7 @@ namespace MoveMate.API.Controllers
         {
             if (callback == null)
             {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+                return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
             var result = await _vnPayService.HandleOrderPaymentAsync(Request.Query, callback);
@@ -275,7 +275,7 @@ namespace MoveMate.API.Controllers
             // Validate callback data
             if (callback == null)
             {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+                return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
             bool IsSuccess = false;

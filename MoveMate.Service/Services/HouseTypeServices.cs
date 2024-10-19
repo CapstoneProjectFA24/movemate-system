@@ -49,14 +49,14 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, "List House Type is Empty!", listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeEmpty, listResponse);
                     return result;
                 }
 
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Auctions Done", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeSuccess, listResponse, pagin);
 
                 return result;
             }
@@ -77,12 +77,12 @@ namespace MoveMate.Service.Services
 
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound, "House Type not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                 }
                 else
                 {
                     var productResponse = _mapper.Map<HouseTypesResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, "Get House Type success", productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetHouseTypeIdSuccess, productResponse);
                 }
 
                 return result;
