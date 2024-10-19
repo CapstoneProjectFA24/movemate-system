@@ -165,7 +165,6 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns>Returns the result of wallet</returns>
         [HttpGet("recharge-callback")]
-        [Authorize]
         public async Task<IActionResult> RechargeCallback([FromQuery] VnPayPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
@@ -186,7 +185,6 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("momo/callback")]
-        [Authorize]
         public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
@@ -228,7 +226,6 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("vnpay-callback")]
-        [Authorize]
         public async Task<IActionResult> VnPayPaymentCallback(
             [FromQuery] VnPayPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
@@ -268,7 +265,6 @@ namespace MoveMate.API.Controllers
         /// <response code="404">Wallet not found</response>
         /// <response code="500">An internal server error occurred</response>
         [HttpGet("payos/callback")]
-        [Authorize]
         public async Task<IActionResult> PayOsPaymentCallback([FromQuery] PayOsPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
