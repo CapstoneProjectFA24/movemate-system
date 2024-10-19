@@ -31,13 +31,13 @@ namespace MoveMate.Service.Services
                 var entityHouseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync(request.HouseTypeId);
                 if (entityHouseType == null)
                 {
-                    result.AddError(StatusCode.NotFound, "House Type not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                 }
 
                 var entityTruck = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId);
                 if (entityTruck == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Truck Category not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
                 }
 
                 var entityHouseTypeSetting = _mapper.Map<HouseTypeSetting>(request);
@@ -49,12 +49,12 @@ namespace MoveMate.Service.Services
 
                 if (checkResult > 0)
                 {
-                    result.AddResponseStatusCode(StatusCode.Created, "Add HouseTypeSetting Success!",
+                    result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.AddHouseTypeSettingSuccess,
                         true); // Return status 201
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, "Add HouseTypeSetting Failed!");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AddHouseTypeFail);
                 }
 
                 return result;
@@ -62,7 +62,7 @@ namespace MoveMate.Service.Services
             catch (Exception e)
             {
                 _logger.LogError(e, $"Error occurred in Create HouseTypeSetting service method");
-                result.AddError(StatusCode.ServerError, "An error occurred while creating the house type setting");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
         }

@@ -82,6 +82,30 @@ namespace MoveMate.Service.Commons
 
             //Booking
             public const string NotFoundBooking = "Booking not found";
+            public const string NotFoundBookingDetail = "Booking detail not found";
+            public const string IsValidBookingAt = "BookingAt is not null and whether the value is greater than or equal to the current time";
+            public const string RegisterBookingFail = "Add booking failed";
+            public const string CanNotUpdateStatus = "Cannot update to the next status from the current status";
+
+
+            //House type
+            public const string NotFoundHouseType = "House type not found";
+            public const string AddHouseTypeFail = "Add house type setting failed";
+
+            //Service
+            public const string NotFoundService = "Service not found";
+
+            //FeeSetting
+            public const string NotFoundFeeSetting = "Fee setting not found";
+
+            //Truck category
+            public const string NotFoundTruckCategory = "Truck category not found";
+
+            //Schedule
+            public const string NotFoundSchedule = "Schedule not found";
+
+            //Wallet
+            public const string NotFoundWallet = "Wallet not found";
         }
 
 
@@ -98,7 +122,42 @@ namespace MoveMate.Service.Commons
             //Booking
             public const string GetListBookingEmpty = "List booking is empty!";
             public const string GetListBookingSuccess = "Get list booking done";
-            
+            public const string GetBookingIdSuccess = "Get booking successfully";
+            public const string RegisterBookingSuccess = "Add booking successed";
+            public const string ValuationBooking = "Valuation!";
+            public const string CancelBooking = "Cancel booking successed";
+            public const string UpdateStatusSuccess = "Status updated successfully";
+            public const string UserConfirm = "Confirm round trip successfully";
+
+            //FeeSetting
+            public const string GetListFeeSettingEmpty = "List fee setting is empty!";
+            public const string GetListFeeSettingSuccess = "Get list fee setting done";
+
+
+            //House Type
+            public const string GetListHouseTypeEmpty = "List house type is empty!";
+            public const string GetListHouseTypeSuccess = "Get list house type done";
+            public const string GetHouseTypeIdSuccess = "Get house type successfully";
+            public const string AddHouseTypeSettingSuccess = "Add house type setting successed";
+
+            //Schedule
+            public const string GetListScheduleEmpty = "List schedule is empty!";
+            public const string GetListScheduleSuccess = "Get list schedule done";
+            public const string GetScheduleSuccess = "Get schedule successfully";
+
+            //Schedule
+            public const string GetListServiceEmpty = "List service is empty!";
+            public const string GetListServiceSuccess = "Get list service done";
+            public const string GetServiceSuccess = "Get service successfully";
+
+            //Truck
+            public const string GetListTruckEmpty = "List truck is empty!";
+            public const string GetListTruckSuccess = "Get list truck done";
+            public const string GetTruckSuccess = "Get truck successfully";
+
+            //Wallet
+            public const string GetWalletSuccess = "Wallet retrieved successfully";
+
         }
 
 

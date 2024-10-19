@@ -38,18 +38,20 @@ namespace MoveMate.Service.Services
                 if (wallet != null)
                 {
                     var walletResponse = _mapper.Map<WalletResponse>(wallet);
-                    result.Payload = walletResponse;
-                    result.Message = "Wallet retrieved successfully";
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetWalletSuccess, walletResponse);
+                    return result;
                 }
+            
                 else
                 {
-                    result.AddError(StatusCode.NotFound, "Wallet not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving the wallet.");
-                result.AddError(StatusCode.ServerError, "An unexpected error occurred");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -63,7 +65,7 @@ namespace MoveMate.Service.Services
                 var wallet = await _unitOfWork.WalletRepository.GetByIdAsync(walletId);
                 if (wallet == null)
                 {
-                    result.AddError(StatusCode.NotFound, $"Wallet '{walletId}' not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
 
@@ -76,7 +78,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.NotFound, $"Wallet");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return result;
             }
         }

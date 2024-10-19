@@ -48,11 +48,11 @@ namespace MoveMate.Service.Services
 
             if (listResponse == null || !listResponse.Any())
             {
-                result.AddResponseStatusCode(StatusCode.Ok, "List TruckCate is Empty!", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckEmpty, listResponse, pagin);
                 return result;
             }
 
-            result.AddResponseStatusCode(StatusCode.Ok, "Get List Truck Category Done", listResponse, pagin);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckSuccess, listResponse, pagin);
 
             return result;
         }
@@ -71,7 +71,7 @@ namespace MoveMate.Service.Services
                 ImageUrl = img,
             }).ToList();
 
-            result.AddResponseStatusCode(StatusCode.Ok, "Get Truck Category Detail Done", response);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetTruckSuccess, response);
             return result;
         }
     }
