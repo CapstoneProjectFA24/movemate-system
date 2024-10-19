@@ -265,17 +265,32 @@ namespace MoveMate.Service.Services
                 return result;
             }
 
-            double totalFee = 0;
+            double total = 0;
             var serviceDetails = new List<ServiceDetail>();
             var feeDetails = new List<FeeDetail>();
 
             try
             {
+                // logic services and fee set amount
                 var (totalServices, listServiceDetails) = await CalculateServiceFees(request.ServiceDetails,
                     request.HouseTypeId,
                     request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
-                totalFee += totalServices;
+                total += totalServices;
                 serviceDetails.AddRange(listServiceDetails);
+                
+                // list lên fee common
+                var dateBooking = request.BookingAt ?? DateTime.Now;
+                var (totalFee, feeCommonDetails) = await CalculateAndAddFees(dateBooking);
+
+                total += totalFee;
+                feeDetails.AddRange(feeCommonDetails);
+
+                if (request.IsRoundTrip == true)
+                {
+                    (double updatedTotal, List<FeeDetail> updatedFeeDetails) = await ApplyPercentFeesAsync(total);
+                    total += updatedTotal;
+                    feeDetails.AddRange(updatedFeeDetails);
+                }
             }
             catch (Exception e)
             {
@@ -286,7 +301,7 @@ namespace MoveMate.Service.Services
 
             var response = new BookingValuationResponse();
 
-            response.Amount = totalFee;
+            response.Amount = total;
             response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
 
             result.AddResponseStatusCode(StatusCode.Ok, "valuation!", response);
