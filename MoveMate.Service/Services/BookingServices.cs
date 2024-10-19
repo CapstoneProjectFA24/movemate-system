@@ -22,6 +22,7 @@ using MoveMate.Service.Utils;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using Catel.Collections;
+using Newtonsoft.Json;
 
 namespace MoveMate.Service.Services
 {
@@ -1773,5 +1774,120 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                // Retrieve the existing booking by ID
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Booking with id not found!");
+                    return result;
+                }
+              
+                if (existingBooking.Status == BookingEnums.ASSIGNED.ToString())
+                {
+                    existingBooking.Status = BookingEnums.WAITING.ToString();
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Cannot update to the next status from the current status");
+                    return result;
+                }
+
+                existingBooking.ReviewAt = request.ReviewAt;
+                existingBooking.UpdatedAt = DateTime.UtcNow;
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                   
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    var response = _mapper.Map<BookingResponse>(updatedBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Booking ReviewAt field updated successfully!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Failed to update the ReviewAt field in booking.");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<BookingResponse>> UserConfirmReviewAt(int bookingId, StatusRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            try
+            {
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, $"Booking with id {bookingId} not found!");
+                    return result;
+                }
+
+                switch (request.Status)
+                {
+                    case "ASSIGNED":
+                        if (existingBooking.Status != BookingEnums.WAITING.ToString())
+                        {
+                            result.AddError(StatusCode.BadRequest, "Booking must have status 'WAITING' before changing to 'ASSIGNED'.");
+                            return result;
+                        }
+                        existingBooking.Status = BookingEnums.ASSIGNED.ToString();
+                        break;
+
+                    case "DEPOSITING":
+                        if (existingBooking.Status != BookingEnums.WAITING.ToString())
+                        {
+                            result.AddError(StatusCode.BadRequest, "Booking must have status 'WAITING' before changing to 'DEPOSITING'.");
+                            return result;
+                        }
+                        existingBooking.Status = BookingEnums.DEPOSITING.ToString();
+                        break;
+
+                    default:
+                        result.AddError(StatusCode.BadRequest, "Invalid status provided or cannot transition from the current status.");
+                        return result;
+                }
+
+                existingBooking.UpdatedAt = DateTime.UtcNow;
+                _unitOfWork.BookingRepository.Update(existingBooking);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
+
+                if (saveResult > 0)
+                {
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    var response = _mapper.Map<BookingResponse>(updatedBooking);
+                    result.AddResponseStatusCode(StatusCode.Ok, "Booking status updated successfully!", response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Failed to update the booking status.");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, $"An error occurred: {ex.Message}");
+            }
+
+            return result;
+        }
+
+
+
     }
 }
