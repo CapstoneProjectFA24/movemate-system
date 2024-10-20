@@ -117,6 +117,9 @@ namespace MoveMate.Service.Commons
 
             //Wallet
             public const string NotFoundWallet = "Wallet not found";
+
+            //Tracker resource
+            public const string NotFoundBookingTracker = "Booking tracker not found";
         }
 
 

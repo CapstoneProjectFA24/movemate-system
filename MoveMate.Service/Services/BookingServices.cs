@@ -1000,13 +1000,13 @@ namespace MoveMate.Service.Services
                     case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
                         nextStatus = BookingDetailStatus.COMPLETED.ToString();
                         break;
+
                     case var status when status == BookingDetailStatus.COMPLETED.ToString():
                         if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
                         {
                             nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
                             bookingDetail.IsRoundTripCompleted = true;
                         }
-
                         break;
 
                     case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
@@ -1022,17 +1022,20 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
+
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess , response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating booking status");
-                throw;
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
         }
+
+
 
         public async Task<OperationResult<BookingDetailsResponse>> DriverUpdateRoundTripBooking(int bookingId)
         {
@@ -1159,7 +1162,7 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId)
+        public async Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId, ResourceRequest request)
         {
             var result = new OperationResult<BookingDetailsResponse>();
 
@@ -1232,6 +1235,22 @@ namespace MoveMate.Service.Services
                 }
 
                 bookingDetail.Status = nextStatus;
+
+                var bookingTracker = await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                if (bookingTracker == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    return result;
+                }
+           
+                var trackerSource = new TrackerSource
+                {
+                    BookingTrackerId = bookingTracker.Id,
+                    ResourceUrl = request.ResourceUrl,
+                    ResourceCode = request.ResourceCode,
+                    Type = request.Type
+                };
+                await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
 
@@ -1249,7 +1268,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId)
+        public async Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId, ResourceRequest request)
         {
             var result = new OperationResult<BookingDetailsResponse>();
 
@@ -1326,6 +1345,22 @@ namespace MoveMate.Service.Services
                 }
 
                 bookingDetail.Status = nextStatus;
+
+                var bookingTracker = await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                if (bookingTracker == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    return result;
+                }
+             
+                var trackerSource = new TrackerSource
+                {
+                    BookingTrackerId = bookingTracker.Id,
+                    ResourceUrl = request.ResourceUrl,
+                    ResourceCode = request.ResourceCode,
+                    Type = request.Type
+                };
+                await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
 
@@ -1396,7 +1431,7 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId)
+        public async Task<OperationResult<BookingDetailsResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId, ResourceRequest request)
         {
             var result = new OperationResult<BookingDetailsResponse>();
 
@@ -1409,12 +1444,12 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                //var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
-                //if (booking == null)
-                //{
-                //    result.AddError(StatusCode.NotFound, "Booking not found.");
-                //    return result;
-                //}
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
                 string nextStatus = bookingDetail.Status;
 
                 switch (bookingDetail.Status)
@@ -1440,8 +1475,24 @@ namespace MoveMate.Service.Services
                 }
 
                 bookingDetail.Status = nextStatus;
+                // Kiểm tra bookingTracker trước khi truy cập Id
+                var bookingTracker = await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                if (bookingTracker == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                    return result;
+                }
+                var trackerSource = new TrackerSource
+                {
+                    BookingTrackerId = bookingTracker.Id,
+                    ResourceUrl = request.ResourceUrl,
+                    ResourceCode = request.ResourceCode,
+                    Type = request.Type
+                };
+                await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
+
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
-                //_unitOfWork.BookingRepository.Update(booking);
+                _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess, response);
