@@ -277,7 +277,7 @@ namespace MoveMate.API.Extensions
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter token",
+                    Description = "Please enter token : eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lQGV4YW1wbGUuY29tIiwiZW1haWwiOiJqb2huZG9lQGV4YW1wbGUuY29tIiwic2lkIjoiMSIsInJvbGUiOiIxIiwianRpIjoiZmUzOTQwZDgtN2VjZi00NzM4LTlmOGUtNTU5MDI1YTcxYTAyIiwibmJmIjoxNzI5MzU3NDI4LCJleHAiOjIzMjkzNTc0MjgsImlhdCI6MTcyOTM1NzQyOH0.Dkz6gbzzix-EeqzM6WsqtjW2JOC4QxMhAFcy6WTK6ONHz5JR5Mm5k9Ewfce6H9_z0W-5IqhY2S5pyH4tmZEt1A",
                     Name = "Authorization",
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
