@@ -49,20 +49,20 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             var serverUrl =
                 string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
                     _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
-                throw new Exception("Server URL is not available");
+                throw new Exception(MessageConstant.FailMessage.ServerUrl);
 
 
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                operationResult.AddError(StatusCode.NotFound, "User not found");
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return operationResult;
             }
 
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
             if (booking == null)
             {
-                operationResult.AddError(StatusCode.NotFound, "Booking not found");
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                 return operationResult;
             }
 
@@ -70,8 +70,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
                     booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest,
-                        "Booking status must be either DEPOSITING or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return operationResult;
                 }
 
@@ -118,12 +117,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 var paymentUrl = paymentResult.checkoutUrl;
 
                 operationResult =
-                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 return operationResult;
             }
             catch (Exception ex)
             {
-                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
+                operationResult.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return operationResult;
             }
         }
@@ -135,22 +134,21 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
             if (amount <= 0)
             {
-                operationResult.AddError(StatusCode.BadRequest, "Amount must be greater than zero");
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AmountGreaterThanZero);
                 return operationResult;
             }
 
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                _logger.LogWarning($"User with ID {userId} not found");
-                operationResult.AddError(StatusCode.NotFound, "User not found");
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return operationResult;
             }
 
             var serverUrl =
                 string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
                     _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
-                throw new Exception("Server URL is not available");
+                throw new Exception(MessageConstant.FailMessage.ServerUrl);
 
             long newGuid = Guid.NewGuid().GetHashCode();
             do
@@ -180,12 +178,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 var paymentUrl = paymentResult.checkoutUrl;
 
                 operationResult =
-                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 return operationResult;
             }
             catch (Exception ex)
             {
-                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
+                operationResult.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return operationResult;
             }
         }
@@ -198,14 +196,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             var user = await _unitOfWork.UserRepository.GetUserAsyncByEmail(email);
             if (user == null)
             {
-                result.AddError(StatusCode.NotFound, "User not found");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return result;
             }
 
             var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(user.Id);
             if (wallet == null)
             {
-                result.AddError(StatusCode.NotFound, "Wallet not found");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return result;
             }
 
@@ -214,8 +212,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
             if (existingTransaction != null)
             {
-                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.",
-                    "Already Processed");
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TransactionSuccess,
+                    MessageConstant.SuccessMessage.AlreadyProcess);
                 return result; // Exit without updating the wallet
             }
 
@@ -227,7 +225,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 var updateResult = await _walletServices.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
                 if (updateResult.IsError)
                 {
-                    result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                     return result;
                 }
 
@@ -249,11 +247,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateWalletSuccess, MessageConstant.SuccessMessage.Success);
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -268,7 +266,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             var user = await _unitOfWork.UserRepository.GetUserAsyncByEmail(command.BuyerEmail);
             if (user == null)
             {
-                result.AddError(StatusCode.NotFound, "User not found");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return result;
             }
 
@@ -276,7 +274,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, user.Id);
             if (booking == null)
             {
-                result.AddError(StatusCode.NotFound, "Booking not found");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                 return result;
             }
 
@@ -284,8 +282,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
             if (existingTransaction != null)
             {
-                result.AddResponseStatusCode(StatusCode.Ok, "Transaction has already been processed.",
-                    "Already Processed");
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TransactionSuccess, MessageConstant.SuccessMessage.AlreadyProcess);
                 return result; // Exit without updating the wallet
             }
 
@@ -305,6 +302,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
+                    booking.TotalReal = booking.Total - (float)command.Amount;
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -336,16 +334,24 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
                 }
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                {
+                    booking.Status = BookingEnums.COMPLETED.ToString();
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                    return result;
+                }
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                result = OperationResult<string>.Success($"{command.returnUrl}?isSuccess=true", StatusCode.Ok,
-                    "Payment handled successfully");
+                result = OperationResult<string>.Success($"{command.returnUrl}?isSuccess=true", StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
