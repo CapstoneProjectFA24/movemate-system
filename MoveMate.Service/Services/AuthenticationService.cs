@@ -66,13 +66,13 @@ namespace MoveMate.Service.Services
                 accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
 
                 // Success: Add response to result
-                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, MessageConstant.SuccessMessage.LoginSuccess , accountResponse);
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while logging in.");
-                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+                result.AddError(Service.Commons.StatusCode.ServerError, MessageConstant.FailMessage.ServerError );
                 return result;
             }
         }
@@ -170,24 +170,24 @@ namespace MoveMate.Service.Services
                 var user = await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Phone);
                 if (user == null)
                 {
-                    result.AddError(Service.Commons.StatusCode.NotFound, "The phone number does not exist.");
+                    result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.FailMessage.LoginByPhoneFail );
                     return result;
                 }
 
                 if (!user.Password.Equals(request.Password))
                 {
-                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid phone number or password.");
+                    result.AddError(Service.Commons.StatusCode.BadRequest, MessageConstant.FailMessage.PasswordFail);
                     return result;
                 }
 
                 var accountResponse = _mapper.Map<AccountResponse>(user);
                 accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
-                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, MessageConstant.SuccessMessage.LoginSuccess , accountResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while logging in with phone number.");
-                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+                result.AddError(Service.Commons.StatusCode.ServerError, MessageConstant.FailMessage.ServerError );
             }
 
             return result;
@@ -208,14 +208,14 @@ namespace MoveMate.Service.Services
 
                 if (user == null)
                 {
-                    result.AddError(Service.Commons.StatusCode.NotFound, "The email or phone number does not exist.");
+                    result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.FailMessage.LoginByEmailFail);
                     return result;
                 }
 
                 // Validate the password
                 if (!user.Password.Equals(request.Password))
                 {
-                    result.AddError(Service.Commons.StatusCode.BadRequest, "Invalid email/phone number or password.");
+                    result.AddError(Service.Commons.StatusCode.BadRequest, MessageConstant.FailMessage.PasswordFail);
                     return result;
                 }
 
@@ -224,12 +224,12 @@ namespace MoveMate.Service.Services
                 accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
 
                 // Success: Add response to result
-                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+                result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, MessageConstant.SuccessMessage.LoginSuccess, accountResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while logging in.");
-                result.AddError(Service.Commons.StatusCode.ServerError, "An internal server error occurred.");
+                result.AddError(Service.Commons.StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -245,7 +245,7 @@ namespace MoveMate.Service.Services
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
                 if (existingUser != null)
                 {
-                    result.AddResponseStatusCode(StatusCode.BadRequest, "Email is already registered.", null);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.EmailExist);
                     return result;
                 }
 
@@ -253,7 +253,7 @@ namespace MoveMate.Service.Services
                     await _unitOfWork.UserRepository.GetUserByPhoneAsync(customerToRegister.Phone);
                 if (existingUserByPhone != null)
                 {
-                    result.AddResponseStatusCode(StatusCode.BadRequest, "Phone number is already registered.", null);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PhoneExist);
                     return result;
                 }
 
@@ -272,14 +272,13 @@ namespace MoveMate.Service.Services
 
                 var userResponse = _mapper.Map<RegisterResponse>(newUser);
 
-                result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess , userResponse);
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during user registration.");
-                result.AddResponseStatusCode(StatusCode.ServerError, "An internal error occurred during registration.",
-                    null);
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
         }
@@ -293,7 +292,7 @@ namespace MoveMate.Service.Services
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
                 if (existingUser != null)
                 {
-                    result.AddError(StatusCode.BadRequest, "Email is already registered.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.EmailExist);
                     return result;
                 }
 
@@ -310,7 +309,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var userResponse = _mapper.Map<AccountResponse>(newUser);
-                result.AddResponseStatusCode(StatusCode.Ok, "User registered successfully.", userResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, userResponse);
 
                 // Generate token for the newly registered user
                 var tokenResponse = await GenerateTokenAsync(userResponse, _jwtAuthOptions);
@@ -321,7 +320,7 @@ namespace MoveMate.Service.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during user registration.");
-                result.AddError(StatusCode.ServerError, "An internal error occurred during registration.");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
         }
@@ -336,24 +335,24 @@ namespace MoveMate.Service.Services
                 var emailExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Email == customer.Email);
                 if (emailExists)
                 {
-                    result.AddError(StatusCode.BadRequest, "Email already exists.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.EmailExist);
                     return result;
                 }
 
                 var phoneExists = await _unitOfWork.UserRepository.AnyAsync(u => u.Phone == customer.Phone);
                 if (phoneExists)
                 {
-                    result.AddError(StatusCode.BadRequest, "Phone already exists.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PhoneExist);
                     return result;
                 }
 
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Customer information is available.", null, null);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CheckUserInfo, null, null);
                 return result;
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
         }
@@ -408,7 +407,7 @@ namespace MoveMate.Service.Services
             var user = await _unitOfWork.UserRepository.FindByEmailAsync(email);
             if (user == null)
             {
-                result.AddError(Service.Commons.StatusCode.NotFound, "User not found.");
+                result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return result;
             }
 
@@ -423,7 +422,7 @@ namespace MoveMate.Service.Services
                 }
             };
 
-            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Login successful", accountResponse);
+            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, MessageConstant.SuccessMessage.LoginSuccess, accountResponse);
             return result;
         }
 

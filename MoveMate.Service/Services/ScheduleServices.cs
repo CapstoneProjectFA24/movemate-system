@@ -47,14 +47,14 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, "List Schedule is Empty!", listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListScheduleEmpty, listResponse);
                     return result;
                 }
 
                 pagin.PageSize = request.per_page;
                 pagin.TotalItemsCount = listResponse.Count();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List Schedule Done", listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListScheduleSuccess, listResponse, pagin);
 
                 return result;
             }
@@ -75,12 +75,12 @@ namespace MoveMate.Service.Services
 
                 if (entity == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Schedule not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundSchedule);
                 }
                 else if ((bool)entity.IsActived)
                 {
                     var productResponse = _mapper.Map<ScheduleResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, "Get Schedule by Id Success!", productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetScheduleSuccess, productResponse);
                 }
 
                 return result;

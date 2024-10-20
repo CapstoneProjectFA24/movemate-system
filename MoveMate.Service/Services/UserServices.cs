@@ -51,11 +51,11 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, "List User is Empty!", listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserFail , listResponse);
                     return result;
                 }
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Get List User Done", listResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserSuccess , listResponse);
 
                 return result;
             }
@@ -114,19 +114,18 @@ namespace MoveMate.Service.Services
                 var userInfo = await _unitOfWork.UserInfoRepository.GetUserInfoByUserIdAsync(int.Parse(userId));
                 if (userInfo != null)
                 {
-                    var addressResponse = _mapper.Map<UserInfoResponse>(userInfo);
-                    result.Payload = addressResponse;
-                    result.Message = "User information retrieved successfully";
+                    var response = _mapper.Map<UserInfoResponse>(userInfo);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserInformationRetrieved , response);
                 }
                 else
                 {
-                    result.AddError(StatusCode.NotFound, "User info not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while retrieving the user address.");
-                result.AddError(StatusCode.ServerError, "An unexpected error occurred.");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError );
             }
 
             return result;
@@ -142,7 +141,7 @@ namespace MoveMate.Service.Services
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(userId);
                 if (existingUser == null)
                 {
-                    throw new NotFoundException("User not found");
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundUser);
                 }
 
                 var updatedUser = _mapper.Map(updateUserRequest, existingUser);
@@ -151,7 +150,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                throw new Exception("Error updating user");
+                throw new Exception(MessageConstant.FailMessage.UpdateUserFail);
             }
         }
     }

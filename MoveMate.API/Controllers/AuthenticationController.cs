@@ -266,7 +266,7 @@ namespace MoveMate.API.Controllers
             }
 
             // If token verification is successful, create a success response
-            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, "Token verification successful", new
+            result.AddResponseStatusCode(Service.Commons.StatusCode.Ok, MessageConstant.SuccessMessage.VerifyToken , new
             {
                 isValid = true,
                 uid = verifyResult.Payload.Uid
@@ -327,7 +327,7 @@ namespace MoveMate.API.Controllers
         {
             if (string.IsNullOrEmpty(token))
             {
-                return BadRequest("Token cannnot be empty");
+                return BadRequest(MessageConstant.FailMessage.TokenEmpty);
             }
 
             // Perform token validation but do not return any response

@@ -85,7 +85,7 @@ namespace MoveMate.API.Controllers
                     new Error
                     {
                         Code = MoveMate.Service.Commons.StatusCode.BadRequest,
-                        Message = "Booking ID is required and must be greater than zero."
+                        Message = MessageConstant.FailMessage.BookingIdInputFail
                     }
                 });
             }
@@ -97,7 +97,7 @@ namespace MoveMate.API.Controllers
                 {
                     new Error
                     {
-                        Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = "Return URL is required."
+                        Code = MoveMate.Service.Commons.StatusCode.BadRequest, Message = MessageConstant.FailMessage.ReturnUrl
                     }
                 });
             }
@@ -110,7 +110,7 @@ namespace MoveMate.API.Controllers
                     new Error
                     {
                         Code = MoveMate.Service.Commons.StatusCode.BadRequest,
-                        Message = "Payment method is required and must be a valid value."
+                        Message = MessageConstant.FailMessage.PaymentMethod
                     }
                 });
             }
@@ -119,7 +119,7 @@ namespace MoveMate.API.Controllers
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
             {
-                return Unauthorized(new { statusCode = 401, message = "Invalid user ID in token.", isError = true });
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
             }
 
             var userId = int.Parse(accountIdClaim.Value);
@@ -165,7 +165,6 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns>Returns the result of wallet</returns>
         [HttpGet("recharge-callback")]
-        [Authorize]
         public async Task<IActionResult> RechargeCallback([FromQuery] VnPayPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
@@ -186,13 +185,12 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("momo/callback")]
-        [Authorize]
         public async Task<IActionResult> PaymentCallbackAsync([FromQuery] MomoPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
             if (callback == null)
             {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+                return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
             if (callback.OrderInfo == "order")
@@ -228,14 +226,13 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("vnpay-callback")]
-        [Authorize]
         public async Task<IActionResult> VnPayPaymentCallback(
             [FromQuery] VnPayPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
             if (callback == null)
             {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+                return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
             var result = await _vnPayService.HandleOrderPaymentAsync(Request.Query, callback);
@@ -268,14 +265,13 @@ namespace MoveMate.API.Controllers
         /// <response code="404">Wallet not found</response>
         /// <response code="500">An internal server error occurred</response>
         [HttpGet("payos/callback")]
-        [Authorize]
         public async Task<IActionResult> PayOsPaymentCallback([FromQuery] PayOsPaymentCallbackCommand callback,
             CancellationToken cancellationToken)
         {
             // Validate callback data
             if (callback == null)
             {
-                return BadRequest(new { statusCode = 400, message = "Invalid callback data.", isError = true });
+                return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
             bool IsSuccess = false;

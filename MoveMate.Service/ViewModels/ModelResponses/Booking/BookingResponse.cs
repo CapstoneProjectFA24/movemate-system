@@ -14,6 +14,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public int Id { get; set; }
 
         [FirestoreProperty] public int UserId { get; set; }
+        [FirestoreProperty] public int HouseTypeId { get; set; }
         [FirestoreProperty] public double Deposit { get; set; }
         [FirestoreProperty] public string Status { get; set; }
         [FirestoreProperty] public string PickupAddress { get; set; }
@@ -34,7 +35,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string ReportedReason { get; set; }
         [FirestoreProperty] public bool IsDeleted { get; set; }
         [FirestoreProperty] public string? CreatedAt { get; set; }
-
+        [FirestoreProperty] public string? BookingAt { get; set; }
         public string CreatedBy { get; set; }
         [FirestoreProperty] public string? UpdatedAt { get; set; }
 
@@ -61,7 +62,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string FeeInfo { get; set; }
         [FirestoreProperty]
         public bool? IsReviewOnline { get; set; }
-        //public DateTime ReviewAt { get; set; }
+        public string? ReviewAt { get; set; }
 
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<BookingDetailsResponse> BookingDetails { get; set; }
