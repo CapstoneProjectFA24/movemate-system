@@ -24,7 +24,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 {
     public class MomoPaymentService : IMomoPaymentService
     {
-        private const string DefaultOrderInfo = "Thanh toán với Momo";
+        private const string DefaultOrderInfo = MessageConstant.SuccessMessage.MomoPayment;
 
         private readonly MomoSettings _momoSettings;
         private readonly ILogger<MomoPaymentService> _logger;
@@ -54,7 +54,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             // Validate parameters
             if (string.IsNullOrEmpty(returnUrl))
             {
-                operationResult.AddError(StatusCode.BadRequest, "Return URL is required");
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ReturnUrl);
                 return operationResult;
             }
 
@@ -62,23 +62,21 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             if (user == null)
             {
                 _logger.LogWarning($"User with ID {userId} not found");
-                operationResult.AddError(StatusCode.NotFound, "User not found");
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return operationResult;
             }
 
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
             if (booking == null)
             {
-                _logger.LogWarning($"Booking with ID {bookingId} for User ID {userId} not found");
-                operationResult.AddError(StatusCode.NotFound, "Booking not found");
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                 return operationResult;
             }
 
             if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
                 booking.Status != BookingEnums.COMPLETED.ToString())
             {
-                operationResult.AddError(StatusCode.BadRequest,
-                    "Booking status must be either DEPOSITING or COMPLETED");
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                 return operationResult;
             }
 
@@ -109,13 +107,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var paymentUrl = await CreatePaymentAsync(payment);
 
                 operationResult =
-                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 return operationResult;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An internal server error occurred while creating the payment");
-                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
+                operationResult.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return operationResult;
             }
         }
@@ -125,7 +122,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var serverUrl =
                 string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
                     _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
-                throw new Exception("Server URL is not available");
+                throw new Exception(MessageConstant.FailMessage.ServerUrl);
             var requestType = "payWithATM";
             var request = new MomoPaymentRequest
             {
@@ -157,15 +154,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             if (momoResponse.IsSuccessStatusCode)
             {
                 var momoPaymentResponse = JsonSerializerUtils.Deserialize<MomoPaymentResponse>(responseContent);
-                _logger.LogInformation($"[Momo payment] Message: {momoPaymentResponse?.Message}");
+               
                 if (momoPaymentResponse != null)
                 {
                     return momoPaymentResponse.PayUrl;
                 }
             }
-
-            _logger.LogError(
-                $"[Momo payment] Error: There was an error creating payment with Momo. Response: {responseContent}");
             throw new Exception($"[Momo payment] Error: {responseContent}");
         }
 
@@ -190,15 +184,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             // Validate parameters
             if (amount <= 0)
             {
-                operationResult.AddError(StatusCode.BadRequest, "Amount must be greater than zero");
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AmountGreaterThanZero);
                 return operationResult;
             }
 
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                _logger.LogWarning($"User with ID {userId} not found");
-                operationResult.AddError(StatusCode.NotFound, "User not found");
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return operationResult;
             }
 
@@ -220,13 +213,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
                 // Add logic to update user's wallet if payment is successful
                 operationResult =
-                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 return operationResult;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An internal server error occurred while adding funds to wallet");
-                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
+                operationResult.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return operationResult;
             }
         }
@@ -240,7 +232,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                result.AddError(StatusCode.NotFound, "User not found");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return result;
             }
 
@@ -248,7 +240,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
             if (wallet == null)
             {
-                result.AddError(StatusCode.NotFound, "Wallet not found");
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return result;
             }
 
@@ -259,7 +251,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
                 if (updateResult.IsError)
                 {
-                    result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                     return result;
                 }
 
@@ -280,11 +272,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
 
-                result.AddResponseStatusCode(StatusCode.Ok, "Wallet updated successfully", "Success");
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateWalletSuccess, MessageConstant.SuccessMessage.Success);
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An internal server error occurred: " + ex.Message);
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -301,8 +293,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var orderIdParts = callback.OrderId.Split('-');
                 if (!int.TryParse(orderIdParts[0], out int bookingId))
                 {
-                    _logger.LogWarning($"Invalid OrderId format: {callback.OrderId}");
-                    operationResult.AddError(StatusCode.BadRequest, "Invalid OrderId format");
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidBookingId);
                     return operationResult;
                 }
 
@@ -310,8 +301,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
                 if (booking == null)
                 {
-                    _logger.LogWarning($"Booking with ID {bookingId} for User ID {userId} not found");
-                    operationResult.AddError(StatusCode.NotFound, "Booking not found");
+                    operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return operationResult;
                 }
 
@@ -329,6 +319,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
+                    booking.TotalReal = booking.Total - (float)callback.Amount;
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -347,30 +338,36 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     PaymentMethod = Resource.Momo.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
-                };
-
+                }; 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
 
-                if (booking.IsReviewOnline == false)
+                if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.REVIEWED.ToString();
                 }
-                else if (booking.IsReviewOnline == true)
+                else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
+                }
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                {
+                    booking.Status = BookingEnums.COMPLETED.ToString();
+                } 
+                else
+                {
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                    return operationResult;
                 }
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                operationResult = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok,
-                    "Payment handled successfully");
+                operationResult = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An internal server error occurred while handling the order payment");
-                operationResult.AddError(StatusCode.ServerError, $"An internal server error occurred: {ex.Message}");
+                operationResult.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return operationResult;

@@ -73,11 +73,10 @@ namespace MoveMate.Service.Commons
             public const string PaymentMethod = "Payment method is required and must be a valid value";
             public const string Callback = "Invalid callback data";
             public const string UnsupportPayment = "Unsupported payment method selected";
+            public const string ServerUrl = "Server URL is not available";
 
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
-
-
             public const string GetListUserFail = "List user is empty!";
             public const string NotFoundUser = "User not found!";
             public const string NotFoundUserInfo = "User info not found";
@@ -117,9 +116,24 @@ namespace MoveMate.Service.Commons
 
             //Wallet
             public const string NotFoundWallet = "Wallet not found";
+            public const string UpdateWalletBalance = "Failed to update wallet balance";
+
+
+            //Payment
+            public const string BookingStatus = "Booking status must be either DEPOSITING or COMPLETED";
+            public const string AmountGreaterThanZero = "Amount must be greater than zero";
+            public const string InvalidSignature = "Invalid payment signature";
+            public const string CreatePaymentFail = "Payment was not successful";
+            public const string ProcessPaymentFail = "Payment was not successful";
+            public const string InvalidBookingId = "Invalid booking ID";
+
+
+            //Transaction
+            public const string TransactionExist = "Transaction has already been processed";
 
             //Tracker resource
             public const string NotFoundBookingTracker = "Booking tracker not found";
+
         }
 
 
@@ -128,7 +142,7 @@ namespace MoveMate.Service.Commons
 
             public const string LoginSuccess = "Login successful";
             public const string VerifyToken = "Token verification successful";
-
+            public const string Success = "Success";
             public const string CheckUserInfo = "Customer information is available";
             public const string RegisterSuccess = "User registered successfully";
             public const string GetListUserSuccess = "Get list user done";
@@ -173,6 +187,19 @@ namespace MoveMate.Service.Commons
 
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";
+            public const string UpdateWalletSuccess = "Wallet updated successfully";
+            
+
+            //Payment
+            public const string CreatePaymentLinkSuccess = "Payment link created successfully";
+            public const string PaymentHandle = "Payment handled successfully";
+            public const string VNPPayment = "Payment with VnPay";
+            public const string MomoPayment = "Payment with Momo";
+
+
+            //Transaction
+            public const string TransactionSuccess = "Transaction has already been processed";
+            public const string AlreadyProcess = "Already processed";
 
         }
 
