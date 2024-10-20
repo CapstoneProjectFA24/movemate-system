@@ -21,11 +21,14 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public bool? IsRoundTrip { get; set; }
         public string? TypeBooking { get; set; }
         public string? RoomNumber { get; set; }
+
         public string? FloorsNumber { get; set; }
         public string? Note { get; set; }
         [JsonIgnore]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
+        public DateTime? BookingAt { get; set; } 
         public List<ServiceDetailRequest> ServiceDetails { get; set; } = new List<ServiceDetailRequest>();
     }
 }

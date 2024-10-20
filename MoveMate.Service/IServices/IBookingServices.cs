@@ -25,18 +25,16 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId, string failedReason);
         Task<OperationResult<BookingDetailsResponse>> DriverUpdateRoundTripBooking(int bookingId);
         Task<OperationResult<BookingDetailsResponse>> ReviewerOnlineUpdateStatusBooking(int bookingId);
-        Task<OperationResult<BookingDetailsResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId);
+        Task<OperationResult<BookingDetailsResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId,ResourceRequest request);
         Task<OperationResult<BookingDetailsResponse>> ReviewerCancelBooking(int bookingId);
 
         Task<OperationResult<BookingDetailsResponse>> ReviewerCompletedBooking(int bookingId);
-        Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId);
-        Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId);
+        Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId, ResourceRequest request);
+        Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId, ResourceRequest request);
         Task<OperationResult<BookingResponse>> UserConfirmRoundTrip(int bookingId);
 
         Task<OperationResult<BookingResponse>> UserConfirmReviewAt(int bookingId, StatusRequest request);
         Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request);
-        Task<OperationResult<BookingResponse>> UpdateBasicInfoAsync(int bookingId, BookingBasicInfoUpdateRequest request);
-        Task<OperationResult<BookingResponse>> UpdateFeeDetailsAsync(int bookingId, BookingFeeDetailsUpdateRequest request);
-        Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingId, BookingServiceDetailsUpdateRequest request);
+        Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingDetailId, BookingServiceDetailsUpdateRequest request);
     }
 }

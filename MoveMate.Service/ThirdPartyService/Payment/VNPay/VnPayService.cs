@@ -20,7 +20,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         private readonly IWalletServices _walletService;
         private readonly IBookingServices _bookingServices;
         private readonly UnitOfWork _unitOfWork;
-        private const string DefaultPaymentInfo = "Thanh toán với VnPay";
+        private const string DefaultPaymentInfo = MessageConstant.SuccessMessage.VNPPayment;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly VnPaySettings _vnPaySettings;
 
@@ -52,14 +52,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
                 if (wallet == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Wallet not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
 
                 var userResult = await _unitOfWork.UserRepository.GetByIdAsync(wallet.UserId);
                 if (userResult == null)
                 {
-                    result.AddError(StatusCode.NotFound, "User not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
 
@@ -80,11 +80,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 // Create payment URL
                 var paymentUrl = vnpay.CreateRequestUrl(_config["VnPay:PaymentEndpoint"], _config["VnPay:HashSecret"]);
-                result.AddResponseStatusCode(StatusCode.Ok, "Payment URL generated successfully", paymentUrl);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess, paymentUrl);
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An internal server error occurred");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -112,7 +112,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, _config["VnPay:HashSecret"]);
                 if (!checkSignature)
                 {
-                    result.AddError(StatusCode.BadRequest, "Invalid payment signature");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidSignature);
                     return result;
                 }
 
@@ -124,13 +124,13 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var wallet = await _unitOfWork.WalletRepository.GetByIdAsync(walletId);
                 if (wallet == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Wallet not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
 
                 if (vnpay.GetResponseData("vnp_ResponseCode") != "00")
                 {
-                    result.AddError(StatusCode.BadRequest, "Payment was not successful");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CreatePaymentFail);
                     return result;
                 }
 
@@ -155,7 +155,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 if (count == 0)
                 {
                     await transaction.RollbackAsync();
-                    result.AddError(StatusCode.BadRequest, "Failed to process payment");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ProcessPaymentFail);
                     return result;
                 }
 
@@ -168,7 +168,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
                 if (updateResult.IsError)
                 {
-                    result.AddError(StatusCode.BadRequest, "Failed to update wallet balance");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                     return result;
                 }
 
@@ -180,7 +180,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                result.AddError(StatusCode.ServerError, "An error occurred: " + ex.Message);
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -195,29 +195,28 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             {
                 if (string.IsNullOrEmpty(returnUrl))
                 {
-                    operationResult.AddError(StatusCode.BadRequest, "Return URL is required");
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ReturnUrl);
                     return operationResult;
                 }
 
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    operationResult.AddError(StatusCode.NotFound, "User not found");
+                    operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return operationResult;
                 }
 
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
                 if (booking == null)
                 {
-                    operationResult.AddError(StatusCode.NotFound, "Booking not found");
+                    operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return operationResult;
                 }
 
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
                     booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    operationResult.AddError(StatusCode.BadRequest,
-                        "Booking status must be either DEPOSITING or COMPLETED");
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return operationResult;
                 }
 
@@ -239,7 +238,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
                                     _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent())
-                                ?? throw new Exception("Server URL is not available");
+                                ?? throw new Exception(MessageConstant.FailMessage.ServerUrl);
 
                 var pay = new VnPayLibrary();
                 pay.AddRequestData("vnp_ReturnUrl",
@@ -259,14 +258,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var paymentUrl = pay.CreateRequestUrl(_vnPaySettings.PaymentEndpoint, _vnPaySettings.HashSecret);
 
                 operationResult =
-                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, "Payment link created successfully");
+                    OperationResult<string>.Success(paymentUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 return operationResult;
             }
             catch (Exception ex)
             {
-                // Log the full exception for troubleshooting
-                Console.WriteLine($"An error occurred in CreatePaymentAsync: {ex}");
-                operationResult.AddError(StatusCode.ServerError, "An internal server error occurred");
+                operationResult.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return operationResult;
             }
         }
@@ -291,7 +288,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, _config["VnPay:HashSecret"]);
                 if (!checkSignature)
                 {
-                    result.AddError(StatusCode.BadRequest, "Invalid payment signature");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidSignature);
                     return result;
                 }
 
@@ -301,7 +298,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 int bookingId;
                 if (!int.TryParse(callback.vnp_OrderInfo, out bookingId))
                 {
-                    result.AddError(StatusCode.BadRequest, "Invalid booking ID");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidBookingId);
                     return result;
                 }
 
@@ -310,7 +307,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Booking not found");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
@@ -328,6 +325,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
+                    booking.TotalReal = booking.Total - (float)callback.vnp_Amount;
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -337,7 +335,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 // Check the response status
                 if (vnpay.GetResponseData("vnp_ResponseCode") != "00")
                 {
-                    result.AddError(StatusCode.BadRequest, "Payment was not successful");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CreatePaymentFail);
                     return result;
                 }
 
@@ -358,26 +356,33 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
 
-                if (booking.IsReviewOnline == false)
+                if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.REVIEWED.ToString();
                 }
-                else if (booking.IsReviewOnline == true)
+                else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
+                }
+                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                {
+                    booking.Status = BookingEnums.COMPLETED.ToString();
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                    return result;
                 }
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                result = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok,
-                    "Payment handled successfully");
+                result = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
             }
             catch (Exception ex)
             {
-                // Log the full exception for troubleshooting
-                Console.WriteLine($"An error occurred in HandleOrderPaymentAsync: {ex}");
-                result.AddError(StatusCode.ServerError, "An internal server error occurred");
+
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
