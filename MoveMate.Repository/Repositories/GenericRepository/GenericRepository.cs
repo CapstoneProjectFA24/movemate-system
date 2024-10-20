@@ -5,6 +5,7 @@ using MoveMate.Domain.Models;
 using System.Linq.Expressions;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Domain.DBContext;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 
 namespace MoveMate.Repository.Repositories.GenericRepository
@@ -63,6 +64,79 @@ namespace MoveMate.Repository.Repositories.GenericRepository
             _dbSet.Update(entity);
         }
 
+        public virtual async Task<List<TEntity>> SaveOrUpdateRangeAsync(List<TEntity> entities)
+        {
+            var primaryKeyProperties = _context.Model.FindEntityType(typeof(TEntity))
+                .FindPrimaryKey()
+                .Properties;
+
+            foreach (var entity in entities)
+            {
+                // Lấy giá trị của khóa chính từ thực thể
+                var key = GetPrimaryKeyValue(entity, primaryKeyProperties);
+
+                // Kiểm tra xem thực thể đã tồn tại chưa
+                var entityInDb = await _dbSet.FindAsync(key);
+
+                if (entityInDb != null)
+                {
+                    // Nếu đã tồn tại, cập nhật giá trị mới
+                    _context.Entry(entityInDb).CurrentValues.SetValues(entity);
+                    _dbSet.Update(entityInDb);
+                }
+                else
+                {
+                    // Nếu chưa tồn tại, thêm mới
+                    await _dbSet.AddAsync(entity);
+                }
+            }
+
+            return entities;
+        }
+
+        // Hàm phụ trợ để lấy giá trị khóa chính
+        private object GetPrimaryKeyValue(TEntity entity, IEnumerable<IProperty> primaryKeyProperties)
+        {
+            var keyValues = primaryKeyProperties
+                .Select(p => entity.GetType().GetProperty(p.Name)?.GetValue(entity, null))
+                .ToArray();
+
+            return keyValues.Length == 1 ? keyValues[0] : keyValues; // Nếu có một khóa chính, trả về nó, nếu nhiều khóa chính, trả về mảng
+        }
+
+        public virtual async Task<TEntity> SaveOrUpdateAsync(TEntity entity)
+        {
+            // Kiểm tra xem thực thể đã tồn tại chưa, dựa vào khóa chính (primary key)
+            var entityInDb = await _dbSet.FindAsync(GetPrimaryKeyValue(entity));
+
+            if (entityInDb != null)
+            {
+                // Nếu tồn tại, cập nhật thực thể
+                _context.Entry(entityInDb).CurrentValues.SetValues(entity);
+                _dbSet.Update(entityInDb);
+            }
+            else
+            {
+                // Nếu không tồn tại, thêm mới thực thể
+                await _dbSet.AddAsync(entity);
+            }
+
+            return entity;
+        }
+
+        // Hàm phụ trợ để lấy giá trị khóa chính của thực thể
+        private object GetPrimaryKeyValue(TEntity entity)
+        {
+            var key = _context.Model.FindEntityType(typeof(TEntity))
+                                    .FindPrimaryKey()
+                                    .Properties
+                                    .Select(p => entity.GetType().GetProperty(p.Name).GetValue(entity, null))
+                                    .SingleOrDefault();
+
+            return key;
+        }
+
+
         public virtual async Task AddRangeAsync(List<TEntity> entities)
         {
             await _dbSet.AddRangeAsync(entities);
@@ -78,6 +152,12 @@ namespace MoveMate.Repository.Repositories.GenericRepository
             _dbSet.Remove(entity);
             return entity;
         }
+
+        public void RemoveRange(List<TEntity> entities)
+        {
+            _dbSet.RemoveRange(entities);
+        }
+
 
         public virtual void UpdateRange(List<TEntity> entities)
         {

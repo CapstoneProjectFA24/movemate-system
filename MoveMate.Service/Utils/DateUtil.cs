@@ -75,12 +75,12 @@ namespace MoveMate.Service.Utils
 
         public static long GetTimeStamp()
         {
-            return GetTimeStamp(DateTime.UtcNow);
+            return GetTimeStamp(DateTime.Now);
         }
 
         public static string GetDateStr()
         {
-            return DateTime.UtcNow.ToString("yyMMdd");
+            return DateTime.Now.ToString("yyMMdd");
         }
 
         public static bool IsOutsideBusinessHours(DateTime date)

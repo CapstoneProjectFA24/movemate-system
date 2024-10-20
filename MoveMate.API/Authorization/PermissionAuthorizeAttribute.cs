@@ -78,7 +78,7 @@ namespace MoveMate.API.Authorization
                 var expiredClaim = long.Parse(context.HttpContext.User.Claims
                     .FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
                 var expiredDate = DateUtil.ConvertUnixTimeToDateTime(expiredClaim);
-                if (expiredDate <= DateTime.UtcNow)
+                if (expiredDate <= DateTime.Now)
                 {
                     context.Result = new ObjectResult("Unauthorized")
                     {
