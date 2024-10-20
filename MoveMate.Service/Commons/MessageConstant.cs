@@ -140,7 +140,7 @@ namespace MoveMate.Service.Commons
             public const string CancelBooking = "Cancel booking successed";
             public const string UpdateStatusSuccess = "Status updated successfully";
             public const string UserConfirm = "Confirm round trip successfully";
-            public const string BookingUpdateSuccess = "Update booking failed";
+            public const string BookingUpdateSuccess = "Update booking succesful";
 
             //FeeSetting
             public const string GetListFeeSettingEmpty = "List fee setting is empty!";

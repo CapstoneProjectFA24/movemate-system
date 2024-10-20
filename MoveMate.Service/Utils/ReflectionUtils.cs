@@ -10,7 +10,6 @@ namespace MoveMate.Service.Utils
     {
         public static void DoWithProperties<T>(T source, Action<PropertyInfo> action)
         {
-            // Iterate through all properties of the source type
             foreach (var property in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
                 action(property);
@@ -22,8 +21,7 @@ namespace MoveMate.Service.Utils
             var sourceProperties = typeof(TSource).GetProperties();
             foreach (var property in sourceProperties)
             {
-                // Skip the Id property
-                if (property.CanRead && property.Name != "Id")
+                if (property.CanRead && property.Name != "Id") // Skip Id property
                 {
                     var value = property.GetValue(source);
                     if (value != null)
@@ -36,7 +34,7 @@ namespace MoveMate.Service.Utils
                             {
                                 HandleCollectionUpdate(value, destProperty, destination);
                             }
-                            // Check for compatible types for single value properties
+                            // Check if the types are compatible for single value properties
                             else if (destProperty.PropertyType.IsAssignableFrom(value.GetType()))
                             {
                                 destProperty.SetValue(destination, value);
@@ -60,33 +58,46 @@ namespace MoveMate.Service.Utils
             {
                 var itemType = destProperty.PropertyType.GenericTypeArguments[0];
 
+                // Use a HashSet to track existing ServiceIds
+                var existingServiceIds = new HashSet<object>(
+                    destCollection.Cast<object>()
+                                  .Select(item => item.GetType().GetProperty("ServiceId")?.GetValue(item)));
+
                 foreach (var sourceItem in sourceCollection)
                 {
                     var sourceServiceId = sourceItem.GetType().GetProperty("ServiceId")?.GetValue(sourceItem);
 
-                    // Find corresponding item in destCollection based on ServiceId
-                    var existingItem = destCollection.Cast<object>()
-                        .FirstOrDefault(destItem =>
-                            destItem.GetType().GetProperty("ServiceId")?.GetValue(destItem)?.Equals(sourceServiceId) == true);
-
-                    if (existingItem != null)
+                    // Check if the ServiceId already exists
+                    if (sourceServiceId != null && existingServiceIds.Contains(sourceServiceId))
                     {
-                        // If service already exists, update quantity
-                        var sourceQuantity = sourceItem.GetType().GetProperty("Quantity")?.GetValue(sourceItem);
-                        var destQuantityProperty = existingItem.GetType().GetProperty("Quantity");
+                        // If the service already exists, update its quantity
+                        var existingItem = destCollection.Cast<object>()
+                            .First(destItem => destItem.GetType().GetProperty("ServiceId")?.GetValue(destItem)?.Equals(sourceServiceId) == true);
 
-                        if (destQuantityProperty != null && sourceQuantity != null)
-                        {
-                            destQuantityProperty.SetValue(existingItem, sourceQuantity);
-                        }
+                        UpdateQuantity(sourceItem, existingItem);
                     }
                     else
                     {
-                        // If service does not exist, add new item to destCollection
+                        // If the service doesn't exist, add it to the collection
                         var mappedItem = MapToDestinationType(sourceItem, itemType);
                         destCollection.Add(mappedItem);
+
+                        // Add the new ServiceId to the HashSet to track it
+                        existingServiceIds.Add(sourceServiceId);
                     }
                 }
+            }
+        }
+
+        private static void UpdateQuantity(object sourceItem, object existingItem)
+        {
+            var sourceQuantity = sourceItem.GetType().GetProperty("Quantity")?.GetValue(sourceItem);
+            var destQuantityProperty = existingItem.GetType().GetProperty("Quantity");
+
+            if (destQuantityProperty != null && sourceQuantity != null)
+            {
+                // Update the existing item's quantity
+                destQuantityProperty.SetValue(existingItem, sourceQuantity);
             }
         }
 

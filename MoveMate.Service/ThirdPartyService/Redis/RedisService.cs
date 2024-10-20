@@ -211,14 +211,14 @@ public class RedisService : IRedisService
         var actualExpiry = expiry ?? TimeSpan.FromHours(20);
 
         var jsonData = JsonSerializer.Serialize(value);
-        var expiryTime = DateTimeOffset.UtcNow.Add(actualExpiry).ToUnixTimeSeconds();
+        var expiryTime = DateTimeOffset.Now.Add(actualExpiry).ToUnixTimeSeconds();
 
         await _database.SortedSetAddAsync(queueKey, jsonData, expiryTime);
     }
 
     public async Task<T?> DequeueWithExpiryAsync<T>(string queueKey)
     {
-        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 
         var values = await _database.SortedSetRangeByScoreAsync(queueKey, 0, now, Exclude.None, Order.Ascending, 0, 1);
 

@@ -107,7 +107,7 @@ namespace MoveMate.Service.Services
             var expiredDate = DateUtil.ConvertUnixTimeToDateTime(utcExpiredDate);
 
             var tokenExpiryInMinutes = int.Parse(_configuration["TokenSettings:TokenExpiryInMinutes"]);
-            if (expiredDate > DateTime.UtcNow)
+            if (expiredDate > DateTime.Now)
             {
                 throw new BadRequestException(MessageConstant.ReGenerationMessage.NotExpiredAccessToken);
             }
@@ -116,7 +116,7 @@ namespace MoveMate.Service.Services
             {
                 AccessToken = jwtTokenHandler.WriteToken(jwtTokenHandler.CreateToken(new SecurityTokenDescriptor
                 {
-                    Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
+                    Expires = DateTime.Now.AddMinutes(tokenExpiryInMinutes),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes),
                         SecurityAlgorithms.HmacSha512),
                     Subject = new ClaimsIdentity(tokenVerification.Claims)
@@ -142,7 +142,7 @@ namespace MoveMate.Service.Services
                     new Claim(ClaimTypes.Role, accountResponse.RoleId.ToString()), // Use ClaimTypes.Role for roles
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
+                Expires = DateTime.Now.AddMinutes(tokenExpiryInMinutes),
                 SigningCredentials = credentials
             };
 
@@ -381,7 +381,7 @@ namespace MoveMate.Service.Services
                     new Claim(JwtRegisteredClaimNames.Sub, userId),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
+                Expires = DateTime.Now.AddMinutes(tokenExpiryInMinutes),
                 SigningCredentials = credentials
             };
             var token = jwtTokenHandler.CreateToken(tokenDescription);
@@ -443,7 +443,7 @@ namespace MoveMate.Service.Services
                     new Claim(ClaimTypes.Role, user.RoleId.ToString()), // Use ClaimTypes.Role for roles
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
+                Expires = DateTime.Now.AddMinutes(tokenExpiryInMinutes),
                 SigningCredentials = credentials
             };
             var token = jwtTokenHandler.CreateToken(tokenDescription);

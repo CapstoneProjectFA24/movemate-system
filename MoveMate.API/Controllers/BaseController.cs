@@ -61,7 +61,7 @@ namespace MoveMate.API.Controllers
                 message = "Bad Request",
                 isError = true,
                 errors = errorMessages,
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.Now
             });
         }
     }
