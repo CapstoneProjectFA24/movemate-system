@@ -107,5 +107,22 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+        
+        using System.Linq;
+        using Microsoft.EntityFrameworkCore;
+
+        public List<User> GetUsersWithTruckCategoryId(int truckCategoryId)
+        {
+            using (var context = new MoveMateDbContext())
+            {
+                var users = context.Users
+                    .Include(u => u.Trucks) // Load the trucks associated with the user
+                    .Where(u => u.Trucks.Any(t => t.TruckCategoryId == truckCategoryId)) // Filter by TruckCategoryId
+                    .ToList();
+
+                return users;
+            }
+        }
+
     }
 }
