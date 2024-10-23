@@ -108,21 +108,21 @@ namespace MoveMate.Repository.Repositories.Repository
             }
         }
         
-        using System.Linq;
-        using Microsoft.EntityFrameworkCore;
-
-        public List<User> GetUsersWithTruckCategoryId(int truckCategoryId)
+        public async Task<List<User>> GetUsersWithTruckCategoryIdAsync(int truckCategoryId)
         {
-            using (var context = new MoveMateDbContext())
+            try
             {
-                var users = context.Users
-                    .Include(u => u.Trucks) // Load the trucks associated with the user
-                    .Where(u => u.Trucks.Any(t => t.TruckCategoryId == truckCategoryId)) // Filter by TruckCategoryId
-                    .ToList();
-
-                return users;
+                return await _dbContext.Users
+                    .Include(u => u.Trucks) 
+                    .Where(u => u.Trucks.Any(t => t.TruckCategoryId == truckCategoryId)) 
+                    .ToListAsync(); 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
+
 
     }
 }
