@@ -103,6 +103,7 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
         public async Task<IActionResult> RegisterBooking(BookingRegisterRequest request)
         {
+            
             IEnumerable<Claim> claims = HttpContext.User.Claims;
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
             var userId = int.Parse(accountId.Value).ToString();

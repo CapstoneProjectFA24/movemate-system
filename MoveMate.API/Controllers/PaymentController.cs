@@ -239,6 +239,7 @@ namespace MoveMate.API.Controllers
 
             if (result.IsError)
             {
+                // bibi + ?isSuccess=true
                 return Redirect($"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}");
             }
 
