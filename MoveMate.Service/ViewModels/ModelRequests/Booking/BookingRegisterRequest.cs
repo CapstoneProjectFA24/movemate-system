@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using MoveMate.Service.ViewModels.Annotation;
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
 
@@ -38,6 +39,7 @@ public class BookingRegisterRequest
     public string? FloorsNumber { get; set; }
 
     [Required(ErrorMessage = "Filed is required")]
+    [MinCollectionSize(1)]
     public List<ServiceDetailRequest> ServiceDetails { get; set; } = new List<ServiceDetailRequest>();
 
     [Required(ErrorMessage = "Filed is required")]
