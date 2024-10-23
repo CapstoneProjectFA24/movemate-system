@@ -131,6 +131,9 @@ namespace MoveMate.Service.Commons
             //Transaction
             public const string TransactionExist = "Transaction has already been processed";
 
+            //Tracker resource
+            public const string NotFoundBookingTracker = "Booking tracker not found";
+
         }
 
 

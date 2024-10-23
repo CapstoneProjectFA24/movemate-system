@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
+using MoveMate.Service.ViewModels.ModelRequests;
 
 namespace MoveMate.API.Controllers
 {
@@ -45,9 +46,9 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("porter/update-status/{id}")]
-        public async Task<IActionResult> PorterUpdateStatusBooking(int id)
+        public async Task<IActionResult> PorterUpdateStatusBooking(int id, [FromBody] ResourceRequest request)
         {
-            var response = await _bookingServices.PorterUpdateStatusBooking(id);
+            var response = await _bookingServices.PorterUpdateStatusBooking(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
@@ -58,9 +59,9 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("porter/update-round-trip/{id}")]
-        public async Task<IActionResult> PorterUpdateRoundTripBooking(int id)
+        public async Task<IActionResult> PorterUpdateRoundTripBooking(int id, [FromBody] ResourceRequest request)
         {
-            var response = await _bookingServices.PorterRoundTripBooking(id);
+            var response = await _bookingServices.PorterRoundTripBooking(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
@@ -83,9 +84,9 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("reviewer/review-offline/update-status/{id}")]
-        public async Task<IActionResult> ReviewerOfflineUpdateStatus(int id)
+        public async Task<IActionResult> ReviewerOfflineUpdateStatus(int id , [FromBody] ResourceRequest request)
         {
-            var response = await _bookingServices.ReviewerOfflineUpdateStatusBooking(id);
+            var response = await _bookingServices.ReviewerOfflineUpdateStatusBooking(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 

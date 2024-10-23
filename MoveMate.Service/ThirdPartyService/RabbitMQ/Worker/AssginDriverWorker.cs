@@ -21,7 +21,7 @@ public class AssginDriverWorker
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    [Consumer("movemate.booking_assign_driver")]
+    [Consumer("movemate.booking_assign_driver_local")]
     public async Task HandleMessage(int message)
     {
         try
