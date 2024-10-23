@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.ComponentModel.DataAnnotations;
+using MoveMate.Service.Exceptions;
 
 namespace MoveMate.Service.ViewModels.Annotation
 {
@@ -17,7 +16,12 @@ namespace MoveMate.Service.ViewModels.Annotation
 
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            if (value is IEnumerable<object> collection)
+            if (value == null)
+            {
+                throw new BadRequestException( $"{validationContext.DisplayName} must contain at least {_minSize} items.");
+            }
+            
+            if (value is IEnumerable collection)
             {
                 var count = 0;
 
@@ -26,12 +30,12 @@ namespace MoveMate.Service.ViewModels.Annotation
                     count++;
                     if (count >= _minSize)
                     {
-                        return ValidationResult.Success; // Dừng lại khi đủ kích thước tối thiểu
+                        return ValidationResult.Success; 
                     }
                 }
             }
-
-            return new ValidationResult(ErrorMessage ?? $"The collection must contain at least {_minSize} items.");
+            
+            throw new BadRequestException( $"{validationContext.DisplayName} must contain at least {_minSize} items." );
         }
     }
 }

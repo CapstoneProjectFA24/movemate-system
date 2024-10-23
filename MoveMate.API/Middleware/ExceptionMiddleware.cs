@@ -58,12 +58,19 @@ namespace MoveMate.API.Middleware
             var error = new Error
             {
                 Code = (Service.Commons.StatusCode)context.Response.StatusCode,
-                Message = ex.Message // Use the exception message as the error message
+                Message = ex.Message 
+            };
+            
+            var operationResult = new OperationResult<object>
+            {
+                StatusCode = (Service.Commons.StatusCode)context.Response.StatusCode,
+                IsError = true,
+                Message = ex.Message 
             };
 
             _logger.LogError(ex, "An error occurred while processing the request.");
 
-            await context.Response.WriteAsync(JsonConvert.SerializeObject(error));
+            await context.Response.WriteAsync(JsonConvert.SerializeObject(operationResult));
         }
     }
 }

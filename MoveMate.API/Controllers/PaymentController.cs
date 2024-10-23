@@ -296,17 +296,6 @@ namespace MoveMate.API.Controllers
 
             if (callback.Type == "order")
             {
-
-                {
-                    returnUrl = "wwbii.com",
-                        payDate
-                            bookingId,
-                                userid
-                                transactionCode
-                                    Amount,
-                                    paymentMethod
-                    
-                }
                 var result = await _payOsService.HandleOrderPaymentAsync(HttpContext, callback);
 
                 if (result.IsError)
