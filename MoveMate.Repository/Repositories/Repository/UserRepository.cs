@@ -107,5 +107,22 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+        
+        public async Task<List<User>> GetUsersWithTruckCategoryIdAsync(int truckCategoryId)
+        {
+            try
+            {
+                return await _dbContext.Users
+                    .Include(u => u.Trucks) 
+                    .Where(u => u.Trucks.Any(t => t.TruckCategoryId == truckCategoryId)) 
+                    .ToListAsync(); 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+
     }
 }

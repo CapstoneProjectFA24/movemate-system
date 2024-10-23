@@ -14,41 +14,41 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public int Id { get; set; }
 
         [FirestoreProperty] public int UserId { get; set; }
-        [FirestoreProperty] public int HouseTypeId { get; set; }
+        public int HouseTypeId { get; set; }
         [FirestoreProperty] public double Deposit { get; set; }
         [FirestoreProperty] public string Status { get; set; }
-        [FirestoreProperty] public string PickupAddress { get; set; }
-        [FirestoreProperty] public string PickupPoint { get; set; }
-        [FirestoreProperty] public string DeliveryAddress { get; set; }
-        [FirestoreProperty] public string DeliveryPoint { get; set; }
+        public string PickupAddress { get; set; }
+        public string PickupPoint { get; set; }
+        public string DeliveryAddress { get; set; }
+        public string DeliveryPoint { get; set; }
 
         public bool IsUseBox { get; set; }
 
         public string BoxType { get; set; }
-        [FirestoreProperty] public string EstimatedDistance { get; set; }
+        public string EstimatedDistance { get; set; }
         [FirestoreProperty] public double Total { get; set; }
         [FirestoreProperty] public double TotalReal { get; set; }
-        [FirestoreProperty] public string EstimatedDeliveryTime { get; set; }
+        public string EstimatedDeliveryTime { get; set; }
         [FirestoreProperty] public bool IsDeposited { get; set; }
-        [FirestoreProperty] public bool IsBonus { get; set; }
-        [FirestoreProperty] public bool IsReported { get; set; }
-        [FirestoreProperty] public string ReportedReason { get; set; }
-        [FirestoreProperty] public bool IsDeleted { get; set; }
-        [FirestoreProperty] public string? CreatedAt { get; set; }
+        public bool IsBonus { get; set; }
+        public bool IsReported { get; set; }
+        public string ReportedReason { get; set; }
+        public bool IsDeleted { get; set; }
+        public string? CreatedAt { get; set; }
         [FirestoreProperty] public string? BookingAt { get; set; }
         public string CreatedBy { get; set; }
-        [FirestoreProperty] public string? UpdatedAt { get; set; }
+        public string? UpdatedAt { get; set; }
 
         public string UpdatedBy { get; set; }
         [FirestoreProperty] public string Review { get; set; }
 
         public string Bonus { get; set; }
-        [FirestoreProperty] public string TypeBooking { get; set; }
+        public string TypeBooking { get; set; }
 
         public string EstimatedAcreage { get; set; }
-        [FirestoreProperty] public string RoomNumber { get; set; }
-        [FirestoreProperty] public string FloorsNumber { get; set; }
-        [FirestoreProperty] public bool IsManyItems { get; set; }
+        public string RoomNumber { get; set; }
+        public string FloorsNumber { get; set; }
+        public bool IsManyItems { get; set; }
 
         public bool IsCancel { get; set; }
 
@@ -56,22 +56,21 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public bool IsPorter { get; set; }
         [FirestoreProperty] public bool IsRoundTrip { get; set; }
-        [FirestoreProperty] public string Note { get; set; }
+        public string Note { get; set; }
         [FirestoreProperty] public double TotalFee { get; set; }
 
         public string FeeInfo { get; set; }
-        [FirestoreProperty]
+
         public bool? IsReviewOnline { get; set; }
         public string? ReviewAt { get; set; }
 
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<BookingDetailsResponse> BookingDetails { get; set; }
-        [FirestoreProperty] public List<BookingTrackerResponse> BookingTrackers { get; set; }
+        public List<BookingTrackerResponse> BookingTrackers { get; set; }
 
-        [FirestoreProperty]
+
         public virtual List<ServiceDetailsResponse> ServiceDetails { get; set; } = new List<ServiceDetailsResponse>();
 
-        [FirestoreProperty]
         public virtual ICollection<FeeDetailResponse> FeeDetails { get; set; } = new List<FeeDetailResponse>();
 
         //public List<HouseTypeResponse> HouseTypes { get; set; }

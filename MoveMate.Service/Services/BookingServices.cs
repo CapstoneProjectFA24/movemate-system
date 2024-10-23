@@ -145,6 +145,12 @@ namespace MoveMate.Service.Services
                 return result;
             }
 
+            if (!request.IsServiceDetailsValid())
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidServiceDetails);
+                return result;
+            }
+
             try
             {
                 var existingHouseType =
@@ -927,6 +933,12 @@ namespace MoveMate.Service.Services
                             break;
                         case "TRUCK":
                             // FEE DISTANCE
+                            if (service.TruckCategoryId != truckCategoryId)
+                            {
+                                throw new BadRequestException(MessageConstant.FailMessage
+                                    .InvalidServiceDetailDifferent);
+                            }
+
                             var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
                                 double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
                             amount += totalTruckFee;
