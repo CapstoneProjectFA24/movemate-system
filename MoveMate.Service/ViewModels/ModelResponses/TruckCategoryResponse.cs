@@ -16,7 +16,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public string Description { get; set; }
 
-        public string ImgUrl { get; set; }
+        public string ImageUrl { get; set; }
 
         public string EstimatedLength { get; set; }
 

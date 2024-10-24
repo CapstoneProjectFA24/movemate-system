@@ -19,6 +19,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
         public string Description { get; set; }
         public string Type { get; set; }
         public int Amount { get; set; }
+        public int userId { get; set; }
         public string BuyerEmail { get; set; }
         public bool IsSuccess => ResultCode == 0;
         public string returnUrl { get; set; }

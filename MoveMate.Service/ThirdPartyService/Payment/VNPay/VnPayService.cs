@@ -377,7 +377,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                result = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
+                result = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
             }
             catch (Exception ex)
             {

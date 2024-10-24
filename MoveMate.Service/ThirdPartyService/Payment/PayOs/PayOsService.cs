@@ -97,7 +97,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             try
             {
                 var urlReturn =
-                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}";
+                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}&userId={userId}";
                 var urlCancel = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
@@ -145,6 +145,13 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return operationResult;
             }
 
+            var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+            if (wallet == null)
+            {
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                return operationResult;
+            }
+
             var serverUrl =
                 string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
                     _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
@@ -159,7 +166,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             try
             {
                 var urlReturn =
-                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&Type=wallet&BuyerEmail={user.Email}&Amount={amount}";
+                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={wallet.Id}&Type=wallet&BuyerEmail={user.Email}&Amount={amount}&userId={userId}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: (int)amount,
@@ -347,7 +354,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                result = OperationResult<string>.Success($"{command.returnUrl}?isSuccess=true", StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
+                result = OperationResult<string>.Success(command.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
             }
             catch (Exception ex)
             {
