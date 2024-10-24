@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
+using MoveMate.Service.Commons;
+using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
@@ -31,10 +33,16 @@ public class AssginDriverWorker
                 var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-
-
+                
                 var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
 
+                if (booking == null)
+                {
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
+                
+                var driverList = await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(booking!.TruckNumber!.Value);
+                
                 string redisKey = DateUtil.GetKeyReview();
 
                 var date = DateUtil.GetShard(booking.BookingAt);
