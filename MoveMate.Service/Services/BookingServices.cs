@@ -726,7 +726,7 @@ namespace MoveMate.Service.Services
             var kmUnitFees = new List<FeeSetting>();
             var floorUnitFees = new List<FeeSetting>();
 
-            feeSettings.AddRange(_unitOfWork.FeeSettingRepository.GetTruckFeeSettings(CateTruckId));
+            //feeSettings.AddRange(_unitOfWork.FeeSettingRepository.GetTruckFeeSettings(CateTruckId));
 
             foreach (var fee in feeSettings)
             {

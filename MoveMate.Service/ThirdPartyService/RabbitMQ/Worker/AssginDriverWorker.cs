@@ -43,6 +43,9 @@ public class AssginDriverWorker
                 
                 var driverList = await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(booking!.TruckNumber!.Value);
                 
+                var bookingDate = DateUtil.GetDateFormat(booking!.BookingAt!.Value);
+                
+                //var schedule = unitOfWork.ScheduleRepository.get                                
                 string redisKey = DateUtil.GetKeyReview();
 
                 var date = DateUtil.GetShard(booking.BookingAt);
