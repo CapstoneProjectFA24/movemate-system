@@ -23,7 +23,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<AssignmentResponse>> ReportFail(int bookingId, string failedReason);
         Task<OperationResult<AssignmentResponse>> DriverUpdateRoundTripBooking(int bookingId);
         
-        Task<OperationResult<AssignmentResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId,TrackerByReviewOfflineRequest request);
+        Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int bookingId,TrackerByReviewOfflineRequest request);
         Task<OperationResult<AssignmentResponse>> ReviewerCancelBooking(int bookingId);
 
         Task<OperationResult<AssignmentResponse>> ReviewerCompletedBooking(int bookingId);

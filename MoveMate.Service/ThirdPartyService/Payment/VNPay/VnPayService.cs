@@ -9,6 +9,9 @@ using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay.Models;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ThirdPartyService.Firebase;
+using static Grpc.Core.Metadata;
 
 
 namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
@@ -23,10 +26,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         private const string DefaultPaymentInfo = MessageConstant.SuccessMessage.VNPPayment;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly VnPaySettings _vnPaySettings;
+        private readonly IMessageProducer _producer;
+        private readonly IFirebaseServices _firebaseServices;
 
         public VnPayService(IConfiguration config, IUserServices userService, IBookingServices bookingServices,
             IWalletServices walletService, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor,
-            VnPaySettings vnPaySettings)
+            VnPaySettings vnPaySettings, IMessageProducer producer, IFirebaseServices firebaseServices)
         {
             _config = config;
             _userService = userService;
@@ -35,6 +40,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             _unitOfWork = (UnitOfWork)unitOfWork;
             _httpContextAccessor = httpContextAccessor;
             _vnPaySettings = vnPaySettings;
+            _producer = producer;
+            _firebaseServices = firebaseServices;
         }
 
 
@@ -369,6 +376,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
+                    _producer.SendingMessage("movemate.booking_assign_driver_local", booking.Id);
+
                 }
                 else
                 {
@@ -378,7 +387,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
             }
             catch (Exception ex)

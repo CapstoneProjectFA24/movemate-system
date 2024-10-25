@@ -16,7 +16,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: Driver update status booking details happy case 
+        /// CHORE: Driver update status booking details happy case 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -29,7 +29,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: Driver update status booking details without round trip at begin 
+        /// CHORE: Driver update status booking details without round trip at begin 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -41,7 +41,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: Porter update status booking details happy case 
+        /// CHORE: Porter update status booking details happy case 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -54,7 +54,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: Porter update status booking details happy case 
+        /// CHORE: Porter update status booking details happy case 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -66,7 +66,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: Report when driver cannot arrived  
+        /// CHORE: Report when driver cannot arrived  
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -79,21 +79,31 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: Reviewer update status booking details by review offline  
+        /// FEATURE: Reviewer update status booking details by review offline  
         /// </summary>
+        /// <remarks>
+        /// This endpoint allows a reviewer to progress through the booking review process based on current assignment and booking statuses. The status transitions vary based on the existing state:
+        /// - If the current assignment status is "ASSIGNED" and the booking is online, the booking status changes to "REVIEWING"; 
+        ///     if offline, the assignment status advances to "ENROUTE."
+        /// - If the assignment is "ENROUTE," it progresses to "ARRIVED."
+        /// - If the assignment is "SUGGESTED" and the booking is in "REVIEWING" status, a new tracker is created for offline resources, 
+        ///     updating the assignment to "REVIEWED" and the booking to "REVIEWED."
+        ///
+        /// If the conditions for a transition are not met, an error message is returned.
+        /// </remarks>
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("reviewer/update-status/{id}")]
         public async Task<IActionResult> ReviewerUpdateStatus(int id , [FromBody] TrackerByReviewOfflineRequest request)
         {
-            var response = await _bookingServices.ReviewerOfflineUpdateStatusBooking(id, request);
+            var response = await _bookingServices.ReviewerUpdateStatusBooking(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-       
+
 
         /// <summary>
-        /// TEST: Reviewer update status booking details when booking completely reasonable  
+        /// CHORE: Reviewer update status booking details when booking completely reasonable  
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -105,7 +115,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: Reviewer cancel booking details
+        /// CHORE: Reviewer cancel booking details
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>

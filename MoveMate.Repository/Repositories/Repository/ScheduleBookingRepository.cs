@@ -36,5 +36,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
+        
+        //public virtual async Task<Schedule?> GetBy
     }
 }

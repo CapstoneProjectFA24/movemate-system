@@ -1316,7 +1316,7 @@ namespace MoveMate.Service.Services
 
 
 
-        public async Task<OperationResult<AssignmentResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId,
+        public async Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int bookingId,
             TrackerByReviewOfflineRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();

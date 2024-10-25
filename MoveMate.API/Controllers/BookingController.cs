@@ -185,7 +185,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: Reviewer update booking by booking ID
+        /// FEATURE: Reviewer update booking by booking ID
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -198,7 +198,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// TEST: User confirm round trip  
+        /// CHORE: User confirm round trip  
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -211,7 +211,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: Reviewer change review at 
+        /// FEATURE: Reviewer change review at 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -223,16 +223,18 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: User confirm 
+        /// FEATURE: User confirm 
         /// </summary>
         /// <remarks>
-        /// This endpoint allows a user to confirm or update the status of an existing booking. 
-        /// The allowed status transitions depend on the current status of the booking and whether the booking
-        /// has been reviewed online. For example:
-        /// - If the booking is in "WAITING" status, it can be changed to "ASSIGNED."
+        /// This endpoint allows a user to update the status of an existing booking, based on the current status and specific conditions:
+        /// - If the booking is in "WAITING" status, it can transition to "ASSIGNED."
         /// - If the booking is in "WAITING" and has not been reviewed online, it can transition to "DEPOSITING."
-        /// - If the booking is in "REVIEWED" and has been reviewed online, it can also transition to "DEPOSITING."
-        /// The status update will be validated, and if the transition is invalid, an error message is returned.
+        /// - If the booking has been reviewed online, it can transition to "DEPOSITING" only if it is in "REVIEWED" status. 
+        ///     In this case, an assignment status related to the booking is also updated from "SUGGESTED" to "REVIEWED."
+        /// - If the booking is in "REVIEWED" status, it can transition to "COMING."
+        ///
+        /// The status update will be validated against these conditions. If any condition fails, an error message will be returned 
+        /// indicating the reason for the rejection.
         /// </remarks>
         /// <param name="id"></param>
         /// <returns></returns>
