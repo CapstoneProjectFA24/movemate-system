@@ -16,9 +16,9 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private MoveMateDbContext _dbContext;
         private IDbFactory _dbFactory;
 
-        private LoyalUserRepository _loyalUserRepository;
-        private LoyalUserDetailRepository _loyalUserDetailRepository;
-        private LoyalUserSettingRepository _loyalUserSettingRepository;
+        //private LoyalUserRepository _loyalUserRepository;
+        //private LoyalUserDetailRepository _loyalUserDetailRepository;
+        //private LoyalUserSettingRepository _loyalUserSettingRepository;
         private BookingRepository _bookingRepository;
         private BookingDetailRepository _bookingDetailRepository;
         private BookingStaffDailyRepository _bookingStaffDailyRepository;
@@ -26,18 +26,18 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private FeeDetailRepository _feeDetailRepository;
         private FeeSettingRepository _feeSettingRepository;
         private HouseTypeRepository _houseTypeRepository;
-        private HouseTypeSettingRepository _houseTypeSettingRepository;
+       // private HouseTypeSettingRepository _houseTypeSettingRepository;
         private NotificationRepository _notificationRepository;
         private PaymentRepository _paymentRepository;
         private VoucherRepository _voucherRepository;
         private PromotionCategoryRepository _promotionCategoryRepository;
         private UserRepository _userRepository;
         private RoleRepository _roleRepository;
-        private ScheduleRepository _scheduleRepository;
-        private ScheduleDetailRepository _scheduleDetailRepository;
+        private ScheduleBookingRepository _scheduleRepository;
+        private ScheduleBookingDetailRepository _scheduleDetailRepository;
         private ServiceRepository _serviceRepository;
-        private ServiceDetailsRepository _serviceDetailsRepository;
-        private TokenRepository _tokenRepository;
+        private AssignmentsRepository _assignmentsRepository;
+        //private TokenRepository _tokenRepository;
         private TrackerSourceRepository _trackerSourceRepository;
         private TransactionRepository _transactionRepository;
         private TruckRepository _truckRepository;
@@ -45,6 +45,9 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private TruckImgRepository _truckImgRepository;
         private UserInfoRepository _userInfoRepository;
         private WalletRepository _walletRepository;
+        private HolidaySettingRepository _holidaySettingRepository;
+        private ScheduleWorkingRepository _scheduleWorkingRepository;
+
 
 
         public async Task<IDbContextTransaction> BeginTransactionAsync()
@@ -62,31 +65,31 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         }
 
 
-        public LoyalUserRepository LoyalUserRepository
-        {
-            get
-            {
-                if (_loyalUserRepository == null)
-                {
-                    _loyalUserRepository = new LoyalUserRepository(_dbContext);
-                }
+        //public LoyalUserRepository LoyalUserRepository
+        //{
+        //    get
+        //    {
+        //        if (_loyalUserRepository == null)
+        //        {
+        //            _loyalUserRepository = new LoyalUserRepository(_dbContext);
+        //        }
 
-                return _loyalUserRepository;
-            }
-        }
+        //        return _loyalUserRepository;
+        //    }
+        //}
 
-        public LoyalUserDetailRepository LoyalUserDetailRepository
-        {
-            get
-            {
-                if (_loyalUserDetailRepository == null)
-                {
-                    _loyalUserDetailRepository = new LoyalUserDetailRepository(_dbContext);
-                }
+        //public LoyalUserDetailRepository LoyalUserDetailRepository
+        //{
+        //    get
+        //    {
+        //        if (_loyalUserDetailRepository == null)
+        //        {
+        //            _loyalUserDetailRepository = new LoyalUserDetailRepository(_dbContext);
+        //        }
 
-                return _loyalUserDetailRepository;
-            }
-        }
+        //        return _loyalUserDetailRepository;
+        //    }
+        //}
 
         public UserInfoRepository UserInfoRepository
         {
@@ -101,18 +104,18 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public LoyalUserSettingRepository LoyalUserSettingRepository
-        {
-            get
-            {
-                if (_loyalUserSettingRepository == null)
-                {
-                    _loyalUserSettingRepository = new LoyalUserSettingRepository(_dbContext);
-                }
+        //public LoyalUserSettingRepository LoyalUserSettingRepository
+        //{
+        //    get
+        //    {
+        //        if (_loyalUserSettingRepository == null)
+        //        {
+        //            _loyalUserSettingRepository = new LoyalUserSettingRepository(_dbContext);
+        //        }
 
-                return _loyalUserSettingRepository;
-            }
-        }
+        //        return _loyalUserSettingRepository;
+        //    }
+        //}
 
         public BookingRepository BookingRepository
         {
@@ -127,6 +130,32 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
+
+        public ScheduleWorkingRepository ScheduleWorkingRepository
+        {
+            get
+            {
+                if (_scheduleWorkingRepository == null)
+                {
+                    _scheduleWorkingRepository = new ScheduleWorkingRepository(_dbContext);
+                }
+
+                return _scheduleWorkingRepository;
+            }
+        }
+
+        public HolidaySettingRepository HolidaySettingRepository
+        {
+            get
+            {
+                if (_holidaySettingRepository == null)
+                {
+                    _holidaySettingRepository = new HolidaySettingRepository(_dbContext);
+                }
+
+                return _holidaySettingRepository;
+            }
+        }
 
         public BookingDetailRepository BookingDetailRepository
         {
@@ -207,18 +236,18 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public HouseTypeSettingRepository HouseTypeSettingRepository
-        {
-            get
-            {
-                if (_houseTypeSettingRepository == null)
-                {
-                    _houseTypeSettingRepository = new HouseTypeSettingRepository(_dbContext);
-                }
+        //public HouseTypeSettingRepository HouseTypeSettingRepository
+        //{
+        //    get
+        //    {
+        //        if (_houseTypeSettingRepository == null)
+        //        {
+        //            _houseTypeSettingRepository = new HouseTypeSettingRepository(_dbContext);
+        //        }
 
-                return _houseTypeSettingRepository;
-            }
-        }
+        //        return _houseTypeSettingRepository;
+        //    }
+        //}
 
 
         public NotificationRepository NotificationRepository
@@ -287,26 +316,26 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public ScheduleRepository ScheduleRepository
+        public ScheduleBookingRepository ScheduleRepository
         {
             get
             {
                 if (_scheduleRepository == null)
                 {
-                    _scheduleRepository = new ScheduleRepository(_dbContext);
+                    _scheduleRepository = new ScheduleBookingRepository(_dbContext);
                 }
 
                 return _scheduleRepository;
             }
         }
 
-        public ScheduleDetailRepository ScheduleDetailRepository
+        public ScheduleBookingDetailRepository ScheduleDetailRepository
         {
             get
             {
                 if (_scheduleDetailRepository == null)
                 {
-                    _scheduleDetailRepository = new ScheduleDetailRepository(_dbContext);
+                    _scheduleDetailRepository = new ScheduleBookingDetailRepository(_dbContext);
                 }
 
                 return _scheduleDetailRepository;
@@ -326,32 +355,32 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public ServiceDetailsRepository ServiceDetailsRepository
+        public AssignmentsRepository AssignmentsRepository
         {
             get
             {
-                if (_serviceDetailsRepository == null)
+                if (_assignmentsRepository == null)
                 {
-                    _serviceDetailsRepository = new ServiceDetailsRepository(_dbContext);
+                    _assignmentsRepository = new AssignmentsRepository(_dbContext);
                 }
 
-                return _serviceDetailsRepository;
+                return _assignmentsRepository;
             }
         }
 
 
-        public TokenRepository TokenRepository
-        {
-            get
-            {
-                if (_tokenRepository == null)
-                {
-                    _tokenRepository = new TokenRepository(_dbContext);
-                }
+        //public TokenRepository TokenRepository
+        //{
+        //    get
+        //    {
+        //        if (_tokenRepository == null)
+        //        {
+        //            _tokenRepository = new TokenRepository(_dbContext);
+        //        }
 
-                return _tokenRepository;
-            }
-        }
+        //        return _tokenRepository;
+        //    }
+        //}
 
         public TrackerSourceRepository TrackerSourceRepository
         {

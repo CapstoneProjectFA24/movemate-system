@@ -2,7 +2,7 @@
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
 
-public class ServiceDetailRequest
+public class BookingDetailRequest
 {
     [JsonIgnore]
     public int Id { get; set; }

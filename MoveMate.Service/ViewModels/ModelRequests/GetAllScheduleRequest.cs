@@ -10,19 +10,19 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllSchedule : PaginationRequestV2<Schedule>
+    public class GetAllSchedule : PaginationRequestV2<ScheduleBooking>
     {
         public string? Search { get; set; }
         public string? Status { get; set; }
 
-        public override Expression<Func<Schedule, bool>> GetExpressions()
+        public override Expression<Func<ScheduleBooking, bool>> GetExpressions()
         {
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<Schedule>(true);
-                queryExpression.Or(cus => cus.StartTime.ToString().Contains(Search));
+                var queryExpression = PredicateBuilder.New<ScheduleBooking>(true);
+                queryExpression.Or(cus => cus.Shard.ToString().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);

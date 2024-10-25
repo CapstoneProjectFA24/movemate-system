@@ -20,7 +20,7 @@ public class AssginReviewWorker
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task  HandleMessage(int message)
     {
         await Task.Delay(TimeSpan.FromSeconds(3));
@@ -37,17 +37,17 @@ public class AssginReviewWorker
                 string redisKey = DateUtil.GetKeyReview();
                 var reviewerId = await redisService.DequeueAsync<int>(redisKey);
 
-                var reviewer = new BookingDetail()
+                var reviewer = new Assignment()
                 {
                     BookingId = message,
-                    Status = BookingDetailStatus.ASSIGNED.ToString(),
+                    Status = AssignmentStatusEnums.ASSIGNED.ToString(),
                     UserId = reviewerId,
                     StaffType = RoleEnums.REVIEWER.ToString(),
                 };
                 
-                booking.BookingDetails.Add(reviewer);
+                booking.Assignments.Add(reviewer);
                 
-                booking.Status = BookingDetailStatus.ASSIGNED.ToString();
+                booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
                 unitOfWork.BookingRepository.Update(booking);
                 unitOfWork.Save();
                 

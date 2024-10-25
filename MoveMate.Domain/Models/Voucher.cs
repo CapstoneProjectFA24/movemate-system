@@ -9,9 +9,9 @@ public partial class Voucher
 
     public int? UserId { get; set; }
 
-    public int? BookingId { get; set; }
-
     public int? PromotionCategoryId { get; set; }
+
+    public int? BookingId { get; set; }
 
     public double? Price { get; set; }
 

@@ -17,7 +17,7 @@ public partial class Service
 
     public string? ImageUrl { get; set; }
 
-    public int? DiscountRate { get; set; }
+    public double? DiscountRate { get; set; }
 
     public double? Amount { get; set; }
 
@@ -31,13 +31,15 @@ public partial class Service
 
     public int? TruckCategoryId { get; set; }
 
+    public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
+
     public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
 
     public virtual ICollection<Service> InverseParentService { get; set; } = new List<Service>();
 
     public virtual Service? ParentService { get; set; }
 
-    public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
+    public virtual ICollection<PromotionCategory> PromotionCategories { get; set; } = new List<PromotionCategory>();
 
     public virtual TruckCategory? TruckCategory { get; set; }
 }
