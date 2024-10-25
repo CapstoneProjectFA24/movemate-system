@@ -164,7 +164,7 @@ namespace MoveMate.Service.Services
                 }
 
                 // setting var
-                var serviceDetails = new List<ServiceDetail>();
+                var bookingDetails = new List<BookingDetail>();
                 var feeDetails = new List<FeeDetail>();
                 double total = 0;
 
@@ -172,14 +172,14 @@ namespace MoveMate.Service.Services
                 var entity = _mapper.Map<Booking>(request);
 
                 // logic services and fee set amount
-                var (totalServices, listServiceDetails, driverNumber, porterNumber, feeServiceDetails) =
-                    await CalculateServiceFees(request.ServiceDetails,
+                var (totalServices, listBookingDetails, driverNumber, porterNumber, feeServiceDetails) =
+                    await CalculateServiceFees(request.BookingDetails,
                         request.HouseTypeId,
                         request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
 
                 total += totalServices;
                 feeDetails.AddRange(feeServiceDetails);
-                serviceDetails.AddRange(listServiceDetails);
+                bookingDetails.AddRange(listBookingDetails);
 
                 // list lên fee common
                 var dateBooking = entity.BookingAt ?? DateTime.Now;
@@ -210,7 +210,7 @@ namespace MoveMate.Service.Services
                 entity.DriverNumber = driverNumber;
                 entity.TruckNumber = request.TruckCategoryId;
                 entity.BookingTrackers.Add(tracker);
-                entity.ServiceDetails = serviceDetails;
+                entity.BookingDetails = bookingDetails;
                 entity.FeeDetails = feeDetails;
 
                 var deposit = total * 30 / 100;
@@ -282,18 +282,18 @@ namespace MoveMate.Service.Services
             }
 
             double total = 0;
-            var serviceDetails = new List<ServiceDetail>();
+            var bookingDetails = new List<BookingDetail>();
             var feeDetails = new List<FeeDetail>();
 
             try
             {
-                var (totalServices, listServiceDetails, driverNumber, porterNumber, feeServiceDetails) =
+                var (totalServices, listBookingDetails, driverNumber, porterNumber, feeServiceDetails) =
                     await CalculateServiceFees(request.ServiceDetails,
                         request.HouseTypeId,
                         request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
                 total += totalServices;
                 feeDetails.AddRange(feeServiceDetails);
-                serviceDetails.AddRange(listServiceDetails);
+                bookingDetails.AddRange(listBookingDetails);
 
                 var dateBooking = request.BookingAt ?? DateTime.Now;
 
@@ -323,7 +323,7 @@ namespace MoveMate.Service.Services
             var deposit = total * 30 / 100;
             response.Deposit = deposit;
 
-            response.ServiceDetails = _mapper.Map<List<ServiceDetailsResponse>>(serviceDetails);
+            response.BookingDetails = _mapper.Map<List<BookingDetailsResponse>>(bookingDetails);
             response.FeeDetails = _mapper.Map<List<FeeDetailResponse>>(feeDetails);
 
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
@@ -375,129 +375,8 @@ namespace MoveMate.Service.Services
 
         //TEST
 
-        #region TEST: ValuationDistanceBooking for a new booking in the system.
+        
 
-        public async Task<OperationResult<BookingValuationResponse>> ValuationDistanceBooking(
-            BookingValuationRequest request)
-        {
-            var result = new OperationResult<BookingValuationResponse>();
-
-            var existingHouseType =
-                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
-
-            // check houseType
-            if (existingHouseType == null)
-            {
-                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
-                return result;
-            }
-
-            double totalFee = 0;
-
-            foreach (var serviceDetailRequest in request.ServiceDetails)
-            {
-                var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
-
-                if (service == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
-                    return result;
-                }
-
-                // Tạo `ServiceDetail`
-                var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
-
-                // logic fee 
-                var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId,
-                        request.TruckCategoryId);
-
-                var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(request.TruckCategoryId,
-                    double.Parse(request.EstimatedDistance), kmUnitFees, quantity ?? 1);
-                totalFee += totalTruckFee;
-                //feeDetails.AddRange(feeTruckDetails);
-
-                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
-                totalFee += nullTotalFee;
-                //feeDetails.AddRange(nullUnitFeeDetails);
-
-                totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate / 100);
-            }
-
-            var response = new BookingValuationResponse();
-
-            response.Total = totalFee;
-
-            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
-
-            return result;
-        }
-
-        #endregion
-
-        #region TEST: ValuationFloorBooking for a new booking in the system.
-
-        public async Task<OperationResult<BookingValuationResponse>> ValuationFloorBooking(
-            BookingValuationRequest request)
-        {
-            var result = new OperationResult<BookingValuationResponse>();
-
-            var existingHouseType =
-                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
-
-            // check houseType
-            if (existingHouseType == null)
-            {
-                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
-                return result;
-            }
-
-            double totalFee = 0;
-
-            foreach (var serviceDetailRequest in request.ServiceDetails)
-            {
-                var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
-
-                if (service == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
-                    return result;
-                }
-
-                // Tạo `ServiceDetail`
-                var quantity = serviceDetailRequest.Quantity;
-                var price = service.Amount * quantity - service.Amount * quantity * service.DiscountRate / 100;
-
-                // logic fee 
-                var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                    SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), request.HouseTypeId,
-                        request.TruckCategoryId);
-
-                var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(request.TruckCategoryId,
-                    int.Parse(request.FloorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
-                totalFee += floorTotalFee;
-                //feeDetails.AddRange(floorUnitFeeDetails);
-
-                var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity ?? 1);
-                totalFee += nullTotalFee;
-                //feeDetails.AddRange(nullUnitFeeDetails);
-
-                //totalFee = (double)(totalFee * quantity - totalFee * quantity * service.DiscountRate/100);
-            }
-
-            var response = new BookingValuationResponse();
-
-            response.Total = totalFee;
-
-            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
-
-            return result;
-        }
-
-        #endregion
 
         // CRONJOB
 
@@ -629,16 +508,16 @@ namespace MoveMate.Service.Services
             }
 
             // Lọc các FeeSetting thuộc TruckCategoryId và có Unit là "KM"
-            var relevantFees = feeSettings
-                .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "KM" && f.IsActived == true)
-                .OrderBy(f => f.RangeMin)
-                .ToList();
+            //var relevantFees = feeSettings
+            //    .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "KM" && f.IsActived == true)
+            //    .OrderBy(f => f.RangeMin)
+            //    .ToList();
 
             double totalFee = 0;
             double remainingDistance = estimatedDistance;
             var feeDetails = new List<FeeDetail>();
 
-            foreach (var fee in relevantFees)
+            foreach (var fee in feeSettings)
             {
                 double rangeMin = fee.RangeMin ?? 0;
                 double rangeMax = fee.RangeMax ?? double.MaxValue; // Nếu RangeMax là null, hiểu là không giới hạn
@@ -693,7 +572,7 @@ namespace MoveMate.Service.Services
             // Nếu còn khoảng cách chưa được tính và không có phí cho phần còn lại
             if (remainingDistance > 0)
             {
-                var lastFeeSetting = relevantFees.LastOrDefault(f => f.RangeMax == null);
+                var lastFeeSetting = feeSettings.LastOrDefault(f => f.RangeMax == null);
                 if (lastFeeSetting != null)
                 {
                     totalFee += remainingDistance * (lastFeeSetting.Amount ?? 0);
@@ -726,7 +605,7 @@ namespace MoveMate.Service.Services
             var kmUnitFees = new List<FeeSetting>();
             var floorUnitFees = new List<FeeSetting>();
 
-            feeSettings.AddRange(_unitOfWork.FeeSettingRepository.GetTruckFeeSettings(CateTruckId));
+         //   feeSettings.AddRange(_unitOfWork.FeeSettingRepository.GetTruckFeeSettings(CateTruckId));
 
             foreach (var fee in feeSettings)
             {
@@ -885,25 +764,25 @@ namespace MoveMate.Service.Services
         #region PRIVATE: CalculateServiceFees for a new booking in the system.
 
         private async
-            Task<(double totalServices, List<ServiceDetail> serviceDetails, int driverNumber, int porterNumber,
+            Task<(double totalServices, List<BookingDetail> bookingDetails, int driverNumber, int porterNumber,
                 List<FeeDetail> feeDetails)> CalculateServiceFees(
-                List<ServiceDetailRequest> serviceDetailRequests,
+                List<BookingDetailRequest> bookingDetailRequests,
                 int houseTypeId,
                 int truckCategoryId,
                 string floorsNumber,
                 string estimatedDistance)
         {
             double totalServices = 0;
-            var serviceDetails = new List<ServiceDetail>();
+            var bookingDetails = new List<BookingDetail>();
             int driverNumber = 0;
             int porterNumber = 0;
             var feeDetails = new List<FeeDetail>();
 
-            foreach (var serviceDetailRequest in serviceDetailRequests)
+            foreach (var bookingDetailRequest in bookingDetailRequests)
             {
                 // Check Service
                 var service =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(serviceDetailRequest.ServiceId, "FeeSettings");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(bookingDetailRequest.ServiceId, "FeeSettings");
 
 
                 if (service == null)
@@ -914,7 +793,7 @@ namespace MoveMate.Service.Services
                 }
 
                 // Set var
-                var quantity = serviceDetailRequest.Quantity;
+                var quantity = bookingDetailRequest.Quantity;
                 var price = service.Amount * quantity - service.Amount * quantity * (service.DiscountRate / 100);
 
                 if (service.Type == TypeServiceEnums.TRUCK.ToString() ||
@@ -965,38 +844,38 @@ namespace MoveMate.Service.Services
 
                     totalServices += amount;
 
-                    var serviceDetail = new ServiceDetail
+                    var bookingDetail = new BookingDetail
                     {
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = amount,
                     };
 
-                    serviceDetails.Add(serviceDetail);
+                    bookingDetails.Add(bookingDetail);
                 }
                 else
                 {
-                    var serviceDetail = new ServiceDetail
+                    var bookingDetail = new BookingDetail
                     {
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = price,
                     };
 
-                    serviceDetails.Add(serviceDetail);
+                    bookingDetails.Add(bookingDetail);
                 }
             }
 
-            return (totalServices, serviceDetails, driverNumber, porterNumber, feeDetails);
+            return (totalServices, bookingDetails, driverNumber, porterNumber, feeDetails);
         }
 
         #endregion
 
         //
         //Driver update status booking  detail
-        public async Task<OperationResult<BookingDetailsResponse>> DriverUpdateStatusBooking(int bookingId)
+        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int bookingId)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1061,7 +940,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1075,9 +954,9 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingDetailsResponse>> DriverUpdateRoundTripBooking(int bookingId)
+        public async Task<OperationResult<AssignmentResponse>> DriverUpdateRoundTripBooking(int bookingId)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1142,7 +1021,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1155,40 +1034,40 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReportFail(int bookingId, string failedReason)
+        public async Task<OperationResult<AssignmentResponse>> ReportFail(int bookingId, string failedReason)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
-                if (bookingDetail == null)
+                var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(bookingId);
+                if (assignment == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
 
-                string nextStatus = bookingDetail.Status;
+                string nextStatus = assignment.Status;
 
-                switch (bookingDetail.Status)
+                switch (assignment.Status)
                 {
                     case var status when status == BookingDetailStatus.ASSIGNED.ToString():
                         nextStatus = BookingDetailStatus.FAILED.ToString();
-                        bookingDetail.FailedReason = failedReason;
+                        assignment.FailedReason = failedReason;
                         break;
                     case var status when status == BookingDetailStatus.ENROUTE.ToString():
                         nextStatus = BookingDetailStatus.FAILED.ToString();
-                        bookingDetail.FailedReason = failedReason;
+                        assignment.FailedReason = failedReason;
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
-                bookingDetail.Status = nextStatus;
-                _unitOfWork.BookingDetailRepository.Update(bookingDetail);
+                assignment.Status = nextStatus;
+                _unitOfWork.AssignmentsRepository.Update(assignment);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(assignment);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1202,10 +1081,10 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingDetailsResponse>> PorterUpdateStatusBooking(int bookingId,
+        public async Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int bookingId,
             ResourceRequest request)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1298,7 +1177,7 @@ namespace MoveMate.Service.Services
 
                 await _unitOfWork.SaveChangesAsync();
 
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1311,10 +1190,10 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> PorterRoundTripBooking(int bookingId,
+        public async Task<OperationResult<AssignmentResponse>> PorterRoundTripBooking(int bookingId,
             ResourceRequest request)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1411,7 +1290,7 @@ namespace MoveMate.Service.Services
 
                 await _unitOfWork.SaveChangesAsync();
 
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1425,9 +1304,9 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReviewerOnlineUpdateStatusBooking(int bookingId)
+        public async Task<OperationResult<AssignmentResponse>> ReviewerOnlineUpdateStatusBooking(int bookingId)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1464,7 +1343,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1478,10 +1357,10 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId,
+        public async Task<OperationResult<AssignmentResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId,
             ResourceRequest request)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1545,7 +1424,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1558,9 +1437,9 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReviewerCancelBooking(int bookingId)
+        public async Task<OperationResult<AssignmentResponse>> ReviewerCancelBooking(int bookingId)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1598,7 +1477,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1611,9 +1490,9 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> ReviewerCompletedBooking(int bookingId)
+        public async Task<OperationResult<AssignmentResponse>> ReviewerCompletedBooking(int bookingId)
         {
-            var result = new OperationResult<BookingDetailsResponse>();
+            var result = new OperationResult<AssignmentResponse>();
 
             try
             {
@@ -1647,7 +1526,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
                 //_unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1706,7 +1585,7 @@ namespace MoveMate.Service.Services
                 // Fetch existing booking from the database
                 var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
-                        include: b => b.Include(b => b.ServiceDetails).Include(b => b.FeeDetails));
+                        include: b => b.Include(b => b.BookingDetails).Include(b => b.FeeDetails));
 
                 if (existingBooking == null)
                 {
@@ -1738,15 +1617,15 @@ namespace MoveMate.Service.Services
                 var total = 0.0;
 
                 // Handle Service Details
-                if (request.ServiceDetails != null && request.ServiceDetails.Any())
+                if (request.BookingDetails != null && request.BookingDetails.Any())
                 {
-                    var (sumServices, listServiceDetails, driverNo, porterNo, feeServiceDetails) =
-                        await CalculateServiceFees(request.ServiceDetails,
+                    var (sumServices, listBookingDetails, driverNo, porterNo, feeServiceDetails) =
+                        await CalculateServiceFees(request.BookingDetails,
                             (int)existingBooking.HouseTypeId,
                             (int)existingBooking.TruckNumber, existingBooking.FloorsNumber,
                             existingBooking.EstimatedDistance);
-                    await CheckServiceDetailExist((int)bookingDetail.BookingId, existingBooking.ServiceDetails.ToList(),
-                        listServiceDetails);
+                    await CheckServiceDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
+                        listBookingDetails);
                 }
 
                 // Calculate total services and fees
@@ -1755,12 +1634,12 @@ namespace MoveMate.Service.Services
                 var floorsNumber = existingBooking.FloorsNumber;
                 var estimatedDistance = existingBooking.EstimatedDistance;
 
-                List<ServiceDetailRequest> newServiceDetails =
-                    _mapper.Map<List<ServiceDetailRequest>>(existingBooking.ServiceDetails);
+                List<BookingDetailRequest> newBookingDetails =
+                    _mapper.Map<List<BookingDetailRequest>>(existingBooking.BookingDetails);
 
-                var (totalServices, serviceDetails, driverNumber, porterNumber, feeDetails) =
+                var (totalServices, bookingDetails, driverNumber, porterNumber, feeDetails) =
                     await CalculateServiceFees(
-                        newServiceDetails,
+                        newBookingDetails,
                         houseTypeId,
                         truckCategoryId,
                         floorsNumber,
@@ -1768,8 +1647,8 @@ namespace MoveMate.Service.Services
 
                 //var existingServiceTotal = existingBooking.ServiceDetails.Sum(f => f.Price);
                 total += (double)totalServices;
-                await CheckServiceDetailExist((int)bookingDetail.BookingId, existingBooking.ServiceDetails.ToList(),
-                    serviceDetails);
+                await CheckServiceDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
+                    bookingDetails);
 
                 existingBooking.DriverNumber = driverNumber;
                 existingBooking.PorterNumber = porterNumber;
@@ -1793,8 +1672,8 @@ namespace MoveMate.Service.Services
                     ? TypeBookingEnums.NOW.ToString()
                     : TypeBookingEnums.DELAY.ToString();
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
-                await _unitOfWork.ServiceDetailsRepository.SaveOrUpdateRangeAsync(
-                    existingBooking.ServiceDetails.ToList());
+                await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
+                    existingBooking.BookingDetails.ToList());
                 await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
                 var saveResult = _unitOfWork.Save();
@@ -1821,26 +1700,26 @@ namespace MoveMate.Service.Services
         }
 
 
-        private async Task<List<ServiceDetail>> CheckServiceDetailExist(int bookingId,
-            List<ServiceDetail> existServiceDetails, List<ServiceDetail> newServiceDetails)
+        private async Task<List<BookingDetail>> CheckServiceDetailExist(int bookingId,
+            List<BookingDetail> existBookingDetails, List<BookingDetail> newBookingDetails)
         {
-            List<ServiceDetail> serviceDetails = existServiceDetails;
+            List<BookingDetail> bookingDetails = existBookingDetails;
 
-            var existingServiceDict = existServiceDetails.ToDictionary(sd => sd.ServiceId);
-            foreach (var requestService in newServiceDetails)
+            var existingServiceDict = existBookingDetails.ToDictionary(sd => sd.ServiceId);
+            foreach (var requestService in newBookingDetails)
             {
                 var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)requestService.ServiceId);
-                if (existingServiceDict.TryGetValue(requestService.ServiceId, out var existingServiceDetail))
+                if (existingServiceDict.TryGetValue(requestService.ServiceId, out var existingBookingDetail))
                 {
                     // Update existing service detail properties
-                    existingServiceDetail.Quantity = requestService.Quantity;
-                    existingServiceDetail.Price = requestService.Price;
-                    serviceDetails.Add(existingServiceDetail);
+                    existingBookingDetail.Quantity = requestService.Quantity;
+                    existingBookingDetail.Price = requestService.Price;
+                    bookingDetails.Add(existingBookingDetail);
                 }
                 else
                 {
                     // Create new ServiceDetail with Amount from the Service
-                    var newServiceDetail = new ServiceDetail
+                    var newBookingDetail = new BookingDetail
                     {
                         ServiceId = requestService.ServiceId,
                         BookingId = bookingId,
@@ -1848,11 +1727,11 @@ namespace MoveMate.Service.Services
                         Price = requestService.Price
                     };
 
-                    serviceDetails.Add(newServiceDetail);
+                    bookingDetails.Add(newBookingDetail);
                 }
             }
 
-            return serviceDetails;
+            return bookingDetails;
         }
 
 

@@ -65,11 +65,13 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? ReviewAt { get; set; }
 
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
-        [FirestoreProperty] public List<BookingDetailsResponse> BookingDetails { get; set; }
+        [FirestoreProperty] public List<AssignmentResponse> Assignments { get; set; }
         public List<BookingTrackerResponse> BookingTrackers { get; set; }
 
+        public List<BookingDetailsResponse> BookingDetails { get; set; }
 
-        public virtual List<ServiceDetailsResponse> ServiceDetails { get; set; } = new List<ServiceDetailsResponse>();
+
+        //public virtual List<ServiceDetailsResponse> ServiceDetails { get; set; } = new List<ServiceDetailsResponse>();
 
         public virtual ICollection<FeeDetailResponse> FeeDetails { get; set; } = new List<FeeDetailResponse>();
 

@@ -7,8 +7,6 @@ public partial class User
 {
     public int Id { get; set; }
 
-    public int? ScheduleId { get; set; }
-
     public int? RoleId { get; set; }
 
     public string? Name { get; set; }
@@ -31,13 +29,15 @@ public partial class User
 
     public DateTime? CreatedAt { get; set; }
 
-    public string? CreatedBy { get; set; }
-
     public DateTime? UpdatedAt { get; set; }
+
+    public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
 
     public int? ModifiedVersion { get; set; }
+
+    public bool? IsInitUsed { get; set; }
 
     public bool? IsDriver { get; set; }
 
@@ -45,27 +45,19 @@ public partial class User
 
     public string? NumberIntroduce { get; set; }
 
-    public bool? IsInitUser { get; set; }
-
-    public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
+    public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingStaffDaily> BookingStaffDailies { get; set; } = new List<BookingStaffDaily>();
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    public virtual ICollection<LoyalUser> LoyalUsers { get; set; } = new List<LoyalUser>();
-
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual Role? Role { get; set; }
 
-    public virtual ICollection<ScheduleDetail> ScheduleDetails { get; set; } = new List<ScheduleDetail>();
+    public virtual ICollection<ScheduleBookingDetail> ScheduleBookingDetails { get; set; } = new List<ScheduleBookingDetail>();
 
-    public virtual ICollection<Token> Tokens { get; set; } = new List<Token>();
-
-    public virtual ICollection<TripAccuracy> TripAccuracies { get; set; } = new List<TripAccuracy>();
-
-    public virtual ICollection<Truck> Trucks { get; set; } = new List<Truck>();
+    public virtual Truck? Truck { get; set; }
 
     public virtual ICollection<UserInfo> UserInfos { get; set; } = new List<UserInfo>();
 

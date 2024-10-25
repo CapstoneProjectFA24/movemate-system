@@ -120,42 +120,9 @@ namespace MoveMate.API.Controllers
 
         #endregion
 
-        /// <summary>
-        ///
-        /// TEST: valuation distance booking, test by vinh
-        /// </summary>
-        /// <returns></returns>
-        ///
+        
 
-        // Post - valuation distance booking
-        [HttpPost("valuation-distance-booking")]
-        [Authorize]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ValuationDistanceBooking(BookingValuationRequest request)
-        {
-            var response = await _bookingServices.ValuationDistanceBooking(request);
-
-
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
-
-        /// <summary>
-        ///
-        /// TEST: valuation floor booking, test by vinh
-        /// </summary>
-        /// <returns></returns>
-        ///
-
-        // Post - valuation distance booking
-        [HttpPost("valuation-floor-booking")]
-        [Authorize]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
-        {
-            var response = await _bookingServices.ValuationFloorBooking(request);
-
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
+        
 
         /// <summary>
         ///

@@ -37,7 +37,7 @@ public class AssginReviewWorker
                 string redisKey = DateUtil.GetKeyReview();
                 var reviewerId = await redisService.DequeueAsync<int>(redisKey);
 
-                var reviewer = new BookingDetail()
+                var reviewer = new Assignment()
                 {
                     BookingId = message,
                     Status = BookingDetailStatus.ASSIGNED.ToString(),
@@ -45,7 +45,7 @@ public class AssginReviewWorker
                     StaffType = RoleEnums.REVIEWER.ToString(),
                 };
                 
-                booking.BookingDetails.Add(reviewer);
+                booking.Assignments.Add(reviewer);
                 
                 booking.Status = BookingDetailStatus.ASSIGNED.ToString();
                 unitOfWork.BookingRepository.Update(booking);

@@ -35,8 +35,7 @@ namespace MoveMate.Service.Commons
             // Mapping for User -> AccountResponse
             CreateMap<User, AccountResponse>()
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
-                .ForMember(dest => dest.Tokens,
-                    opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
+                ; // Adjust as needed
             //Address
             CreateMap<UserInfo, UserInfoResponse>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
@@ -49,9 +48,9 @@ namespace MoveMate.Service.Commons
                 ;
 
             //Booking
-            CreateMap<BookingDetail, BookingDetailsResponse>();
+            CreateMap<BookingDetail, AssignmentResponse>();
             CreateMap<Booking, BookingResponse>()
-                .ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
+                .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Assignments))
                 .ForMember(dest => dest.FeeDetails, opt => opt.MapFrom(src => src.FeeDetails))
                 .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
                 .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
@@ -63,15 +62,15 @@ namespace MoveMate.Service.Commons
             //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
 
             CreateMap<BookingServiceDetailsUpdateRequest, Booking>()
-                .ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails));
-            CreateMap<ServiceDetail, ServiceDetailsResponse>();
-            CreateMap<ServiceDetailRequest, ServiceDetail>();
+                .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails));
             CreateMap<BookingDetail, BookingDetailsResponse>();
+            CreateMap<BookingDetailRequest, BookingDetail>();
+            CreateMap<BookingDetail, AssignmentResponse>();
             CreateMap<BookingTracker, BookingTrackerResponse>();
             CreateMap<HouseType, HouseTypeResponse>();
             // REQUEST
             CreateMap<BookingRegisterRequest, Booking>()
-                .ForMember(dest => dest.ServiceDetails,
+                .ForMember(dest => dest.BookingDetails,
                     opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
                 .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
                 .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
@@ -82,10 +81,10 @@ namespace MoveMate.Service.Commons
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
-            CreateMap<Schedule, ScheduleResponse>()
-                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleDetails));
+            CreateMap<ScheduleBooking, ScheduleResponse>()
+                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
 
-            CreateMap<ScheduleDetail, ScheduleDetailResponse>();
+            CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
 
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
@@ -93,19 +92,19 @@ namespace MoveMate.Service.Commons
 
 
             //House Type
-            CreateMap<HouseType, HouseTypesResponse>()
-                .ForMember(dest => dest.HouseTypeSettings, opt => opt.MapFrom(src => src.HouseTypeSettings));
-            CreateMap<HouseTypeSetting, HouseTypeSettingResponse>();
-            CreateMap<CreateHouseTypeSetting, HouseTypeSetting>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore());
+            CreateMap<HouseType, HouseTypesResponse>();
+                //.ForMember(dest => dest.HouseTypeSettings, opt => opt.MapFrom(src => src.HouseTypeSettings));
+           // CreateMap<HouseTypeSetting, HouseTypeSettingResponse>();
+            //CreateMap<CreateHouseTypeSetting, HouseTypeSetting>()
+             //   .ForMember(dest => dest.Id, opt => opt.Ignore());
 
 
             //Service
             CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
-            CreateMap<ServiceDetail, ServiceDetailsResponse>();
-            CreateMap<ServiceDetail, ServiceDetailRequest>();
+            CreateMap<BookingDetail, BookingDetailsResponse>();
+            CreateMap<BookingDetail, BookingDetailRequest>();
             //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
 
             //Wallet
@@ -114,7 +113,7 @@ namespace MoveMate.Service.Commons
 
             // Mapping for TruckCategory to TruckCategoryResponse
             CreateMap<TruckCategory, TruckCategoryResponse>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImgUrl));
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
 
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();

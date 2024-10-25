@@ -40,7 +40,7 @@ public class BookingRegisterRequest
 
     [Required(ErrorMessage = "Filed is required")]
     //[MinCollectionSize(1, ErrorMessage = "ServiceDetails must contain at least one item.")]
-    public List<ServiceDetailRequest> ServiceDetails { get; set; } = new List<ServiceDetailRequest>();
+    public List<BookingDetailRequest> BookingDetails { get; set; } = new List<BookingDetailRequest>();
 
     [Required(ErrorMessage = "Filed is required")]
     public int TruckCategoryId { get; set; }
@@ -75,7 +75,7 @@ public class BookingRegisterRequest
 
     public bool IsServiceDetailsValid()
     {
-        return ServiceDetails.Any();
+        return BookingDetails.Any();
     }
 
 }

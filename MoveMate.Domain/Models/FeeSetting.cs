@@ -7,6 +7,10 @@ public partial class FeeSetting
 {
     public int Id { get; set; }
 
+    public int? ServiceId { get; set; }
+
+    public int? HouseTypeId { get; set; }
+
     public string? Name { get; set; }
 
     public string? Description { get; set; }
@@ -23,13 +27,7 @@ public partial class FeeSetting
 
     public double? RangeMax { get; set; }
 
-    public int? HouseTypeId { get; set; }
-
-    public int? TruckCategoryId { get; set; }
-
-    public int? ServiceId { get; set; }
-
-    public int? DiscountRate { get; set; }
+    public string? DiscountRate { get; set; }
 
     public double? FloorPercentage { get; set; }
 
@@ -38,6 +36,4 @@ public partial class FeeSetting
     public virtual HouseType? HouseType { get; set; }
 
     public virtual Service? Service { get; set; }
-
-    public virtual TruckCategory? TruckCategory { get; set; }
 }

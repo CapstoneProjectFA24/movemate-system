@@ -8,14 +8,16 @@ using Google.Cloud.Firestore;
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
     [FirestoreData]
-    public class ServiceDetailsResponse
+    public class BookingDetailsResponse
     {
         [FirestoreProperty] public int Id { get; set; }
         [FirestoreProperty] public int? ServiceId { get; set; }
         [FirestoreProperty] public int? BookingId { get; set; }
         [FirestoreProperty] public int? Quantity { get; set; }
         [FirestoreProperty] public double? Price { get; set; }
-        [FirestoreProperty] public bool? IsQuantity { get; set; }
+        [FirestoreProperty] public string? Status { get; set; }
+        [FirestoreProperty] public string? Type { get; set; }
+        [FirestoreProperty] public string? Name { get; set; }
         [FirestoreProperty] public string? Description { get; set; }
     }
 }

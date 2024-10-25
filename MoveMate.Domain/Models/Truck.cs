@@ -25,6 +25,8 @@ public partial class Truck
 
     public int? UserId { get; set; }
 
+    public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
+
     public virtual TruckCategory? TruckCategory { get; set; }
 
     public virtual ICollection<TruckImg> TruckImgs { get; set; } = new List<TruckImg>();

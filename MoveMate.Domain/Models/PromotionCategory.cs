@@ -17,7 +17,9 @@ public partial class PromotionCategory
 
     public double? DiscountMax { get; set; }
 
-    public double? DiscountPrice { get; set; }
+    public double? RequireMin { get; set; }
+
+    public double? DiscountMin { get; set; }
 
     public string? Name { get; set; }
 
@@ -32,6 +34,8 @@ public partial class PromotionCategory
     public DateTime? EndBookingTime { get; set; }
 
     public bool? IsInfinite { get; set; }
+
+    public virtual ICollection<Service> Services { get; set; } = new List<Service>();
 
     public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
 }

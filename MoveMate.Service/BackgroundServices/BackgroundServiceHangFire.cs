@@ -58,37 +58,37 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
             List<int> listReviewer = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
             string redisKey = DateUtil.GetKeyReview();
 
-            List<BookingStaffDaily> listDriver =
-                await _unitOfWork.BookingStaffDailyRepository.GetBookingStaffDailiesNow(4);
+            //List<BookingStaffDaily> listDriver =
+            //    await _unitOfWork.BookingStaffDailyRepository.GetBookingStaffDailiesNow(4);
 
 
-            foreach (var driver in listDriver)
-            {
-                driver.Status = BookingStaffDailyEnums.CLOSE.ToString();
-            }
+            //foreach (var driver in listDriver)
+            //{
+            //    driver.Status = BookingStaffDailyEnums.CLOSE.ToString();
+            //}
 
-            _unitOfWork.BookingStaffDailyRepository.UpdateRange(listDriver);
+            //_unitOfWork.BookingStaffDailyRepository.UpdateRange(listDriver);
 
-            List<int> drivers = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(4);
+            //List<int> drivers = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(4);
 
-            List<BookingStaffDaily> newListDriver = new List<BookingStaffDaily>();
-            foreach (var driver in drivers)
-            {
-                var newDriver = new BookingStaffDaily()
-                {
-                    AddressCurrent = "10.841140522859849, 106.80987597826075",
-                    UserId = driver,
-                    IsActived = true,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    Status = BookingStaffDailyEnums.NOW.ToString(),
-                };
-                newListDriver.Add(newDriver);
-            }
+            //List<BookingStaffDaily> newListDriver = new List<BookingStaffDaily>();
+            //foreach (var driver in drivers)
+            //{
+            //    var newDriver = new BookingStaffDaily()
+            //    {
+            //        AddressCurrent = "10.841140522859849, 106.80987597826075",
+            //        UserId = driver,
+            //        IsActived = true,
+            //        CreatedAt = DateTime.Now,
+            //        UpdatedAt = DateTime.Now,
+            //        Status = BookingStaffDailyEnums.NOW.ToString(),
+            //    };
+            //    newListDriver.Add(newDriver);
+            //}
 
-            await _unitOfWork.BookingStaffDailyRepository.AddRangeAsync(newListDriver);
+            //await _unitOfWork.BookingStaffDailyRepository.AddRangeAsync(newListDriver);
 
-            var check = await _unitOfWork.SaveChangesAsync();
+            //var check = await _unitOfWork.SaveChangesAsync();
             await _redisService.EnqueueMultipleAsync(redisKey, listReviewer);
         }
         catch (Exception e)
