@@ -62,7 +62,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
-
+                var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
+                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent())
+                ?? throw new Exception(MessageConstant.FailMessage.ServerUrl);
                 // Add VnPay request data
                 vnpay.AddRequestData("vnp_Version", _config["VnPay:Version"]);
                 vnpay.AddRequestData("vnp_Command", _config["VnPay:Command"]);
@@ -75,7 +77,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 vnpay.AddRequestData("vnp_OrderInfo", wallet.Id.ToString());
                 vnpay.AddRequestData("vnp_OrderType", PaymentMethod.RECHARGE.ToString());
                 vnpay.AddRequestData("vnp_ReturnUrl",
-                    $"{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}");
+                    $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}");
                 vnpay.AddRequestData("vnp_TxnRef", time.Ticks.ToString());
 
                 // Create payment URL
