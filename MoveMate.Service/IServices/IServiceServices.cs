@@ -17,5 +17,8 @@ namespace MoveMate.Service.IServices
 
         public Task<OperationResult<List<ServiceResponse>>> GetAllServiceTruck(GetAllServiceTruckType request);
         public Task<OperationResult<ServicesResponse>> GetById(int id);
+
+        Task<OperationResult<ServicesResponse>> CreateService(CreateServiceRequest request);
+        Task<OperationResult<bool>> DeleteService(int id);
     }
 }

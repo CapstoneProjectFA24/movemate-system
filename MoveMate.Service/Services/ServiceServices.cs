@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
@@ -166,6 +167,53 @@ namespace MoveMate.Service.Services
                 _logger.LogError(e, "Error occurred in getAll Service Method");
                 throw;
             }
+        }
+
+        public async Task<OperationResult<ServicesResponse>> CreateService(CreateServiceRequest request)
+        {
+            var result = new OperationResult<ServicesResponse>();
+            try
+            {
+               
+
+                var service = _mapper.Map<MoveMate.Domain.Models.Service>(request);
+
+
+                await _unitOfWork.ServiceRepository.AddAsync(service);
+                await _unitOfWork.SaveChangesAsync();
+                var response = _mapper.Map<ServicesResponse>(service);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CreateService, response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
+        public async Task<OperationResult<bool>> DeleteService(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
+                if (service == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                }
+
+                service.IsActived = false;
+
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteService, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
         }
     }
 }

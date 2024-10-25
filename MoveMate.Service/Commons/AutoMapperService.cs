@@ -37,6 +37,9 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
                 .ForMember(dest => dest.Tokens,
                     opt => opt.MapFrom(src => src.Tokens.FirstOrDefault())); // Adjust as needed
+
+            CreateMap<AdminCreateUserRequest, User>()
+                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.RoleId));
             //Address
             CreateMap<UserInfo, UserInfoResponse>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
@@ -106,6 +109,9 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
             CreateMap<ServiceDetail, ServiceDetailsResponse>();
             CreateMap<ServiceDetail, ServiceDetailRequest>();
+            CreateMap<CreateServiceRequest, MoveMate.Domain.Models.Service>()
+                .ForMember(dest => dest.ParentServiceId, opt => opt.MapFrom(src => src.ParentServiceId ?? null)) 
+                .ForMember(dest => dest.TruckCategoryId, opt => opt.MapFrom(src => src.TruckCategoryId ?? null));
             //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
 
             //Wallet
