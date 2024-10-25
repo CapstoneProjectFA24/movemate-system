@@ -31,8 +31,6 @@ public partial class Service
 
     public int? TruckCategoryId { get; set; }
 
-    public int? PromotionCategoryId { get; set; }
-
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
     public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
@@ -41,7 +39,7 @@ public partial class Service
 
     public virtual Service? ParentService { get; set; }
 
-    public virtual PromotionCategory? PromotionCategory { get; set; }
+    public virtual ICollection<PromotionCategory> PromotionCategories { get; set; } = new List<PromotionCategory>();
 
     public virtual TruckCategory? TruckCategory { get; set; }
 }

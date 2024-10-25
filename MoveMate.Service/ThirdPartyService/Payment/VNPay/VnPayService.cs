@@ -327,7 +327,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
-                    booking.TotalReal = booking.Total - (float)callback.vnp_Amount;
+                    booking.TotalReal = booking.Total - (float)amount;
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -360,11 +360,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.REVIEWED.ToString();
+                    booking.Status = BookingEnums.REVIEWING.ToString();
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.COMMING.ToString();
+                    booking.Status = BookingEnums.COMING.ToString();
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {

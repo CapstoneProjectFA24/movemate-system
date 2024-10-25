@@ -24,6 +24,8 @@ using Microsoft.EntityFrameworkCore;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using Catel.Collections;
 using Newtonsoft.Json;
+using static Grpc.Core.Metadata;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MoveMate.Service.Services
 {
@@ -104,7 +106,7 @@ namespace MoveMate.Service.Services
             {
                 var booking =
                     await _unitOfWork.BookingRepository.GetByIdAsyncV1(id,
-                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,ServiceDetails");
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
 
                 if (booking == null)
                 {
@@ -154,7 +156,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var existingHouseType =
-                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId);
 
                 // check houseType
                 if (existingHouseType == null)
@@ -178,7 +180,7 @@ namespace MoveMate.Service.Services
                         request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
 
                 total += totalServices;
-                feeDetails.AddRange(feeServiceDetails);
+                //feeDetails.AddRange(feeServiceDetails);
                 bookingDetails.AddRange(listBookingDetails);
 
                 // list lên fee common
@@ -242,7 +244,7 @@ namespace MoveMate.Service.Services
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
 
-                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
@@ -508,16 +510,16 @@ namespace MoveMate.Service.Services
             }
 
             // Lọc các FeeSetting thuộc TruckCategoryId và có Unit là "KM"
-            //var relevantFees = feeSettings
-            //    .Where(f => f.TruckCategoryId == truckCategoryId && f.Unit == "KM" && f.IsActived == true)
-            //    .OrderBy(f => f.RangeMin)
-            //    .ToList();
+            var relevantFees = feeSettings
+                .Where(f => f.Unit == "KM" && f.IsActived == true)
+                .OrderBy(f => f.RangeMin)
+                .ToList();
 
             double totalFee = 0;
             double remainingDistance = estimatedDistance;
             var feeDetails = new List<FeeDetail>();
 
-            foreach (var fee in feeSettings)
+            foreach (var fee in relevantFees)
             {
                 double rangeMin = fee.RangeMin ?? 0;
                 double rangeMax = fee.RangeMax ?? double.MaxValue; // Nếu RangeMax là null, hiểu là không giới hạn
@@ -572,7 +574,7 @@ namespace MoveMate.Service.Services
             // Nếu còn khoảng cách chưa được tính và không có phí cho phần còn lại
             if (remainingDistance > 0)
             {
-                var lastFeeSetting = feeSettings.LastOrDefault(f => f.RangeMax == null);
+                var lastFeeSetting = relevantFees.LastOrDefault(f => f.RangeMax == null);
                 if (lastFeeSetting != null)
                 {
                     totalFee += remainingDistance * (lastFeeSetting.Amount ?? 0);
@@ -849,6 +851,8 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = amount,
+                        Name = service.Name,
+                        Description = service.Description
                     };
 
                     bookingDetails.Add(bookingDetail);
@@ -860,6 +864,8 @@ namespace MoveMate.Service.Services
                         ServiceId = service.Id,
                         Quantity = quantity,
                         Price = price,
+                        Name = service.Name,
+                        Description = service.Description
                     };
 
                     bookingDetails.Add(bookingDetail);
@@ -897,37 +903,37 @@ namespace MoveMate.Service.Services
 
                 switch (bookingDetail.Status)
                 {
-                    case var status when status == BookingDetailStatus.WAITING.ToString():
-                        nextStatus = BookingDetailStatus.ASSIGNED.ToString();
+                    case var status when status == AssignmentStatusEnums.WAITING.ToString():
+                        nextStatus = AssignmentStatusEnums.ASSIGNED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.ENROUTE.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ARRIVED.ToString():
-                        nextStatus = BookingDetailStatus.IN_PROGRESS.ToString();
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                        nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
-                        nextStatus = BookingDetailStatus.COMPLETED.ToString();
+                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.COMPLETED.ToString():
+                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
                         if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
                         {
-                            nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
+                            nextStatus = AssignmentStatusEnums.ROUND_TRIP.ToString();
                             bookingDetail.IsRoundTripCompleted = true;
                         }
 
                         break;
 
-                    case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ROUND_TRIP.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
                     default:
@@ -941,6 +947,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -978,39 +985,39 @@ namespace MoveMate.Service.Services
 
                 switch (bookingDetail.Status)
                 {
-                    case var status when status == BookingDetailStatus.WAITING.ToString():
-                        nextStatus = BookingDetailStatus.ASSIGNED.ToString();
+                    case var status when status == AssignmentStatusEnums.WAITING.ToString():
+                        nextStatus = AssignmentStatusEnums.ASSIGNED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.ENROUTE.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ARRIVED.ToString():
-                        nextStatus = BookingDetailStatus.IN_PROGRESS.ToString();
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                        nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
-                        nextStatus = BookingDetailStatus.COMPLETED.ToString();
+                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.COMPLETED.ToString():
+                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
                         if (booking.IsUserConfirm == true && booking.IsRoundTrip == false)
                         {
-                            nextStatus = BookingDetailStatus.CONFIRM.ToString();
+                            nextStatus = AssignmentStatusEnums.CONFIRM.ToString();
                             booking.IsRoundTrip = true;
                             bookingDetail.IsRoundTripCompleted = true;
                         }
 
                         break;
-                    case var status when status == BookingDetailStatus.CONFIRM.ToString():
-                        nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
+                    case var status when status == AssignmentStatusEnums.CONFIRM.ToString():
+                        nextStatus = AssignmentStatusEnums.ROUND_TRIP.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ROUND_TRIP.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
@@ -1022,6 +1029,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1051,12 +1059,12 @@ namespace MoveMate.Service.Services
 
                 switch (assignment.Status)
                 {
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.FAILED.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        nextStatus = AssignmentStatusEnums.FAILED.ToString();
                         assignment.FailedReason = failedReason;
                         break;
-                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
-                        nextStatus = BookingDetailStatus.FAILED.ToString();
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                        nextStatus = AssignmentStatusEnums.FAILED.ToString();
                         assignment.FailedReason = failedReason;
                         break;
                     default:
@@ -1106,46 +1114,46 @@ namespace MoveMate.Service.Services
 
                 switch (bookingDetail.Status)
                 {
-                    case var status when status == BookingDetailStatus.WAITING.ToString():
-                        nextStatus = BookingDetailStatus.ASSIGNED.ToString();
+                    case var status when status == AssignmentStatusEnums.WAITING.ToString():
+                        nextStatus = AssignmentStatusEnums.ASSIGNED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.ENROUTE.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ARRIVED.ToString():
-                        nextStatus = BookingDetailStatus.IN_PROGRESS.ToString();
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                        nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
-                        nextStatus = BookingDetailStatus.IN_TRANSIT.ToString();
+                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
+                        nextStatus = AssignmentStatusEnums.IN_TRANSIT.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.IN_TRANSIT.ToString():
-                        nextStatus = BookingDetailStatus.DELIVERED.ToString();
+                    case var status when status == AssignmentStatusEnums.IN_TRANSIT.ToString():
+                        nextStatus = AssignmentStatusEnums.DELIVERED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.DELIVERED.ToString():
-                        nextStatus = BookingDetailStatus.UNLOAD.ToString();
+                    case var status when status == AssignmentStatusEnums.DELIVERED.ToString():
+                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.UNLOAD.ToString():
-                        nextStatus = BookingDetailStatus.COMPLETED.ToString();
+                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString():
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.COMPLETED.ToString():
+                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
                         if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
                         {
-                            nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
+                            nextStatus = AssignmentStatusEnums.ROUND_TRIP.ToString();
                             bookingDetail.IsRoundTripCompleted = true;
                         }
 
                         break;
 
-                    case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ROUND_TRIP.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
                     default:
@@ -1178,6 +1186,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1215,50 +1224,50 @@ namespace MoveMate.Service.Services
 
                 switch (bookingDetail.Status)
                 {
-                    case var status when status == BookingDetailStatus.WAITING.ToString():
-                        nextStatus = BookingDetailStatus.ASSIGNED.ToString();
+                    case var status when status == AssignmentStatusEnums.WAITING.ToString():
+                        nextStatus = AssignmentStatusEnums.ASSIGNED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.ENROUTE.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ARRIVED.ToString():
-                        nextStatus = BookingDetailStatus.IN_PROGRESS.ToString();
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                        nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.IN_PROGRESS.ToString():
-                        nextStatus = BookingDetailStatus.IN_TRANSIT.ToString();
+                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
+                        nextStatus = AssignmentStatusEnums.IN_TRANSIT.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.IN_TRANSIT.ToString():
-                        nextStatus = BookingDetailStatus.DELIVERED.ToString();
+                    case var status when status == AssignmentStatusEnums.IN_TRANSIT.ToString():
+                        nextStatus = AssignmentStatusEnums.DELIVERED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.DELIVERED.ToString():
-                        nextStatus = BookingDetailStatus.UNLOAD.ToString();
+                    case var status when status == AssignmentStatusEnums.DELIVERED.ToString():
+                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.UNLOAD.ToString():
-                        nextStatus = BookingDetailStatus.COMPLETED.ToString();
+                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString():
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.COMPLETED.ToString():
+                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
                         if (booking.IsUserConfirm == true && booking.IsRoundTrip == false)
                         {
-                            nextStatus = BookingDetailStatus.CONFIRM.ToString();
+                            nextStatus = AssignmentStatusEnums.CONFIRM.ToString();
                             bookingDetail.IsRoundTripCompleted = true;
                             booking.IsRoundTrip = true;
                         }
 
                         break;
-                    case var status when status == BookingDetailStatus.CONFIRM.ToString():
-                        nextStatus = BookingDetailStatus.ROUND_TRIP.ToString();
+                    case var status when status == AssignmentStatusEnums.CONFIRM.ToString():
+                        nextStatus = AssignmentStatusEnums.ROUND_TRIP.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.ROUND_TRIP.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ROUND_TRIP.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
                     default:
@@ -1291,6 +1300,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1304,97 +1314,76 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<AssignmentResponse>> ReviewerOnlineUpdateStatusBooking(int bookingId)
-        {
-            var result = new OperationResult<AssignmentResponse>();
-
-            try
-            {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
-                if (bookingDetail == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
-                    return result;
-                }
-
-                //var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
-                //if (booking == null)
-                //{
-                //    result.AddError(StatusCode.NotFound, "Booking not found.");
-                //    return result;
-                //}
-                string nextStatus = bookingDetail.Status;
-
-                switch (bookingDetail.Status)
-                {
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.SUGGESTED.ToString();
-                        break;
-
-                    case var status when status == BookingDetailStatus.SUGGESTED.ToString():
-                        nextStatus = BookingDetailStatus.REVIEWED.ToString();
-                        break;
-                    default:
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
-                        return result;
-                }
-
-                bookingDetail.Status = nextStatus;
-                _unitOfWork.BookingDetailRepository.Update(bookingDetail);
-                //_unitOfWork.BookingRepository.Update(booking);
-                await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
-                    response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating booking status");
-                throw;
-            }
-
-            return result;
-        }
 
 
         public async Task<OperationResult<AssignmentResponse>> ReviewerOfflineUpdateStatusBooking(int bookingId,
-            ResourceRequest request)
+            TrackerByReviewOfflineRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();
 
             try
             {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
-                if (bookingDetail == null)
+                var assigment = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndBookingId(RoleEnums.REVIEWER.ToString(), bookingId);
+                if (assigment == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
 
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
 
-                string nextStatus = bookingDetail.Status;
+                string nextStatus = assigment.Status;
 
-                switch (bookingDetail.Status)
+                switch (assigment.Status)
                 {
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.ENROUTE.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        if (booking.IsReviewOnline == true)
+                        {
+                            booking.Status = BookingEnums.REVIEWING.ToString();
+                        }
+                        else 
+                        {
+                            nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                        }
+                        
                         break;
 
-                    case var status when status == BookingDetailStatus.ENROUTE.ToString():
-                        nextStatus = BookingDetailStatus.ARRIVED.ToString();
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
-                    case var status when status == BookingDetailStatus.ARRIVED.ToString():
-                        nextStatus = BookingDetailStatus.SUGGESTED.ToString();
-                        break;
+                    //case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                    //    nextStatus = AssignmentStatusEnums.SUGGESTED.ToString();
+                      
+                    //    break;
 
-                    case var status when status == BookingDetailStatus.SUGGESTED.ToString():
-                        nextStatus = BookingDetailStatus.REVIEWED.ToString();
+                    case var status when status == AssignmentStatusEnums.SUGGESTED.ToString() && booking.Status == BookingEnums.REVIEWING.ToString():
+                        var bookingTracker =
+                        await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTracker == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+
+                        var tracker = new BookingTracker();
+                        tracker.Type = TrackerEnums.PENDING.ToString();
+                        tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        tracker.TrackerSources = resourceList;
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                        }
+                       
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                        nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+                        booking.Status = BookingEnums.REVIEWED.ToString();
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -1402,29 +1391,12 @@ namespace MoveMate.Service.Services
                         return result;
                 }
 
-                bookingDetail.Status = nextStatus;
-                // Kiểm tra bookingTracker trước khi truy cập Id
-                var bookingTracker =
-                    await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
-                if (bookingTracker == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
-                    return result;
-                }
-
-                var trackerSource = new TrackerSource
-                {
-                    BookingTrackerId = bookingTracker.Id,
-                    ResourceUrl = request.ResourceUrl,
-                    ResourceCode = request.ResourceCode,
-                    Type = request.Type
-                };
-                await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
-
-                _unitOfWork.BookingDetailRepository.Update(bookingDetail);
+                assigment.Status = nextStatus;
+                _unitOfWork.AssignmentsRepository.Update(assigment);
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(assigment);
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1460,12 +1432,12 @@ namespace MoveMate.Service.Services
 
                 switch (bookingDetail.Status)
                 {
-                    case var status when status == BookingDetailStatus.SUGGESTED.ToString():
-                        nextStatus = BookingDetailStatus.CANCELLED.ToString();
+                    case var status when status == AssignmentStatusEnums.SUGGESTED.ToString():
+                        nextStatus = AssignmentStatusEnums.CANCELLED.ToString();
                         break;
 
-                    case var status when status == BookingDetailStatus.CANCELLED.ToString():
-                        nextStatus = BookingDetailStatus.REFUNDED.ToString();
+                    case var status when status == AssignmentStatusEnums.CANCELLED.ToString():
+                        nextStatus = AssignmentStatusEnums.REFUNDED.ToString();
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -1513,8 +1485,8 @@ namespace MoveMate.Service.Services
 
                 switch (bookingDetail.Status)
                 {
-                    case var status when status == BookingDetailStatus.ASSIGNED.ToString():
-                        nextStatus = BookingDetailStatus.REVIEWED.ToString();
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                        nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -1551,11 +1523,12 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-
+                
                 booking.IsUserConfirm = true;
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingResponse>(booking);
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserConfirm, response);
             }
             catch (Exception ex)
@@ -1568,13 +1541,48 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int bookingDetailId,
+        public async Task<OperationResult<BookingResponse>> UpdateBookingByBookingIdAsync(int id, BookingServiceDetailsUpdateRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(id, "Assignments");
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+                if (booking.Status != BookingEnums.REVIEWING.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidStatus);
+                    return result;
+                }
+
+                var reviewer = booking.Assignments.FirstOrDefault(a => a.StaffType == RoleEnums.REVIEWER.ToString() && a.BookingId == id);
+                if (reviewer == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
+                
+
+               return await UpdateBookingAsync(reviewer.Id, request);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
+
+        public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int assignmentId,
             BookingServiceDetailsUpdateRequest request)
         {
             var result = new OperationResult<BookingResponse>();
             try
             {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingDetailId);
+                var bookingDetail = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
                 if (bookingDetail == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
@@ -1594,17 +1602,18 @@ namespace MoveMate.Service.Services
                 }
 
 
-                if (bookingDetail.Status == BookingDetailStatus.ASSIGNED.ToString() &&
+                if (bookingDetail.Status == AssignmentStatusEnums.ASSIGNED.ToString() &&
                     existingBooking.IsReviewOnline == true)
                 {
-                    bookingDetail.Status = BookingDetailStatus.SUGGESTED.ToString();
+                    bookingDetail.Status = AssignmentStatusEnums.SUGGESTED.ToString();
                 }
-                else if (bookingDetail.Status == BookingDetailStatus.ARRIVED.ToString() &&
+                else if (bookingDetail.Status == AssignmentStatusEnums.ARRIVED.ToString() &&
                          existingBooking.IsReviewOnline == false)
                 {
-                    bookingDetail.Status = BookingDetailStatus.SUGGESTED.ToString();
+                    bookingDetail.Status = AssignmentStatusEnums.SUGGESTED.ToString();
                 }
-                else
+                
+                else if (bookingDetail.Status != AssignmentStatusEnums.SUGGESTED.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                     return result;
@@ -1671,10 +1680,21 @@ namespace MoveMate.Service.Services
                                                (request.UpdatedAt - now).TotalHours >= 0)
                     ? TypeBookingEnums.NOW.ToString()
                     : TypeBookingEnums.DELAY.ToString();
-                await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
-                await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
-                    existingBooking.BookingDetails.ToList());
+
+
+                
+                
+                if (existingBooking.IsReviewOnline == true)
+                {
+                    existingBooking.Status = BookingEnums.REVIEWED.ToString();
+                }
+
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
+              
+                await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(existingBooking.BookingDetails.ToList());
+               
                 await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
+               
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
                 var saveResult = _unitOfWork.Save();
 
@@ -1683,6 +1703,7 @@ namespace MoveMate.Service.Services
                 {
                     existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId);
                     var response = _mapper.Map<BookingResponse>(existingBooking);
+                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }
@@ -1714,6 +1735,8 @@ namespace MoveMate.Service.Services
                     // Update existing service detail properties
                     existingBookingDetail.Quantity = requestService.Quantity;
                     existingBookingDetail.Price = requestService.Price;
+                    existingBookingDetail.Name = service.Name;
+                    existingBookingDetail.Description = service.Description;
                     bookingDetails.Add(existingBookingDetail);
                 }
                 else
@@ -1724,7 +1747,10 @@ namespace MoveMate.Service.Services
                         ServiceId = requestService.ServiceId,
                         BookingId = bookingId,
                         Quantity = requestService.Quantity,
-                        Price = requestService.Price
+                        Price = requestService.Price,
+                        Name = service.Name,
+                        Description = service.Description
+
                     };
 
                     bookingDetails.Add(newBookingDetail);
@@ -1769,6 +1795,7 @@ namespace MoveMate.Service.Services
                 {
                     var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
+                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }
@@ -1785,19 +1812,21 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingResponse>> UserConfirmReviewAt(int bookingId, StatusRequest request)
+        public async Task<OperationResult<BookingResponse>> UserConfirm(int bookingId, StatusRequest request)
         {
             var result = new OperationResult<BookingResponse>();
 
             try
             {
-                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");
 
                 if (existingBooking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
+
+                
 
                 switch (request.Status)
                 {
@@ -1812,13 +1841,32 @@ namespace MoveMate.Service.Services
                         break;
 
                     case "DEPOSITING":
-                        if (existingBooking.Status != BookingEnums.WAITING.ToString())
+                        if (existingBooking.Status != BookingEnums.WAITING.ToString() && existingBooking.IsReviewOnline == false)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            return result;
+                        }
+                        if (existingBooking.Status != BookingEnums.REVIEWED.ToString() && existingBooking.IsReviewOnline == true)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            return result;
+                        }
+                        if (existingBooking.IsReviewOnline == true)
+                        {
+                           var assignmentStatus = existingBooking.Assignments.FirstOrDefault(a => a.Status == AssignmentStatusEnums.SUGGESTED.ToString() && a.StaffType == RoleEnums.REVIEWER.ToString());
+                            assignmentStatus.Status = AssignmentStatusEnums.REVIEWED.ToString();
+                            _unitOfWork.AssignmentsRepository.Update(assignmentStatus);
+                        }
+                        existingBooking.Status = BookingEnums.DEPOSITING.ToString();
+                        break;
+                    case "COMING":
+                        if (existingBooking.Status != BookingEnums.REVIEWED.ToString())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                             return result;
                         }
 
-                        existingBooking.Status = BookingEnums.DEPOSITING.ToString();
+                        existingBooking.Status = BookingEnums.COMING.ToString();
                         break;
 
                     default:
@@ -1834,6 +1882,7 @@ namespace MoveMate.Service.Services
                 {
                     var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
+                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }
@@ -1849,5 +1898,7 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+       
     }
 }

@@ -35,7 +35,9 @@ public partial class PromotionCategory
 
     public bool? IsInfinite { get; set; }
 
-    public virtual ICollection<Service> Services { get; set; } = new List<Service>();
+    public int? ServiceId { get; set; }
+
+    public virtual Service? Service { get; set; }
 
     public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
 }

@@ -15,5 +15,12 @@ namespace MoveMate.Repository.Repositories.Repository
         public AssignmentsRepository(MoveMateDbContext context) : base(context)
         {
         }
+
+        public Assignment GetByStaffTypeAndBookingId(string staffType, int bookingId)
+        {
+            var assignment = Get(a => a.StaffType == staffType && a.BookingId == bookingId)
+                                .FirstOrDefault();
+            return assignment;
+        }
     }
 }

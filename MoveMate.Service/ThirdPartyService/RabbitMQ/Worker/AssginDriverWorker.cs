@@ -57,7 +57,7 @@ public class AssginDriverWorker
     //                var driverDetail = new BookingDetail()
     //                {
     //                    BookingId = message,
-    //                    Status = BookingDetailStatus.ASSIGNED.ToString(),
+    //                    Status = AssignmentStatusEnums.ASSIGNED.ToString(),
     //                    UserId = driver!.UserId,
     //                    StaffType = RoleEnums.DRIVER.ToString(),
     //                };
@@ -66,7 +66,7 @@ public class AssginDriverWorker
 
     //                booking.BookingDetails.Add(driverDetail);
 
-    //                booking.Status = BookingDetailStatus.ASSIGNED.ToString();
+    //                booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
 
     //                var endtime = booking.BookingAt!.Value.AddHours(booking.EstimatedDeliveryTime ?? 3);
     //                var workDate = new ScheduleDetail()

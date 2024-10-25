@@ -138,6 +138,7 @@ namespace MoveMate.Service.Commons
 
             //Tracker resource
             public const string NotFoundBookingTracker = "Booking tracker not found";
+            public const string VerifyReviewOffline= "Must have image or video to verify from SUGGESTED to REVIEWED";
 
         }
 

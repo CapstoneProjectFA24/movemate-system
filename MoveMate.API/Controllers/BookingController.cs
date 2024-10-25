@@ -65,18 +65,18 @@ namespace MoveMate.API.Controllers
         ///           "isManyItems": true,
         ///           "roomNumber": "3",
         ///           "floorsNumber": "3",
-        ///           "serviceDetails": [
+        ///           "bookingDetails": [
         ///             {
-        ///               "serviceId": 52,
+        ///               "serviceId": 12,
         ///               "quantity": 1
         ///             },
         ///             {
-        ///               "serviceId": 35,
+        ///               "serviceId": 2,
         ///               "quantity": 1
         ///             }
         ///           ],
-        ///           "truckCategoryId": 1,
-        ///           "bookingAt": "2024-10-16T05:26:28.452Z",
+        ///           "truckCategoryId": 4,
+        ///           "bookingAt": "2024-10-30T05:26:28.452Z",
         ///           "resourceList": [
         ///             {
         ///               "type": "IMG",
@@ -172,16 +172,30 @@ namespace MoveMate.API.Controllers
        
 
         /// <summary>
-        /// TEST: User Update Service Detail of booking 
+        /// TEST: Reviewer update booking by assignment ID
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("reviewer/update-service-booking/{id}")]
-        public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
+        [HttpPut("reviewer/update-booking-by-assignmentId/{id}")]
+        public async Task<IActionResult> UpdateServiceBookingByAssigmentId(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
         {
             var response = await _bookingServices.UpdateBookingAsync(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+        /// <summary>
+        /// TEST: Reviewer update booking by booking ID
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-booking/{id}")]
+        public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateBookingByBookingIdAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
         /// <summary>
         /// TEST: User confirm round trip  
@@ -209,14 +223,23 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: User confirm change review at 
+        /// TEST: User confirm 
         /// </summary>
+        /// <remarks>
+        /// This endpoint allows a user to confirm or update the status of an existing booking. 
+        /// The allowed status transitions depend on the current status of the booking and whether the booking
+        /// has been reviewed online. For example:
+        /// - If the booking is in "WAITING" status, it can be changed to "ASSIGNED."
+        /// - If the booking is in "WAITING" and has not been reviewed online, it can transition to "DEPOSITING."
+        /// - If the booking is in "REVIEWED" and has been reviewed online, it can also transition to "DEPOSITING."
+        /// The status update will be validated, and if the transition is invalid, an error message is returned.
+        /// </remarks>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("user/confirm-review-at/{id}")]
-        public async Task<IActionResult> UserConfirmChangeReviewAt(int id, [FromBody] StatusRequest request)
+        [HttpPut("user/confirm/{id}")]
+        public async Task<IActionResult> UserConfirmChange(int id, [FromBody] StatusRequest request)
         {
-            var response = await _bookingServices.UserConfirmReviewAt(id, request);
+            var response = await _bookingServices.UserConfirm(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

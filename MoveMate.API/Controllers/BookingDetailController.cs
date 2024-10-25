@@ -83,31 +83,21 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("reviewer/review-offline/update-status/{id}")]
-        public async Task<IActionResult> ReviewerOfflineUpdateStatus(int id , [FromBody] ResourceRequest request)
+        [HttpPut("reviewer/update-status/{id}")]
+        public async Task<IActionResult> ReviewerUpdateStatus(int id , [FromBody] TrackerByReviewOfflineRequest request)
         {
             var response = await _bookingServices.ReviewerOfflineUpdateStatusBooking(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        /// <summary>
-        /// TEST: Reviewer update status booking details by review offline  
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [HttpPut("reviewer/review-online/update-status/{id}")]
-        public async Task<IActionResult> ReviewerOnlineUpdateStatus(int id)
-        {
-            var response = await _bookingServices.ReviewerOnlineUpdateStatusBooking(id);
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
+       
 
         /// <summary>
         /// TEST: Reviewer update status booking details when booking completely reasonable  
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("reviewer/update-status/{id}")]
+        [HttpPut("reviewer/complete-booking/{id}")]
         public async Task<IActionResult> ReviewerUpdateCompletedBooking(int id)
         {
             var response = await _bookingServices.ReviewerCompletedBooking(id);

@@ -350,11 +350,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.REVIEWED.ToString();
+                    booking.Status = BookingEnums.REVIEWING.ToString();
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.COMMING.ToString();
+                    booking.Status = BookingEnums.COMING.ToString();
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {

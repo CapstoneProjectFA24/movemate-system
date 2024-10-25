@@ -277,6 +277,10 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.StartBookingTime).HasColumnType("datetime");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Type).HasMaxLength(255);
+
+            entity.HasOne(d => d.Service).WithMany(p => p.PromotionCategories)
+                .HasForeignKey(d => d.ServiceId)
+                .HasConstraintName("FK_PromotionCategory_Service");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -336,10 +340,6 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.ParentService).WithMany(p => p.InverseParentService)
                 .HasForeignKey(d => d.ParentServiceId)
                 .HasConstraintName("FK_Service_ParentService");
-
-            entity.HasOne(d => d.PromotionCategory).WithMany(p => p.Services)
-                .HasForeignKey(d => d.PromotionCategoryId)
-                .HasConstraintName("FK_Service_PromotionCategory");
 
             entity.HasOne(d => d.TruckCategory).WithMany(p => p.Services)
                 .HasForeignKey(d => d.TruckCategoryId)
