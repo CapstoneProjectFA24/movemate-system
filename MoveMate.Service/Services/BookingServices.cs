@@ -359,7 +359,7 @@ namespace MoveMate.Service.Services
 
                 //
                 var response = _mapper.Map<BookingResponse>(entity);
-
+                _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking, response);
 
                 return result;
