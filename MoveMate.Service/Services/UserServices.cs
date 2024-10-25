@@ -45,7 +45,8 @@ namespace MoveMate.Service.Services
                     filter: filter,
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
+                    orderBy: request.GetOrder(),
+                    includeProperties: "Role"
                 );
                 var listResponse = _mapper.Map<List<UserResponse>>(entities);
 
