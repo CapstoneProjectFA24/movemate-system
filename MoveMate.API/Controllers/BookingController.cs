@@ -65,18 +65,18 @@ namespace MoveMate.API.Controllers
         ///           "isManyItems": true,
         ///           "roomNumber": "3",
         ///           "floorsNumber": "3",
-        ///           "serviceDetails": [
+        ///           "bookingDetails": [
         ///             {
-        ///               "serviceId": 52,
+        ///               "serviceId": 12,
         ///               "quantity": 1
         ///             },
         ///             {
-        ///               "serviceId": 35,
+        ///               "serviceId": 2,
         ///               "quantity": 1
         ///             }
         ///           ],
-        ///           "truckCategoryId": 1,
-        ///           "bookingAt": "2024-10-16T05:26:28.452Z",
+        ///           "truckCategoryId": 4,
+        ///           "bookingAt": "2024-10-30T05:26:28.452Z",
         ///           "resourceList": [
         ///             {
         ///               "type": "IMG",
@@ -120,42 +120,9 @@ namespace MoveMate.API.Controllers
 
         #endregion
 
-        /// <summary>
-        ///
-        /// TEST: valuation distance booking, test by vinh
-        /// </summary>
-        /// <returns></returns>
-        ///
+        
 
-        // Post - valuation distance booking
-        [HttpPost("valuation-distance-booking")]
-        [Authorize]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ValuationDistanceBooking(BookingValuationRequest request)
-        {
-            var response = await _bookingServices.ValuationDistanceBooking(request);
-
-
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
-
-        /// <summary>
-        ///
-        /// TEST: valuation floor booking, test by vinh
-        /// </summary>
-        /// <returns></returns>
-        ///
-
-        // Post - valuation distance booking
-        [HttpPost("valuation-floor-booking")]
-        [Authorize]
-        [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ValuationFloorBooking(BookingValuationRequest request)
-        {
-            var response = await _bookingServices.ValuationFloorBooking(request);
-
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
+        
 
         /// <summary>
         ///
@@ -205,19 +172,33 @@ namespace MoveMate.API.Controllers
        
 
         /// <summary>
-        /// TEST: User Update Service Detail of booking 
+        /// TEST: Reviewer update booking by assignment ID
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("reviewer/update-service-booking/{id}")]
-        public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
+        [HttpPut("reviewer/update-booking-by-assignmentId/{id}")]
+        public async Task<IActionResult> UpdateServiceBookingByAssigmentId(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
         {
             var response = await _bookingServices.UpdateBookingAsync(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+
         /// <summary>
-        /// TEST: User confirm round trip  
+        /// FEATURE: Reviewer update booking by booking ID
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("reviewer/update-booking/{id}")]
+        public async Task<IActionResult> UpdateServiceBooking(int id, [FromBody] BookingServiceDetailsUpdateRequest request)
+        {
+            var response = await _bookingServices.UpdateBookingByBookingIdAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE: User confirm round trip  
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -230,7 +211,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: Reviewer change review at 
+        /// FEATURE: Reviewer change review at 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -242,14 +223,25 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// TEST: User confirm change review at 
+        /// FEATURE: User confirm 
         /// </summary>
+        /// <remarks>
+        /// This endpoint allows a user to update the status of an existing booking, based on the current status and specific conditions:
+        /// - If the booking is in "WAITING" status, it can transition to "ASSIGNED."
+        /// - If the booking is in "WAITING" and has not been reviewed online, it can transition to "DEPOSITING."
+        /// - If the booking has been reviewed online, it can transition to "DEPOSITING" only if it is in "REVIEWED" status. 
+        ///     In this case, an assignment status related to the booking is also updated from "SUGGESTED" to "REVIEWED."
+        /// - If the booking is in "REVIEWED" status, it can transition to "COMING."
+        ///
+        /// The status update will be validated against these conditions. If any condition fails, an error message will be returned 
+        /// indicating the reason for the rejection.
+        /// </remarks>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("user/confirm-review-at/{id}")]
-        public async Task<IActionResult> UserConfirmChangeReviewAt(int id, [FromBody] StatusRequest request)
+        [HttpPut("user/confirm/{id}")]
+        public async Task<IActionResult> UserConfirmChange(int id, [FromBody] StatusRequest request)
         {
-            var response = await _bookingServices.UserConfirmReviewAt(id, request);
+            var response = await _bookingServices.UserConfirm(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

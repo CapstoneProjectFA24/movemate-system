@@ -17,11 +17,11 @@ namespace MoveMate.Repository.Repositories.Repository
         {
         }
 
-        public async Task<BookingDetail> GetBookingDetailAsyncByBookingId(int bookingId)
-        {
-            return await _context.Set<BookingDetail>()
-                .Include(b => b.User)
-                .FirstOrDefaultAsync(b => b.BookingId == bookingId);
-        }
+        //public async Task<BookingDetail> GetBookingDetailAsyncByBookingId(int bookingId)
+        //{
+        //    return await _context.Set<BookingDetail>()
+        //        .Include(b => b.User)
+        //        .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+        //}
     }
 }

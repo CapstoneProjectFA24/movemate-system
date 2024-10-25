@@ -20,6 +20,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using static Grpc.Core.Metadata;
+using MoveMate.Service.ThirdPartyService.Firebase;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 {
@@ -33,12 +35,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
         private readonly UnitOfWork _unitOfWork;
         private readonly IWalletServices _walletService;
         private readonly IMessageProducer _producer;
-
+        private readonly IFirebaseServices _firebaseServices;
 
         public MomoPaymentService(
             IOptions<MomoSettings> momoSettings,
             ILogger<MomoPaymentService> logger,
-            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IWalletServices walletServices, IMessageProducer producer)
+            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IWalletServices walletServices, IMessageProducer producer, IFirebaseServices firebaseServices)
         {
             _momoSettings = momoSettings.Value;
             _logger = logger;
@@ -46,6 +48,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             _unitOfWork = (UnitOfWork)unitOfWork;
             _walletService = walletServices;
             _producer = producer;
+            _firebaseServices = firebaseServices;
         }
 
         public ClaimsPrincipal? CurrentUserPrincipal => _httpContextAccessor.HttpContext?.User;
@@ -354,13 +357,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.REVIEWED.ToString();
+                    booking.Status = BookingEnums.REVIEWING.ToString();
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.COMMING.ToString();
-                    _producer.SendingMessage("movemate.booking_assign_driver_local", booking.Id);
-
+                    booking.Status = BookingEnums.COMING.ToString();
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -374,7 +375,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 operationResult =
                     OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 

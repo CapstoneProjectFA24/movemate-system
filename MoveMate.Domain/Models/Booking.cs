@@ -9,6 +9,8 @@ public partial class Booking
 
     public int? UserId { get; set; }
 
+    public int? HouseTypeId { get; set; }
+
     public double? Deposit { get; set; }
 
     public string? Status { get; set; }
@@ -31,8 +33,6 @@ public partial class Booking
 
     public bool? IsDeposited { get; set; }
 
-    public bool? IsBonus { get; set; }
-
     public bool? IsReported { get; set; }
 
     public string? ReportedReason { get; set; }
@@ -49,15 +49,13 @@ public partial class Booking
 
     public string? Review { get; set; }
 
-    public string? Bonus { get; set; }
-
     public string? TypeBooking { get; set; }
 
     public string? RoomNumber { get; set; }
 
     public string? FloorsNumber { get; set; }
 
-    public bool? IsManyItems { get; set; }
+    public string? IsManyItems { get; set; }
 
     public bool? IsCancel { get; set; }
 
@@ -71,23 +69,23 @@ public partial class Booking
 
     public double? TotalFee { get; set; }
 
-    public string? FeeInfo { get; set; }
-
-    public int? HouseTypeId { get; set; }
-
     public DateTime? BookingAt { get; set; }
 
     public bool? IsReviewOnline { get; set; }
 
     public bool? IsUserConfirm { get; set; }
 
-    public DateTime? ReviewAt { get; set; }
-
     public int? DriverNumber { get; set; }
 
     public int? PorterNumber { get; set; }
 
     public int? TruckNumber { get; set; }
+
+    public DateTime? ReviewAt { get; set; }
+
+    public DateTime? EstimatedEndTime { get; set; }
+
+    public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
 
@@ -97,11 +95,9 @@ public partial class Booking
 
     public virtual HouseType? HouseType { get; set; }
 
-    public virtual ICollection<LoyalUserDetail> LoyalUserDetails { get; set; } = new List<LoyalUserDetail>();
-
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
-    public virtual ICollection<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
+    public virtual ICollection<ScheduleBookingDetail> ScheduleBookingDetails { get; set; } = new List<ScheduleBookingDetail>();
 
     public virtual User? User { get; set; }
 

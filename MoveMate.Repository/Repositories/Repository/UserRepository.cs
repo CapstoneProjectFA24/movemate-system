@@ -113,8 +113,8 @@ namespace MoveMate.Repository.Repositories.Repository
             try
             {
                 return await _dbContext.Users
-                    .Include(u => u.Trucks) 
-                    .Where(u => u.Trucks.Any(t => t.TruckCategoryId == truckCategoryId)) 
+                    .Include(u => u.Truck) 
+                    .Where(u => u.Truck.TruckCategoryId == truckCategoryId) 
                     .ToListAsync(); 
             }
             catch (Exception ex)

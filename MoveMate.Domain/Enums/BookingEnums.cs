@@ -12,8 +12,9 @@ namespace MoveMate.Domain.Enums;
         DEPOSITING,
         ASSIGNED,
         APPROVED,
+        REVIEWING,
         REVIEWED,
-        COMMING,
+        COMING,
         WAITING,
         IN_PROGRESS,
         COMPLETED,
@@ -21,7 +22,7 @@ namespace MoveMate.Domain.Enums;
         REFUNDED
     }
 
-    public enum BookingDetailStatus
+    public enum AssignmentStatusEnums
     {
         WAITING,
         ASSIGNED,

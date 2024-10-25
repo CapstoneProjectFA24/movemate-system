@@ -10,6 +10,8 @@ using MoveMate.Domain.Models;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ThirdPartyService.Firebase;
+using static Grpc.Core.Metadata;
 
 
 namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
@@ -25,11 +27,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly VnPaySettings _vnPaySettings;
         private readonly IMessageProducer _producer;
-
+        private readonly IFirebaseServices _firebaseServices;
 
         public VnPayService(IConfiguration config, IUserServices userService, IBookingServices bookingServices,
             IWalletServices walletService, IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor,
-            VnPaySettings vnPaySettings, IMessageProducer producer)
+            VnPaySettings vnPaySettings, IMessageProducer producer, IFirebaseServices firebaseServices)
         {
             _config = config;
             _userService = userService;
@@ -39,6 +41,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
             _httpContextAccessor = httpContextAccessor;
             _vnPaySettings = vnPaySettings;
             _producer = producer;
+            _firebaseServices = firebaseServices;
         }
 
 
@@ -331,7 +334,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
-                    booking.TotalReal = booking.Total - (float)callback.vnp_Amount;
+                    booking.TotalReal = booking.Total - (float)amount;
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -364,12 +367,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.REVIEWED.ToString();
+                    booking.Status = BookingEnums.REVIEWING.ToString();
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.COMMING.ToString();
-                    
+                    booking.Status = BookingEnums.COMING.ToString();
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -385,7 +387,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
             }
             catch (Exception ex)

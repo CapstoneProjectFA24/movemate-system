@@ -65,40 +65,40 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        /// <summary>
-        /// CHORE : Creates a new house type setting.
-        /// </summary>
-        /// <param name="request">The details of the house type setting to create.</param>
-        /// <returns>An IActionResult indicating the result of the creation operation.</returns>
-        /// <remarks>
-        /// Sample request:
-        /// 
-        ///     POST /housetype/house-type-setting
-        ///     {
-        ///         "houseTypeId": 1,
-        ///         "truckCategoryId": "1",
-        ///         "numberOfFloors": "3",
-        ///         "numberOfRooms": 10,
-        ///         "numberOfTrucks": 2
-        ///     }
-        /// </remarks>
-        /// <response code="201">Add HouseTypeSetting Success!</response>
-        /// <response code="400">Add HouseTypeSetting Failed!</response>
-        /// <response code="404">House Type not found</response>
-        /// <response code="404">Truck Category not found</response>
-        /// <response code="500">An error occurred while creating the house type setting</response>
-        [HttpPost("house-type-setting")]
-        //[Authorize]
-        public async Task<IActionResult> Create(CreateHouseTypeSetting request)
-        {
-            var response = await _houseTypeSettingServices.CreateEntity(request);
-            if (response.IsError)
-            {
-                return HandleErrorResponse(response.Errors);
-            }
+        ///// <summary>
+        ///// CHORE : Creates a new house type setting.
+        ///// </summary>
+        ///// <param name="request">The details of the house type setting to create.</param>
+        ///// <returns>An IActionResult indicating the result of the creation operation.</returns>
+        ///// <remarks>
+        ///// Sample request:
+        ///// 
+        /////     POST /housetype/house-type-setting
+        /////     {
+        /////         "houseTypeId": 1,
+        /////         "truckCategoryId": "1",
+        /////         "numberOfFloors": "3",
+        /////         "numberOfRooms": 10,
+        /////         "numberOfTrucks": 2
+        /////     }
+        ///// </remarks>
+        ///// <response code="201">Add HouseTypeSetting Success!</response>
+        ///// <response code="400">Add HouseTypeSetting Failed!</response>
+        ///// <response code="404">House Type not found</response>
+        ///// <response code="404">Truck Category not found</response>
+        ///// <response code="500">An error occurred while creating the house type setting</response>
+        //[HttpPost("house-type-setting")]
+        ////[Authorize]
+        //public async Task<IActionResult> Create(CreateHouseTypeSetting request)
+        //{
+        //    var response = await _houseTypeSettingServices.CreateEntity(request);
+        //    if (response.IsError)
+        //    {
+        //        return HandleErrorResponse(response.Errors);
+        //    }
 
-            // Return 201 Created status with the success message
-            return StatusCode((int)Service.Commons.StatusCode.Created, response);
-        }
+        //    // Return 201 Created status with the success message
+        //    return StatusCode((int)Service.Commons.StatusCode.Created, response);
+        //}
     }
 }
