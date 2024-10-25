@@ -18,6 +18,7 @@ using MoveMate.Service.ThirdPartyService.Payment.Momo;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.Utils;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 {
@@ -29,9 +30,10 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
         private readonly PayOS _payOs;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWalletServices _walletServices;
+        private readonly IMessageProducer _producer;
 
         public PayOsService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PayOsService> logger, PayOS payOS,
-            IWalletServices walletServices, IHttpContextAccessor httpContextAccessor)
+            IWalletServices walletServices, IHttpContextAccessor httpContextAccessor, IMessageProducer producer)
         {
             _unitOfWork = (UnitOfWork)unitOfWork;
             _mapper = mapper;
@@ -39,6 +41,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             _payOs = payOS;
             _walletServices = walletServices;
             _httpContextAccessor = httpContextAccessor;
+            _producer = producer;
         }
 
         public async Task<OperationResult<string>> CreatePaymentLinkAsync(int bookingId, int userId, string returnUrl)
@@ -340,6 +343,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
+                    _producer.SendingMessage("movemate.booking_assign_driver_local", booking.Id);
+
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {

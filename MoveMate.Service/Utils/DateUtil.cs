@@ -147,12 +147,18 @@ namespace MoveMate.Service.Utils
             return dateKey;
         }
         
+        public static DateTime GetDateFormat(DateTime dateTime)
+        {
+            string formattedDate = dateTime.ToString("yyyyMMdd");
+            return DateTime.ParseExact(formattedDate, "yyyyMMdd", null);
+        }
+
+        
         public static String GetShard(DateTime? time)
         {
             string dateKey =  time.HasValue ? time.Value.ToString("yyyyMMdd") : GetShardNow();
             return dateKey;
         }
-
 
         public static String GetKeyReview()
         {

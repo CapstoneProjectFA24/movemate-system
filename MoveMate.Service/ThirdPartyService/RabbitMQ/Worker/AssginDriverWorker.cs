@@ -43,43 +43,53 @@ public class AssginDriverWorker
                 
                 var driverList = await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(booking!.TruckNumber!.Value);
                 
+                var bookingDate = DateUtil.GetDateFormat(booking!.BookingAt!.Value);
+                
+                //var schedule = unitOfWork.ScheduleRepository.get                                
                 string redisKey = DateUtil.GetKeyReview();
 
                 var date = DateUtil.GetShard(booking.BookingAt);
 
-                var checkBookingStaffDaily =
-                    await unitOfWork.BookingStaffDailyRepository.GetStaffActiveNowBookingStaffDailies(4);
+                /*var checkBookingStaffDaily =
+                    await unitOfWork.BookingStaffDailyRepository.GetStaffActiveNowBookingStaffDailies(4);*/
 
-                if (checkBookingStaffDaily.Count > 0)
+                if (driverList.Count > 0)
                 {
-                    var driver = checkBookingStaffDaily.FirstOrDefault();
+                    for (int i = 0; i < booking.TruckNumber; i++)
+                    {
+
+                    }
+                    
+                    var driver = driverList.FirstOrDefault();
 
                     var driverDetail = new BookingDetail()
                     {
                         BookingId = message,
                         Status = BookingDetailStatus.ASSIGNED.ToString(),
-                        UserId = driver!.UserId,
+                        UserId = driver!.Id,
                         StaffType = RoleEnums.DRIVER.ToString(),
                     };
 
-                    driver.Status = BookingStaffDailyEnums.BUSSY.ToString();
+                    //driver.Status = BookingStaffDailyEnums.BUSSY.ToString();
 
                     booking.BookingDetails.Add(driverDetail);
 
                     booking.Status = BookingDetailStatus.ASSIGNED.ToString();
 
                     var endtime = booking.BookingAt!.Value.AddHours(booking.EstimatedDeliveryTime ?? 3);
-                    var workDate = new ScheduleDetail()
+                    /*var workDate = new ScheduleDetail()
                     {
                         UserId = driver.UserId,
                         WorkingDays = DateTime.Now,
                         StartDate = booking.BookingAt,
                         EndDate = endtime
-                    };
+                    };*/
 
                     //save BookingStaffDaily
-                    await unitOfWork.ScheduleDetailRepository.AddAsync(workDate);
-                    unitOfWork.BookingStaffDailyRepository.UpdateRange(checkBookingStaffDaily);
+                    /*await unitOfWork.ScheduleDetailRepository.AddAsync(workDate);
+                    unitOfWork.BookingStaffDailyRepository.UpdateRange(checkBookingStaffDaily);*/
+                    
+                    await unitOfWork.BookingDetailRepository.AddAsync(driverDetail);
                 }
                 else
                 {
@@ -87,8 +97,7 @@ public class AssginDriverWorker
                     //khó quá à
                 }
 
-
-                unitOfWork.BookingRepository.Update(booking);
+                //unitOfWork.
                 unitOfWork.Save();
 
                 Console.WriteLine($"Booking assign_driver info: {booking.Id}");

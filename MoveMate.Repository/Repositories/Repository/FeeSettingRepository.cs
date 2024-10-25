@@ -55,5 +55,14 @@ namespace MoveMate.Repository.Repositories.Repository
                             f.TruckCategoryId == cateTruckId && f.ServiceId == null)
                 .ToList();
         }
+        
+        public List<FeeSetting> GetHouseFeeSettings(int HouseTypeId)
+        {
+            return _context.Set<FeeSetting>()
+                .Where(f => f.Type == TypeServiceEnums.TRUCK.ToString() && f.IsActived == true &&
+                            f.HouseTypeId == HouseTypeId && f.ServiceId == null)
+                .ToList();
+        }
+        
     }
 }

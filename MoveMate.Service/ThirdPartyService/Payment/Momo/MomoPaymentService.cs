@@ -19,6 +19,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 {
@@ -31,17 +32,20 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UnitOfWork _unitOfWork;
         private readonly IWalletServices _walletService;
+        private readonly IMessageProducer _producer;
+
 
         public MomoPaymentService(
             IOptions<MomoSettings> momoSettings,
             ILogger<MomoPaymentService> logger,
-            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IWalletServices walletServices)
+            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IWalletServices walletServices, IMessageProducer producer)
         {
             _momoSettings = momoSettings.Value;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             _unitOfWork = (UnitOfWork)unitOfWork;
             _walletService = walletServices;
+            _producer = producer;
         }
 
         public ClaimsPrincipal? CurrentUserPrincipal => _httpContextAccessor.HttpContext?.User;
@@ -355,6 +359,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.COMMING.ToString();
+                    _producer.SendingMessage("movemate.booking_assign_driver_local", booking.Id);
+
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
