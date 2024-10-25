@@ -31,5 +31,53 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception($"An error occurred while fetching the notification: {ex.Message}");
             }
         }
+
+        public async Task<Notification> GetUserDeviceAsync(string fcmToken)
+        {
+            try
+            {
+                return await this._dbContext.Notifications.SingleOrDefaultAsync(x => x.FCMToken.Equals(fcmToken));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public void DeleteUserDevice(Notification userDevice)
+        {
+            try
+            {
+                this._dbContext.Notifications.Remove(userDevice);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task CreateUserDeviceAsync(Notification userDevice)
+        {
+            try
+            {
+                await this._dbContext.Notifications.AddAsync(userDevice);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<Notification> GetUserDeviceAsync(int id)
+        {
+            try
+            {
+                return await this._dbContext.Notifications.SingleOrDefaultAsync(x => x.Id == id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

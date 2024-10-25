@@ -204,6 +204,9 @@ namespace MoveMate.Service.Commons
             public const string TransactionSuccess = "Transaction has already been processed";
             public const string AlreadyProcess = "Already processed";
 
+            //Notification
+            public const string Notification = "Created user device successfully";
+            public const string DeletedUserDevice = "Deleted user device successfully";
         }
 
 

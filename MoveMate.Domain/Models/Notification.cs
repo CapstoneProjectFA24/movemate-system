@@ -13,6 +13,8 @@ public partial class Notification
 
     public string? Receive { get; set; }
 
+    public string? FCMToken { get; set; }
+
     public string? DeviceId { get; set; }
 
     public string? Name { get; set; }
