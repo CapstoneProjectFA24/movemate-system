@@ -61,7 +61,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                _logger.LogWarning($"User with ID {userId} not found");
                 operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return operationResult;
             }
@@ -195,6 +194,13 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 return operationResult;
             }
 
+            var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+            if (wallet == null)
+            {
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                return operationResult;
+            }
+
             var newGuid = Guid.NewGuid();
             try
             {
@@ -203,7 +209,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 {
                     Amount = (int)amount,
                     Info = "wallet",
-                    PaymentReferenceId = $"wallet-{userId}-{newGuid}",
+                    PaymentReferenceId = wallet.Id + "-" + newGuid,
                     returnUrl = returnUrl,
                     ExtraData = userId.ToString()
                 };
@@ -363,7 +369,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                operationResult = OperationResult<string>.Success($"{callback.returnUrl}?isSuccess=true", StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
+                operationResult =
+                    OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
+                
             }
             catch (Exception ex)
             {

@@ -18,7 +18,8 @@ namespace MoveMate.Service.Commons
         {
             // Mapping for UserResponse
             CreateMap<User, UserResponse>()
-                .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
             CreateMap<UpdateUserRequest, User>();
 
             // Mapping for AccountToken
@@ -112,7 +113,8 @@ namespace MoveMate.Service.Commons
 
 
             // Mapping for TruckCategory to TruckCategoryResponse
-            CreateMap<TruckCategory, TruckCategoryResponse>();
+            CreateMap<TruckCategory, TruckCategoryResponse>()
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImgUrl));
 
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
