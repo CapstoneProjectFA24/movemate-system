@@ -147,9 +147,9 @@ namespace MoveMate.Service.Services
                 return result;
             }
 
-            if (!request.IsServiceDetailsValid())
+            if (!request.IsBookingDetailsValid())
             {
-                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidServiceDetails);
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidBookingDetails);
                 return result;
             }
 
@@ -817,7 +817,7 @@ namespace MoveMate.Service.Services
                             if (service.TruckCategoryId != truckCategoryId)
                             {
                                 throw new BadRequestException(MessageConstant.FailMessage
-                                    .InvalidServiceDetailDifferent);
+                                    .InvalidBookingDetailDifferent);
                             }
 
                             var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
@@ -1634,7 +1634,7 @@ namespace MoveMate.Service.Services
                             (int)existingBooking.HouseTypeId,
                             (int)existingBooking.TruckNumber, existingBooking.FloorsNumber,
                             existingBooking.EstimatedDistance);
-                    await CheckServiceDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
+                    await CheckBookingDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
                         listBookingDetails);
                 }
 
@@ -1657,7 +1657,7 @@ namespace MoveMate.Service.Services
 
                 //var existingServiceTotal = existingBooking.ServiceDetails.Sum(f => f.Price);
                 total += (double)totalServices;
-                await CheckServiceDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
+                await CheckBookingDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
                     bookingDetails);
 
                 existingBooking.DriverNumber = driverNumber;
@@ -1722,7 +1722,7 @@ namespace MoveMate.Service.Services
         }
 
 
-        private async Task<List<BookingDetail>> CheckServiceDetailExist(int bookingId,
+        private async Task<List<BookingDetail>> CheckBookingDetailExist(int bookingId,
             List<BookingDetail> existBookingDetails, List<BookingDetail> newBookingDetails)
         {
             List<BookingDetail> bookingDetails = existBookingDetails;

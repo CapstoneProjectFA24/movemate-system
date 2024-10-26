@@ -12,7 +12,7 @@ namespace MoveMate.API.Controllers
     [ApiController]
     public class ServiceController : BaseController
     {
-        private readonly IServiceDetails _serviceDetails;
+        
         private readonly IServiceServices _services;
         private readonly IMessageProducer _producer;
         private readonly IRedisService _redisService;
@@ -24,10 +24,9 @@ namespace MoveMate.API.Controllers
         /// <param name="services"></param>
         /// <param name="producer"></param>
         /// <param name="redisService"></param>
-        public ServiceController(IServiceDetails serviceDetails, IServiceServices services, IMessageProducer producer,
+        public ServiceController(IServiceServices services, IMessageProducer producer,
             IRedisService redisService)
         {
-            _serviceDetails = serviceDetails;
             _services = services;
             _producer = producer;
             _redisService = redisService;

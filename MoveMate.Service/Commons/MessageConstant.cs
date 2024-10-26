@@ -97,8 +97,8 @@ namespace MoveMate.Service.Commons
             public const string BookingIdInputFail = "Booking ID is required and must be greater than 0";
             public const string BookingUpdateFail = "Update booking failed";
             public const string InvalidStatus = "Invalid status provided or cannot transition from the current status";
-            public const string InvalidServiceDetails = "Invalid service details list, must contain at least 1 element";
-            public const string InvalidServiceDetailDifferent = "Invalid service details list, truck Category Id in request is different from truck CategoryId in services";
+            public const string InvalidBookingDetails = "Invalid booking details list, must contain at least 1 element";
+            public const string InvalidBookingDetailDifferent = "Invalid booking details list, truck Category Id in request is different from truck CategoryId in services";
             public const string BookingReview = "The booking status must be REVIEW";
             public const string BookingWaiting = "The booking status must be WAITING";
 
