@@ -73,7 +73,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(id, includeProperties: "HouseTypeSettings");
+                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(id);
 
                 if (entity == null)
                 {
