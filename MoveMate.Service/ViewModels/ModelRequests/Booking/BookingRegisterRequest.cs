@@ -73,7 +73,7 @@ public class BookingRegisterRequest
         return BookingAt.HasValue && BookingAt.Value >= DateTime.Now;
     }
 
-    public bool IsServiceDetailsValid()
+    public bool IsBookingDetailsValid()
     {
         return BookingDetails.Any();
     }

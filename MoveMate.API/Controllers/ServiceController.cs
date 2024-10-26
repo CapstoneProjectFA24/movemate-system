@@ -12,7 +12,7 @@ namespace MoveMate.API.Controllers
     [ApiController]
     public class ServiceController : BaseController
     {
-        private readonly IServiceDetails _serviceDetails;
+        
         private readonly IServiceServices _services;
         private readonly IMessageProducer _producer;
         private readonly IRedisService _redisService;
@@ -24,10 +24,9 @@ namespace MoveMate.API.Controllers
         /// <param name="services"></param>
         /// <param name="producer"></param>
         /// <param name="redisService"></param>
-        public ServiceController(IServiceDetails serviceDetails, IServiceServices services, IMessageProducer producer,
+        public ServiceController(IServiceServices services, IMessageProducer producer,
             IRedisService redisService)
         {
-            _serviceDetails = serviceDetails;
             _services = services;
             _producer = producer;
             _redisService = redisService;
@@ -142,7 +141,7 @@ namespace MoveMate.API.Controllers
         /// <returns>A response indicating the result of the service creation process.</returns>
         /// <remarks>
         /// **Example Request:**
-        ///
+        /// 
         ///     POST /api/admin/createService
         ///     {
         ///         "name": "Premium Service",
@@ -158,6 +157,20 @@ namespace MoveMate.API.Controllers
         ///         "quantityMax": 5,
         ///         "truckCategoryId": 2
         ///     }
+        /// 
+        /// **Request Properties:**
+        /// - **name**: The name of the service (e.g., "Premium Service").
+        /// - **description**: A brief description of the service (e.g., "Premium moving service with additional features.").
+        /// - **isActived**: Indicates whether the service is active (true or false).
+        /// - **tier**: The tier level of the service (e.g., 1).
+        /// - **imageUrl**: URL to the service image (e.g., "https://example.com/image.jpg").
+        /// - **discountRate**: The discount percentage applied to the service (e.g., 10).
+        /// - **amount**: The base price of the service (e.g., 100.0).
+        /// - **parentServiceId**: The ID of the parent service, if applicable (null if none).
+        /// - **type**: The type of service being created (e.g., "Full-Service").
+        /// - **isQuantity**: Indicates whether the service has a quantity limit (true or false).
+        /// - **quantityMax**: The maximum quantity allowed for the service (e.g., 5).
+        /// - **truckCategoryId**: The ID of the truck category if applicable (e.g., 2).
         /// </remarks>
         /// <response code="200">Returns if the service is successfully created, with the created service details.</response>
         /// <response code="400">Returns if the input data is invalid or the creation fails.</response>
@@ -169,6 +182,7 @@ namespace MoveMate.API.Controllers
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
 
         /// <summary>
         /// Delete service by setting the service's IsActive status to false.

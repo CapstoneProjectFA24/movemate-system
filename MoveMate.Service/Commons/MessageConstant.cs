@@ -97,12 +97,14 @@ namespace MoveMate.Service.Commons
             public const string BookingIdInputFail = "Booking ID is required and must be greater than 0";
             public const string BookingUpdateFail = "Update booking failed";
             public const string InvalidStatus = "Invalid status provided or cannot transition from the current status";
-            public const string InvalidServiceDetails = "Invalid service details list, must contain at least 1 element";
-            public const string InvalidServiceDetailDifferent = "Invalid service details list, truck Category Id in request is different from truck CategoryId in services";
-
+            public const string InvalidBookingDetails = "Invalid booking details list, must contain at least 1 element";
+            public const string InvalidBookingDetailDifferent = "Invalid booking details list, truck Category Id in request is different from truck CategoryId in services";
+            public const string BookingReview = "The booking status must be REVIEW";
+            public const string BookingWaiting = "The booking status must be WAITING";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
+            public const string AssignmentSuggeted = "The assignment status must be SUGGESTED";
 
             //House type
             public const string NotFoundHouseType = "House type not found";
@@ -110,6 +112,13 @@ namespace MoveMate.Service.Commons
 
             //Service
             public const string NotFoundService = "Service not found";
+            public const string TypeTruckRequire = "Type must be TRUCK when TruckCategoryId is provided";
+            public const string TruckCategoryRequire = "TruckCategoryId is required when Type is TRUCK";
+            public const string ParentServiceIdTier1 = "A valid ParentServiceId is required for Tier 1 services";
+            public const string ParentServiceIdTier0 = "The specified ParentServiceId must refer to a Tier 0 service";
+            public const string SynchronizeType = "The Type of the service must match the Type of its ParentService";
+            public const string ServiceExisted = "Service has been existed";
+            public const string InverseParentServiceType = "Each inverseParentService item must have the same Type as the main service";
 
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
