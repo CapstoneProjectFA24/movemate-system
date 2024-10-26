@@ -20,7 +20,8 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
     private readonly int _maxRetryAttempts;
     private readonly string? _deadLetterQueue;
     private readonly IServiceProvider _serviceProvider;
-
+    private readonly int _initialRetryDelay;
+    
     public RabbitMqConsumer(IRabbitMqConnection connection, ILogger<RabbitMqConsumer> logger,
         IConfiguration configuration, IServiceProvider serviceProvider)
     {
@@ -28,8 +29,9 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         _logger = logger;
         _serviceProvider = serviceProvider;
         _channel = _connection.Connection.CreateModel();
-        _maxRetryAttempts = configuration.GetValue<int>("RabbitMQ:MaxRetryAttempts");
-        _deadLetterQueue = configuration.GetValue<string>("RabbitMQ:DeadLetterQueue");
+        _maxRetryAttempts = configuration.GetValue<int>("RabbitMQ:MaxRetryAttempts", 3);
+        _deadLetterQueue = configuration.GetValue<string>("RabbitMQ:DeadLetterQueue", "DeadLetterQueue");
+        _initialRetryDelay = configuration.GetValue<int>("RabbitMQ:InitialRetryDelay", 1000);
     }
 
     public void StartConsuming<T>() where T : class
@@ -66,14 +68,16 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         }
     }
 
-    private void StartListening(string queueName, MethodInfo method, object instance)
+    private async void StartListening(string queueName, MethodInfo method, object instance)
     {
         var consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += (model, ea) =>
+        consumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
             var jsonString = Encoding.UTF8.GetString(body);
-
+            
+            _logger.LogInformation("Received message from queue {QueueName}: {Message}", queueName, jsonString);
+            
             try
             {
                 var expectedType = method.GetParameters()[0].ParameterType;
@@ -82,7 +86,7 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
                 if (message != null && expectedType.IsInstanceOfType(message))
                 {
-                    method.Invoke(instance, new object[] { message });
+                    await (Task)method.Invoke(instance, new object[] { message });
                     _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
                 }
                 else
@@ -95,16 +99,20 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message from queue {QueueName}", queueName);
+                _logger.LogError(ex, "JsonException processing message from queue {QueueName}. Message: {Message}", queueName, jsonString);
 
-                int retryCount = GetRetryCount(ea);
+                int retryCount = GetRetryCount(ea.BasicProperties);
                 if (retryCount >= _maxRetryAttempts)
                 {
-                    MoveToDeadLetterQueue(ea, queueName);
+                    MoveToDeadLetterQueue(ea, queueName, ex);
                 }
                 else
                 {
-                    RetryMessage(ea, retryCount);
+                    var expectedType = method.GetParameters()[0].ParameterType;
+
+                    var message = JsonSerializer.Deserialize(jsonString, expectedType);
+                    //RetryMessage(ea, retryCount);
+                    RetryMessageWithDelay(message ,ea, retryCount);
                 }
             }
         };
@@ -204,6 +212,28 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
         return 0;
     }
+    
+    private void RetryMessageWithDelay(object? message , BasicDeliverEventArgs ea, int currentRetryCount)
+    {
+        int delay = _initialRetryDelay * (int)Math.Pow(2, currentRetryCount); // Exponential backoff
+        Task.Delay(delay).Wait();
+
+        var properties = ea.BasicProperties;
+        properties.Headers ??= new Dictionary<string, object>();
+        properties.Headers["x-retry-count"] = currentRetryCount + 1;
+
+        
+        //var message = ea.Body;
+        
+        var jsonString = JsonSerializer.Serialize(message);
+        var body = Encoding.UTF8.GetBytes(jsonString);
+        
+        _channel.BasicPublish(exchange: "", routingKey: ea.RoutingKey, basicProperties: properties, body: body);
+        _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+
+        _logger.LogWarning("Retrying message from queue {QueueName} after {Delay}ms. Retry attempt: {RetryCount}. Message Content: {MessageContent}", 
+            ea.RoutingKey, delay, currentRetryCount + 1, body);
+    }
 
     private void RetryMessage(BasicGetResult result, int currentRetryCount)
     {
@@ -221,6 +251,19 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         _channel.BasicPublish(exchange: "", routingKey: _deadLetterQueue, basicProperties: result.BasicProperties,
             body: result.Body);
         _channel.BasicAck(result.DeliveryTag, false);
+    }
+    private void MoveToDeadLetterQueue(BasicDeliverEventArgs ea, string queueName, Exception ex)
+    {
+        var properties = ea.BasicProperties;
+        properties.Headers ??= new Dictionary<string, object>();
+        properties.Headers["error-details"] = ex.Message;
+        properties.Headers["queue-name"] = queueName;
+
+        _channel.BasicPublish(exchange: "", routingKey: _deadLetterQueue, basicProperties: properties, body: ea.Body);
+        _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+
+        _logger.LogError("Moved message to Dead Letter Queue after {MaxRetryAttempts} retries. Queue: {QueueName}, Error: {Error}", 
+            _maxRetryAttempts, queueName, ex.Message);
     }
 
     public void Dispose()
