@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
@@ -175,6 +176,20 @@ namespace MoveMate.Service.Services
 
             try
             {
+
+                // Validate that if Type is TRUCK, TruckCategoryId must be provided
+                if (request.Type == TypeServiceEnums.TRUCK.ToString() && !request.TruckCategoryId.HasValue)
+                {
+                    result.AddError(StatusCode.BadRequest, "TruckCategoryId is required when Type is TRUCK.");
+                    return result;
+                }
+
+                // Validate that if TruckCategoryId is provided, Type must be TRUCK
+                if (request.TruckCategoryId.HasValue && request.Type != TypeServiceEnums.TRUCK.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, "Type must be TRUCK when TruckCategoryId is provided.");
+                    return result;
+                }
                 // Check if TruckCategoryId exists if provided
                 if (request.TruckCategoryId.HasValue)
                 {
@@ -219,6 +234,16 @@ namespace MoveMate.Service.Services
                         return result;
                     }
 
+                    // Additional validation to check if a similar service already exists
+                    var existingService = await _unitOfWork.ServiceRepository
+                        .FindByParentTypeAndTruckCategoryAsync(request.ParentServiceId.Value, request.Type, (int)request.TruckCategoryId);
+
+                    if (existingService != null)
+                    {
+                        result.AddError(StatusCode.BadRequest, "A service with the specified ParentServiceId, Type, and TruckCategoryId already exists.");
+                        return result;
+                    }
+
                     // Set ParentServiceId if valid
                     service.ParentServiceId = request.ParentServiceId;
                 }
@@ -250,6 +275,8 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+
 
 
 

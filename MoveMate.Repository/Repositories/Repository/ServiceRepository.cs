@@ -131,6 +131,15 @@ namespace MoveMate.Repository.Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<Service> FindByParentTypeAndTruckCategoryAsync(int parentServiceId, string type, int truckCategoryId)
+        {
+            return await _dbSet
+                .FirstOrDefaultAsync(s => s.ParentServiceId == parentServiceId
+                                          && s.Type == type
+                                          && s.TruckCategoryId == truckCategoryId);
+        }
+
+
 
     }
 }
