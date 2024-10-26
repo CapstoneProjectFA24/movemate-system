@@ -29,7 +29,7 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
         _logger.LogInformation("Starting all background jobs");
 
         RecurringJob.AddOrUpdate("test job",
-            () => _logger.LogInformation("Hello from Hangfire test job"),
+            () => Console.WriteLine("Hello from Hangfire test job"),
             cronExpression: "* * * * *",
             new RecurringJobOptions
             {
