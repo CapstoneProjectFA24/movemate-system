@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using MoveMate.Domain.Enums;
+using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
@@ -166,6 +168,141 @@ namespace MoveMate.Service.Services
                 _logger.LogError(e, "Error occurred in getAll Service Method");
                 throw;
             }
+        }
+
+        public async Task<OperationResult<ServicesResponse>> CreateService(CreateServiceRequest request)
+        {
+            var result = new OperationResult<ServicesResponse>();
+
+            try
+            {
+
+                // Validate that if Type is TRUCK, TruckCategoryId must be provided
+                if (request.Type == TypeServiceEnums.TRUCK.ToString() && !request.TruckCategoryId.HasValue)
+                {
+                    result.AddError(StatusCode.BadRequest, "TruckCategoryId is required when Type is TRUCK.");
+                    return result;
+                }
+
+                // Validate that if TruckCategoryId is provided, Type must be TRUCK
+                if (request.TruckCategoryId.HasValue && request.Type != TypeServiceEnums.TRUCK.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, "Type must be TRUCK when TruckCategoryId is provided.");
+                    return result;
+                }
+                // Check if TruckCategoryId exists if provided
+                if (request.TruckCategoryId.HasValue)
+                {
+                    var truckCategoryExists = await _unitOfWork.TruckCategoryRepository
+                        .GetByIdAsync(request.TruckCategoryId.Value);
+
+                    if (truckCategoryExists == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, "The specified TruckCategoryId does not exist.");
+                        return result;
+                    }
+                }
+
+                // Map request to Service domain model
+                var service = _mapper.Map<MoveMate.Domain.Models.Service>(request);
+
+                // Set Tier based on InverseParentService count
+                service.Tier = request.InverseParentService.Count < 1 ? 1 : 0;
+
+                // If Tier is 1, validate that ParentServiceId refers to a Tier 0 service and that Types match
+                if (service.Tier == 1)
+                {
+                    if (!request.ParentServiceId.HasValue)
+                    {
+                        result.AddError(StatusCode.BadRequest, "A valid ParentServiceId is required for Tier 1 services.");
+                        return result;
+                    }
+
+                    var parentService = await _unitOfWork.ServiceRepository
+                        .GetTierZeroServiceByParentIdAsync(request.ParentServiceId.Value);
+
+                    if (parentService == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, "The specified ParentServiceId must refer to a Tier 0 service.");
+                        return result;
+                    }
+
+                    // Validate that the Type of the request matches the Type of the ParentService
+                    if (parentService.Type != request.Type)
+                    {
+                        result.AddError(StatusCode.BadRequest, "The Type of the service must match the Type of its ParentService.");
+                        return result;
+                    }
+
+                    // Additional validation to check if a similar service already exists
+                    var existingService = await _unitOfWork.ServiceRepository
+                        .FindByParentTypeAndTruckCategoryAsync(request.ParentServiceId.Value, request.Type, (int)request.TruckCategoryId);
+
+                    if (existingService != null)
+                    {
+                        result.AddError(StatusCode.BadRequest, "A service with the specified ParentServiceId, Type, and TruckCategoryId already exists.");
+                        return result;
+                    }
+
+                    // Set ParentServiceId if valid
+                    service.ParentServiceId = request.ParentServiceId;
+                }
+
+                // Validate that each item in InverseParentService has the same Type as the main service
+                foreach (var inverseService in request.InverseParentService)
+                {
+                    if (inverseService.Type != request.Type)
+                    {
+                        result.AddError(StatusCode.BadRequest, "Each inverseParentService item must have the same Type as the main service.");
+                        return result;
+                    }
+                }
+
+                // Add and save the new service
+                await _unitOfWork.ServiceRepository.AddAsync(service);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Map to response and add success status
+                var response = _mapper.Map<ServicesResponse>(service);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CreateService, response);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+
+
+
+
+
+        public async Task<OperationResult<bool>> DeleteService(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
+                if (service == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                }
+
+                service.IsActived = false;
+
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteService, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
         }
     }
 }

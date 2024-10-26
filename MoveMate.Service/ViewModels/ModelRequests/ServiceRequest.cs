@@ -1,22 +1,19 @@
-﻿using System;
+﻿using MoveMate.Service.ViewModels.ModelResponses;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Service.ViewModels.ModelResponses
+namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class ServiceResponse
+    public class ServiceRequest
     {
-        public int Id { get; set; }
-
         public string Name { get; set; }
 
         public string Description { get; set; }
 
         public bool IsActived { get; set; }
-
-        public int Tier { get; set; }
 
         public string ImageUrl { get; set; }
         public string Type { get; set; }
@@ -28,7 +25,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public int? QuantityMax { get; set; }
 
         public double Amount { get; set; }
-        public int ParentServiceId { get; set; }
-        public TruckCategoryResponse TruckCategory { get; set; }
+        public int? TruckCategoryId { get; set; }
+
     }
+
 }

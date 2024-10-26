@@ -154,5 +154,74 @@ namespace MoveMate.Service.Services
                 throw new Exception(MessageConstant.FailMessage.UpdateUserFail);
             }
         }
+
+        public async Task<OperationResult<UserResponse>> CreateUser(AdminCreateUserRequest request)
+        {
+            var result = new OperationResult<UserResponse>();
+            try
+            {
+                // Check if the email already exists
+                var userEmail = await _unitOfWork.UserRepository.GetUserAsyncByEmail(request.Email);
+                if (userEmail != null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.EmailExist);
+                    return result;
+                }
+
+                // Check if the phone already exists
+                var userPhone = await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Phone);
+                if (userPhone != null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PhoneExist);
+                    return result;
+                }
+
+                var roleId = await _unitOfWork.RoleRepository.GetByIdAsync(request.RoleId);
+                if (roleId == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.RoleNotFound); 
+                    return result;
+                }
+
+                var user = _mapper.Map<User>(request);
+
+
+                await _unitOfWork.UserRepository.AddAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+                var userResponse = _mapper.Map<UserResponse>(user);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, userResponse);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
+        public async Task<OperationResult<bool>> BanUser(int id)
+        {
+            var result = new OperationResult<bool>();   
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                }
+
+                user.IsBanned = true;
+
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BanUserSuccess, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError); 
+            }
+
+            return result;
+        }
+
     }
 }
