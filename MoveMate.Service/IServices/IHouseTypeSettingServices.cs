@@ -10,6 +10,6 @@ namespace MoveMate.Service.IServices
 {
     public interface IHouseTypeSettingServices
     {
-        public Task<OperationResult<bool>> CreateEntity(CreateHouseTypeSetting request);
+       // public Task<OperationResult<bool>> CreateEntity(CreateHouseTypeSetting request);
     }
 }

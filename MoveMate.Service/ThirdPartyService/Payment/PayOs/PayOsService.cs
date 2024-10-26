@@ -18,6 +18,9 @@ using MoveMate.Service.ThirdPartyService.Payment.Momo;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.Utils;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ThirdPartyService.Firebase;
+using static Grpc.Core.Metadata;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 {
@@ -29,9 +32,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
         private readonly PayOS _payOs;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWalletServices _walletServices;
+        private readonly IMessageProducer _producer;
+        private readonly IFirebaseServices _firebaseServices;
 
         public PayOsService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PayOsService> logger, PayOS payOS,
-            IWalletServices walletServices, IHttpContextAccessor httpContextAccessor)
+            IWalletServices walletServices, IHttpContextAccessor httpContextAccessor, IMessageProducer producer, IFirebaseServices firebaseServices)
         {
             _unitOfWork = (UnitOfWork)unitOfWork;
             _mapper = mapper;
@@ -39,6 +44,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             _payOs = payOS;
             _walletServices = walletServices;
             _httpContextAccessor = httpContextAccessor;
+            _producer = producer;
+            _firebaseServices = firebaseServices;
         }
 
         public async Task<OperationResult<string>> CreatePaymentLinkAsync(int bookingId, int userId, string returnUrl)
@@ -335,11 +342,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.REVIEWED.ToString();
+                    booking.Status = BookingEnums.REVIEWING.ToString();
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
-                    booking.Status = BookingEnums.COMMING.ToString();
+                    booking.Status = BookingEnums.COMING.ToString();
                 }
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
@@ -353,6 +360,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
 
                 result = OperationResult<string>.Success(command.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
             }

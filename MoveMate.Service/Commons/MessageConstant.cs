@@ -101,6 +101,8 @@ namespace MoveMate.Service.Commons
             public const string InvalidServiceDetailDifferent = "Invalid service details list, truck Category Id in request is different from truck CategoryId in services";
 
 
+            //Assignment
+            public const string NotFoundAssignment = "Assignment not found";
 
             //House type
             public const string NotFoundHouseType = "House type not found";
@@ -137,6 +139,7 @@ namespace MoveMate.Service.Commons
 
             //Tracker resource
             public const string NotFoundBookingTracker = "Booking tracker not found";
+            public const string VerifyReviewOffline= "Must have image or video to verify from SUGGESTED to REVIEWED";
 
         }
 

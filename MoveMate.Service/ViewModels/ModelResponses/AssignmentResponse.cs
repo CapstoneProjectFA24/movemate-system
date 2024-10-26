@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
     [FirestoreData]
-    public class BookingDetailsResponse
+    public class AssignmentResponse
     {
         [FirestoreProperty] public int Id { get; set; }
         [FirestoreProperty] public int? UserId { get; set; }

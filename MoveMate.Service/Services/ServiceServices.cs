@@ -37,13 +37,13 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.GetAll(
+                var entities = _unitOfWork.ServiceRepository.GetAllWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -52,7 +52,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -75,13 +75,13 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.GetAll(
+                var entities = _unitOfWork.ServiceRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -90,7 +90,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -140,14 +140,14 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.Get(
+                var entities = _unitOfWork.ServiceRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
                     includeProperties: "TruckCategory"
                 );
-                var listResponse = _mapper.Map<List<ServiceResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServiceResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -156,7 +156,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -172,25 +172,87 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<ServicesResponse>> CreateService(CreateServiceRequest request)
         {
             var result = new OperationResult<ServicesResponse>();
+
             try
             {
-               
+                // Check if TruckCategoryId exists if provided
+                if (request.TruckCategoryId.HasValue)
+                {
+                    var truckCategoryExists = await _unitOfWork.TruckCategoryRepository
+                        .GetByIdAsync(request.TruckCategoryId.Value);
 
+                    if (truckCategoryExists == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, "The specified TruckCategoryId does not exist.");
+                        return result;
+                    }
+                }
+
+                // Map request to Service domain model
                 var service = _mapper.Map<MoveMate.Domain.Models.Service>(request);
 
+                // Set Tier based on InverseParentService count
+                service.Tier = request.InverseParentService.Count < 1 ? 1 : 0;
 
+                // If Tier is 1, validate that ParentServiceId refers to a Tier 0 service and that Types match
+                if (service.Tier == 1)
+                {
+                    if (!request.ParentServiceId.HasValue)
+                    {
+                        result.AddError(StatusCode.BadRequest, "A valid ParentServiceId is required for Tier 1 services.");
+                        return result;
+                    }
+
+                    var parentService = await _unitOfWork.ServiceRepository
+                        .GetTierZeroServiceByParentIdAsync(request.ParentServiceId.Value);
+
+                    if (parentService == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, "The specified ParentServiceId must refer to a Tier 0 service.");
+                        return result;
+                    }
+
+                    // Validate that the Type of the request matches the Type of the ParentService
+                    if (parentService.Type != request.Type)
+                    {
+                        result.AddError(StatusCode.BadRequest, "The Type of the service must match the Type of its ParentService.");
+                        return result;
+                    }
+
+                    // Set ParentServiceId if valid
+                    service.ParentServiceId = request.ParentServiceId;
+                }
+
+                // Validate that each item in InverseParentService has the same Type as the main service
+                foreach (var inverseService in request.InverseParentService)
+                {
+                    if (inverseService.Type != request.Type)
+                    {
+                        result.AddError(StatusCode.BadRequest, "Each inverseParentService item must have the same Type as the main service.");
+                        return result;
+                    }
+                }
+
+                // Add and save the new service
                 await _unitOfWork.ServiceRepository.AddAsync(service);
                 await _unitOfWork.SaveChangesAsync();
+
+                // Map to response and add success status
                 var response = _mapper.Map<ServicesResponse>(service);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CreateService, response);
+
                 return result;
             }
             catch (Exception ex)
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
+
+
+
 
         public async Task<OperationResult<bool>> DeleteService(int id)
         {

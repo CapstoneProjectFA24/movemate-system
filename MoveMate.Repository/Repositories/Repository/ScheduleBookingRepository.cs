@@ -11,15 +11,15 @@ using MoveMate.Domain.DBContext;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
-    public class ScheduleRepository : GenericRepository<Schedule>, IScheduleRepository
+    public class ScheduleBookingRepository : GenericRepository<ScheduleBooking>, IScheduleBookingRepository
     {
-        public ScheduleRepository(MoveMateDbContext context) : base(context)
+        public ScheduleBookingRepository(MoveMateDbContext context) : base(context)
         {
         }
 
-        public virtual async Task<Schedule?> GetByIdAsyncV1(int id, string includeProperties = "")
+        public virtual async Task<ScheduleBooking?> GetByIdAsyncV1(int id, string includeProperties = "")
         {
-            IQueryable<Schedule> query = _dbSet;
+            IQueryable<ScheduleBooking> query = _dbSet;
 
             // Apply includes
             foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
@@ -36,5 +36,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
+        
+        //public virtual async Task<Schedule?> GetBy
     }
 }

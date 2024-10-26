@@ -8,7 +8,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 {
     public class HouseTypeResponse
     {
-        public int? BookingId { get; set; }
         public int Id { get; set; }
         public string? Name { get; set; }
 

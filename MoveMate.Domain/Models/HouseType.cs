@@ -11,9 +11,9 @@ public partial class HouseType
 
     public string? Description { get; set; }
 
+    public bool? IsActived { get; set; }
+
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
-
-    public virtual ICollection<HouseTypeSetting> HouseTypeSettings { get; set; } = new List<HouseTypeSetting>();
 }

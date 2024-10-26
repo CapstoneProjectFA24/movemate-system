@@ -13,23 +13,19 @@ public partial class TruckCategory
 
     public string? Description { get; set; }
 
-    public string? ImgUrl { get; set; }
-
-    public string? EstimatedLength { get; set; }
-
-    public string? EstimatedWidth { get; set; }
-
-    public string? EstimatedHeight { get; set; }
-
     public string? Summarize { get; set; }
+
+    public string? ImageUrl { get; set; }
 
     public double? Price { get; set; }
 
     public int? TotalTrips { get; set; }
 
-    public virtual ICollection<FeeSetting> FeeSettings { get; set; } = new List<FeeSetting>();
+    public string? EstimatedLenght { get; set; }
 
-    public virtual ICollection<HouseTypeSetting> HouseTypeSettings { get; set; } = new List<HouseTypeSetting>();
+    public string? EstimatedWidth { get; set; }
+
+    public string? EstimatedHeight { get; set; }
 
     public virtual ICollection<Service> Services { get; set; } = new List<Service>();
 

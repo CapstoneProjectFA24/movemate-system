@@ -41,6 +41,8 @@ namespace MoveMate.Repository.Repositories.Repository
             return result;
         }
 
+        
+
         public virtual IEnumerable<Service> GetAll(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
@@ -79,5 +81,56 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return query.ToList();
         }
+        
+        public virtual (IEnumerable<Service> Data, int Count) GetAllWithCount(
+            Expression<Func<Service, bool>> filter = null,
+            Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
+            int? pageIndex = null,
+            int? pageSize = null)
+        {
+            IQueryable<Service> query = _dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            int count = query.Count();
+            query = query.Include(s => s.InverseParentService)
+                .ThenInclude(ts => ts.TruckCategory);
+
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            // Implementing pagination
+            if (pageIndex.HasValue && pageSize.HasValue)
+            {
+                // Ensure the pageIndex and pageSize are valid
+                int validPageIndex = pageIndex.Value > 0 ? pageIndex.Value - 1 : 0;
+                int validPageSize =
+                    pageSize.Value > 0
+                        ? pageSize.Value
+                        : 10; // Assuming a default pageSize of 10 if an invalid value is passed
+                if (pageSize.Value > 0)
+                {
+                    query = query.Skip(validPageIndex * validPageSize).Take(validPageSize);
+                }
+            }
+
+            return (Data: query.ToList(), Count: count);
+        }
+
+        public async Task<Service?> GetTierZeroServiceByParentIdAsync(int parentServiceId)
+        {
+            return await _dbSet
+                .Where(s => s.Id == parentServiceId && s.Tier == 0) 
+                .Include(s => s.InverseParentService) 
+                .Include(s => s.TruckCategory)        
+                .FirstOrDefaultAsync();
+        }
+
+
     }
 }

@@ -2,5 +2,6 @@
 
 public enum TrackerEnums
 {
-    PENDING
+    PENDING,
+    REVIEW_OFFLINE
 }
