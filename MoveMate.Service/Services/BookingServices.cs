@@ -67,7 +67,7 @@ namespace MoveMate.Service.Services
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
-                    includeProperties: "BookingDetails,FeeDetails,BookingTrackers.TrackerSources,ServiceDetails"
+                    includeProperties: "BookingDetails,FeeDetails,BookingTrackers.TrackerSources,Assignments"
                 );
                 var listResponse = _mapper.Map<List<BookingResponse>>(entities);
 
