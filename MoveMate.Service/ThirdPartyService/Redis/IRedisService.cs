@@ -15,6 +15,7 @@ public interface IRedisService
     Task RemoveDataAsync(string key);
 
     Task<bool> KeyExistsAsync(string key);
+    public Task<bool> KeyExistsQueueAsync(string queueKey);
 
     Task EnqueueAsync<T>(string queueKey, T value, TimeSpan? expiry = null);
 
