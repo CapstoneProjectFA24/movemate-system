@@ -820,6 +820,10 @@ namespace MoveMate.Service.Services
                                     .InvalidBookingDetailDifferent);
                             }
 
+                            if (service.Tier == 0)
+                            {
+                                throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceTier);
+                            }
                             var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(truckCategoryId,
                                 double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
                             amount += totalTruckFee;
@@ -828,6 +832,10 @@ namespace MoveMate.Service.Services
                             break;
                         case "PORTER":
                             // FEE FLOOR
+                            if (service.Tier == 0)
+                            {
+                                throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceTier);
+                            }
                             var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
                                 int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
                             amount += floorTotalFee;

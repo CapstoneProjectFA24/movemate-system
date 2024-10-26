@@ -119,7 +119,7 @@ namespace MoveMate.Service.Commons
             public const string SynchronizeType = "The Type of the service must match the Type of its ParentService";
             public const string ServiceExisted = "Service has been existed";
             public const string InverseParentServiceType = "Each inverseParentService item must have the same Type as the main service";
-
+            public const string InvalidServiceTier = "Service Tier is invalid for Truck type services or Porter type services";
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
 
