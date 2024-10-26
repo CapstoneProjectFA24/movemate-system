@@ -30,12 +30,12 @@ namespace MoveMate.Repository.Repositories.Repository
             }
 
             // Include BookingTrackers and their related TrackerResources (fix typo here)
-            query = query
-                .Include(b => b.BookingDetails)
-                .Include(b => b.Assignments)
-                .Include(b => b.FeeDetails)
-                .Include(b => b.BookingTrackers)              
-                .ThenInclude(bt => bt.TrackerSources); // Use 'TrackerResources' instead of 'TrackerSources'
+            //query = query
+            //    .Include(b => b.BookingDetails)
+            //    .Include(b => b.Assignments)
+            //    .Include(b => b.FeeDetails)
+            //    .Include(b => b.BookingTrackers)              
+            //    .ThenInclude(bt => bt.TrackerSources); // Use 'TrackerResources' instead of 'TrackerSources'
 
             query = query.Where(a => a.Id == id);
 
