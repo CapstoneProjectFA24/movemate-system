@@ -77,6 +77,22 @@ public class RedisService : IRedisService
     }
 
     // QUEUE
+    
+    public async Task<bool> KeyExistsQueueAsync(string queueKey)
+    {
+        try
+        {
+            bool exists = await _database.KeyExistsAsync(queueKey);
+            Console.WriteLine(exists ? $"Key '{queueKey}' exists in Redis." : $"Key '{queueKey}' does not exist in Redis.");
+            return exists;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while checking if key '{queueKey}' exists: {ex.Message}");
+            return false; // hoặc ném exception tùy vào cách bạn muốn xử lý lỗi
+        }
+    }
+
     public async Task EnqueueAsync<T>(string queueKey, T value, TimeSpan? expiry = null)
     {
         var jsonData = JsonSerializer.Serialize(value);
