@@ -36,13 +36,13 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.GetAll(
+                var entities = _unitOfWork.ServiceRepository.GetAllWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -51,7 +51,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -74,13 +74,13 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.GetAll(
+                var entities = _unitOfWork.ServiceRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<ServicesResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -89,7 +89,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -139,14 +139,14 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.Get(
+                var entities = _unitOfWork.ServiceRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
                     includeProperties: "TruckCategory"
                 );
-                var listResponse = _mapper.Map<List<ServiceResponse>>(entities);
+                var listResponse = _mapper.Map<List<ServiceResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -155,7 +155,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 

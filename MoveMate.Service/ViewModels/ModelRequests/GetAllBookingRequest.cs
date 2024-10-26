@@ -16,10 +16,12 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public int? UserId { get; set; }
         public string? Status { get; set; }
         
-        public int? StaffId { get; set; }
+        //public int? StaffId { get; set; }
 
         public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
         {
+            bool isStaff = false;
+            
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
@@ -31,15 +33,21 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(queryExpression);
             }
 
-            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
+            /*if (!string.IsNullOrWhiteSpace(UserId.ToString()))
             {
-                Expression = Expression.And(u => u.User.Id == UserId);
+                Expression = Expression.And(u => u.UserId == UserId);
             }
 
-            if (!string.IsNullOrWhiteSpace(StaffId.ToString()))
+            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
             {
-                Expression = Expression.And(u => u.Assignments.Any(a => a.UserId == StaffId));
+                Expression = Expression.And(u => u.Assignments.Any(a => a.UserId == UserId));
+            }*/
+            
+            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
+            {
+                Expression = Expression.And(u => u.UserId == UserId || u.Assignments.Any(a => a.UserId == UserId));
             }
+
 
             if (!string.IsNullOrWhiteSpace(Status))
             {

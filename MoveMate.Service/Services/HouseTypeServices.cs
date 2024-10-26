@@ -39,13 +39,13 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.HouseTypeRepository.Get(
+                var entities = _unitOfWork.HouseTypeRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<HouseTypeResponse>>(entities);
+                var listResponse = _mapper.Map<List<HouseTypeResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -54,7 +54,7 @@ namespace MoveMate.Service.Services
                 }
 
                 pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = listResponse.Count();
+                pagin.TotalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeSuccess, listResponse, pagin);
 
