@@ -16,5 +16,9 @@ namespace MoveMate.Service.IServices
         public Task<UserResponse> GetAccountAsync(int id, IEnumerable<Claim> claims);
         public Task<OperationResult<UserInfoResponse>> GetUserInfoByUserIdAsync(string userId);
         public Task UpdateUserAsync(string id, UpdateUserRequest updateUserRequest);
+
+        public Task<OperationResult<UserResponse>> CreateUser(AdminCreateUserRequest request);
+
+        public Task<OperationResult<bool>> BanUser(int id);
     }
 }

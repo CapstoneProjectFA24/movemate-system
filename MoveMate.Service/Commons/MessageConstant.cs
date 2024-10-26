@@ -86,6 +86,7 @@ namespace MoveMate.Service.Commons
             public const string PasswordFail = "Invalid email/phone number or password";
             public const string EmailExist = "Email is already registered";
             public const string PhoneExist = "Phone number is already registered";
+            public const string RoleNotFound = "Role not found";
 
             //Booking
             public const string NotFoundBooking = "Booking not found";
@@ -153,6 +154,8 @@ namespace MoveMate.Service.Commons
             public const string RegisterSuccess = "User registered successfully";
             public const string GetListUserSuccess = "Get list user done";
             public const string UserInformationRetrieved = "User information retrieved successfully";
+            public const string CreateUser = "Create user successful";
+            public const string BanUserSuccess = "User has been banned";
 
             //Booking
             public const string GetListBookingEmpty = "List booking is empty!";
@@ -206,6 +209,10 @@ namespace MoveMate.Service.Commons
             //Transaction
             public const string TransactionSuccess = "Transaction has already been processed";
             public const string AlreadyProcess = "Already processed";
+
+            //Service
+            public const string CreateService = "Create a new service successful";
+            public const string DeleteService = "Service has been deleted";
 
         }
 

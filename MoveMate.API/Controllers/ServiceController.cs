@@ -133,5 +133,58 @@ namespace MoveMate.API.Controllers
                 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+        /// <summary>
+        /// Creates a new service with the specified details.
+        /// </summary>
+        /// <param name="request">An instance of <see cref="CreateServiceRequest"/> containing service information.</param>
+        /// <returns>A response indicating the result of the service creation process.</returns>
+        /// <remarks>
+        /// **Example Request:**
+        ///
+        ///     POST /api/admin/createService
+        ///     {
+        ///         "name": "Premium Service",
+        ///         "description": "Premium moving service with additional features.",
+        ///         "isActived": true,
+        ///         "tier": 1,
+        ///         "imageUrl": "https://example.com/image.jpg",
+        ///         "discountRate": 10,
+        ///         "amount": 100.0,
+        ///         "parentServiceId": null,
+        ///         "type": "Full-Service",
+        ///         "isQuantity": true,
+        ///         "quantityMax": 5,
+        ///         "truckCategoryId": 2
+        ///     }
+        /// </remarks>
+        /// <response code="200">Returns if the service is successfully created, with the created service details.</response>
+        /// <response code="400">Returns if the input data is invalid or the creation fails.</response>
+        /// <response code="500">Returns if an internal server error occurs.</response>
+        [HttpPost("manage/create-service")]
+        public async Task<IActionResult> CreateService([FromBody] CreateServiceRequest request)
+        {
+            var response = await _services.CreateService(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// Delete service by setting the service's IsActive status to false.
+        /// </summary>
+        /// <param name="id">The ID of the service to be deleeted.</param>
+        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+        /// <response code="200">Returns if the user was successfully banned.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpPost("manager/deleted-service/{id}")]
+        public async Task<IActionResult> DeleteService(int id)
+        {
+            var response = await _services.DeleteService(id);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
     }
 }

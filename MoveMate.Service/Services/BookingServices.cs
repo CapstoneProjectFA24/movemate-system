@@ -274,7 +274,7 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<BookingValuationResponse>();
 
             var existingHouseType =
-                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId, "HouseTypeSettings");
+                await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId);
 
             // check houseType
             if (existingHouseType == null)
@@ -290,7 +290,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var (totalServices, listBookingDetails, driverNumber, porterNumber, feeServiceDetails) =
-                    await CalculateServiceFees(request.ServiceDetails,
+                    await CalculateServiceFees(request.BookingDetails,
                         request.HouseTypeId,
                         request.TruckCategoryId, request.FloorsNumber, request.EstimatedDistance);
                 total += totalServices;
@@ -1390,8 +1390,9 @@ namespace MoveMate.Service.Services
                             MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
-
+                
                 assigment.Status = nextStatus;
+                booking.UpdatedAt = DateTime.Now;
                 _unitOfWork.AssignmentsRepository.Update(assigment);
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
