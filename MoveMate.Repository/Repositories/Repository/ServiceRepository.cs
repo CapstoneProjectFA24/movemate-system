@@ -41,6 +41,8 @@ namespace MoveMate.Repository.Repositories.Repository
             return result;
         }
 
+        
+
         public virtual IEnumerable<Service> GetAll(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
@@ -119,5 +121,25 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return (Data: query.ToList(), Count: count);
         }
+
+        public async Task<Service?> GetTierZeroServiceByParentIdAsync(int parentServiceId)
+        {
+            return await _dbSet
+                .Where(s => s.Id == parentServiceId && s.Tier == 0) 
+                .Include(s => s.InverseParentService) 
+                .Include(s => s.TruckCategory)        
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Service> FindByParentTypeAndTruckCategoryAsync(int parentServiceId, string type, int truckCategoryId)
+        {
+            return await _dbSet
+                .FirstOrDefaultAsync(s => s.ParentServiceId == parentServiceId
+                                          && s.Type == type
+                                          && s.TruckCategoryId == truckCategoryId);
+        }
+
+
+
     }
 }

@@ -105,6 +105,9 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
             CreateMap<BookingDetail, BookingDetailsResponse>();
             CreateMap<BookingDetail, BookingDetailRequest>();
+            CreateMap<CreateServiceRequest, MoveMate.Domain.Models.Service>()
+                .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
+            CreateMap<ServiceRequest, MoveMate.Domain.Models.Service>();
             //CreateMap<List<ServiceDetail>, List<ServiceDetailResponse>>();
 
             //Wallet
@@ -114,6 +117,7 @@ namespace MoveMate.Service.Commons
             // Mapping for TruckCategory to TruckCategoryResponse
             CreateMap<TruckCategory, TruckCategoryResponse>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
+            
 
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
