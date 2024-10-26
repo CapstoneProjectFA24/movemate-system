@@ -16,7 +16,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         Task<UserRecord> CreateUser(
             string username,
             string password,
-            string email,
+            string email,   
             string phoneNumber
         );
 
@@ -36,5 +36,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public Task<T> GetSubcollectionByKey<T>(long parentId, string parentCollectionName, string subcollectionName,
             string subKey);
+
+        public Task<List<Booking>> GetCanceledBookingsOlderThanAsync(DateTime cutoffDate);
     }
 }

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Google.Cloud.Firestore;
 using Google.Cloud.Firestore.V1;
+using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
@@ -220,6 +221,39 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
+        public async Task<List<Booking>> GetCanceledBookingsOlderThanAsync(DateTime cutoffDate)
+        {
+            var canceledBookings = new List<Booking>();
+
+            var collectionRef = _dbFirestore.Collection("bookings"); // Replace with your collection name
+
+            // First query for CANCELED bookings
+            var canceledQuery = collectionRef
+                .WhereEqualTo("status", BookingEnums.CANCEL)
+                .WhereLessThan("bookingAt", cutoffDate);
+
+            var canceledSnapshots = await canceledQuery.GetSnapshotAsync();
+            foreach (var doc in canceledSnapshots.Documents)
+            {
+                var booking = doc.ConvertTo<Booking>();
+                canceledBookings.Add(booking);
+            }
+
+            // Second query for COMPLETED bookings
+            var completedQuery = collectionRef
+                .WhereEqualTo("status", BookingEnums.COMPLETED)
+                .WhereLessThan("bookingAt", cutoffDate);
+
+            var completedSnapshots = await completedQuery.GetSnapshotAsync();
+            foreach (var doc in completedSnapshots.Documents)
+            {
+                var booking = doc.ConvertTo<Booking>();
+                canceledBookings.Add(booking);
+            }
+
+            return canceledBookings;
+        }
+
 
 
     }
