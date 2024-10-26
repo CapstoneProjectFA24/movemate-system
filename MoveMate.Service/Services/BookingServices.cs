@@ -1555,7 +1555,7 @@ namespace MoveMate.Service.Services
                 }
                 if (booking.Status != BookingEnums.REVIEWING.ToString())
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidStatus);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
                     return result;
                 }
 
@@ -1586,7 +1586,7 @@ namespace MoveMate.Service.Services
                 var bookingDetail = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
                 if (bookingDetail == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
 
@@ -1616,7 +1616,7 @@ namespace MoveMate.Service.Services
                 
                 else if (bookingDetail.Status != AssignmentStatusEnums.SUGGESTED.ToString())
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentSuggeted);
                     return result;
                 }
 
@@ -1834,7 +1834,7 @@ namespace MoveMate.Service.Services
                     case "ASSIGNED":
                         if (existingBooking.Status != BookingEnums.WAITING.ToString())
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingWaiting);
                             return result;
                         }
 
@@ -1844,12 +1844,12 @@ namespace MoveMate.Service.Services
                     case "DEPOSITING":
                         if (existingBooking.Status != BookingEnums.WAITING.ToString() && existingBooking.IsReviewOnline == false)
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingWaiting);
                             return result;
                         }
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString() && existingBooking.IsReviewOnline == true)
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
                             return result;
                         }
                         if (existingBooking.IsReviewOnline == true)
@@ -1863,7 +1863,7 @@ namespace MoveMate.Service.Services
                     case "COMING":
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString())
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
                             return result;
                         }
 

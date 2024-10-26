@@ -10,10 +10,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
     public class HouseTypesResponse
     {
         public int Id { get; set; }
-        public int? BookingId { get; set; }
         public string? Name { get; set; }
-
+        public bool? IsActived { get; set; }
         public string? Description { get; set; }
-        public List<HouseTypeSettingResponse> HouseTypeSettings { get; set; }
     }
 }
