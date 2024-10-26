@@ -105,7 +105,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var booking =
-                    await _unitOfWork.BookingRepository.GetByIdAsyncV1(id,
+                    await _unitOfWork.BookingRepository.GetByIdAsync(id,
                         includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
 
                 if (booking == null)

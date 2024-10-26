@@ -103,7 +103,7 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
-            CreateMap<BookingDetail, BookingDetailsResponse>();
+           
             CreateMap<BookingDetail, BookingDetailRequest>();
             CreateMap<CreateServiceRequest, MoveMate.Domain.Models.Service>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
