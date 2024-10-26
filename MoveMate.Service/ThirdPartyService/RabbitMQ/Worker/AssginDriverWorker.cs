@@ -23,6 +23,12 @@ public class AssginDriverWorker
         _serviceScopeFactory = serviceScopeFactory;
     }
 
+    [Consumer("movemate.booking_assign_driver_local")]
+    public async Task HandleMessage(int message)
+    {
+        
+    }
+    
     //[Consumer("movemate.booking_assign_driver_local")]
     //public async Task HandleMessage(int message)
     //{
