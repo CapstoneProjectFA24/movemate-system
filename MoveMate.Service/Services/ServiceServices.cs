@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FirebaseAdmin.Auth;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
@@ -80,7 +81,9 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
+                    orderBy: request.GetOrder(),
+                    includeProperties: "InverseParentService"
+
                 );
                 var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
 
@@ -246,7 +249,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<ServicesResponse>(service);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CreateService, response);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateService, response);
 
                 return result;
             }
@@ -271,12 +274,19 @@ namespace MoveMate.Service.Services
                 var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
+                    return result;
+                }
+                if (service.IsActived == false)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceAlreadyDeleted);
+                    return result;
                 }
 
                 service.IsActived = false;
 
-                await _unitOfWork.SaveChangesAsync();
+                _unitOfWork.ServiceRepository.Update(service);
+                _unitOfWork.Save();
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteService, true);
             }
             catch (Exception ex)

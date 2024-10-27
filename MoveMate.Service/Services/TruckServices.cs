@@ -11,6 +11,10 @@ using Hangfire;
 using MoveMate.Service.Commons;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
+using MoveMate.Domain.Enums;
+using MoveMate.Domain.Models;
+using FirebaseAdmin.Auth;
+using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.Services
 {
@@ -74,5 +78,163 @@ namespace MoveMate.Service.Services
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetTruckSuccess, response);
             return result;
         }
+
+        public async Task<OperationResult<bool>> DeleteTruckImg(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var truclImg = await _unitOfWork.TruckImgRepository.GetByIdAsync(id);
+                if (truclImg == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckImg);
+                    return result;
+                }
+                if (truclImg.IsDeleted == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckImgIsDeleted);
+                    return result;
+                }
+                truclImg.IsDeleted = true;
+
+                _unitOfWork.TruckImgRepository.Update(truclImg);
+                _unitOfWork.Save();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteTruckImg, true);
+            }
+            catch
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
+        public async Task<OperationResult<TruckImageResponse>> CreateTruckImg(CreateTruckImgRequest request)
+        {
+            var result = new OperationResult<TruckImageResponse>();
+
+            try
+            {
+                var truck = await _unitOfWork.TruckRepository.GetByIdAsync((int)request.TruckId);
+                if (truck == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruck);
+                    return result;
+                }
+
+                var truckImg = _mapper.Map<TruckImg>(request);
+               
+                await _unitOfWork.TruckImgRepository.AddAsync(truckImg);
+                await _unitOfWork.SaveChangesAsync();
+
+                var response = _mapper.Map<TruckImageResponse>(truckImg);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckImg, response);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<bool>> DeleteTruckCategory(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var truck = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(id);
+                if (truck == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
+                    return result;
+                }
+                if (truck.IsDeleted == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryAlreadyDeleted);
+                    return result;
+                }
+
+                truck.IsDeleted = true;
+
+                _unitOfWork.TruckCategoryRepository.Update(truck);
+                _unitOfWork.Save();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteTruckCategory, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<TruckCategoryResponse>> CreateTruckCategory(TruckCategoryRequest request)
+        {
+            var result = new OperationResult<TruckCategoryResponse>();
+
+            try
+            {
+               
+
+                var truckCategory = _mapper.Map<TruckCategory>(request);
+
+                await _unitOfWork.TruckCategoryRepository.AddAsync(truckCategory);
+                await _unitOfWork.SaveChangesAsync();
+
+                var response = _mapper.Map<TruckCategoryResponse>(truckCategory);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckCategory, response);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<TruckCategoryResponse>> UpdateTruckCategory(int id, TruckCategoryRequest request)
+        {
+            var result = new OperationResult<TruckCategoryResponse>();
+            try
+            {
+                var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(id);
+                if(truckCategory == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
+                    return result;
+                }
+
+                ReflectionUtils.UpdateProperties(request, truckCategory);
+                await _unitOfWork.TruckCategoryRepository.SaveOrUpdateAsync(truckCategory);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(truckCategory.Id);
+                    var response = _mapper.Map<TruckCategoryResponse>(truckCategory);
+                   
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckCategoryUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryUpdateFail);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
+
+
     }
 }

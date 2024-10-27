@@ -27,6 +27,8 @@ public partial class TruckCategory
 
     public string? EstimatedHeight { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual ICollection<Service> Services { get; set; } = new List<Service>();
 
     public virtual ICollection<Truck> Trucks { get; set; } = new List<Truck>();

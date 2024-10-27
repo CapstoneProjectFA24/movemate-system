@@ -74,10 +74,12 @@ namespace MoveMate.Service.Commons
             public const string Callback = "Invalid callback data";
             public const string UnsupportPayment = "Unsupported payment method selected";
             public const string ServerUrl = "Server URL is not available";
+            public const string UserInfoIsDeleted = "User info has been deleted";
 
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
             public const string GetListUserFail = "List user is empty!";
+            public const string GetListUserInfoFail = "List user info is empty!";
             public const string NotFoundUser = "User not found!";
             public const string NotFoundUserInfo = "User info not found";
             public const string UpdateUserFail = "Update user failed";
@@ -90,6 +92,7 @@ namespace MoveMate.Service.Commons
 
             //Booking
             public const string NotFoundBooking = "Booking not found";
+            public const string BookingCannotPay = "Booking is not from this user";
             public const string NotFoundBookingDetail = "Booking detail not found";
             public const string IsValidBookingAt = "BookingAt is not null and whether the value is greater than or equal to the current time";
             public const string RegisterBookingFail = "Add booking failed";
@@ -101,6 +104,7 @@ namespace MoveMate.Service.Commons
             public const string InvalidBookingDetailDifferent = "Invalid booking details list, truck Category Id in request is different from truck CategoryId in services";
             public const string BookingReview = "The booking status must be REVIEW";
             public const string BookingWaiting = "The booking status must be WAITING";
+            public const string BookingAssigned = "The booking status must be ASSIGNED";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
@@ -120,11 +124,17 @@ namespace MoveMate.Service.Commons
             public const string ServiceExisted = "Service has been existed";
             public const string InverseParentServiceType = "Each inverseParentService item must have the same Type as the main service";
             public const string InvalidServiceTier = "Service Tier is invalid for Truck type services or Porter type services";
+            public const string ServiceAlreadyDeleted = "Service already deleted";
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
 
             //Truck category
             public const string NotFoundTruckCategory = "Truck category not found";
+            public const string NotFoundTruckImg = "Truck image not found";
+            public const string NotFoundTruck = "Truck not found";
+            public const string TruckImgIsDeleted = "Truck image  has been deleted";
+            public const string TruckCategoryAlreadyDeleted = "Truck category already deleted";
+            public const string TruckCategoryUpdateFail = "Update truck category failed";
 
             //Schedule
             public const string NotFoundSchedule = "Schedule not found";
@@ -149,6 +159,8 @@ namespace MoveMate.Service.Commons
             //Tracker resource
             public const string NotFoundBookingTracker = "Booking tracker not found";
             public const string VerifyReviewOffline= "Must have image or video to verify from SUGGESTED to REVIEWED";
+            public const string NotFoundTrackerSource = "Tracker source not found";
+            public const string TrackerSourceIsDeleted = "Tracker source has been deleted";
 
         }
 
@@ -162,9 +174,11 @@ namespace MoveMate.Service.Commons
             public const string CheckUserInfo = "Customer information is available";
             public const string RegisterSuccess = "User registered successfully";
             public const string GetListUserSuccess = "Get list user done";
+            public const string GetListUserInfoSuccess = "Get list user info done";
             public const string UserInformationRetrieved = "User information retrieved successfully";
             public const string CreateUser = "Create user successful";
             public const string BanUserSuccess = "User has been banned";
+            public const string DeleteUserInfo = "User info has been deleted";
 
             //Booking
             public const string GetListBookingEmpty = "List booking is empty!";
@@ -202,6 +216,12 @@ namespace MoveMate.Service.Commons
             public const string GetListTruckEmpty = "List truck is empty!";
             public const string GetListTruckSuccess = "Get list truck done";
             public const string GetTruckSuccess = "Get truck successfully";
+            public const string DeleteTruckImg = "Truck image has been deleted";
+            public const string CreateTruckImg = "Create a new truck image successful";
+            public const string DeleteTruckCategory = "Truck category has been deleted";
+            public const string CreateTruckCategory = "Create a new truck category successful";
+            public const string TruckCategoryUpdateSuccess = "Update truck category succesful";
+
 
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";
@@ -218,11 +238,15 @@ namespace MoveMate.Service.Commons
             //Transaction
             public const string TransactionSuccess = "Transaction has already been processed";
             public const string AlreadyProcess = "Already processed";
+            public const string GetListTransactionEmpty = "List transaction is empty!";
+            public const string GetListTransactionSuccess = "Get list transaction done";
 
             //Service
             public const string CreateService = "Create a new service successful";
             public const string DeleteService = "Service has been deleted";
 
+            //Tracker Source
+            public const string DeleteTrackerSource = "Tracker source has been deleted";
         }
 
 

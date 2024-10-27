@@ -106,30 +106,37 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<UserInfoResponse>> GetUserInfoByUserIdAsync(string userId)
+        public async Task<OperationResult<List<UserInfoResponse>>> GetUserInfoByUserIdAsync(GetAllUserInfoRequest request)
         {
-            var result = new OperationResult<UserInfoResponse>();
+            var result = new OperationResult<List<UserInfoResponse>>();
+
+            var filter = request.GetExpressions();
 
             try
             {
-                var userInfo = await _unitOfWork.UserInfoRepository.GetUserInfoByUserIdAsync(int.Parse(userId));
-                if (userInfo != null)
-                {
-                    var response = _mapper.Map<UserInfoResponse>(userInfo);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserInformationRetrieved , response);
-                }
-                else
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving the user address.");
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError );
-            }
+                var entities = _unitOfWork.UserInfoRepository.Get(
+                    filter: filter,
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder()
+                );
+                var listResponse = _mapper.Map<List<UserInfoResponse>>(entities);
 
-            return result;
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserInfoFail, listResponse);
+                    return result;
+                }
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserInfoSuccess, listResponse);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occurred in getAll Service Method");
+                throw;
+            }
         }
 
 
@@ -222,6 +229,38 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<bool>> DeleteUserInfo(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                
+                var userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(id);
+                if (userInfo == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
+                    return result;
+                }
+
+                if (userInfo.IsDeleted == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoIsDeleted);
+                    return result;
+                }
+                userInfo.IsDeleted = true;
+
+                _unitOfWork.UserInfoRepository.Update(userInfo);
+                _unitOfWork.Save();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteUserInfo, true);
+            }
+            catch
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
 
     }
 }
