@@ -20,7 +20,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("delete/{id}")]
+        [HttpDelete("delete/{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteTrackerSourceById(int id)
         {

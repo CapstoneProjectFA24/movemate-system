@@ -74,7 +74,7 @@ public class TruckCategoryController : BaseController
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpPut("truck-img/delete/{id}")]
+    [HttpDelete("truck-img/delete/{id}")]
     [Authorize]
     public async Task<IActionResult> DeleteTruckImgById(int id)
     {
@@ -118,7 +118,7 @@ public class TruckCategoryController : BaseController
     /// <response code="200">Returns if the user was successfully banned.</response>
     /// <response code="404">Returns if the user is not found.</response>
     /// <response code="500">Returns if a system error occurs.</response>
-    [HttpPut("manager/deleted/{id}")]
+    [HttpDelete("manager/deleted/{id}")]
     public async Task<IActionResult> DeleteTruckCategory(int id)
     {
         var response = await _truckServices.DeleteTruckCategory(id);
