@@ -117,7 +117,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("user-info/delete/{id}")]
+        [HttpDelete("user-info/delete/{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteUserInfoByUserId(int id)
         {
