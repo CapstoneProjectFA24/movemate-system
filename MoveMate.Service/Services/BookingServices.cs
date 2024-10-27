@@ -1860,7 +1860,7 @@ namespace MoveMate.Service.Services
                         }
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString() && existingBooking.IsReviewOnline == true)
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
                             return result;
                         }
                         if (existingBooking.IsReviewOnline == true)
