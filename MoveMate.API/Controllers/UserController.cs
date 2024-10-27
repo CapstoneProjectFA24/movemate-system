@@ -61,24 +61,11 @@ namespace MoveMate.API.Controllers
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("info")]
         [Authorize]
-        public async Task<IActionResult> GetAddressByUserIdAsync()
+        public async Task<IActionResult> GetAllUserInfoAsync([FromQuery] GetAllUserInfoRequest request)
         {
-            IEnumerable<Claim> claims = HttpContext.User.Claims;
-            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
-            var userId = int.Parse(accountId.Value).ToString();
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
-            }
-
-            var result = await _userService.GetUserInfoByUserIdAsync(userId);
-            if (result.IsError)
-            {
-                return HandleErrorResponse(result.Errors);
-            }
-
-            return Ok(result);
+            var response = await _userService.GetUserInfoByUserIdAsync(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
 
@@ -123,6 +110,19 @@ namespace MoveMate.API.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        /// <summary>
+        /// FEATURE: Set User info's IsDeleted become true by User Info Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("user-info/delete/{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUserInfoByUserId(int id)
+        {
+            var response = await _userService.DeleteUserInfo(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }
 }

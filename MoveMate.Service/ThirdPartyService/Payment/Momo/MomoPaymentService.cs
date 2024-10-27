@@ -75,7 +75,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
             if (booking == null)
             {
-                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay);
                 return operationResult;
             }
 

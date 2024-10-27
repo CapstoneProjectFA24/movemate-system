@@ -31,5 +31,6 @@ public partial class UserInfo
 
     public string? CurriculumVitae { get; set; }
 
+    public bool? IsDeleted { get; set; }
     public virtual User? User { get; set; }
 }

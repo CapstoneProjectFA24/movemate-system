@@ -26,7 +26,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public double Amount { get; set; }
 
-        public int ParentServiceId { get; set; }
+        public int? ParentServiceId { get; set; }
 
         public List<ServiceResponse> InverseParentService { get; set; }
     }

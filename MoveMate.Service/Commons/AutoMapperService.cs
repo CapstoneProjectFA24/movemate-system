@@ -37,10 +37,7 @@ namespace MoveMate.Service.Commons
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Role.Id))
                 ; // Adjust as needed
             //Address
-            CreateMap<UserInfo, UserInfoResponse>()
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
-                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User.Phone))
-                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.User.AvatarUrl));
+            CreateMap<UserInfo, UserInfoResponse>();
 
             //Register
             CreateMap<User, RegisterResponse>()
@@ -89,7 +86,12 @@ namespace MoveMate.Service.Commons
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
             CreateMap<TruckCategory, TruckCateDetailResponse>();
+            CreateMap<CreateTruckImgRequest, TruckImg>();
+            CreateMap<TruckImg, TruckImageResponse>();
+            CreateMap<TruckCategoryRequest, TruckCategory>();
 
+            //Transaction 
+            CreateMap<Transaction,  TransactionResponse>();
 
             //House Type
             CreateMap<HouseType, HouseTypesResponse>();
@@ -103,7 +105,8 @@ namespace MoveMate.Service.Commons
             CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
-            CreateMap<BookingDetail, BookingDetailsResponse>();
+
+
             CreateMap<BookingDetail, BookingDetailRequest>();
             CreateMap<CreateServiceRequest, MoveMate.Domain.Models.Service>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));

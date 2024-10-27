@@ -88,6 +88,8 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IServiceServices, ServiceServices>();
             services.AddScoped<IServiceDetails, ServiceDetails>();
             services.AddScoped<IFeeSettingServices, FeeSettingServices>();
+            services.AddScoped<ITrackerSourceServices, TrackerSourceServices>();
+            services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
             services.AddScoped<IVnPayService, VnPayService>();
