@@ -1185,7 +1185,9 @@ namespace MoveMate.Service.Services
                     BookingTrackerId = bookingTracker.Id,
                     ResourceUrl = request.ResourceUrl,
                     ResourceCode = request.ResourceCode,
-                    Type = request.Type
+                    Type = request.Type,
+                    IsDeleted = false
+                    
                 };
                 await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
@@ -1299,7 +1301,8 @@ namespace MoveMate.Service.Services
                     BookingTrackerId = bookingTracker.Id,
                     ResourceUrl = request.ResourceUrl,
                     ResourceCode = request.ResourceCode,
-                    Type = request.Type
+                    Type = request.Type,
+                    IsDeleted = false
                 };
                 await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
                 _unitOfWork.BookingDetailRepository.Update(bookingDetail);
@@ -1563,7 +1566,7 @@ namespace MoveMate.Service.Services
                 }
                 if (booking.Status != BookingEnums.REVIEWING.ToString())
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
                     return result;
                 }
 
@@ -1791,7 +1794,7 @@ namespace MoveMate.Service.Services
                 }
                 else
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingAssigned);
                     return result;
                 }
 
@@ -1857,7 +1860,7 @@ namespace MoveMate.Service.Services
                         }
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString() && existingBooking.IsReviewOnline == true)
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
                             return result;
                         }
                         if (existingBooking.IsReviewOnline == true)
@@ -1871,7 +1874,7 @@ namespace MoveMate.Service.Services
                     case "COMING":
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString())
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
                             return result;
                         }
 

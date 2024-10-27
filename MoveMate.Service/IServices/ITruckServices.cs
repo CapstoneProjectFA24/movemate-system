@@ -15,5 +15,12 @@ namespace MoveMate.Service.IServices
 
         public Task<OperationResult<List<TruckCateResponse>>> GetAllCate();
         public Task<OperationResult<TruckCateDetailResponse>> GetCateById(int id);
+        public Task<OperationResult<TruckImageResponse>> CreateTruckImg(CreateTruckImgRequest request);
+
+        public Task<OperationResult<bool>> DeleteTruckImg(int id);
+        public Task<OperationResult<bool>> DeleteTruckCategory(int id);
+
+        public Task<OperationResult<TruckCategoryResponse>> UpdateTruckCategory (int id, TruckCategoryRequest request);
+        Task<OperationResult<TruckCategoryResponse>> CreateTruckCategory(TruckCategoryRequest request);
     }
 }

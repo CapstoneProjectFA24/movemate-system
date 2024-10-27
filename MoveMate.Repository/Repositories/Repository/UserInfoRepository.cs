@@ -20,9 +20,11 @@ namespace MoveMate.Repository.Repositories.Repository
         public async Task<UserInfo> GetUserInfoByUserIdAsync(int accountId)
         {
             return await _dbSet
-                .Include(ui => ui.User) // Eagerly load the related User entity
+                .Include(ui => ui.User) 
                 .Where(a => a.UserId == accountId)
                 .FirstOrDefaultAsync();
         }
+
+
     }
 }

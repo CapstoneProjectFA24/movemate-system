@@ -14,11 +14,12 @@ namespace MoveMate.Service.IServices
     {
         public Task<OperationResult<List<UserResponse>>> GetAll(GetAllUserRequest request);
         public Task<UserResponse> GetAccountAsync(int id, IEnumerable<Claim> claims);
-        public Task<OperationResult<UserInfoResponse>> GetUserInfoByUserIdAsync(string userId);
+        public Task<OperationResult<List<UserInfoResponse>>> GetUserInfoByUserIdAsync(GetAllUserInfoRequest request);
         public Task UpdateUserAsync(string id, UpdateUserRequest updateUserRequest);
 
         public Task<OperationResult<UserResponse>> CreateUser(AdminCreateUserRequest request);
 
         public Task<OperationResult<bool>> BanUser(int id);
+        public Task<OperationResult<bool>> DeleteUserInfo(int id);
     }
 }

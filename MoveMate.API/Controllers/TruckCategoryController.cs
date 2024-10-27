@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Services;
 using MoveMate.Service.ThirdPartyService;
+using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.API.Controllers;
 
@@ -62,5 +66,129 @@ public class TruckCategoryController : BaseController
         var response = await _truckServices.GetCateById(id);
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// FEATURE: Set Truck image's IsDeleted become true by truck img Id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete("truck-img/delete/{id}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteTruckImgById(int id)
+    {
+        var response = await _truckServices.DeleteTruckImg(id);
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// Creates a new truck image entry.
+    /// </summary>
+    /// <param name="request">The request payload containing truck image details.</param>
+    /// <returns>A response indicating success or failure of the operation.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/truck/manage/truck-img
+    ///     {
+    ///         "TruckId": 1,
+    ///         "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729831911/movemate/hkvbh89uo8qoh6uzajac.jpg",
+    ///         "ImageCode": "TRUCK123IMG"
+    ///     }
+    /// </remarks>
+    /// <response code="201">Truck image created successfully.</response>
+    /// <response code="400">Bad request, invalid data.</response>
+    /// <response code="500">Internal server error.</response>
+    [HttpPost("manage/truck-img")]
+    public async Task<IActionResult> CreateTruckImg([FromBody] CreateTruckImgRequest request)
+    {
+        var response = await _truckServices.CreateTruckImg(request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// Delete truck category by setting the truck category's IsDeleted status to true.
+    /// </summary>
+    /// <param name="id">The ID of the truck category to be deleeted.</param>
+    /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+    /// <response code="200">Returns if the user was successfully banned.</response>
+    /// <response code="404">Returns if the user is not found.</response>
+    /// <response code="500">Returns if a system error occurs.</response>
+    [HttpDelete("manager/deleted/{id}")]
+    public async Task<IActionResult> DeleteTruckCategory(int id)
+    {
+        var response = await _truckServices.DeleteTruckCategory(id);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// Creates a new truck category.
+    /// </summary>
+    /// <param name="request">The truck category request model.</param>
+    /// <returns>A response containing the created truck category.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/truck/manage/truck-img
+    ///     {
+    ///         "categoryName": "Heavy Duty Truck",
+    ///         "maxLoad": 12000,
+    ///         "description": "A truck suitable for heavy loads.",
+    ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1728489912/movemate/vs174go4uz7uw1g9js2e.jpg",
+    ///         "estimatedLength": "7.5m",
+    ///         "estimatedWidth": "2.5m",
+    ///         "estimatedHeight": "3.0m",
+    ///         "summarize": "Designed for heavy-duty transport.",
+    ///         "price": 15000,
+    ///         "totalTrips": 100
+    ///     }
+    /// </remarks>
+    /// <response code="201">Returns the created truck category</response>
+    /// <response code="500">If there is a server error</response>
+    [HttpPost("manager/truck-category")]
+    public async Task<IActionResult> CreateTruckCategory([FromBody] TruckCategoryRequest request)
+    {
+        var response = await _truckServices.CreateTruckCategory(request);
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+    }
+
+
+    /// <summary>
+    /// Update truck category.by truck category id
+    /// </summary>
+    /// <param name="request">The truck category request model.</param>
+    /// <returns>A response containing the created truck category.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/truck/manage/truck-img
+    ///     {
+    ///         "categoryName": "Heavy Duty Truck",
+    ///         "maxLoad": 12000,
+    ///         "description": "A truck suitable for heavy loads.",
+    ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1728489912/movemate/vs174go4uz7uw1g9js2e.jpg",
+    ///         "estimatedLength": "7.5m",
+    ///         "estimatedWidth": "2.5m",
+    ///         "estimatedHeight": "3.0m",
+    ///         "summarize": "Designed for heavy-duty transport.",
+    ///         "price": 15000,
+    ///         "totalTrips": 100
+    ///     }
+    /// </remarks>
+    /// <response code="201">Returns the created truck category</response>
+    /// <response code="500">If there is a server error</response>
+    [HttpPut("manager/truck-category/{id}")]
+    public async Task<IActionResult> UpdateTruckCategory(int id, [FromBody] TruckCategoryRequest request)
+    {
+        var response = await _truckServices.UpdateTruckCategory(id, request);
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
     }
 }

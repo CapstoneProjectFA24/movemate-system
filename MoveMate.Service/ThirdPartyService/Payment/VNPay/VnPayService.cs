@@ -84,7 +84,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 vnpay.AddRequestData("vnp_OrderInfo", wallet.Id.ToString());
                 vnpay.AddRequestData("vnp_OrderType", PaymentMethod.RECHARGE.ToString());
                 vnpay.AddRequestData("vnp_ReturnUrl",
-                    $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}");
+                    $"{serverUrl}/{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}&userId={userId}");
                 vnpay.AddRequestData("vnp_TxnRef", time.Ticks.ToString());
 
                 // Create payment URL
@@ -218,7 +218,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
                 if (booking == null)
                 {
-                    operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay);
                     return operationResult;
                 }
 
