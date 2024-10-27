@@ -12,12 +12,12 @@ using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
-public class AssginDriverWorker
+public class AssignDriverWorker
 {
     private readonly ILogger _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public AssginDriverWorker(ILogger logger, IServiceScopeFactory serviceScopeFactory)
+    public AssignDriverWorker(ILogger logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
@@ -26,7 +26,40 @@ public class AssginDriverWorker
     [Consumer("movemate.booking_assign_driver_local")]
     public async Task HandleMessage(int message)
     {
-        
+        await Task.Delay(100);
+        try
+        {
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                // var
+                var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+                var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
+                
+                // check booking
+                var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
+                
+                if (booking == null) 
+                { 
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
+                
+                var date = DateUtil.GetShard(booking.BookingAt);
+
+                var schedule = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
+
+                if (schedule == null)
+                {
+                    
+                }
+            }
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("AssignDriverWorker - " + e.Message);
+            throw;
+        }
     }
     
     //[Consumer("movemate.booking_assign_driver_local")]

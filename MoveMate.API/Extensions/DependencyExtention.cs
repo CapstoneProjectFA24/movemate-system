@@ -104,7 +104,7 @@ namespace MoveMate.API.Extensions
             services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
             
             services.AddTransient<MyMessageHandlerWorker>(); 
-            services.AddScoped<AssginReviewWorker>();   
+            services.AddScoped<AssignReviewWorker>();   
             
             services.AddSingleton<Index>();
 
