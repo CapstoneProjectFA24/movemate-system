@@ -13,5 +13,7 @@ public partial class TruckImg
 
     public string? ImageCode { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual Truck? Truck { get; set; }
 }
