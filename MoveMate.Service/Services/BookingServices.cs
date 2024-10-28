@@ -1566,7 +1566,7 @@ namespace MoveMate.Service.Services
                 }
                 if (booking.Status != BookingEnums.REVIEWING.ToString())
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
                     return result;
                 }
 
@@ -1874,7 +1874,7 @@ namespace MoveMate.Service.Services
                     case "COMING":
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString())
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReview);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
                             return result;
                         }
 
