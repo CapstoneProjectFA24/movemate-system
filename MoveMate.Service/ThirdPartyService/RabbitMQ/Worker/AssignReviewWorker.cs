@@ -10,12 +10,12 @@ using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
-public class AssginReviewWorker
+public class AssignReviewWorker
 {
-    private readonly ILogger<AssginReviewWorker> _logger;
+    private readonly ILogger<AssignReviewWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public AssginReviewWorker(ILogger<AssginReviewWorker> logger, IServiceScopeFactory serviceScopeFactory)
+    public AssignReviewWorker(ILogger<AssignReviewWorker> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;

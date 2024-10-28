@@ -1,9 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using LinqKit;
-using System.Linq.Dynamic.Core;
-using MoveMate.Service.Commons;
 
-namespace MoveMate.Service.Commons;
+namespace MoveMate.Service.Commons.Page;
 
 public abstract class PaginationRequest<T> where T : class
 {

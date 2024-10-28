@@ -14,6 +14,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Service.Commons.Errors;
 
 namespace MoveMate.API.Authorization
 

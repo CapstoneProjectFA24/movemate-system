@@ -36,7 +36,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ScheduleRepository.GetWithCount(
+                var entities = _unitOfWork.ScheduleBookingRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
@@ -71,7 +71,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.ScheduleRepository.GetByIdAsyncV1(id, includeProperties: "ScheduleDetails");
+                    await _unitOfWork.ScheduleBookingRepository.GetByIdAsyncV1(id, includeProperties: "ScheduleDetails");
 
                 if (entity == null)
                 {
