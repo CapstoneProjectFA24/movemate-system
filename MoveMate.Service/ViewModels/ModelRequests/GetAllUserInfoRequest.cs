@@ -50,6 +50,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .ToArray();
             }
 
+            Expression = Expression.And(u => u.IsDeleted == false);
 
             return Expression;
         }

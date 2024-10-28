@@ -147,30 +147,19 @@ namespace MoveMate.API.Controllers
         ///         "name": "Premium Service",
         ///         "description": "Premium moving service with additional features.",
         ///         "isActived": true,
-        ///         "tier": 1,
-        ///         "imageUrl": "https://example.com/image.jpg",
-        ///         "discountRate": 10,
-        ///         "amount": 100.0,
-        ///         "parentServiceId": null,
-        ///         "type": "Full-Service",
+        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1728489912/movemate/vs174go4uz7uw1g9js2e.jpg",
+        ///         "discountRate": 0,
+        ///         "amount": 12340,
+        ///         "type": "PORTER",
         ///         "isQuantity": true,
-        ///         "quantityMax": 5,
-        ///         "truckCategoryId": 2
+        ///         "quantityMax": 0,
+        ///         "parentServiceId": 1
         ///     }
         /// 
-        /// **Request Properties:**
-        /// - **name**: The name of the service (e.g., "Premium Service").
-        /// - **description**: A brief description of the service (e.g., "Premium moving service with additional features.").
-        /// - **isActived**: Indicates whether the service is active (true or false).
-        /// - **tier**: The tier level of the service (e.g., 1).
-        /// - **imageUrl**: URL to the service image (e.g., "https://example.com/image.jpg").
-        /// - **discountRate**: The discount percentage applied to the service (e.g., 10).
-        /// - **amount**: The base price of the service (e.g., 100.0).
-        /// - **parentServiceId**: The ID of the parent service, if applicable (null if none).
-        /// - **type**: The type of service being created (e.g., "Full-Service").
-        /// - **isQuantity**: Indicates whether the service has a quantity limit (true or false).
-        /// - **quantityMax**: The maximum quantity allowed for the service (e.g., 5).
-        /// - **truckCategoryId**: The ID of the truck category if applicable (e.g., 2).
+        /// **Validation Rules:**
+        /// - `TruckCategoryId` is required if `Type` is set to `"Truck"`.
+        /// - `ParentServiceId` must refer to an existing Tier 0 service if `tier` is `1`.
+        /// - `InverseParentService` types must match the current service's type.
         /// </remarks>
         /// <response code="200">Returns if the service is successfully created, with the created service details.</response>
         /// <response code="400">Returns if the input data is invalid or the creation fails.</response>
@@ -199,6 +188,57 @@ namespace MoveMate.API.Controllers
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+        /// <summary>
+        /// Updates an existing service by its ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the service to update.</param>
+        /// <param name="request">The request model containing updated service details.</param>
+        /// <returns>An IActionResult containing the operation result, including the updated service details on success or error information on failure.</returns>
+        /// <remarks>
+        /// This endpoint updates a service's details by ID. It includes logic to ensure data integrity based on the service's type and tier. The service must already exist, and specific rules apply based on service type and whether a parent service ID is provided.
+        /// 
+        /// Sample Request:
+        /// 
+        ///     PUT /api/service/manager/{id}
+        ///     {
+        ///         "name": "Standard Moving Service",
+        ///         "description": "Basic moving service",
+        ///         "isActived": true,
+        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1728489912/movemate/vs174go4uz7uw1g9js2e.jpg",
+        ///         "discountRate": 10.0,
+        ///         "amount": 250.00,
+        ///         "type": "Moving",
+        ///         "isQuantity": true,
+        ///         "quantityMax": 5,
+        ///         "truckCategoryId": 1,
+        ///         "parentServiceId": 2
+        ///     }
+        ///     
+        /// Important Notes:
+        /// - If the service is a Tier 0 service, it cannot have a parent service assigned (`parentServiceId` should be null).
+        /// - If `parentServiceId` is provided, the parent service must exist and have the same type as the current service.
+        /// - For services of type "TRUCK," `truckCategoryId` is required. Providing a `truckCategoryId` with other types will result in a validation error.
+        /// - Synchronization checks ensure that service types and tier restrictions are respected during updates.
+        /// 
+        /// Response Codes:
+        /// - 200: Successfully updated service.
+        /// - 400: Validation failure or tier restriction violation.
+        /// - 404: Specified service or parent service not found.
+        /// - 500: Internal server error due to unexpected issues.
+        /// </remarks>
+        /// <response code="200">Returns the updated service.</response>
+        /// <response code="400">If validation errors or tier restrictions are violated.</response>
+        /// <response code="404">If the specified service or parent service is not found.</response>
+        /// <response code="500">If there is a server error.</response>
+        [HttpPut("manager/{id}")]
+        public async Task<IActionResult> UpdateService(int id, [FromBody] UpdateServiceRequest request)
+        {
+            var response = await _services.UpdateService(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
     }
 }

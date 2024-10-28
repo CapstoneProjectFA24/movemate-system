@@ -125,6 +125,11 @@ namespace MoveMate.Service.Commons
             public const string InverseParentServiceType = "Each inverseParentService item must have the same Type as the main service";
             public const string InvalidServiceTier = "Service Tier is invalid for Truck type services or Porter type services";
             public const string ServiceAlreadyDeleted = "Service already deleted";
+            public const string ServiceUpdateFail = "Update service failed";
+            public const string NotFoundParentService = "Parent service not found";
+            public const string CannotUpdateParentForTierZero = "Can not update parentServiceId for service tier 0)";
+
+
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
 
@@ -135,6 +140,7 @@ namespace MoveMate.Service.Commons
             public const string TruckImgIsDeleted = "Truck image  has been deleted";
             public const string TruckCategoryAlreadyDeleted = "Truck category already deleted";
             public const string TruckCategoryUpdateFail = "Update truck category failed";
+
 
             //Schedule
             public const string NotFoundSchedule = "Schedule not found";
@@ -244,6 +250,7 @@ namespace MoveMate.Service.Commons
             //Service
             public const string CreateService = "Create a new service successful";
             public const string DeleteService = "Service has been deleted";
+            public const string ServiceUpdateSuccess = "Update service succesful";
 
             //Tracker Source
             public const string DeleteTrackerSource = "Tracker source has been deleted";
