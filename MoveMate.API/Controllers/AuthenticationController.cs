@@ -15,6 +15,7 @@ using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
 using System.Security.Claims;
+using MoveMate.Service.Commons.Errors;
 
 namespace MoveMate.API.Controllers
 {

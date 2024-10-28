@@ -17,6 +17,7 @@ public class Index : BackgroundService
     {
         _consumer.StartConsuming<MyMessageHandlerWorker>();
         _consumer.StartConsuming<AssignReviewWorker>();
+        _consumer.StartConsuming<SetScheduleReview>();
         return Task.CompletedTask;
     }
 }

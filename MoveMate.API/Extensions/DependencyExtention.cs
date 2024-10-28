@@ -22,6 +22,7 @@ using MoveMate.Service.ThirdPartyService;
 using ErrorUtil = MoveMate.Service.Utils.ErrorUtil;
 using MoveMate.Service.ViewModels.ModelRequests;
 using Microsoft.Extensions.Options;
+using MoveMate.Service.Commons.Errors;
 using Net.payOS;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay;
 using MoveMate.Service.ThirdPartyService.Firebase;
@@ -107,7 +108,8 @@ namespace MoveMate.API.Extensions
             
             services.AddTransient<MyMessageHandlerWorker>(); 
             services.AddScoped<AssignReviewWorker>();   
-            
+            services.AddScoped<SetScheduleReview>();   
+
             services.AddSingleton<Index>();
 
             services.AddHostedService<Index>();

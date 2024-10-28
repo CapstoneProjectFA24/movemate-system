@@ -46,7 +46,7 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
                 TimeZone = DateUtil.GetSEATimeZone(),
             });
 
-        BackgroundJob.Enqueue(() => DeleteCanceledBookingsJob());
+        /*BackgroundJob.Enqueue(() => DeleteCanceledBookingsJob());
         RecurringJob.AddOrUpdate(
             "delete-canceled-bookings-job",
             () => DeleteCanceledBookingsJob(),
@@ -55,7 +55,7 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
             {
                 TimeZone = DateUtil.GetSEATimeZone(),
             }
-        );
+        );*/
 
         _logger.LogInformation("All background jobs started successfully");
     }

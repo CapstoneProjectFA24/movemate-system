@@ -18,6 +18,8 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using System.Configuration;
+using MoveMate.Service.Commons.AutoMapper;
+using MoveMate.Service.Commons.Validates;
 
 namespace MoveMate.API
 {
