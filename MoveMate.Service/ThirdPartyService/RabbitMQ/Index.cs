@@ -16,7 +16,8 @@ public class Index : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _consumer.StartConsuming<MyMessageHandlerWorker>();
-        _consumer.StartConsuming<AssginReviewWorker>();
+        _consumer.StartConsuming<AssignReviewWorker>();
+        _consumer.StartConsuming<SetScheduleReview>();
         return Task.CompletedTask;
     }
 }

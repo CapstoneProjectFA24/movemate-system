@@ -12,12 +12,12 @@ using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
-public class AssginDriverWorker
+public class AssignDriverWorker
 {
     private readonly ILogger _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public AssginDriverWorker(ILogger logger, IServiceScopeFactory serviceScopeFactory)
+    public AssignDriverWorker(ILogger logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
@@ -26,9 +26,65 @@ public class AssginDriverWorker
     [Consumer("movemate.booking_assign_driver_local")]
     public async Task HandleMessage(int message)
     {
-        
-    }
+        await Task.Delay(100);
+        try
+        {
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                // var
+                var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+                var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
+
+                // check booking
+                var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
+
+                if (booking == null)
+                {
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
+
+                /*check shard xem co k
+                nếu ko thì tạo mới
+                   tìm kiếm list driver có loại xe và lịch làm việc đó
+                   add vào redis queue
+                   add vào assignment
+                nếu có
+                 thì check các schedule detail xem có lịch nào ko
+                 rule check - condition thuận chiều (có booking nào nằm thỏa condition ko):
+                 endtime cua booking at > starttime của schedule or starttime của booking < endtime của schedule
+                 nếu có tức đang rảnh
+                   check count > 1 thì check theo location mà chọn
+                    var rate cuả mỗi loại schedule là 1
+                       filter xem có lịch nào xong trong vòng 1h - 2h ko
+                       (endtime của booking là 9 check xem có lịch startime nào nằm trong 9 + 1 và nhỏ hơn 9 + 2 để assign liên tục)
+                       or
+                       starttime của booking check xem có lịch endtime nào nằm trong 9 -1 và lớn hớn 9 -2 để assign liên tục
+                       nếu có thì nằm trong 1h thì rate là + 1
+                       nếu có nằm trong vòng 2h thì rate là +0,5
+                       tiếp theo so về location endpoint của booking, công thức là  rate = rate/khoảng cách
+                    chọn rate cao nhất mà pick
+                   check count = 1 thì pick lun
+                   check count < 0 đánh tag là tự động assign failed cần review can thiệp
+                  nếu không => đánh tag là tự động assign failed cần review can thiệp
     
+                */
+                var date = DateUtil.GetShard(booking.BookingAt);
+
+                var schedule = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
+
+                if (schedule == null)
+                {
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("AssignDriverWorker - " + e.Message);
+            throw;
+        }
+    }
+
     //[Consumer("movemate.booking_assign_driver_local")]
     //public async Task HandleMessage(int message)
     //{
@@ -39,16 +95,16 @@ public class AssginDriverWorker
     //            var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
     //            var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
     //            var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-                
+
     //            var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
 
     //            if (booking == null)
     //            {
     //                throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
     //            }
-                
+
     //            var driverList = await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(booking!.TruckNumber!.Value);
-                
+
     //            string redisKey = DateUtil.GetKeyReview();
 
     //            var date = DateUtil.GetShard(booking.BookingAt);

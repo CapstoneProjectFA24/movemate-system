@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MoveMate.Service.Commons;
+using MoveMate.Service.Commons.Errors;
 
 namespace MoveMate.API.Controllers
 {

@@ -4,13 +4,8 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponse;
 using MoveMate.Service.ViewModels.ModelResponses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MoveMate.Service.Commons
+namespace MoveMate.Service.Commons.AutoMapper
 {
     public class AutoMapperService : Profile
     {

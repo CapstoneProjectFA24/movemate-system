@@ -9,6 +9,7 @@ using MoveMate.Service.ViewModels;
 using Net.payOS;
 using Net.payOS.Types;
 using System.Security.Claims;
+using MoveMate.Service.Commons.Errors;
 using MoveMate.Service.ThirdPartyService.Payment.PayOs;
 using MoveMate.Service.ThirdPartyService.Payment.Momo;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay;

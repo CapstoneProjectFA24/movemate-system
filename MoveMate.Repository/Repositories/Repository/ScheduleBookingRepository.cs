@@ -36,7 +36,12 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-        
-        //public virtual async Task<Schedule?> GetBy
+
+        public virtual async Task<ScheduleBooking?> GetByShard(string shard)
+        {
+            IQueryable<ScheduleBooking> query = _dbSet;
+            query = query.Where(scheduleBooking => scheduleBooking.Shard == shard);
+            return await query.FirstOrDefaultAsync();
+        }
     }
 }

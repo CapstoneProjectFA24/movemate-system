@@ -94,7 +94,7 @@ namespace MoveMate.Service.Commons
             public const string NotFoundBooking = "Booking not found";
             public const string BookingCannotPay = "Booking is not from this user";
             public const string NotFoundBookingDetail = "Booking detail not found";
-            public const string IsValidBookingAt = "BookingAt is not null and whether the value is greater than or equal to the current time";
+            public const string IsValidTimeGreaterNow = "Time is not null and whether the value is greater than or equal to the current time";
             public const string RegisterBookingFail = "Add booking failed";
             public const string CanNotUpdateStatus = "Cannot update to the next status from the current status";
             public const string BookingIdInputFail = "Booking ID is required and must be greater than 0";

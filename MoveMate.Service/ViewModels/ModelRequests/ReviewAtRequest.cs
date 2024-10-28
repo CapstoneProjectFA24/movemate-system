@@ -8,6 +8,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
 
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
-        public DateTime ReviewAt { get; set; }
+        public DateTime? ReviewAt { get; set; }
+        
+        public bool IsReviewAtValid()
+        {
+            return ReviewAt.HasValue && ReviewAt.Value >= DateTime.Now;
+        }
     }
 }

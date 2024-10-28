@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MoveMate.Repository.Repositories.UnitOfWork;
+using MoveMate.Service.Commons.Errors;
 
 namespace MoveMate.Service.Commons
 {
