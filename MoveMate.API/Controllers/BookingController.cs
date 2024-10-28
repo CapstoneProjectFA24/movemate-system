@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.Commons;
+using MoveMate.Service.Commons.Errors;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
@@ -126,7 +127,7 @@ namespace MoveMate.API.Controllers
 
         /// <summary>
         ///
-        /// FEATURE: valuation floor booking, dev by vinh
+        /// FEATURE: valuation floor booking
         /// </summary>
         /// <returns></returns>
         ///

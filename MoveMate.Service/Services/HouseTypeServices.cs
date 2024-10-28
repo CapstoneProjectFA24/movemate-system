@@ -5,6 +5,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
@@ -89,9 +90,99 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred in Get House Type By Id service method for ID: {id}");
-                throw;
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
             }
+        }
+
+        public async Task<OperationResult<HouseTypeResponse>> UpdateHouseType(int id, UpdateHouseTypeRequest request)
+        {
+            var result = new OperationResult<HouseTypeResponse>();
+            try
+            {
+                var houseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync(id);
+                if (houseType == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
+                    return result;
+                }
+
+                ReflectionUtils.UpdateProperties(request, houseType);
+                await _unitOfWork.HouseTypeRepository.SaveOrUpdateAsync(houseType);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    houseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync(houseType.Id);
+                    var response = _mapper.Map<HouseTypeResponse>(houseType);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.HouseTypeUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.HouseTypeUpdateFail);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
+
+        public async Task<OperationResult<HouseTypeResponse>> CreateHouseType(CreateHouseTypeRequest request)
+        {
+            var result = new OperationResult<HouseTypeResponse>();
+            try
+            {
+                var houseType = _mapper.Map<HouseType>(request);
+                await _unitOfWork.HouseTypeRepository.AddAsync(houseType);
+                await _unitOfWork.SaveChangesAsync();
+                var response = _mapper.Map<HouseTypeResponse>(houseType);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateHouseType, response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+
+        public async Task<OperationResult<bool>> DeleteHouseType(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var houseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync(id);
+                if (houseType == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
+                    return result;
+                }
+                if (houseType.IsActived == false)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.HouseTypeAlreadyDeleted);
+                    return result;
+                }
+
+                houseType.IsActived = false;
+
+                _unitOfWork.HouseTypeRepository.Update(houseType);
+                _unitOfWork.Save();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteHouseType, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
         }
     }
 }

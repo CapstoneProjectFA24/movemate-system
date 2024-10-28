@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Service.Commons.Page;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
@@ -33,7 +34,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             {
                 Expression = Expression.And(u => u.Name == Name);
             }
-
+            Expression = Expression.And(u => u.IsActived == true);
             return Expression;
         }
     }

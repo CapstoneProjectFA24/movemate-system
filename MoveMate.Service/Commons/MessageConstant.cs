@@ -75,6 +75,8 @@ namespace MoveMate.Service.Commons
             public const string UnsupportPayment = "Unsupported payment method selected";
             public const string ServerUrl = "Server URL is not available";
             public const string UserInfoIsDeleted = "User info has been deleted";
+            public const string UserInfoExist = "User info with this type has existed";
+            public const string AccountNotLogin = "This account has been banned";
 
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
@@ -89,12 +91,15 @@ namespace MoveMate.Service.Commons
             public const string EmailExist = "Email is already registered";
             public const string PhoneExist = "Phone number is already registered";
             public const string RoleNotFound = "Role not found";
+            public const string UserInfoUpdateFail = "Update user info failed";
+            public const string UserNotDriver = "User is not a driver";
+            public const string UserHaveTruck = "The user has already registered a truck";
 
             //Booking
             public const string NotFoundBooking = "Booking not found";
             public const string BookingCannotPay = "Booking is not from this user";
             public const string NotFoundBookingDetail = "Booking detail not found";
-            public const string IsValidBookingAt = "BookingAt is not null and whether the value is greater than or equal to the current time";
+            public const string IsValidTimeGreaterNow = "Time is not null and whether the value is greater than or equal to the current time";
             public const string RegisterBookingFail = "Add booking failed";
             public const string CanNotUpdateStatus = "Cannot update to the next status from the current status";
             public const string BookingIdInputFail = "Booking ID is required and must be greater than 0";
@@ -113,6 +118,8 @@ namespace MoveMate.Service.Commons
             //House type
             public const string NotFoundHouseType = "House type not found";
             public const string AddHouseTypeFail = "Add house type setting failed";
+            public const string HouseTypeUpdateFail = "Update house type failed";
+            public const string HouseTypeAlreadyDeleted = "House type already deleted";
 
             //Service
             public const string NotFoundService = "Service not found";
@@ -140,6 +147,7 @@ namespace MoveMate.Service.Commons
             public const string TruckImgIsDeleted = "Truck image  has been deleted";
             public const string TruckCategoryAlreadyDeleted = "Truck category already deleted";
             public const string TruckCategoryUpdateFail = "Update truck category failed";
+            public const string TruckAlreadyDeleted = "Truck already deleted";
 
 
             //Schedule
@@ -185,6 +193,8 @@ namespace MoveMate.Service.Commons
             public const string CreateUser = "Create user successful";
             public const string BanUserSuccess = "User has been banned";
             public const string DeleteUserInfo = "User info has been deleted";
+            public const string CreateUserInfo = "Create a new user info successful";
+            public const string UserInfoUpdateSuccess = "Update user info succesful";
 
             //Booking
             public const string GetListBookingEmpty = "List booking is empty!";
@@ -207,16 +217,14 @@ namespace MoveMate.Service.Commons
             public const string GetListHouseTypeSuccess = "Get list house type done";
             public const string GetHouseTypeIdSuccess = "Get house type successfully";
             public const string AddHouseTypeSettingSuccess = "Add house type setting successed";
+            public const string DeleteHouseType = "House type has been deleted";
 
             //Schedule
             public const string GetListScheduleEmpty = "List schedule is empty!";
             public const string GetListScheduleSuccess = "Get list schedule done";
             public const string GetScheduleSuccess = "Get schedule successfully";
 
-            //Schedule
-            public const string GetListServiceEmpty = "List service is empty!";
-            public const string GetListServiceSuccess = "Get list service done";
-            public const string GetServiceSuccess = "Get service successfully";
+            
 
             //Truck
             public const string GetListTruckEmpty = "List truck is empty!";
@@ -227,6 +235,11 @@ namespace MoveMate.Service.Commons
             public const string DeleteTruckCategory = "Truck category has been deleted";
             public const string CreateTruckCategory = "Create a new truck category successful";
             public const string TruckCategoryUpdateSuccess = "Update truck category succesful";
+            public const string GetListTruckCategoryEmpty = "List truck is empty!";
+            public const string GetListTruckCategorySuccess = "Get list truck done";
+            public const string GetTruckCategorySuccess = "Get truck category successfully";
+            public const string DeleteTruck = "Truck has been deleted";
+
 
 
             //Wallet
@@ -251,9 +264,16 @@ namespace MoveMate.Service.Commons
             public const string CreateService = "Create a new service successful";
             public const string DeleteService = "Service has been deleted";
             public const string ServiceUpdateSuccess = "Update service succesful";
+            public const string GetListServiceEmpty = "List service is empty!";
+            public const string GetListServiceSuccess = "Get list service done";
+            public const string GetServiceSuccess = "Get service successfully";
 
             //Tracker Source
             public const string DeleteTrackerSource = "Tracker source has been deleted";
+
+            //HouseType
+            public const string HouseTypeUpdateSuccess = "Update house type succesful";
+            public const string CreateHouseType = "Create a new house type successful";
         }
 
 

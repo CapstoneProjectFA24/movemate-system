@@ -4,13 +4,8 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponse;
 using MoveMate.Service.ViewModels.ModelResponses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MoveMate.Service.Commons
+namespace MoveMate.Service.Commons.AutoMapper
 {
     public class AutoMapperService : Profile
     {
@@ -38,6 +33,8 @@ namespace MoveMate.Service.Commons
                 ; // Adjust as needed
             //Address
             CreateMap<UserInfo, UserInfoResponse>();
+            CreateMap<CreateUserInfoRequest, UserInfo>();
+            CreateMap<UpdateUserInfoRequest, UserInfo>();
 
             //Register
             CreateMap<User, RegisterResponse>()
@@ -89,16 +86,26 @@ namespace MoveMate.Service.Commons
             CreateMap<CreateTruckImgRequest, TruckImg>();
             CreateMap<TruckImg, TruckImageResponse>();
             CreateMap<TruckCategoryRequest, TruckCategory>();
+            CreateMap<CreateTruckRequest, Truck>()
+                .ForMember(dest => dest.TruckImgs, opt => opt.MapFrom(src => src.TruckImgs));
+            CreateMap<UpdateTruckRequest, Truck>();
+            CreateMap<Truck, TruckResponse>()
+                .ForMember(dest => dest.TruckImgs, opt => opt.MapFrom(src => src.TruckImgs));
+            CreateMap<TruckImg, TruckImgResponse>();
+            CreateMap<TruckImgRequest, TruckImg>();
+
 
             //Transaction 
             CreateMap<Transaction,  TransactionResponse>();
 
             //House Type
             CreateMap<HouseType, HouseTypesResponse>();
-                //.ForMember(dest => dest.HouseTypeSettings, opt => opt.MapFrom(src => src.HouseTypeSettings));
-           // CreateMap<HouseTypeSetting, HouseTypeSettingResponse>();
+            //.ForMember(dest => dest.HouseTypeSettings, opt => opt.MapFrom(src => src.HouseTypeSettings));
+            // CreateMap<HouseTypeSetting, HouseTypeSettingResponse>();
             //CreateMap<CreateHouseTypeSetting, HouseTypeSetting>()
-             //   .ForMember(dest => dest.Id, opt => opt.Ignore());
+            //   .ForMember(dest => dest.Id, opt => opt.Ignore());
+            CreateMap<CreateHouseTypeRequest, HouseType>();
+            CreateMap<UpdateHouseTypeRequest, HouseType>();
 
 
             //Service

@@ -1,4 +1,4 @@
-﻿namespace MoveMate.Service.Commons;
+﻿namespace MoveMate.Service.Commons.Page;
 
 public class PaginationConstants
 {

@@ -21,5 +21,9 @@ namespace MoveMate.Service.IServices
 
         public Task<OperationResult<bool>> BanUser(int id);
         public Task<OperationResult<bool>> DeleteUserInfo(int id);
+
+        Task <OperationResult<UserInfoResponse>> UpdateUserInfoAsync(int id, UpdateUserInfoRequest request);
+
+        Task<OperationResult<UserInfoResponse>> CreateUserInfo(CreateUserInfoRequest request);
     }
 }

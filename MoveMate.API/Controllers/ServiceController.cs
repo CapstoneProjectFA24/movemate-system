@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
+using MoveMate.Service.Constants;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
@@ -12,7 +14,6 @@ namespace MoveMate.API.Controllers
     [ApiController]
     public class ServiceController : BaseController
     {
-        
         private readonly IServiceServices _services;
         private readonly IMessageProducer _producer;
         private readonly IRedisService _redisService;
@@ -48,8 +49,18 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> GetAllNotTruck([FromQuery] GetAllServiceNotTruckRequest request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
+            var queryRequestHash = request.GetExpressions().ToString().GetHashCode();
+            var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
 
-            var response = await _services.GetAllNotTruck(request);
+            var response = await _redisService.GetDataAsync<OperationResult<List<ServicesResponse>>>(keyService);
+            if (response == null)
+            {
+                response = await _services.GetAllNotTruck(request);
+                if (!response.IsError)
+                {
+                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromHours(10));
+                }
+            }
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
@@ -69,9 +80,18 @@ namespace MoveMate.API.Controllers
         // get all
         public async Task<IActionResult> GetAllServiceTruck([FromQuery] GetAllServiceTruckType request)
         {
-            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+            var queryRequestHash = request.GetExpressions().ToString().GetHashCode();
+            var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
 
-            var response = await _services.GetAllServiceTruck(request);
+            var response = await _redisService.GetDataAsync<OperationResult<List<ServiceResponse>>>(keyService);
+            if (response == null)
+            {
+                response = await _services.GetAllServiceTruck(request);
+                if (!response.IsError)
+                {
+                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromHours(10));
+                }
+            }
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
@@ -113,23 +133,35 @@ namespace MoveMate.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request)
         {
-            //IEnumerable<Claim> claims = HttpContext.User.Claims;
-
-            var response = await _services.GetAll(request);
 
             _producer.SendingMessage<String>("hello");
             string queueKey = "myQueue";
 
-            await _redisService.EnqueueAsync(queueKey,response.Payload);
+            var queryRequestHash = request.GetExpressions().ToString().GetHashCode();
+            var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
+            
+            var response = await _redisService.GetDataAsync<OperationResult<List<ServicesResponse>>>(keyService);
+            if (response == null)
+            {
+                response = await _services.GetAll(request);
+
+                if (!response.IsError)
+                {
+                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromHours(20));
+                }
+            }
+
+            await _redisService.EnqueueAsync(queueKey, response.Payload);
             var key = DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + "mykey";
             //await _redisService.SetDataAsync(key, "Hello, World! my key");
 
             await _redisService.EnqueueWithExpiryAsync("testqueue", "test");
 
             await _redisService.SetDataAsync(key, response.Payload);
+            await _redisService.RemoveKeysWithPatternAsync("my");
 
             var check = await _redisService.GetDataAsync<List<ServicesResponse>>(key);
-                
+
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 

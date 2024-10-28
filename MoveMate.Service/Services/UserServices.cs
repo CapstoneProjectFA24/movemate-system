@@ -261,6 +261,92 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        public async Task<OperationResult<UserInfoResponse>> CreateUserInfo(CreateUserInfoRequest request)
+        {
+            var result = new OperationResult<UserInfoResponse>();
+
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync((int)request.UserId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+
+                var existingUserInfo = await _unitOfWork.UserInfoRepository
+             .GetUserInfoByUserIdAsync(user.Id);
+
+                if (existingUserInfo.Any(ui => ui.Type == request.Type))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoExist);
+                    return result;
+                }
+
+                var userInfoReq = _mapper.Map<UserInfo>(request);
+
+                await _unitOfWork.UserInfoRepository.AddAsync(userInfoReq);
+                await _unitOfWork.SaveChangesAsync();
+
+                var response = _mapper.Map<UserInfoResponse>(userInfoReq);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateUserInfo, response);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<UserInfoResponse>> UpdateUserInfoAsync(int id, UpdateUserInfoRequest request)
+        {
+            var result = new OperationResult<UserInfoResponse>();
+            try
+            {
+                var userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(id);
+                if (userInfo == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
+                    return result;
+                }
+
+                var existingUserInfo = await _unitOfWork.UserInfoRepository
+            .GetUserInfoByUserIdAsync((int)userInfo.UserId);
+
+                if (existingUserInfo.Any(ui => ui.Type == request.Type))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoExist);
+                    return result;
+                }
+
+                ReflectionUtils.UpdateProperties(request, userInfo);
+                await _unitOfWork.UserInfoRepository.SaveOrUpdateAsync(userInfo);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(userInfo.Id);
+                    var response = _mapper.Map<UserInfoResponse>(userInfo);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserInfoUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoUpdateFail);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+            return result;
+        }
 
     }
 }

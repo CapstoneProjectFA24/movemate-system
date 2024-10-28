@@ -2,27 +2,36 @@
 using LinqKit;
 using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
+using MoveMate.Service.Commons.Page;
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
 
-public class GetAllTruckRequest : PaginationRequest<Truck>
+public class GetAllTruckRequest : PaginationRequestV2<Truck>
 {
-    public string? SearchByCategory { get; set; }
+    public string? Search { get; set; }
+    public int? UserId { get; set; }
 
     public override Expression<Func<Truck, bool>> GetExpressions()
     {
-        if (!string.IsNullOrWhiteSpace(SearchByCategory))
+        if (!string.IsNullOrWhiteSpace(Search))
         {
-            SearchByCategory = SearchByCategory.Trim().ToLower();
+            Search = Search.Trim().ToLower();
 
-            var cateList = SearchByCategory.Split(',')
-                .Select(s => int.TryParse(s, out var value) ? (int?)value : null)
-                .Where(s => s.HasValue)
-                .Select(s => s.Value)
-                .ToArray();
+            var queryExpression = PredicateBuilder.New<Truck>(true);
+            queryExpression.Or(cus => cus.Model.ToLower().Contains(Search));
+            queryExpression.Or(cus => cus.Brand.ToLower().Contains(Search));
 
-            Expression = Expression.And(entity => cateList.Cast<int?>().Contains(entity.TruckCategoryId));
+
+            Expression = Expression.And(queryExpression);
         }
+
+        if (UserId.HasValue)
+        {
+            Expression = Expression.And(u => u.UserId == UserId.Value);
+        }
+
+
+        Expression = Expression.And(u => u.IsDeleted == false);
 
         return Expression;
     }

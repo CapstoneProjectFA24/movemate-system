@@ -17,14 +17,13 @@ namespace MoveMate.Repository.Repositories.Repository
         {
         }
 
-        public async Task<UserInfo> GetUserInfoByUserIdAsync(int accountId)
+        public async Task<List<UserInfo>> GetUserInfoByUserIdAsync(int accountId)
         {
             return await _dbSet
-                .Include(ui => ui.User) 
+                .Include(ui => ui.User)
                 .Where(a => a.UserId == accountId)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
         }
-
 
     }
 }

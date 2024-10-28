@@ -9,11 +9,12 @@ public class RedisService : IRedisService
 {
     private IDistributedCache _cache;
     private IDatabase _database;
-
+    private readonly IConnectionMultiplexer _redisConnection;
     public RedisService(IDistributedCache cache, IConnectionMultiplexer connectionMultiplexer)
     {
         _database = connectionMultiplexer.GetDatabase();
         _cache = cache;
+        _redisConnection = connectionMultiplexer;
     }
 
     public T? GetData<T>(string key)
@@ -75,6 +76,32 @@ public class RedisService : IRedisService
         var data = await _cache.GetStringAsync(key);
         return data != null;
     }
+    
+    public async Task RemoveKeysWithPatternAsync(string pattern)
+    {
+        try
+        {
+            var server = _redisConnection.GetServer(_redisConnection.GetEndPoints().First());
+            
+            var keys = server.Keys(pattern: $"*{pattern}*").ToArray();
+
+            if (keys.Length == 0)
+            {
+                Console.WriteLine("No keys found matching the pattern.");
+                return;
+            }
+            
+            var deleteTasks = keys.Select(key => _cache.RemoveAsync(key.ToString())).ToList();
+
+            await Task.WhenAll(deleteTasks);
+            Console.WriteLine($"Deleted {deleteTasks.Count} keys matching the pattern '{pattern}'.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while removing keys with pattern '{pattern}': {ex.Message}");
+        }
+    }
+
 
     // QUEUE
     

@@ -53,6 +53,8 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+               
+
                 // Validate the password
                 if (!user.Password.Equals(accountRequest.Password))
                 {
@@ -211,7 +213,11 @@ namespace MoveMate.Service.Services
                     result.AddError(Service.Commons.StatusCode.NotFound, MessageConstant.FailMessage.LoginByEmailFail);
                     return result;
                 }
-
+                if (user.IsBanned == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AccountNotLogin);
+                    return result;
+                }
                 // Validate the password
                 if (!user.Password.Equals(request.Password))
                 {

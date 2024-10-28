@@ -7,6 +7,7 @@ using MoveMate.Service.Commons;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MoveMate.Service.Commons.Errors;
 
 namespace MoveMate.API.Middleware
 {

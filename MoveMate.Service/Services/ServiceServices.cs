@@ -299,6 +299,13 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+
+        /// <summary>
+        /// UpdateService sads
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         public async Task<OperationResult<ServicesResponse>> UpdateService(int id, UpdateServiceRequest request)
         {
             var result = new OperationResult<ServicesResponse>();
