@@ -860,7 +860,8 @@ namespace MoveMate.Service.Services
                         Quantity = quantity,
                         Price = amount,
                         Name = service.Name,
-                        Description = service.Description
+                        Description = service.Description,
+                        Type = service.Type
                     };
 
                     bookingDetails.Add(bookingDetail);
@@ -873,7 +874,8 @@ namespace MoveMate.Service.Services
                         Quantity = quantity,
                         Price = price,
                         Name = service.Name,
-                        Description = service.Description
+                        Description = service.Description,
+                        Type = service.Type
                     };
 
                     bookingDetails.Add(bookingDetail);
@@ -1764,7 +1766,8 @@ namespace MoveMate.Service.Services
                         Quantity = requestService.Quantity,
                         Price = requestService.Price,
                         Name = service.Name,
-                        Description = service.Description
+                        Description = service.Description,
+                        Type = service.Type
                     };
 
                     bookingDetails.Add(newBookingDetail);
