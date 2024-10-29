@@ -49,7 +49,10 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> GetAllNotTruck([FromQuery] GetAllServiceNotTruckRequest request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
-            var queryRequestHash = request.GetExpressions().ToString().GetHashCode();
+            
+            var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
+            
+            var queryRequestHash = hash.GetHashCode();
             var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
 
             var response = await _redisService.GetDataAsync<OperationResult<List<ServicesResponse>>>(keyService);
@@ -80,7 +83,9 @@ namespace MoveMate.API.Controllers
         // get all
         public async Task<IActionResult> GetAllServiceTruck([FromQuery] GetAllServiceTruckType request)
         {
-            var queryRequestHash = request.GetExpressions().ToString().GetHashCode();
+            var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
+            
+            var queryRequestHash = hash.GetHashCode();
             var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
 
             var response = await _redisService.GetDataAsync<OperationResult<List<ServiceResponse>>>(keyService);
@@ -137,7 +142,9 @@ namespace MoveMate.API.Controllers
             _producer.SendingMessage<String>("hello");
             string queueKey = "myQueue";
 
-            var queryRequestHash = request.GetExpressions().ToString().GetHashCode();
+            var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
+            
+            var queryRequestHash = hash.GetHashCode();
             var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
             
             var response = await _redisService.GetDataAsync<OperationResult<List<ServicesResponse>>>(keyService);
