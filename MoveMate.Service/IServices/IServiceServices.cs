@@ -20,5 +20,7 @@ namespace MoveMate.Service.IServices
 
         Task<OperationResult<ServicesResponse>> CreateService(CreateServiceRequest request);
         Task<OperationResult<bool>> DeleteService(int id);
+
+        Task<OperationResult<ServicesResponse>> UpdateService (int id, UpdateServiceRequest request);
     }
 }

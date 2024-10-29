@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MoveMate.Service.ViewModels.ModelResponses
+namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class TruckResponse
+    public class UpdateTruckRequest
     {
-        public int? UserId { get; set; }
         public int? TruckCategoryId { get; set; }
 
         public string? Model { get; set; }
@@ -25,7 +24,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public bool? IsInsurrance { get; set; }
 
-        public virtual ICollection<TruckImgResponse> TruckImgs { get; set; } = new List<TruckImgResponse>();
+        //public int? UserId { get; set; }
 
+        public virtual ICollection<TruckImgRequest> TruckImgs { get; set; } = new List<TruckImgRequest>();
     }
 }

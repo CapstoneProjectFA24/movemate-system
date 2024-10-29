@@ -1,40 +1,42 @@
 ﻿using LinqKit;
 using MoveMate.Domain.Models;
-using MoveMate.Service.Commons;
+using MoveMate.Service.Commons.Page;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using MoveMate.Service.Commons.Page;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllHouseTypeRequest : PaginationRequestV2<HouseType>
+    public class GetAllPromotionRequest : PaginationRequestV2<PromotionCategory>
     {
         public string? Search { get; set; }
-        public string? Name { get; set; }
+        public int? ServiceId { get; set; }
 
-
-        public override Expression<Func<HouseType, bool>> GetExpressions()
+        public override Expression<Func<PromotionCategory, bool>> GetExpressions()
         {
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<HouseType>(true);
+                var queryExpression = PredicateBuilder.New<PromotionCategory>(true);
                 queryExpression.Or(cus => cus.Name.ToLower().Contains(Search));
+                queryExpression.Or(cus => cus.Description.ToLower().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);
             }
 
-            if (!string.IsNullOrWhiteSpace(Name))
+            if (ServiceId.HasValue)
             {
-                Expression = Expression.And(u => u.Name == Name);
+                Expression = Expression.And(u => u.ServiceId == ServiceId.Value);
             }
-            Expression = Expression.And(u => u.IsActived == true);
+
+
+            Expression = Expression.And(u => u.IsDeleted == false);
+
             return Expression;
         }
     }

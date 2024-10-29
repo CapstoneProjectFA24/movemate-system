@@ -6,6 +6,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
@@ -225,14 +226,19 @@ namespace MoveMate.Service.Services
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SynchronizeType);
                         return result;
                     }
-                    var existingService = await _unitOfWork.ServiceRepository
+
+                    if (request.Type == TypeServiceEnums.TRUCK.ToString() && request.TruckCategoryId.HasValue)
+                    {
+                        var existingService = await _unitOfWork.ServiceRepository
                         .FindByParentTypeAndTruckCategoryAsync(request.ParentServiceId.Value, request.Type, (int)request.TruckCategoryId);
 
-                    if (existingService != null)
-                    {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceExisted);
-                        return result;
+                        if (existingService != null)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceExisted);
+                            return result;
+                        }
                     }
+                    
 
                     service.ParentServiceId = request.ParentServiceId;
                 }
@@ -260,10 +266,6 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
-
-
-
 
 
         public async Task<OperationResult<bool>> DeleteService(int id)
@@ -294,6 +296,140 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
+            return result;
+        }
+
+
+        /// <summary>
+        /// UpdateService sads
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<OperationResult<ServicesResponse>> UpdateService(int id, UpdateServiceRequest request)
+        {
+            var result = new OperationResult<ServicesResponse>();
+            try
+            {
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
+                if (service == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
+                    return result;
+                }
+
+                var parentService = await _unitOfWork.ServiceRepository.GetByIdAsync((int)service.ParentServiceId);
+                if (parentService == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundParentService);
+                    return result;
+                }
+
+                if (service.Tier == 0 && request.ParentServiceId.HasValue)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotUpdateParentForTierZero);
+                    return result;
+                }
+
+                if (request.Type == TypeServiceEnums.TRUCK.ToString() && !request.TruckCategoryId.HasValue)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryRequire);
+                    return result;
+                }
+                if (request.TruckCategoryId.HasValue && request.Type != TypeServiceEnums.TRUCK.ToString() && service.Type != TypeServiceEnums.TRUCK.ToString())
+                {                 
+                   result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TypeTruckRequire);
+                   return result;                                    
+                }
+                if (request.Type != parentService.Type && !request.ParentServiceId.HasValue)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SynchronizeType);
+                    return result;
+                }
+
+                if ( request.TruckCategoryId.HasValue)
+                {
+                    if (request.Type == TypeServiceEnums.TRUCK.ToString())
+                    {
+                        var existingService = await _unitOfWork.ServiceRepository
+                            .FindByParentTypeAndTruckCategoryAsync((int)service.ParentServiceId, request.Type, (int)request.TruckCategoryId);
+
+                        if (existingService != null)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceExisted);
+                            return result;
+                        }
+                    }
+                    else if (service.Type == TypeServiceEnums.TRUCK.ToString())
+                    {
+                        var existingService = await _unitOfWork.ServiceRepository
+                            .FindByParentTypeAndTruckCategoryAsync((int)service.ParentServiceId, service.Type, (int)request.TruckCategoryId);
+
+                        if (existingService != null)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceExisted);
+                            return result;
+                        }
+                    }
+                   
+                }
+
+
+                if (request.ParentServiceId.HasValue)
+                {
+                    
+                    var parentServiceReq = await _unitOfWork.ServiceRepository.GetByIdAsync(request.ParentServiceId.Value);
+                    if (parentServiceReq == null)
+                    {
+                        result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundParentService);
+                        return result;
+                    }
+                    if (request.Type != parentServiceReq.Type)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SynchronizeType);
+                        return result;
+                    }
+                    if (parentServiceReq.Tier != 0)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ParentServiceIdTier0);
+                        return result;
+                    }
+
+                    if (request.Type == TypeServiceEnums.TRUCK.ToString() && request.TruckCategoryId.HasValue)
+                    {
+                        var existingService = await _unitOfWork.ServiceRepository
+                        .FindByParentTypeAndTruckCategoryAsync(request.ParentServiceId.Value, request.Type, (int)request.TruckCategoryId);
+
+                        if (existingService != null)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceExisted);
+                            return result;
+                        }
+                    }
+                }
+
+                ReflectionUtils.UpdateProperties(request, service);
+
+                await _unitOfWork.ServiceRepository.SaveOrUpdateAsync(service);
+                var saveResult = _unitOfWork.Save();
+                if (saveResult > 0)
+                {
+                    service = await _unitOfWork.ServiceRepository.GetByIdAsync(service.Id);
+                    var response = _mapper.Map<ServicesResponse>(service);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ServiceUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceUpdateFail);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
             return result;
         }
     }

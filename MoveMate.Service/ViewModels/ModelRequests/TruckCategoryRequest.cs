@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
@@ -27,7 +28,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public double? Price { get; set; }
 
         public int? TotalTrips { get; set; }
-
+        [JsonIgnore]
         public bool? IsDeleted { get; set; } = false;
     }
 }

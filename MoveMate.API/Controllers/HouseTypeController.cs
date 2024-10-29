@@ -24,7 +24,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Retrieves a paginated list of all house types.
+        /// FEATURE : Retrieves a paginated list of all house types.
         /// </summary>
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -46,7 +46,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Retrieves a house type by its ID.
+        /// FEATURE : Retrieves a house type by its ID.
         /// </summary>
         /// <param name="id">The ID of the house type to retrieve.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -100,5 +100,72 @@ namespace MoveMate.API.Controllers
         //    // Return 201 Created status with the success message
         //    return StatusCode((int)Service.Commons.StatusCode.Created, response);
         //}
+
+
+        /// <summary>
+        /// Delete house type by setting the house type's IsActived status to false.
+        /// </summary>
+        /// <param name="id">The ID of the house type to be deleeted.</param>
+        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+        /// <response code="200">Returns if the user was successfully banned.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteHouseType(int id)
+        {
+            var response = await _houseTypeServices.DeleteHouseType(id);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE : Creates a new house type.
+        /// </summary>
+        /// <param name="request">The house type request model.</param>
+        /// <returns>A response containing the created house type.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/housetype/
+        ///     {
+        ///         "name": "Heavy Duty Truck",
+        ///         "description": "A truck suitable for heavy loads."
+        ///     }
+        /// </remarks>
+        /// <response code="201">Returns the created truck category</response>
+        /// <response code="500">If there is a server error</response>
+        [HttpPost()]
+        public async Task<IActionResult> CreateHouseType([FromBody] CreateHouseTypeRequest request)
+        {
+            var response = await _houseTypeServices.CreateHouseType(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+
+
+        /// <summary>
+        /// CHORE : Update house type by house type id
+        /// </summary>
+        /// <param name="request">The house type request model.</param>
+        /// <returns>A response containing the created house type.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/housetype/
+        ///     {
+        ///         "name": "Heavy Duty Truck",
+        ///         "description": "A truck suitable for heavy loads."
+        ///     }
+        /// </remarks>
+        /// <response code="201">Returns the created truck category</response>
+        /// <response code="500">If there is a server error</response>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateHouseType(int id, [FromBody] UpdateHouseTypeRequest request)
+        {
+            var response = await _houseTypeServices.UpdateHouseType(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
     }
 }
