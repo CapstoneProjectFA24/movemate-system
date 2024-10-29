@@ -20,7 +20,7 @@ public class Pagination
     public int pageSize { get; set; } = -1;
     public int pageIndex { get; set; } = 0;
 
-    public int TotalPagesCount
+    public int totalPagesCount
     {
         get
         {
