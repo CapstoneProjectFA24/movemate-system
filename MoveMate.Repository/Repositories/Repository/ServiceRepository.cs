@@ -40,9 +40,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-
         
-
         public virtual IEnumerable<Service> GetAll(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
@@ -82,7 +80,7 @@ namespace MoveMate.Repository.Repositories.Repository
             return query.ToList();
         }
         
-        public virtual (IEnumerable<Service> Data, int Count) GetAllWithCount(
+        /*public virtual (IEnumerable<Service> Data, int Count) GetAllWithCount(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
             int? pageIndex = null,
@@ -120,7 +118,7 @@ namespace MoveMate.Repository.Repositories.Repository
             }
 
             return (Data: query.ToList(), Count: count);
-        }
+        }*/
 
         public async Task<Service?> GetTierZeroServiceByParentIdAsync(int parentServiceId)
         {

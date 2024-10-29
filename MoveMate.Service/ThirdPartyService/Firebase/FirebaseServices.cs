@@ -41,7 +41,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
-            _dbFirestore = FirestoreDb.Create("movemate-bb487");
+            _dbFirestore = FirestoreDb.Create("movemate-firebase");
         }
 
 

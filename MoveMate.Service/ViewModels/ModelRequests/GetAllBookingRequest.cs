@@ -16,6 +16,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Search { get; set; }
         public int? UserId { get; set; }
         public string? Status { get; set; }
+
+        public bool? IsReviewOnl { get; set; }
         
         //public int? StaffId { get; set; }
 
@@ -49,6 +51,10 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.UserId == UserId || u.Assignments.Any(a => a.UserId == UserId));
             }
 
+            if (!string.IsNullOrWhiteSpace(IsReviewOnl.ToString()))
+            {
+                Expression = Expression.And(u => u.IsReviewOnline == IsReviewOnl );
+            }
 
             if (!string.IsNullOrWhiteSpace(Status))
             {
