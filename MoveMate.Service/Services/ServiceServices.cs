@@ -53,8 +53,8 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = entities.Count;
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -93,8 +93,8 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = entities.Count;
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
@@ -159,8 +159,8 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                pagin.PageSize = request.per_page;
-                pagin.TotalItemsCount = entities.Count;
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
