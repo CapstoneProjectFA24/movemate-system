@@ -360,7 +360,7 @@ namespace MoveMate.Service.Services
                 var truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
                 if (truck == null)
                 {
-                    result.AddError(StatusCode.NotFound, "Truck not found.");
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruck);
                     return result;
                 }
 
@@ -370,7 +370,7 @@ namespace MoveMate.Service.Services
                     var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId.Value);
                     if (truckCategory == null)
                     {
-                        result.AddError(StatusCode.NotFound, "Truck category not found.");
+                        result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
                         return result;
                     }
                     truck.TruckCategoryId = request.TruckCategoryId.Value;
@@ -420,11 +420,11 @@ namespace MoveMate.Service.Services
 
                 // Map updated truck to response model
                 var response = _mapper.Map<TruckResponse>(truck);
-                result.AddResponseStatusCode(StatusCode.Ok, "Truck updated successfully.", response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckUpdateSuccess, response);
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, "An error occurred while updating the truck.");
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;

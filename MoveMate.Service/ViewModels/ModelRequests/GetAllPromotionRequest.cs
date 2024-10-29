@@ -14,6 +14,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
         public string? Search { get; set; }
         public int? ServiceId { get; set; }
+        public DateTime? DateFilter { get; set; }
+        public DateTime? HuntingDate { get; set; }
 
         public override Expression<Func<PromotionCategory, bool>> GetExpressions()
         {
@@ -25,7 +27,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 queryExpression.Or(cus => cus.Name.ToLower().Contains(Search));
                 queryExpression.Or(cus => cus.Description.ToLower().Contains(Search));
 
-
                 Expression = Expression.And(queryExpression);
             }
 
@@ -34,10 +35,21 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.ServiceId == ServiceId.Value);
             }
 
+            if (DateFilter.HasValue)
+            {
+                Expression = Expression.And(u => u.StartDate <= DateFilter && u.EndDate >= DateFilter);
+            }
+
+            if (HuntingDate.HasValue)
+            {
+                var huntingDatePlusOneDay = HuntingDate.Value.AddDays(1); // Adjusted logic
+                Expression = Expression.And(u => u.StartDate >= HuntingDate && u.StartDate <= huntingDatePlusOneDay); // Fetch promotions that start on or after the day after the hunting date
+            }
 
             Expression = Expression.And(u => u.IsDeleted == false);
 
             return Expression;
         }
+
     }
 }

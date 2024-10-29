@@ -181,6 +181,11 @@ namespace MoveMate.Service.Commons
             //Assignment
             public const string AssignmentUpdateFail = "Update assignment failed";
 
+            //Promotion
+            public const string NotFoundPromotion = "Promotion not found";
+            public const string PromotionAlreadyDeleted = "Promotion category already deleted";
+            
+
         }
 
 
@@ -244,7 +249,7 @@ namespace MoveMate.Service.Commons
             public const string GetListTruckCategorySuccess = "Get list truck done";
             public const string GetTruckCategorySuccess = "Get truck category successfully";
             public const string DeleteTruck = "Truck has been deleted";
-
+            public const string TruckUpdateSuccess = "Update truck succesful";
 
 
             //Wallet
@@ -282,6 +287,13 @@ namespace MoveMate.Service.Commons
 
             //Assignment
             public const string UpdateAssignment = "Update assignment successful";
+            //Promotion
+            public const string GetListPromotionEmpty = "List promotion is empty!";
+            public const string GetListPromotionSuccess = "Get list promotion done";
+            public const string DeletePromotionCategory = "Promotion category has been deleted";
+            public const string GetPromotionCategorySuccess = "Get promotion category successfully";
+            public const string CreatePromotion = "Create a new promotion successful";
+            public const string PromotionUpdateSuccess = "Update promotion category succesful";
         }
 
 

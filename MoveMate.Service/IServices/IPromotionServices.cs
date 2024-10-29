@@ -11,10 +11,10 @@ namespace MoveMate.Service.IServices
 {
     public interface IPromotionServices
     {
-        public Task<OperationResult<List<PromotionResponse>>> GetAllTruck(GetAllPromotionRequest request);
-        public Task<OperationResult<PromotionResponse>> GetTruckById(int id);
-        Task<OperationResult<PromotionResponse>> UpdateTruck(int id, UpdatePromotionRequest request);
-        Task<OperationResult<PromotionResponse>> CreateTruck(CreatePromotionRequest request);
-        Task<OperationResult<bool>> DeleteTruck(int id);
+        public Task<OperationResult<List<PromotionResponse>>> GetAllPromotion(GetAllPromotionRequest request);
+        public Task<OperationResult<PromotionResponse>> GetPromotionById(int id);
+        Task<OperationResult<PromotionResponse>> UpdatePromotion(int id, UpdatePromotionRequest request);
+        Task<OperationResult<PromotionResponse>> CreatePromotion(CreatePromotionRequest request);
+        Task<OperationResult<bool>> DeletePromotion(int id);
     }
 }
