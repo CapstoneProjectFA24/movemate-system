@@ -11,10 +11,11 @@ namespace MoveMate.Service.IServices
 {
     public interface ITruckServices
     {
-        public Task<OperationResult<List<TruckResponse>>> GetAll(GetAllTruckRequest request);
+        
 
-        public Task<OperationResult<List<TruckCateResponse>>> GetAllCate();
-        public Task<OperationResult<TruckCateDetailResponse>> GetCateById(int id);
+        Task<OperationResult<List<TruckCategoryResponse>>> GetAllTruckCategory(GetAllTruckCategoryRequest request);
+        // public Task<OperationResult<TruckCateDetailResponse>> GetCateById(int id);
+        public Task<OperationResult<TruckCategoryResponse>> GetTruckCategoryById(int id);
         public Task<OperationResult<TruckImageResponse>> CreateTruckImg(CreateTruckImgRequest request);
 
         public Task<OperationResult<bool>> DeleteTruckImg(int id);
@@ -22,5 +23,11 @@ namespace MoveMate.Service.IServices
 
         public Task<OperationResult<TruckCategoryResponse>> UpdateTruckCategory (int id, TruckCategoryRequest request);
         Task<OperationResult<TruckCategoryResponse>> CreateTruckCategory(TruckCategoryRequest request);
+
+        public Task<OperationResult<List<TruckResponse>>> GetAllTruck(GetAllTruckRequest request);
+        public Task<OperationResult<TruckResponse>> GetTruckById(int id);
+        Task<OperationResult<TruckResponse>> UpdateTruck(int id, UpdateTruckRequest request);
+        Task<OperationResult<TruckResponse>> CreateTruck(CreateTruckRequest request);
+        Task<OperationResult<bool>> DeleteTruck(int id);
     }
 }

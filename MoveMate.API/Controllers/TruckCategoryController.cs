@@ -34,12 +34,12 @@ public class TruckCategoryController : BaseController
     [HttpGet("")]
     [Authorize]
     // get all
-    public async Task<IActionResult> GetAllCate()
+    public async Task<IActionResult> GetAllCate([FromQuery] GetAllTruckCategoryRequest request)
     {
         //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
-        var response = await _truckServices.GetAllCate();
-        _googleMapsService.GetDistanceAndDuration("9.922823, 106.333055", "10.772132, 106.653129");
+        var response = await _truckServices.GetAllTruckCategory(request);
+       // _googleMapsService.GetDistanceAndDuration("9.922823, 106.333055", "10.772132, 106.653129");
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
@@ -56,25 +56,44 @@ public class TruckCategoryController : BaseController
     /// </remarks>
     /// <response code="200">Get Truck Category Detail Done</response>
     /// <response code="500">Internal server error occurred</response>
+    //[HttpGet("{id}")]
+    //[Authorize]
+    //// get all
+    //public async Task<IActionResult> GetCateById(int id)
+    //{
+    //    //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+    //    var response = await _truckServices.GetCateById(id);
+
+    //    return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    //}
+
+    /// <summary>
+    /// CHORE : Retrieves a truck category by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the truck category to retrieve.</param>
+    /// <returns>An IActionResult containing the operation result.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     GET /truckcategory/1
+    /// </remarks>
+    /// <response code="200">Get House Type success</response>
+    /// <response code="404">House type not found</response>
+    /// <response code="500">Internal server error occurred</response>
     [HttpGet("{id}")]
-    [Authorize]
-    // get all
-    public async Task<IActionResult> GetCateById(int id)
+    public async Task<IActionResult> GetTruckCategoryById(int id)
     {
-        //IEnumerable<Claim> claims = HttpContext.User.Claims;
-
-        var response = await _truckServices.GetCateById(id);
-
+        var response = await _truckServices.GetTruckCategoryById(id);
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
-
 
     /// <summary>
     /// FEATURE: Set Truck image's IsDeleted become true by truck img Id
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpDelete("truck-img/delete/{id}")]
+    [HttpDelete("manager/truck-img/{id}")]
     [Authorize]
     public async Task<IActionResult> DeleteTruckImgById(int id)
     {
@@ -84,7 +103,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Creates a new truck image entry.
+    /// CHORE : Creates a new truck image entry.
     /// </summary>
     /// <param name="request">The request payload containing truck image details.</param>
     /// <returns>A response indicating success or failure of the operation.</returns>
@@ -111,7 +130,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Delete truck category by setting the truck category's IsDeleted status to true.
+    /// CHORE : Delete truck category by setting the truck category's IsDeleted status to true.
     /// </summary>
     /// <param name="id">The ID of the truck category to be deleeted.</param>
     /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
@@ -128,7 +147,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Creates a new truck category.
+    /// CHORE : Creates a new truck category.
     /// </summary>
     /// <param name="request">The truck category request model.</param>
     /// <returns>A response containing the created truck category.</returns>
@@ -161,7 +180,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Update truck category.by truck category id
+    /// CHORE : Update truck category by truck category id
     /// </summary>
     /// <param name="request">The truck category request model.</param>
     /// <returns>A response containing the created truck category.</returns>
@@ -190,5 +209,142 @@ public class TruckCategoryController : BaseController
         var response = await _truckServices.UpdateTruckCategory(id, request);
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
+    }
+
+    /// <summary>
+    /// CHORE : Retrieves a paginated list of all truck .
+    /// </summary>
+    /// <param name="request">The request containing pagination and filter parameters.</param>
+    /// <returns>An IActionResult containing the operation result.</returns>
+    /// <remarks>
+    /// </remarks>
+    /// <response code="200">Get List Truck Done</response>
+    /// <response code="200">List Truck is Empty!</response>
+    /// <response code="500">Internal server error occurred</response>
+    [HttpGet("truck")]
+    [Authorize]
+    // get all
+    public async Task<IActionResult> GetAllTruck([FromQuery] GetAllTruckRequest request)
+    {
+        //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+        var response = await _truckServices.GetAllTruck(request);
+        // _googleMapsService.GetDistanceAndDuration("9.922823, 106.333055", "10.772132, 106.653129");
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// CHORE : Retrieves a truck by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the truck to retrieve.</param>
+    /// <returns>An IActionResult containing the operation result.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     GET /truckcategory/truck
+    /// </remarks>
+    /// <response code="200">Get House Type success</response>
+    /// <response code="404">House type not found</response>
+    /// <response code="500">Internal server error occurred</response>
+    [HttpGet("truck/{id}")]
+    public async Task<IActionResult> GetTruckById(int id)
+    {
+        var response = await _truckServices.GetTruckById(id);
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+    /// <summary>
+    /// CHORE : Delete truck by setting the truck category's IsDeleted status to true.
+    /// </summary>
+    /// <param name="id">The ID of the truck to be deleeted.</param>
+    /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+    /// <response code="200">Returns if the user was successfully banned.</response>
+    /// <response code="404">Returns if the user is not found.</response>
+    /// <response code="500">Returns if a system error occurs.</response>
+    [HttpDelete("truck/{id}")]
+    public async Task<IActionResult> DeleteTruck(int id)
+    {
+        var response = await _truckServices.DeleteTruck(id);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// CHORE : Creates a new truck entry based on the provided details.
+    /// </summary>
+    /// <param name="request">An object containing details for creating the truck, including category, model, and specifications.</param>
+    /// <returns>An IActionResult containing the response indicating the success or failure of the operation.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/truckcategory/truck
+    ///     {
+    ///         "truckCategoryId": 1,
+    ///         "model": "Ford F-150",
+    ///         "numberPlate": "ABC123",
+    ///         "capacity": 5.5,
+    ///         "isAvailable": true,
+    ///         "brand": "Ford",
+    ///         "color": "Blue",
+    ///         "isInsurrance": true,
+    ///         "userId": 3
+    ///     }
+    /// 
+    /// </remarks>
+    /// <response code="201">Truck created successfully.</response>
+    /// <response code="400">Bad request, invalid data provided, or user is not a driver.</response>
+    /// <response code="404">Specified user or truck category was not found.</response>
+    /// <response code="409">User already owns a truck in the specified category.</response>
+    /// <response code="500">Internal server error occurred during processing.</response>
+    [HttpPost("truck")]
+    public async Task<IActionResult> CreateTruck([FromBody] CreateTruckRequest request)
+    {
+        var response = await _truckServices.CreateTruck(request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// CHORE : Update an existed truck entry based on the provided details.
+    /// </summary>
+    /// <param name="request">An object containing details for creating the truck, including category, model, and specifications.</param>
+    /// <returns>An IActionResult containing the response indicating the success or failure of the operation.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/truckcategory/truck
+    ///     {
+    ///         "truckCategoryId": 1,
+    ///         "model": "Ford F-150",
+    ///         "numberPlate": "ABC123",
+    ///         "capacity": 5.5,
+    ///         "isAvailable": true,
+    ///         "brand": "Ford",
+    ///         "color": "Blue",
+    ///         "isInsurrance": true,
+    ///         "truckImgs": [
+    ///             {
+    ///               "imageUrl": "string",
+    ///               "imageCode": "string"
+    ///             }
+    ///         ]
+    ///     }
+    /// 
+    /// </remarks>
+    /// <response code="201">Truck update successfully.</response>
+    /// <response code="400">Bad request, invalid data provided, or user is not a driver.</response>
+    /// <response code="404">Specified user or truck category was not found.</response>
+    /// <response code="409">User already owns a truck in the specified category.</response>
+    /// <response code="500">Internal server error occurred during processing.</response>
+    [HttpPut("truck")]
+    public async Task<IActionResult> UpdateTruck(int id,[FromBody] UpdateTruckRequest request)
+    {
+        var response = await _truckServices.UpdateTruck(id, request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
 }

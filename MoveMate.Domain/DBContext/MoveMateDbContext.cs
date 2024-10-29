@@ -457,18 +457,9 @@ public partial class MoveMateDbContext : DbContext
         modelBuilder.Entity<UserInfo>(entity =>
         {
             entity.ToTable("UserInfo");
-
-            entity.Property(e => e.Cavet).HasMaxLength(255);
-            entity.Property(e => e.CitizenIdentification).HasMaxLength(255);
-            entity.Property(e => e.Code).HasMaxLength(255);
-            entity.Property(e => e.CurriculumVitae).HasMaxLength(255);
-            entity.Property(e => e.HealthCertificate).HasMaxLength(255);
-            entity.Property(e => e.HealthInsurance).HasMaxLength(255);
-            entity.Property(e => e.ImgUrl).HasMaxLength(255);
-            entity.Property(e => e.License).HasMaxLength(255);
-            entity.Property(e => e.PermanentAddress).HasMaxLength(255);
-            entity.Property(e => e.TemporaryResidenceAddress).HasMaxLength(255);
+            entity.Property(e => e.ImageUrl).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
+            entity.Property(e => e.Value).HasMaxLength(255);
 
             entity.HasOne(d => d.User).WithMany(p => p.UserInfos)
                 .HasForeignKey(d => d.UserId)

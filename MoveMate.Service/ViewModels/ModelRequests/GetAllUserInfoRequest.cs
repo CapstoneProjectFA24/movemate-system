@@ -25,7 +25,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Search = Search.Trim().ToLower();
 
                 var queryExpression = PredicateBuilder.New<UserInfo>(true);
-                queryExpression.Or(cus => cus.Code.ToLower().Contains(Search));
+                queryExpression.Or(cus => cus.Value.ToLower().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);
@@ -51,6 +51,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .ToArray();
             }
 
+            Expression = Expression.And(u => u.IsDeleted == false);
 
             return Expression;
         }

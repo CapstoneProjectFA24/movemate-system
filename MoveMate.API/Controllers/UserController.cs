@@ -124,5 +124,58 @@ namespace MoveMate.API.Controllers
             var response = await _userService.DeleteUserInfo(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// CHORE : Creates new user information in the system.
+        /// </summary>
+        /// <param name="request">An instance of <see cref="CreateUserInfoRequest"/> containing user information details.</param>
+        /// <returns>A response indicating the result of the user information creation process.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/user-info
+        ///     {
+        ///         "userId": 1,
+        ///         "type": "CAVET",
+        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729864500/movemate/eopqdqwqcblmzc5ymbeg.jpg",
+        ///         "value": "324214221212312"
+        ///     }
+        /// </remarks>
+        /// <response code="201">Returns details of the created user information.</response>
+        /// <response code="400">If the input data is invalid or required fields are missing.</response>
+        /// <response code="500">If a server error occurs.</response>
+        [HttpPost("user-info")]
+        public async Task<IActionResult> CreateUserInfo([FromBody] CreateUserInfoRequest request)
+        {
+            var response = await _userService.CreateUserInfo(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+
+
+        /// <summary>
+        /// CHORE : Update user info by user info id
+        /// </summary>
+        /// <param name="request">The user info request model.</param>
+        /// <returns>A response containing the created user info.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT /api/user-info/{id}
+        ///     {
+        ///         "type": "CAVET",
+        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729864500/movemate/eopqdqwqcblmzc5ymbeg.jpg",
+        ///         "value": "324214221212312"
+        ///     }
+        /// </remarks>
+        /// <response code="201">Returns the created truck category</response>
+        /// <response code="500">If there is a server error</response>
+        [HttpPut("user-info/{id}")]
+        public async Task<IActionResult> UpdateUserInfo(int id, [FromBody] UpdateUserInfoRequest request)
+        {
+            var response = await _userService.UpdateUserInfoAsync(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
     }
 }

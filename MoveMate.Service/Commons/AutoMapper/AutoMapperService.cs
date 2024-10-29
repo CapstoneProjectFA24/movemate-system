@@ -33,6 +33,8 @@ namespace MoveMate.Service.Commons.AutoMapper
                 ; // Adjust as needed
             //Address
             CreateMap<UserInfo, UserInfoResponse>();
+            CreateMap<CreateUserInfoRequest, UserInfo>();
+            CreateMap<UpdateUserInfoRequest, UserInfo>();
 
             //Register
             CreateMap<User, RegisterResponse>()
@@ -84,23 +86,33 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<CreateTruckImgRequest, TruckImg>();
             CreateMap<TruckImg, TruckImageResponse>();
             CreateMap<TruckCategoryRequest, TruckCategory>();
+            CreateMap<CreateTruckRequest, Truck>()
+                .ForMember(dest => dest.TruckImgs, opt => opt.MapFrom(src => src.TruckImgs));
+            CreateMap<UpdateTruckRequest, Truck>();
+            CreateMap<Truck, TruckResponse>()
+                .ForMember(dest => dest.TruckImgs, opt => opt.MapFrom(src => src.TruckImgs));
+            CreateMap<TruckImg, TruckImgResponse>();
+            CreateMap<TruckImgRequest, TruckImg>();
+
 
             //Transaction 
             CreateMap<Transaction,  TransactionResponse>();
 
             //House Type
             CreateMap<HouseType, HouseTypesResponse>();
-                //.ForMember(dest => dest.HouseTypeSettings, opt => opt.MapFrom(src => src.HouseTypeSettings));
-           // CreateMap<HouseTypeSetting, HouseTypeSettingResponse>();
+            //.ForMember(dest => dest.HouseTypeSettings, opt => opt.MapFrom(src => src.HouseTypeSettings));
+            // CreateMap<HouseTypeSetting, HouseTypeSettingResponse>();
             //CreateMap<CreateHouseTypeSetting, HouseTypeSetting>()
-             //   .ForMember(dest => dest.Id, opt => opt.Ignore());
+            //   .ForMember(dest => dest.Id, opt => opt.Ignore());
+            CreateMap<CreateHouseTypeRequest, HouseType>();
+            CreateMap<UpdateHouseTypeRequest, HouseType>();
 
 
             //Service
             CreateMap<MoveMate.Domain.Models.Service, ServiceResponse>();
             CreateMap<MoveMate.Domain.Models.Service, ServicesResponse>()
                 .ForMember(dest => dest.InverseParentService, opt => opt.MapFrom(src => src.InverseParentService));
-
+            CreateMap<UpdateServiceRequest, ServiceResponse>();
 
             CreateMap<BookingDetail, BookingDetailRequest>();
             CreateMap<CreateServiceRequest, MoveMate.Domain.Models.Service>()

@@ -14,5 +14,8 @@ namespace MoveMate.Service.IServices
     {
         public Task<OperationResult<List<HouseTypeResponse>>> GetAll(GetAllHouseTypeRequest request);
         public Task<OperationResult<HouseTypesResponse>> GetById(int id);
+        Task<OperationResult<HouseTypeResponse>> UpdateHouseType(int id, UpdateHouseTypeRequest request);
+        Task<OperationResult<HouseTypeResponse>> CreateHouseType(CreateHouseTypeRequest request);
+        Task<OperationResult<bool>> DeleteHouseType(int id);
     }
 }

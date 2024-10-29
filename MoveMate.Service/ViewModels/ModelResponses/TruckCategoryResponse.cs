@@ -29,5 +29,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public double? Price { get; set; }
 
         public int? TotalTrips { get; set; }
+
     }
 }

@@ -6,16 +6,20 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
-    public class UserInfoResponse
+    public class VoucherResponse
     {
         public int Id { get; set; }
 
         public int? UserId { get; set; }
 
-        public string? Type { get; set; }
+        public int? PromotionCategoryId { get; set; }
 
-        public string? ImageUrl { get; set; }
+        public int? BookingId { get; set; }
 
-        public string? Value { get; set; }
+        public double? Price { get; set; }
+
+        public string? Code { get; set; }
+
+        public bool? IsActived { get; set; }
     }
 }

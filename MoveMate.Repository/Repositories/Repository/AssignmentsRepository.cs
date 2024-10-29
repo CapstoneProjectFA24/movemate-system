@@ -22,5 +22,13 @@ namespace MoveMate.Repository.Repositories.Repository
                                 .FirstOrDefault();
             return assignment;
         }
+
+        public Assignment GetByStaffTypeAndIsResponsible(string staffType, int bookingId)
+        {
+            var assignment = Get(a => a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)
+                                .FirstOrDefault();
+            return assignment;
+        }
+
     }
 }
