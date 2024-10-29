@@ -1799,6 +1799,12 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                if (existingBooking.IsReviewOnline == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewOnline);
+                    return result;
+                }
+
                 if (existingBooking.Status == BookingEnums.ASSIGNED.ToString())
                 {
                     existingBooking.Status = BookingEnums.WAITING.ToString();

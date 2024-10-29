@@ -113,21 +113,15 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<bool>();
             try
             {
-                var truclImg = await _unitOfWork.TruckImgRepository.GetByIdAsync(id);
-                if (truclImg == null)
+                var truckImg = await _unitOfWork.TruckImgRepository.GetByIdAsync(id);
+                if (truckImg == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckImg);
                     return result;
                 }
-                if (truclImg.IsDeleted == true)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckImgIsDeleted);
-                    return result;
-                }
-                truclImg.IsDeleted = true;
 
-                _unitOfWork.TruckImgRepository.Update(truclImg);
-                _unitOfWork.Save();
+                 _unitOfWork.TruckImgRepository.Remove(truckImg);
+                 _unitOfWork.Save();
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteTruckImg, true);
             }
             catch
@@ -362,13 +356,15 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId);
+                // Retrieve the truck by ID, including related images
+                var truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
                 if (truck == null)
                 {
                     result.AddError(StatusCode.NotFound, "Truck not found.");
                     return result;
                 }
 
+                // Update Truck Category if provided
                 if (request.TruckCategoryId.HasValue)
                 {
                     var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId.Value);
@@ -388,14 +384,23 @@ namespace MoveMate.Service.Services
                 truck.Brand = request.Brand;
                 truck.Color = request.Color;
                 truck.IsInsurrance = request.IsInsurrance;
-                truck.UserId = request.UserId;
+                //truck.UserId = request.UserId;
 
-                // Update or add truck images
+                // Delete all existing images in the database for the truck
+                if (truck.TruckImgs.Any())
+                {
+                    foreach (var existingImg in truck.TruckImgs.ToList())
+                    {
+                        _unitOfWork.TruckImgRepository.Remove(existingImg);
+                    }
+                    await _unitOfWork.SaveChangesAsync(); // Save deletion changes to the database
+                }
+
+                // Add new images from the request if provided
                 if (request.TruckImgs != null && request.TruckImgs.Any())
                 {
                     foreach (var imgRequest in request.TruckImgs)
                     {
-                        // Map or add new images
                         var truckImg = new TruckImg
                         {
                             TruckId = truck.Id,
@@ -406,9 +411,14 @@ namespace MoveMate.Service.Services
                     }
                 }
 
+                // Update truck and save changes
                 _unitOfWork.TruckRepository.Update(truck);
                 await _unitOfWork.SaveChangesAsync();
 
+                // Fetch the updated truck with all images to ensure the response includes them
+                truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
+
+                // Map updated truck to response model
                 var response = _mapper.Map<TruckResponse>(truck);
                 result.AddResponseStatusCode(StatusCode.Ok, "Truck updated successfully.", response);
             }
@@ -419,7 +429,6 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
 
         public async Task<OperationResult<TruckResponse>> CreateTruck(CreateTruckRequest request)
         {

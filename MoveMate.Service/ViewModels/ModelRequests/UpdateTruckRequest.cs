@@ -24,7 +24,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public bool? IsInsurrance { get; set; }
 
-        public int? UserId { get; set; }
+        //public int? UserId { get; set; }
 
         public virtual ICollection<TruckImgRequest> TruckImgs { get; set; } = new List<TruckImgRequest>();
     }
