@@ -24,7 +24,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Retrieves a paginated list of all house types.
+        /// FEATURE : Retrieves a paginated list of all house types.
         /// </summary>
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -46,7 +46,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Retrieves a house type by its ID.
+        /// FEATURE : Retrieves a house type by its ID.
         /// </summary>
         /// <param name="id">The ID of the house type to retrieve.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -120,7 +120,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Creates a new house type.
+        /// CHORE : Creates a new house type.
         /// </summary>
         /// <param name="request">The house type request model.</param>
         /// <returns>A response containing the created house type.</returns>
@@ -145,7 +145,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Update house type by house type id
+        /// CHORE : Update house type by house type id
         /// </summary>
         /// <param name="request">The house type request model.</param>
         /// <returns>A response containing the created house type.</returns>

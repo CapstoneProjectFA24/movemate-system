@@ -203,7 +203,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("user/confirm-round-trip/{id}")]
+        [HttpPatch("user/confirm-round-trip/{id}")]
         [Authorize]
         public async Task<IActionResult> UserConfirmRoundTrip(int id)
         {

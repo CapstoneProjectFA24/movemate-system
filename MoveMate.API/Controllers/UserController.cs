@@ -126,7 +126,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Creates new user information in the system.
+        /// CHORE : Creates new user information in the system.
         /// </summary>
         /// <param name="request">An instance of <see cref="CreateUserInfoRequest"/> containing user information details.</param>
         /// <returns>A response indicating the result of the user information creation process.</returns>
@@ -154,7 +154,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Update user info by user info id
+        /// CHORE : Update user info by user info id
         /// </summary>
         /// <param name="request">The user info request model.</param>
         /// <returns>A response containing the created user info.</returns>

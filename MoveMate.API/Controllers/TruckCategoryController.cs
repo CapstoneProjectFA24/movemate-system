@@ -103,7 +103,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Creates a new truck image entry.
+    /// CHORE : Creates a new truck image entry.
     /// </summary>
     /// <param name="request">The request payload containing truck image details.</param>
     /// <returns>A response indicating success or failure of the operation.</returns>
@@ -130,7 +130,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Delete truck category by setting the truck category's IsDeleted status to true.
+    /// CHORE : Delete truck category by setting the truck category's IsDeleted status to true.
     /// </summary>
     /// <param name="id">The ID of the truck category to be deleeted.</param>
     /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
@@ -147,7 +147,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Creates a new truck category.
+    /// CHORE : Creates a new truck category.
     /// </summary>
     /// <param name="request">The truck category request model.</param>
     /// <returns>A response containing the created truck category.</returns>
@@ -180,7 +180,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Update truck category by truck category id
+    /// CHORE : Update truck category by truck category id
     /// </summary>
     /// <param name="request">The truck category request model.</param>
     /// <returns>A response containing the created truck category.</returns>
@@ -256,7 +256,7 @@ public class TruckCategoryController : BaseController
     }
 
     /// <summary>
-    /// Delete truck by setting the truck category's IsDeleted status to true.
+    /// CHORE : Delete truck by setting the truck category's IsDeleted status to true.
     /// </summary>
     /// <param name="id">The ID of the truck to be deleeted.</param>
     /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
@@ -273,7 +273,7 @@ public class TruckCategoryController : BaseController
 
 
     /// <summary>
-    /// Creates a new truck entry based on the provided details.
+    /// CHORE : Creates a new truck entry based on the provided details.
     /// </summary>
     /// <param name="request">An object containing details for creating the truck, including category, model, and specifications.</param>
     /// <returns>An IActionResult containing the response indicating the success or failure of the operation.</returns>
@@ -307,6 +307,39 @@ public class TruckCategoryController : BaseController
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
 
+
+    /// <summary>
+    /// CHORE : Update an existed truck entry based on the provided details.
+    /// </summary>
+    /// <param name="request">An object containing details for creating the truck, including category, model, and specifications.</param>
+    /// <returns>An IActionResult containing the response indicating the success or failure of the operation.</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     POST /api/truckcategory/truck
+    ///     {
+    ///         "truckCategoryId": 1,
+    ///         "model": "Ford F-150",
+    ///         "numberPlate": "ABC123",
+    ///         "capacity": 5.5,
+    ///         "isAvailable": true,
+    ///         "brand": "Ford",
+    ///         "color": "Blue",
+    ///         "isInsurrance": true,
+    ///         "truckImgs": [
+    ///             {
+    ///               "imageUrl": "string",
+    ///               "imageCode": "string"
+    ///             }
+    ///         ]
+    ///     }
+    /// 
+    /// </remarks>
+    /// <response code="201">Truck update successfully.</response>
+    /// <response code="400">Bad request, invalid data provided, or user is not a driver.</response>
+    /// <response code="404">Specified user or truck category was not found.</response>
+    /// <response code="409">User already owns a truck in the specified category.</response>
+    /// <response code="500">Internal server error occurred during processing.</response>
     [HttpPut("truck")]
     public async Task<IActionResult> UpdateTruck(int id,[FromBody] UpdateTruckRequest request)
     {

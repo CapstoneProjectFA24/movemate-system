@@ -34,7 +34,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Retrieves a paginated list of all service not type truck.
+        /// FEATURE : Retrieves a paginated list of all service not type truck.
         /// </summary>
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -69,7 +69,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Retrieves a paginated list of all service type truck.
+        /// FEATURE : Retrieves a paginated list of all service type truck.
         /// </summary>
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
@@ -174,7 +174,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Creates a new service with the specified details.
+        /// CHORE : Creates a new service with the specified details.
         /// </summary>
         /// <param name="request">An instance of <see cref="CreateServiceRequest"/> containing service information.</param>
         /// <returns>A response indicating the result of the service creation process.</returns>
@@ -213,7 +213,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Delete service by setting the service's IsActive status to false.
+        /// CHORE : Delete service by setting the service's IsActive status to false.
         /// </summary>
         /// <param name="id">The ID of the service to be deleeted.</param>
         /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
@@ -230,7 +230,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// Updates an existing service by its ID.
+        /// CHORE : Updates an existing service by its ID.
         /// </summary>
         /// <param name="id">The unique identifier of the service to update.</param>
         /// <param name="request">The request model containing updated service details.</param>

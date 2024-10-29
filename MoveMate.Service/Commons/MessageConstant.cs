@@ -136,6 +136,7 @@ namespace MoveMate.Service.Commons
             public const string ServiceUpdateFail = "Update service failed";
             public const string NotFoundParentService = "Parent service not found";
             public const string CannotUpdateParentForTierZero = "Can not update parentServiceId for service tier 0)";
+            public const string AssignedLeader = "Leader have been assigned";
 
 
             //FeeSetting
@@ -176,6 +177,9 @@ namespace MoveMate.Service.Commons
             public const string VerifyReviewOffline= "Must have image or video to verify from SUGGESTED to REVIEWED";
             public const string NotFoundTrackerSource = "Tracker source not found";
             public const string TrackerSourceIsDeleted = "Tracker source has been deleted";
+
+            //Assignment
+            public const string AssignmentUpdateFail = "Update assignment failed";
 
         }
 
@@ -275,6 +279,9 @@ namespace MoveMate.Service.Commons
             //HouseType
             public const string HouseTypeUpdateSuccess = "Update house type succesful";
             public const string CreateHouseType = "Create a new house type successful";
+
+            //Assignment
+            public const string UpdateAssignment = "Update assignment successful";
         }
 
 

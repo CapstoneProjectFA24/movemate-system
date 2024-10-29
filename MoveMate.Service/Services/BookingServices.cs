@@ -1938,5 +1938,51 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<AssignmentResponse>> AssignedLeader(int assignmentId)
+        {
+            var result = new OperationResult<AssignmentResponse>();
+            try
+            {
+                var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
+                if (assignment == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
+
+                var checkLeader = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(assignment.StaffType, (int)assignment.BookingId);
+                if (checkLeader != null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignedLeader);
+                    return result;
+                }
+
+                assignment.IsResponsible = true;
+                _unitOfWork.AssignmentsRepository.Update(assignment);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignment.Id);
+                    var response = _mapper.Map<AssignmentResponse>(assignment);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateAssignment,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+
+            return result;
+        }
     }
 }
