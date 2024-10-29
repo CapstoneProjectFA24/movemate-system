@@ -4,33 +4,33 @@ public class Pagination
 {
     public Pagination()
     {
-        PageIndex = 0;
-        PageSize = 1;
-        TotalItemsCount = 1;
+        pageIndex = 0;
+        pageSize = 1;
+        totalItemsCount = 1;
     }
 
     public Pagination(int pageIndex, int pageSize, int count)
     {
-        PageIndex = pageIndex;
-        PageSize = pageSize;
-        TotalItemsCount = count;
+        this.pageIndex = pageIndex;
+        this.pageSize = pageSize;
+        totalItemsCount = count;
     }
 
-    public int TotalItemsCount { get; set; }
-    public int PageSize { get; set; } = -1;
-    public int PageIndex { get; set; } = 0;
+    public int totalItemsCount { get; set; }
+    public int pageSize { get; set; } = -1;
+    public int pageIndex { get; set; } = 0;
 
     public int TotalPagesCount
     {
         get
         {
-            if (PageSize == -1)
+            if (pageSize == -1)
             {
-                return TotalItemsCount;
+                return totalItemsCount;
             }
 
-            var temp = TotalItemsCount / PageSize;
-            if (TotalItemsCount % PageSize == 0)
+            var temp = totalItemsCount / pageSize;
+            if (totalItemsCount % pageSize == 0)
             {
                 return temp;
             }

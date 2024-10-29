@@ -365,9 +365,9 @@ namespace MoveMate.Repository.Repositories.GenericRepository
             IQueryable<TEntity> query = _dbSet;
 
             var pagin = new Pagination();
-            pagin.TotalItemsCount = query.Count();
-            pagin.PageSize = pageSize ?? -1;
-            pagin.PageIndex = pageIndex ?? 0;
+            pagin.totalItemsCount = query.Count();
+            pagin.pageSize = pageSize ?? -1;
+            pagin.pageIndex = pageIndex ?? 0;
 
             if (filter != null)
             {
