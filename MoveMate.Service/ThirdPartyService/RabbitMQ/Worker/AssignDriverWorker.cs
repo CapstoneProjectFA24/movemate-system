@@ -37,11 +37,11 @@ Quy trình nâng cấp tự động gán tài xế:
      - Kiểm tra Redis queue _booking_at:
        - Nếu queue có phần tử:
           - Lấy phần tử từ queue và gán vào assignment.
-          - Kiểm tra lịch sử năng suất:
+          -* Kiểm tra lịch sử năng suất*:
             - Nếu tài xế có tần suất từ chối nhiệm vụ cao, giảm ưu tiên gán.
 
        - Nếu queue rỗng:
-         - Kiểm tra chi tiết lịch làm việc (schedule detail) của tài xế:
+         - Kiểm tra chi tiết lịch làm việc (schedule booking detail) của tài xế:
            - Điều kiện kiểm tra:
              - endTime của booking_at > startTime của schedule hoặc startTime của booking < endTime của schedule.
            - Nếu có lịch rảnh:
@@ -55,29 +55,29 @@ Quy trình nâng cấp tự động gán tài xế:
                    - Trong vòng 2 giờ: rate += 0.5.
                - So sánh và chọn tài xế:
                  - Tính toán rate dựa trên khoảng cách: rate = rate / khoảng cách.
-                 - Bổ sung: Tính toán yếu tố môi trường (thời tiết, tắc đường) vào rate.
+                 - ! Bổ sung: Tính toán yếu tố môi trường (thời tiết, tắc đường) vào rate.
              - Nếu count = 1: Chọn ngay.
              - Nếu count < 1: Đánh tag "auto-assign failed, cần review can thiệp".
            - Nếu không có lịch rảnh thỏa điều kiện, đánh tag "auto-assign failed, cần review can thiệp".
 
 2. Bổ sung các tình huống đặc biệt:
-   - Trường hợp khẩn cấp:
+   - Trường hợp khẩn cấp - khi nào tình huống khẩn cấp:
      - Khi có yêu cầu khẩn cấp, hệ thống tạm ngừng gán tự động khác và ưu tiên tài xế gần nhất.
    - Dự phòng khi thiếu tài xế:
-     - Nếu không có tài xế phù hợp, tự động đặt lệnh chờ (standby) và tìm kiếm tài xế từ các nguồn khác.
+     - Nếu không có tài xế phù hợp, tự động đặt lệnh chờ (standby) và tìm kiếm manager.
    - Lựa chọn tài xế dự phòng:
      - Nếu tài xế có lịch xung đột, đưa họ vào danh sách dự phòng để tái gán khi tài xế chính không khả dụng.
    - Cảnh báo cho quản lý:
      - Gửi cảnh báo cho quản lý khi tỷ lệ gán thất bại quá cao hoặc không có tài xế phù hợp.
-   - Phân bổ dựa trên xếp hạng:
+   -* Phân bổ dựa trên xếp hạng - cần công thức tính toán:
      - Tính toán điểm xếp hạng dựa trên hiệu suất, độ uy tín, và phản hồi từ khách hàng để ưu tiên tài xế chất lượng cao cho nhiệm vụ phức tạp.
 
 3. Giám sát và cải tiến quy trình:
-   - Phân tích định kỳ:
+   - ! Phân tích định kỳ:
      - Thực hiện phân tích định kỳ để đánh giá hiệu quả của quy trình gán tài xế, từ đó điều chỉnh các tham số và quy định.
-   - Phản hồi từ tài xế:
+   - ! Phản hồi từ tài xế:
      - Tạo kênh phản hồi cho tài xế để thu thập thông tin về quy trình gán và cải tiến dựa trên ý kiến của họ.
-   - Cập nhật công nghệ:
+   - ! Cập nhật công nghệ:
      - Nghiên cứu và áp dụng các công nghệ mới như AI và machine learning để tự động hóa và tối ưu hóa quy trình gán tài xế.
 */
 
@@ -106,32 +106,33 @@ Quy trình nâng cấp tự động gán tài xế:
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
                 }
-                
+
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt);
-                  
+
                 var schedule = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
 
                 if (schedule == null)
                 {
-                  var driverIds =
-                    await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!.Value);
-                  await redisService.EnqueueMultipleAsync(redisKey, driverIds);
-                  
-                  for (int i = 0; i < existingBooking.DriverNumber; i++)
-                  {
-                    var driverId = await redisService.DequeueAsync<int>(redisKey);
-                    var endtime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime ?? 3);
-                    var newScheduleReview = new ScheduleBookingDetail()
+                    var driverIds =
+                        await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
+                            .Value);
+                    await redisService.EnqueueMultipleAsync(redisKey, driverIds);
+
+                    for (int i = 0; i < existingBooking.DriverNumber; i++)
                     {
-                      BookingId = message,
-                      Type = RoleEnums.DRIVER.ToString(),
-                      StartDate = existingBooking.ReviewAt,
-                      UserId = driverId,
-                      EndDate = endtime
-                      
-                    }; 
-                  }
+                        var driverId = await redisService.DequeueAsync<int>(redisKey);
+                        var endtime =
+                            existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime ?? 3);
+                        var newScheduleReview = new ScheduleBookingDetail()
+                        {
+                            BookingId = message,
+                            Type = RoleEnums.DRIVER.ToString(),
+                            StartDate = existingBooking.ReviewAt,
+                            UserId = driverId,
+                            EndDate = endtime
+                        };
+                    }
                 }
             }
         }
