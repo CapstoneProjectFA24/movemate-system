@@ -39,7 +39,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.GetWithCount(
+                var entities = _unitOfWork.ServiceRepository.GetAllWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
