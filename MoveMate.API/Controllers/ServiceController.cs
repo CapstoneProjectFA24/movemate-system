@@ -61,7 +61,7 @@ namespace MoveMate.API.Controllers
                 response = await _services.GetAllNotTruck(request);
                 if (!response.IsError)
                 {
-                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromHours(10));
+                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(10));
                 }
             }
 
@@ -94,7 +94,7 @@ namespace MoveMate.API.Controllers
                 response = await _services.GetAllServiceTruck(request);
                 if (!response.IsError)
                 {
-                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromHours(10));
+                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(10));
                 }
             }
 
@@ -154,7 +154,7 @@ namespace MoveMate.API.Controllers
 
                 if (!response.IsError)
                 {
-                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromHours(20));
+                    await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(10));
                 }
             }
 
