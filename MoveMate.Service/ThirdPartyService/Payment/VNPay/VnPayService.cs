@@ -376,7 +376,6 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 else if (booking.Status == BookingEnums.COMPLETED.ToString())
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
-                    _producer.SendingMessage("movemate.booking_assign_driver_local", booking.Id);
 
                 }
                 else

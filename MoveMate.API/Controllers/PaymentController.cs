@@ -155,6 +155,7 @@ namespace MoveMate.API.Controllers
             {
                 return HandleErrorResponse(operationResult.Errors);
             }
+            //_producer.SendingMessage("movemate.booking_assign_driver_local", booking.Id);
 
             // Return the successful operation result
             return Ok(operationResult);
