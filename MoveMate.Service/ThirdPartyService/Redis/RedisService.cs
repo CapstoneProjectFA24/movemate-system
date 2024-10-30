@@ -140,7 +140,7 @@ public class RedisService : IRedisService
             }
             
             await _database.ListRightPushAsync(queueKey, jsonData);
-            Console.WriteLine($"Successfully enqueued data to queue '{queueKey}': {jsonData}");
+            //Console.WriteLine($"Successfully enqueued data to queue '{queueKey}': {jsonData}");
             
             var expiryResult = await _database.KeyExpireAsync(queueKey, expiryTime);
             if (expiryResult)
@@ -272,4 +272,20 @@ public class RedisService : IRedisService
 
         return JsonSerializer.Deserialize<T>(jsonData);
     }
+    
+    public async Task<long> CheckQueueCountAsync(string queueKey)
+    {
+        try
+        {
+            long count = await _database.ListLengthAsync(queueKey);
+            Console.WriteLine($"Queue '{queueKey}' hiện có {count} phần tử.");
+            return count;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Đã xảy ra lỗi khi kiểm tra số lượng phần tử trong queue '{queueKey}': {ex.Message}");
+            return 0;
+        }
+    }
+
 }

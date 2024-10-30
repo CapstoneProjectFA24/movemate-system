@@ -108,12 +108,12 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IMessageProducer, MessageProducer>();
             services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
             
-            services.AddTransient<MyMessageHandlerWorker>(); 
+            services.AddScoped<MyMessageHandlerWorker>(); 
             services.AddScoped<AssignReviewWorker>();   
             services.AddScoped<SetScheduleReview>();
             services.AddScoped<AssignDriverWorker>();
             
-            services.AddSingleton<Index>();
+            services.AddScoped<Index>();
 
             services.AddHostedService<Index>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();

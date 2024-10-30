@@ -50,7 +50,7 @@ namespace MoveMate.API.Controllers
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
             
-            var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
+            /*var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
             
             var queryRequestHash = hash.GetHashCode();
             var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
@@ -63,7 +63,8 @@ namespace MoveMate.API.Controllers
                 {
                     await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(30));
                 }
-            }
+            }*/
+            var response = await _services.GetAllNotTruck(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
@@ -83,7 +84,7 @@ namespace MoveMate.API.Controllers
         // get all
         public async Task<IActionResult> GetAllServiceTruck([FromQuery] GetAllServiceTruckType request)
         {
-            var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
+            /*var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
             
             var queryRequestHash = hash.GetHashCode();
             var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
@@ -96,7 +97,8 @@ namespace MoveMate.API.Controllers
                 {
                     await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(30));
                 }
-            }
+            }*/
+            var response = await _services.GetAllServiceTruck(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
@@ -142,7 +144,7 @@ namespace MoveMate.API.Controllers
             _producer.SendingMessage<String>("hello");
             string queueKey = "myQueue";
 
-            var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
+            /*var hash = request.GetExpressions() + request.page.ToString() + request .per_page + request.GetOrder();
             
             var queryRequestHash = hash.GetHashCode();
             var keyService = RedisConstants.ServiceConstants.GetService + queryRequestHash;
@@ -156,18 +158,18 @@ namespace MoveMate.API.Controllers
                 {
                     await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(30));
                 }
-            }
-
+            }*/
+            var response = await _services.GetAll(request);
             await _redisService.EnqueueAsync(queueKey, response.Payload);
-            var key = DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + "mykey";
+            //var key = DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + "mykey";
             //await _redisService.SetDataAsync(key, "Hello, World! my key");
 
-            await _redisService.EnqueueWithExpiryAsync("testqueue", "test");
+            //await _redisService.EnqueueWithExpiryAsync("testqueue", "test");
 
-            await _redisService.SetDataAsync(key, response.Payload);
-            await _redisService.RemoveKeysWithPatternAsync("my");
+            //await _redisService.SetDataAsync(key, response.Payload);
+            //await _redisService.RemoveKeysWithPatternAsync("my");
 
-            var check = await _redisService.GetDataAsync<List<ServicesResponse>>(key);
+            //var check = await _redisService.GetDataAsync<List<ServicesResponse>>(key);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }

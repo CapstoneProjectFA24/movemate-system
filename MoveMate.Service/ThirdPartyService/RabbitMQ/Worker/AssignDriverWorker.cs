@@ -112,45 +112,44 @@ Quy trình nâng cấp tự động gán tài xế:
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt);
 
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
+                var listScheduleBookingDetails = new List<ScheduleBookingDetail>();
 
                 if (scheduleBooking == null)
                 {
                     var timeExpiry = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
-                    
+
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value);
                     await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiry);
-                    var listScheduleBookingDetails = new List<ScheduleBookingDetail>();
 
-                    for (int i = 0; i < existingBooking.DriverNumber; i++)
+                    await AssignDriversToBooking(
+                        message,
+                        redisKey,
+                        existingBooking.BookingAt.Value,
+                        existingBooking.DriverNumber!.Value,
+                        existingBooking.EstimatedDeliveryTime ?? 3,
+                        listScheduleBookingDetails,
+                        redisService,
+                        unitOfWork
+                    );
+                }
+                else
+                {
+                    var countDriver = await redisService.CheckQueueCountAsync(redisKey);
+                    if (countDriver > existingBooking.DriverNumber)
                     {
-                        var driverId = await redisService.DequeueAsync<int>(redisKey);
-                        var endtime =
-                            existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime ?? 3);
-                        var newScheduleReview = new ScheduleBookingDetail()
-                        {
-                            BookingId = message,
-                            Type = RoleEnums.DRIVER.ToString(),
-                            StartDate = existingBooking.BookingAt.Value,
-                            UserId = driverId,
-                            EndDate = endtime,
-                            
-                            
-                        };
-                        listScheduleBookingDetails.Add(newScheduleReview);                        
+                        await AssignDriversToBooking(
+                            message,
+                            redisKey,
+                            existingBooking.BookingAt!.Value,
+                            existingBooking.DriverNumber.Value,
+                            existingBooking.EstimatedDeliveryTime ?? 3,
+                            listScheduleBookingDetails,
+                            redisService,
+                            unitOfWork
+                        );
                     }
-                    
-                    var newScheduleBooking = new ScheduleBooking()
-                    {
-                        Shard = date,
-                        IsActived = true,
-                        ScheduleBookingDetails = listScheduleBookingDetails,
-                    };
-
-                    await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(newScheduleBooking);
-                    var saveResult = unitOfWork.Save();
-
                 }
             }
         }
@@ -160,6 +159,39 @@ Quy trình nâng cấp tự động gán tài xế:
             throw;
         }
     }
+
+    private async Task AssignDriversToBooking(int bookingId, string redisKey, DateTime startTime, int driverCount,
+        double estimatedDeliveryTime, List<ScheduleBookingDetail> listScheduleBookingDetails,
+        IRedisService redisService, UnitOfWork unitOfWork)
+    {
+        for (int i = 0; i < driverCount; i++)
+        {
+            var driverId = await redisService.DequeueAsync<int>(redisKey);
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
+
+            var newScheduleBookingDetail = new ScheduleBookingDetail()
+            {
+                BookingId = bookingId,
+                Type = RoleEnums.DRIVER.ToString(),
+                StartDate = startTime,
+                UserId = driverId,
+                EndDate = endTime,
+            };
+
+            listScheduleBookingDetails.Add(newScheduleBookingDetail);
+        }
+
+        var newScheduleBooking = new ScheduleBooking()
+        {
+            Shard = DateUtil.GetShard(startTime),
+            IsActived = true,
+            ScheduleBookingDetails = listScheduleBookingDetails,
+        };
+
+        await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(newScheduleBooking);
+        unitOfWork.Save();
+    }
+
 
     //[Consumer("movemate.booking_assign_driver_local")]
     //public async Task HandleMessage(int message)
