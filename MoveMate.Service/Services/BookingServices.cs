@@ -1358,9 +1358,13 @@ namespace MoveMate.Service.Services
                         {
                             booking.Status = BookingEnums.REVIEWING.ToString();
                         }
-                        else
+                        else if (booking.IsReviewOnline == false && booking.Status == BookingEnums.REVIEWING.ToString())
                         {
                             nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                        }else
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewing);
+                            return result;
                         }
 
                         break;
@@ -1392,6 +1396,7 @@ namespace MoveMate.Service.Services
                         if (request.ResourceList.Count() <= 0)
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
                         }
 
                         await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
@@ -1825,7 +1830,7 @@ namespace MoveMate.Service.Services
 
                 if (saveResult > 0)
                 {
-                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId, includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
@@ -1922,7 +1927,7 @@ namespace MoveMate.Service.Services
 
                 if (saveResult > 0)
                 {
-                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId);
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId, includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,

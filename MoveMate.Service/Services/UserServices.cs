@@ -348,5 +348,31 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        public async Task<OperationResult<GetUserResponse>> GetUserById(int id)
+        {
+            var result = new OperationResult<GetUserResponse>();
+            try
+            {
+                var entity =
+                    await _unitOfWork.UserRepository.GetByIdAsync(id);
+
+                if (entity == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                }
+                else
+                {
+                    var productResponse = _mapper.Map<GetUserResponse>(entity);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess, productResponse);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
     }
 }

@@ -89,7 +89,7 @@ public class TruckCategoryController : BaseController
     }
 
     /// <summary>
-    /// FEATURE: Set Truck image's IsDeleted become true by truck img Id
+    /// CHORE : Set Truck image's IsDeleted become true by truck img Id
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>

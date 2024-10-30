@@ -35,6 +35,8 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<UserInfo, UserInfoResponse>();
             CreateMap<CreateUserInfoRequest, UserInfo>();
             CreateMap<UpdateUserInfoRequest, UserInfo>();
+            CreateMap<User, GetUserResponse>();
+
 
             //Register
             CreateMap<User, RegisterResponse>()
@@ -144,6 +146,18 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //Fee Setting
             CreateMap<FeeSetting, FeeSettingResponse>();
+
+            //Promotion
+            CreateMap<CreatePromotionRequest, PromotionCategory>()
+                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
+            CreateMap<UpdatePromotionRequest, PromotionCategory>();
+            CreateMap<PromotionCategory, PromotionResponse>()
+                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
+
+            //Voucher
+            CreateMap<VoucherRequest, Voucher>();
+            CreateMap<Voucher, VoucherResponse>();
+            CreateMap<CreateVoucherRequest, Voucher>();
         }
     }
 }
