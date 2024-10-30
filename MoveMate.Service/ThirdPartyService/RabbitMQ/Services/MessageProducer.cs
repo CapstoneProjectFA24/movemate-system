@@ -22,7 +22,7 @@ public class MessageProducer : IMessageProducer, IDisposable
 
     public void SendingMessage<T>(T message)
     {
-        SendingMessage("chanel-1", message);
+        SendingMessage("chanel-2", message);
     }
 
     public void SendingMessage<T>(string channel, T message)
