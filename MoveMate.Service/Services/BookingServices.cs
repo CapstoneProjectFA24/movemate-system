@@ -1397,6 +1397,7 @@ namespace MoveMate.Service.Services
                         await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
                         booking.Status = BookingEnums.REVIEWED.ToString();
+                        booking.IsStaffReview = true;
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -1703,6 +1704,7 @@ namespace MoveMate.Service.Services
                 if (existingBooking.IsReviewOnline == true)
                 {
                     existingBooking.Status = BookingEnums.REVIEWED.ToString();
+                    existingBooking.IsStaffReview = true;
                 }
 
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
@@ -1817,7 +1819,7 @@ namespace MoveMate.Service.Services
 
                 existingBooking.ReviewAt = request.ReviewAt;
                 existingBooking.UpdatedAt = DateTime.Now;
-                
+
                 _unitOfWork.BookingRepository.Update(existingBooking);
                 var saveResult = await _unitOfWork.SaveChangesAsync();
 
@@ -1951,7 +1953,9 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                var checkLeader = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(assignment.StaffType, (int)assignment.BookingId);
+                var checkLeader =
+                    _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(assignment.StaffType,
+                        (int)assignment.BookingId);
                 if (checkLeader != null)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignedLeader);

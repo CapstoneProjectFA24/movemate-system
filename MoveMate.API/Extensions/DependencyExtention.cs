@@ -277,7 +277,7 @@ namespace MoveMate.API.Extensions
                 var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
-                options.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "MoveMate", Version = "v1" });
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
