@@ -35,6 +35,8 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<UserInfo, UserInfoResponse>();
             CreateMap<CreateUserInfoRequest, UserInfo>();
             CreateMap<UpdateUserInfoRequest, UserInfo>();
+            CreateMap<User, GetUserResponse>();
+
 
             //Register
             CreateMap<User, RegisterResponse>()
@@ -155,6 +157,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             //Voucher
             CreateMap<VoucherRequest, Voucher>();
             CreateMap<Voucher, VoucherResponse>();
+            CreateMap<CreateVoucherRequest, Voucher>();
         }
     }
 }

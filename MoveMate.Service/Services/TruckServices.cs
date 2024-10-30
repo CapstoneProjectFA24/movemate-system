@@ -364,27 +364,14 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                // Update Truck Category if provided
-                if (request.TruckCategoryId.HasValue)
+                var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId.Value);
+                if (truckCategory == null)
                 {
-                    var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId.Value);
-                    if (truckCategory == null)
-                    {
-                        result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
-                        return result;
-                    }
-                    truck.TruckCategoryId = request.TruckCategoryId.Value;
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
+                    return result;
                 }
 
-                // Update truck details
-                truck.Model = request.Model;
-                truck.NumberPlate = request.NumberPlate;
-                truck.Capacity = request.Capacity;
-                truck.IsAvailable = request.IsAvailable;
-                truck.Brand = request.Brand;
-                truck.Color = request.Color;
-                truck.IsInsurrance = request.IsInsurrance;
-                //truck.UserId = request.UserId;
+                ReflectionUtils.UpdateProperties(request, truck);
 
                 // Delete all existing images in the database for the truck
                 if (truck.TruckImgs.Any())
@@ -392,8 +379,7 @@ namespace MoveMate.Service.Services
                     foreach (var existingImg in truck.TruckImgs.ToList())
                     {
                         _unitOfWork.TruckImgRepository.Remove(existingImg);
-                    }
-                    await _unitOfWork.SaveChangesAsync(); // Save deletion changes to the database
+                    }              
                 }
 
                 // Add new images from the request if provided
@@ -411,14 +397,10 @@ namespace MoveMate.Service.Services
                     }
                 }
 
-                // Update truck and save changes
                 _unitOfWork.TruckRepository.Update(truck);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Fetch the updated truck with all images to ensure the response includes them
                 truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
-
-                // Map updated truck to response model
                 var response = _mapper.Map<TruckResponse>(truck);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckUpdateSuccess, response);
             }

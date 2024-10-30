@@ -105,47 +105,16 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                promotion.IsPublic = request.IsPublic;
-                promotion.Name = request.Name;
-                promotion.Description = request.Description;
-                promotion.StartDate = request.StartDate;
-                promotion.EndDate = request.EndDate;
-                promotion.DiscountRate = request.DiscountRate;
-                promotion.DiscountMax = request.DiscountMax;
-                promotion.DiscountMin = request.DiscountMin;
-                promotion.RequireMin = request.RequireMin;
-                promotion.Type = request.Type;
-                promotion.Quantity = request.Quantity;
-                promotion.StartBookingTime = request.StartBookingTime;
-                promotion.EndBookingTime = request.EndBookingTime;
-                promotion.IsInfinite = request.IsInfinite;
-                promotion.ServiceId = request.ServiceId;
-
-                if (promotion.Vouchers.Any())
+                
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)request.ServiceId);
+                if (service == null)
                 {
-                    foreach (var existingImg in promotion.Vouchers.ToList())
-                    {
-                        _unitOfWork.VoucherRepository.Remove(existingImg);
-                    }
-                    await _unitOfWork.SaveChangesAsync(); // Save deletion changes to the database
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
+                    return result;
                 }
 
-                // Add new images from the request if provided
-                if (request.Vouchers != null && request.Vouchers.Any())
-                {
-                    foreach (var imgRequest in request.Vouchers)
-                    {
-                        var truckImg = new Voucher
-                        {
-                            PromotionCategoryId = promotion.Id,
-                            Code = imgRequest.Code,
-                            Price = imgRequest.Price
-                        };
-                        promotion.Vouchers.Add(truckImg);
-                    }
-                }
-
-                // Update truck and save changes
+                ReflectionUtils.UpdateProperties(request, promotion);
+                
                 _unitOfWork.PromotionCategoryRepository.Update(promotion);
                 await _unitOfWork.SaveChangesAsync();
 

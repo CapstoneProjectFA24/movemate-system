@@ -19,6 +19,8 @@ public partial class Voucher
 
     public bool? IsActived { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual Booking? Booking { get; set; }
 
     public virtual PromotionCategory? PromotionCategory { get; set; }
