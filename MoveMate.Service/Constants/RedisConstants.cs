@@ -4,7 +4,7 @@ public class RedisConstants
 {
     public static class ServiceConstants
     {
-        public const string GetService = "GetService.";
+        public const string GetService = "Service:";
     }
     
 }
