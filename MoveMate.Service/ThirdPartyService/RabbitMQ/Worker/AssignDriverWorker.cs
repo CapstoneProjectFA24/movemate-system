@@ -14,10 +14,10 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
 public class AssignDriverWorker
 {
-    private readonly ILogger _logger;
+    private readonly ILogger<AssignDriverWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public AssignDriverWorker(ILogger logger, IServiceScopeFactory serviceScopeFactory)
+    public AssignDriverWorker(ILogger<AssignDriverWorker> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
@@ -90,6 +90,7 @@ Quy trình nâng cấp tự động gán tài xế:
     public async Task HandleMessage(int message)
     {
         await Task.Delay(100);
+        Console.WriteLine("movemate.booking_assign_driver");
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
@@ -110,14 +111,17 @@ Quy trình nâng cấp tự động gán tài xế:
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt);
 
-                var schedule = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
+                var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
 
-                if (schedule == null)
+                if (scheduleBooking == null)
                 {
+                    var timeExpiry = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+                    
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value);
-                    await redisService.EnqueueMultipleAsync(redisKey, driverIds);
+                    await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiry);
+                    var listScheduleBookingDetails = new List<ScheduleBookingDetail>();
 
                     for (int i = 0; i < existingBooking.DriverNumber; i++)
                     {
@@ -128,11 +132,25 @@ Quy trình nâng cấp tự động gán tài xế:
                         {
                             BookingId = message,
                             Type = RoleEnums.DRIVER.ToString(),
-                            StartDate = existingBooking.ReviewAt,
+                            StartDate = existingBooking.BookingAt.Value,
                             UserId = driverId,
-                            EndDate = endtime
+                            EndDate = endtime,
+                            
+                            
                         };
+                        listScheduleBookingDetails.Add(newScheduleReview);                        
                     }
+                    
+                    var newScheduleBooking = new ScheduleBooking()
+                    {
+                        Shard = date,
+                        IsActived = true,
+                        ScheduleBookingDetails = listScheduleBookingDetails,
+                    };
+
+                    await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(newScheduleBooking);
+                    var saveResult = unitOfWork.Save();
+
                 }
             }
         }

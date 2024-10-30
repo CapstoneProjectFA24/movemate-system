@@ -338,7 +338,7 @@ namespace MoveMate.Service.Services
                 }
                 
 
-                if ( request.TruckCategoryId.HasValue)
+                if (request.TruckCategoryId.HasValue)
                 {
                     if (request.Type == TypeServiceEnums.TRUCK.ToString())
                     {

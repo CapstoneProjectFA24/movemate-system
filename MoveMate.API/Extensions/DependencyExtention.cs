@@ -110,8 +110,9 @@ namespace MoveMate.API.Extensions
             
             services.AddTransient<MyMessageHandlerWorker>(); 
             services.AddScoped<AssignReviewWorker>();   
-            services.AddScoped<SetScheduleReview>();   
-
+            services.AddScoped<SetScheduleReview>();
+            services.AddScoped<AssignDriverWorker>();
+            
             services.AddSingleton<Index>();
 
             services.AddHostedService<Index>();
@@ -161,8 +162,8 @@ namespace MoveMate.API.Extensions
             string firebaseConfigPath = configuration.GetSection("FirebaseSettings:ConfigFile").Value;
 
             // Register FirebaseServices as a singleton to ensure only one instance is created
-            services.AddSingleton<IFirebaseServices>(sp =>
-                new FirebaseServices(firebaseConfigPath, sp.GetRequiredService<IMapper>()));
+            services.AddScoped<IFirebaseServices>(sp =>
+                new FirebaseServices(firebaseConfigPath, sp.GetRequiredService<IMapper>(), sp.GetRequiredService<IMessageProducer>()));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 
