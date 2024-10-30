@@ -9,6 +9,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 {
     public class PromotionResponse
     {
+        public int Id { get; set; }
         public bool? IsPublic { get; set; }
 
         public DateTime? StartDate { get; set; }

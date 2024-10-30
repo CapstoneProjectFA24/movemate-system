@@ -114,7 +114,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(id, includeProperties: "InverseParentService");
+                    await _unitOfWork.ServiceRepository.GetByIdAsyncV1(id, includeProperties: "InverseParentService.TruckCategory");
 
                 if (entity == null)
                 {
@@ -317,13 +317,8 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
                 }
-
-                var parentService = await _unitOfWork.ServiceRepository.GetByIdAsync((int)service.ParentServiceId);
-                if (parentService == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundParentService);
-                    return result;
-                }
+                
+                
 
                 if (service.Tier == 0 && request.ParentServiceId.HasValue)
                 {
@@ -341,11 +336,7 @@ namespace MoveMate.Service.Services
                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TypeTruckRequire);
                    return result;                                    
                 }
-                if (request.Type != parentService.Type && !request.ParentServiceId.HasValue)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SynchronizeType);
-                    return result;
-                }
+                
 
                 if (request.TruckCategoryId.HasValue)
                 {
@@ -384,6 +375,7 @@ namespace MoveMate.Service.Services
                         result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundParentService);
                         return result;
                     }
+
                     if (request.Type != parentServiceReq.Type)
                     {
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SynchronizeType);
