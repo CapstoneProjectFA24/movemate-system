@@ -84,7 +84,7 @@ public partial class Booking
     public DateTime? ReviewAt { get; set; }
 
     public DateTime? EstimatedEndTime { get; set; }
-    public bool? IsStaffReview { get; set; }
+    public bool? IsStaffReviewed { get; set; }
 
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 

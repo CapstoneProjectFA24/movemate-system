@@ -59,10 +59,10 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             
             if (!string.IsNullOrWhiteSpace(IsReview.ToString()))
             {
-                Expression = Expression.And(u => u.IsStaffReview == IsReview );
+                Expression = Expression.And(u => u.IsStaffReviewed == IsReview );
                 if (IsReview == true)
                 {
-                    Expression = Expression.And(u => (u.IsReviewOnline == true && u.Status != BookingEnums.PENDING.ToString()) || (u.IsStaffReview == IsReviewOnl) );
+                    Expression = Expression.And(u => (u.IsReviewOnline == true && u.Status != BookingEnums.PENDING.ToString()) || (u.IsStaffReviewed == IsReviewOnl) );
                 }
             }
 

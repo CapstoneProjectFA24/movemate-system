@@ -1397,7 +1397,7 @@ namespace MoveMate.Service.Services
                         await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
                         booking.Status = BookingEnums.REVIEWED.ToString();
-                        booking.IsStaffReview = true;
+                        booking.IsStaffReviewed = true;
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -1704,7 +1704,7 @@ namespace MoveMate.Service.Services
                 if (existingBooking.IsReviewOnline == true)
                 {
                     existingBooking.Status = BookingEnums.REVIEWED.ToString();
-                    existingBooking.IsStaffReview = true;
+                    existingBooking.IsStaffReviewed = true;
                 }
 
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
