@@ -13,6 +13,7 @@ using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
@@ -22,10 +23,13 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private static FirebaseApp? _firebaseApp;
         private readonly FirestoreDb _dbFirestore;
         private readonly IMapper _mapper;
+        private readonly IMessageProducer _producer;
 
-        public FirebaseServices(string authJsonFile, IMapper mapper)
+
+        public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer)
         {
             _mapper = mapper;
+            _producer = producer;
 
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
@@ -123,6 +127,13 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             try
             {
                 var save = _mapper.Map<BookingResponse>(saveObj);
+                if (saveObj.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    Console.WriteLine("push to movemate.booking_assign_driver");
+
+                    _producer.SendingMessage("movemate.booking_assign_driver_local", saveObj.Id);
+
+                }
 
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);

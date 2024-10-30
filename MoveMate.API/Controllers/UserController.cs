@@ -49,7 +49,7 @@ namespace MoveMate.API.Controllers
         /// <summary>
         /// CHORE : Retrieves a user info by token
         /// </summary>
-        /// <param name="id">The ID of the house type to retrieve.</param>
+        /// <param name="id">The ID of the user info to retrieve.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
         /// <remarks>
         /// Sample request:
@@ -67,6 +67,28 @@ namespace MoveMate.API.Controllers
             var response = await _userService.GetUserInfoByUserIdAsync(request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE : Retrieves a user by usser id
+        /// </summary>
+        /// <param name="id">The ID of the user to retrieve.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /user/{id}
+        /// </remarks>
+        /// <response code="200">User information retrieved successfully</response>
+        /// <response code="404">User info not found</response>
+        /// <response code="500">Internal server error occurred</response>
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetUserAsync(int id)
+        {
+            var response = await _userService.GetUserById(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
 
         /// <summary>

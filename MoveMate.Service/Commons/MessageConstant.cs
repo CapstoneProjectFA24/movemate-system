@@ -111,6 +111,7 @@ namespace MoveMate.Service.Commons
             public const string BookingWaiting = "The booking status must be WAITING";
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
+            public const string BookingReviewing = "The booking status must be REVIEWING";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
@@ -181,6 +182,17 @@ namespace MoveMate.Service.Commons
             //Assignment
             public const string AssignmentUpdateFail = "Update assignment failed";
 
+            //Promotion
+            public const string NotFoundPromotion = "Promotion not found";
+            public const string PromotionAlreadyDeleted = "Promotion category already deleted";
+            public const string PromotionRunOut = "Vouchers are out of stock";
+
+            //Voucher
+            public const string NotFoundVoucher = "Voucher not found";
+            public const string VoucherAlreadyDeleted = "Voucher already deleted";
+            public const string VoucherAlreadyAssigned = "Voucher received";
+
+
         }
 
 
@@ -200,6 +212,8 @@ namespace MoveMate.Service.Commons
             public const string DeleteUserInfo = "User info has been deleted";
             public const string CreateUserInfo = "Create a new user info successful";
             public const string UserInfoUpdateSuccess = "Update user info succesful";
+            public const string GetUserSuccess = "Get user done";
+            
 
             //Booking
             public const string GetListBookingEmpty = "List booking is empty!";
@@ -244,7 +258,7 @@ namespace MoveMate.Service.Commons
             public const string GetListTruckCategorySuccess = "Get list truck done";
             public const string GetTruckCategorySuccess = "Get truck category successfully";
             public const string DeleteTruck = "Truck has been deleted";
-
+            public const string TruckUpdateSuccess = "Update truck succesful";
 
 
             //Wallet
@@ -282,6 +296,21 @@ namespace MoveMate.Service.Commons
 
             //Assignment
             public const string UpdateAssignment = "Update assignment successful";
+            //Promotion
+            public const string GetListPromotionEmpty = "List promotion is empty!";
+            public const string GetListPromotionSuccess = "Get list promotion done";
+            public const string DeletePromotionCategory = "Promotion category has been deleted";
+            public const string GetPromotionCategorySuccess = "Get promotion category successfully";
+            public const string CreatePromotion = "Create a new promotion successful";
+            public const string PromotionUpdateSuccess = "Update promotion category succesful";
+
+            //Voucher
+            public const string GetListVoucherEmpty = "List voucher is empty!";
+            public const string GetListVoucherSuccess = "Get list voucher done";
+            public const string CreateVoucher = "Create a new voucher successful";
+            public const string DeleteVoucher = "Voucher has been deleted";
+            public const string GetVoucherSuccess = "Get voucher successfully";
+            public const string AssignVoucherToUserSuccess = "Get voucher successful";
         }
 
 

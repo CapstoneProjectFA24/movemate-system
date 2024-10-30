@@ -34,4 +34,6 @@ public interface IRedisService
     Task EnqueueWithExpiryAsync<T>(string queueKey, T value, TimeSpan? expiry = null);
 
     Task<T?> DequeueWithExpiryAsync<T>(string queueKey);
+
+    Task<long> CheckQueueCountAsync(string queueKey);
 }

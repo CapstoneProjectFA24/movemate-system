@@ -91,6 +91,8 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IFeeSettingServices, FeeSettingServices>();
             services.AddScoped<ITrackerSourceServices, TrackerSourceServices>();
             services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<IPromotionServices, PromotionServices>();
+            services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();
             services.AddScoped<IVnPayService, VnPayService>();
@@ -106,11 +108,12 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IMessageProducer, MessageProducer>();
             services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
             
-            services.AddTransient<MyMessageHandlerWorker>(); 
+            services.AddScoped<MyMessageHandlerWorker>(); 
             services.AddScoped<AssignReviewWorker>();   
-            services.AddScoped<SetScheduleReview>();   
-
-            services.AddSingleton<Index>();
+            services.AddScoped<SetScheduleReview>();
+            services.AddScoped<AssignDriverWorker>();
+            
+            services.AddScoped<Index>();
 
             services.AddHostedService<Index>();
             // services.AddScoped<IFirebaseMiddleware, FirebaseMiddleware>();
@@ -159,8 +162,8 @@ namespace MoveMate.API.Extensions
             string firebaseConfigPath = configuration.GetSection("FirebaseSettings:ConfigFile").Value;
 
             // Register FirebaseServices as a singleton to ensure only one instance is created
-            services.AddSingleton<IFirebaseServices>(sp =>
-                new FirebaseServices(firebaseConfigPath, sp.GetRequiredService<IMapper>()));
+            services.AddScoped<IFirebaseServices>(sp =>
+                new FirebaseServices(firebaseConfigPath, sp.GetRequiredService<IMapper>(), sp.GetRequiredService<IMessageProducer>()));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 

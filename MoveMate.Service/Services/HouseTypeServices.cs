@@ -50,14 +50,16 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeEmpty, listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeEmpty,
+                        listResponse);
                     return result;
                 }
 
                 pagin.pageSize = request.per_page;
                 pagin.totalItemsCount = entities.Count;
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeSuccess, listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListHouseTypeSuccess,
+                    listResponse, pagin);
 
                 return result;
             }
@@ -83,7 +85,8 @@ namespace MoveMate.Service.Services
                 else
                 {
                     var productResponse = _mapper.Map<HouseTypesResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetHouseTypeIdSuccess, productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetHouseTypeIdSuccess,
+                        productResponse);
                 }
 
                 return result;
@@ -124,12 +127,12 @@ namespace MoveMate.Service.Services
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.HouseTypeUpdateFail);
                 }
-
             }
             catch (Exception ex)
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
 
@@ -142,7 +145,8 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.HouseTypeRepository.AddAsync(houseType);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<HouseTypeResponse>(houseType);
-                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateHouseType, response);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateHouseType,
+                    response);
                 return result;
             }
             catch (Exception ex)
@@ -165,6 +169,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                     return result;
                 }
+
                 if (houseType.IsActived == false)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.HouseTypeAlreadyDeleted);
