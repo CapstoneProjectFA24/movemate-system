@@ -15,6 +15,7 @@ using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using FirebaseAdmin.Auth;
 using MoveMate.Service.Utils;
+using System.ComponentModel.DataAnnotations;
 
 namespace MoveMate.Service.Services
 {
@@ -353,10 +354,28 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<TruckResponse>> UpdateTruck(int truckId, UpdateTruckRequest request)
         {
             var result = new OperationResult<TruckResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                // Collect validation errors
+                foreach (var validationResult in validationResults)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                }
+                return result;
+            }
             try
             {
-                // Retrieve the truck by ID, including related images
+
+                if (request.TruckImgs == null || !request.TruckImgs.Any())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckImgRequire);
+                    return result;
+                }
+
                 var truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
                 if (truck == null)
                 {
@@ -364,7 +383,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId.Value);
+                var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(request.TruckCategoryId);
                 if (truckCategory == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
@@ -372,6 +391,8 @@ namespace MoveMate.Service.Services
                 }
 
                 ReflectionUtils.UpdateProperties(request, truck);
+
+
 
                 // Delete all existing images in the database for the truck
                 if (truck.TruckImgs.Any())

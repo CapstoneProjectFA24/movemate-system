@@ -10,21 +10,21 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class UpdateTruckRequest
     {
         [Required]
-        public int? TruckCategoryId { get; set; }
+        public int TruckCategoryId { get; set; }
         [Required]
-        public string? Model { get; set; }
+        public string Model { get; set; }
         [Required]
-        public string? NumberPlate { get; set; }
+        public string NumberPlate { get; set; }
         [Required]
-        public double? Capacity { get; set; }
+        public double Capacity { get; set; }
         [Required]
-        public bool? IsAvailable { get; set; }
+        public bool IsAvailable { get; set; }
         [Required]
-        public string? Brand { get; set; }
+        public string Brand { get; set; }
         [Required]
-        public string? Color { get; set; }
+        public string Color { get; set; }
         [Required]
-        public bool? IsInsurrance { get; set; }
+        public bool IsInsurrance { get; set; }
         [Required]
         public virtual ICollection<TruckImgRequest> TruckImgs { get; set; } = new List<TruckImgRequest>();
     }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Azure.Messaging;
 using Microsoft.Extensions.Logging;
+using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
@@ -275,9 +276,10 @@ namespace MoveMate.Service.Services
                 }
 
                 var existingUserInfo = await _unitOfWork.UserInfoRepository
-             .GetUserInfoByUserIdAsync(user.Id);
+             .GetUserInfoByUserIdAndTypeAsync(user.Id , request.Type);
 
-                if (existingUserInfo.Any(ui => ui.Type == request.Type))
+
+                if (existingUserInfo != null) 
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoExist);
                     return result;
@@ -306,31 +308,31 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<UserInfoResponse>();
             try
             {
-                var userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(id);
-                if (userInfo == null)
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+                if (user == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
 
-                var existingUserInfo = await _unitOfWork.UserInfoRepository
-            .GetUserInfoByUserIdAsync((int)userInfo.UserId);
-
-                if (existingUserInfo.Any(ui => ui.Type == request.Type))
+                var existingUserInfo = await _unitOfWork.UserInfoRepository.GetUserInfoByUserIdAndTypeAsync(id, request.Type);
+                if (existingUserInfo == null) // Change to null check
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoExist);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundUserInfo);
                     return result;
                 }
 
-                ReflectionUtils.UpdateProperties(request, userInfo);
-                await _unitOfWork.UserInfoRepository.SaveOrUpdateAsync(userInfo);
-                var saveResult = _unitOfWork.Save();
+                // Update properties from request to existingUserInfo
+                ReflectionUtils.UpdateProperties(request, existingUserInfo);
+
+                await _unitOfWork.UserInfoRepository.SaveOrUpdateAsync(existingUserInfo);
+                var saveResult = await _unitOfWork.SaveChangesAsync(); // Ensure you await this
 
                 // Check save result and return response
                 if (saveResult > 0)
                 {
-                    userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(userInfo.Id);
-                    var response = _mapper.Map<UserInfoResponse>(userInfo);
+                    existingUserInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(existingUserInfo.Id);
+                    var response = _mapper.Map<UserInfoResponse>(existingUserInfo);
 
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserInfoUpdateSuccess,
                         response);
@@ -339,7 +341,6 @@ namespace MoveMate.Service.Services
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoUpdateFail);
                 }
-
             }
             catch (Exception ex)
             {
@@ -347,6 +348,7 @@ namespace MoveMate.Service.Services
             }
             return result;
         }
+
 
         public async Task<OperationResult<GetUserResponse>> GetUserById(int id)
         {

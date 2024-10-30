@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoveMate.Service.ViewModels.ModelRequests;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -175,5 +176,11 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+
+        public static bool IsAtLeast24HoursApart(DateTime startTime, DateTime endTime)
+        {
+            return (endTime - startTime).TotalHours >= 24;
+        }
+
     }
 }
