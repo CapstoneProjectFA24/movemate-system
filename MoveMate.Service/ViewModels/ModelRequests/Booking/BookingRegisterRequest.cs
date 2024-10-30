@@ -63,6 +63,7 @@ public class BookingRegisterRequest
     [JsonIgnore] public bool? IsBonus { get; set; } = false;
     [JsonIgnore] public bool? IsDeposited { get; set; } = false;
 
+    [JsonIgnore] public bool? IsStaffReviewed { get; set; } = false;
     public bool? IsReviewOnline { get; set; } = true;
 
     public virtual ICollection<ResourceRequest> ResourceList { get; set; } = new List<ResourceRequest>();

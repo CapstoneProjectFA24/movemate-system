@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Domain.Enums;
 using MoveMate.Service.Commons.Page;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
@@ -19,7 +20,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public bool? IsReviewOnl { get; set; }
         
-        //public int? StaffId { get; set; }
+        public bool? IsReview { get; set; }
 
         public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
         {
@@ -54,6 +55,15 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             if (!string.IsNullOrWhiteSpace(IsReviewOnl.ToString()))
             {
                 Expression = Expression.And(u => u.IsReviewOnline == IsReviewOnl );
+            }
+            
+            if (!string.IsNullOrWhiteSpace(IsReview.ToString()))
+            {
+                Expression = Expression.And(u => u.IsStaffReviewed == IsReview );
+                if (IsReview == true)
+                {
+                    Expression = Expression.And(u => (u.IsReviewOnline == true && u.Status != BookingEnums.PENDING.ToString()) || (u.IsStaffReviewed == IsReviewOnl) );
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(Status))
