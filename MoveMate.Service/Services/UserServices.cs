@@ -53,11 +53,13 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserFail , listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserFail,
+                        listResponse);
                     return result;
                 }
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserSuccess , listResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserSuccess,
+                    listResponse);
 
                 return result;
             }
@@ -107,7 +109,8 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<List<UserInfoResponse>>> GetUserInfoByUserIdAsync(GetAllUserInfoRequest request)
+        public async Task<OperationResult<List<UserInfoResponse>>> GetUserInfoByUserIdAsync(
+            GetAllUserInfoRequest request)
         {
             var result = new OperationResult<List<UserInfoResponse>>();
 
@@ -125,11 +128,13 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserInfoFail, listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserInfoFail,
+                        listResponse);
                     return result;
                 }
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserInfoSuccess, listResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserInfoSuccess,
+                    listResponse);
 
                 return result;
             }
@@ -187,7 +192,7 @@ namespace MoveMate.Service.Services
                 var roleId = await _unitOfWork.RoleRepository.GetByIdAsync(request.RoleId);
                 if (roleId == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.RoleNotFound); 
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.RoleNotFound);
                     return result;
                 }
 
@@ -197,19 +202,21 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.UserRepository.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
                 var userResponse = _mapper.Map<UserResponse>(user);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, userResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess,
+                    userResponse);
                 return result;
             }
             catch (Exception ex)
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
 
         public async Task<OperationResult<bool>> BanUser(int id)
         {
-            var result = new OperationResult<bool>();   
+            var result = new OperationResult<bool>();
             try
             {
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
@@ -225,7 +232,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError); 
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -236,7 +243,6 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<bool>();
             try
             {
-                
                 var userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(id);
                 if (userInfo == null)
                 {
@@ -249,6 +255,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoIsDeleted);
                     return result;
                 }
+
                 userInfo.IsDeleted = true;
 
                 _unitOfWork.UserInfoRepository.Update(userInfo);
@@ -259,6 +266,7 @@ namespace MoveMate.Service.Services
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
 
@@ -291,7 +299,8 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<UserInfoResponse>(userInfoReq);
-                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateUserInfo, response);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateUserInfo,
+                    response);
 
                 return result;
             }
@@ -346,6 +355,7 @@ namespace MoveMate.Service.Services
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
 
@@ -365,7 +375,8 @@ namespace MoveMate.Service.Services
                 else
                 {
                     var productResponse = _mapper.Map<GetUserResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess, productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess,
+                        productResponse);
                 }
 
                 return result;

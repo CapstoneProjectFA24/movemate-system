@@ -53,17 +53,18 @@ namespace MoveMate.Service.Services
 
         //}
 
-            public async Task<OperationResult<List<TruckCategoryResponse>>> GetAllTruckCategory(GetAllTruckCategoryRequest request)
+        public async Task<OperationResult<List<TruckCategoryResponse>>> GetAllTruckCategory(
+            GetAllTruckCategoryRequest request)
+        {
+            var result = new OperationResult<List<TruckCategoryResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
             {
-                var result = new OperationResult<List<TruckCategoryResponse>>();
-
-                var pagin = new Pagination();
-
-                var filter = request.GetExpressions();
-
-                try
-                {
-                    var entities = _unitOfWork.TruckCategoryRepository.GetWithCount(
+                var entities = _unitOfWork.TruckCategoryRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
@@ -73,14 +74,16 @@ namespace MoveMate.Service.Services
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckCategoryEmpty, listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok,
+                        MessageConstant.SuccessMessage.GetListTruckCategoryEmpty, listResponse);
                     return result;
                 }
 
                 pagin.pageSize = request.per_page;
                 pagin.totalItemsCount = entities.Count;
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckCategorySuccess, listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckCategorySuccess,
+                    listResponse, pagin);
 
                 return result;
             }
@@ -121,14 +124,15 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                 _unitOfWork.TruckImgRepository.Remove(truckImg);
-                 _unitOfWork.Save();
+                _unitOfWork.TruckImgRepository.Remove(truckImg);
+                _unitOfWork.Save();
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteTruckImg, true);
             }
             catch
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
 
@@ -146,12 +150,13 @@ namespace MoveMate.Service.Services
                 }
 
                 var truckImg = _mapper.Map<TruckImg>(request);
-               
+
                 await _unitOfWork.TruckImgRepository.AddAsync(truckImg);
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<TruckImageResponse>(truckImg);
-                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckImg, response);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckImg,
+                    response);
 
                 return result;
             }
@@ -174,6 +179,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
                     return result;
                 }
+
                 if (truck.IsDeleted == true)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryAlreadyDeleted);
@@ -200,15 +206,14 @@ namespace MoveMate.Service.Services
 
             try
             {
-               
-
                 var truckCategory = _mapper.Map<TruckCategory>(request);
 
                 await _unitOfWork.TruckCategoryRepository.AddAsync(truckCategory);
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<TruckCategoryResponse>(truckCategory);
-                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckCategory, response);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckCategory,
+                    response);
 
                 return result;
             }
@@ -220,13 +225,14 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<TruckCategoryResponse>> UpdateTruckCategory(int id, TruckCategoryRequest request)
+        public async Task<OperationResult<TruckCategoryResponse>> UpdateTruckCategory(int id,
+            TruckCategoryRequest request)
         {
             var result = new OperationResult<TruckCategoryResponse>();
             try
             {
                 var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(id);
-                if(truckCategory == null)
+                if (truckCategory == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
                     return result;
@@ -241,20 +247,21 @@ namespace MoveMate.Service.Services
                 {
                     truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(truckCategory.Id);
                     var response = _mapper.Map<TruckCategoryResponse>(truckCategory);
-                   
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckCategoryUpdateSuccess,
+
+                    result.AddResponseStatusCode(StatusCode.Ok,
+                        MessageConstant.SuccessMessage.TruckCategoryUpdateSuccess,
                         response);
                 }
                 else
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryUpdateFail);
                 }
-
             }
             catch (Exception ex)
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
+
             return result;
         }
 
@@ -273,7 +280,8 @@ namespace MoveMate.Service.Services
                 else
                 {
                     var productResponse = _mapper.Map<TruckCategoryResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetTruckCategorySuccess, productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetTruckCategorySuccess,
+                        productResponse);
                 }
 
                 return result;
@@ -296,24 +304,26 @@ namespace MoveMate.Service.Services
             try
             {
                 var entities = _unitOfWork.TruckRepository.GetWithCount(
-                filter: request.GetExpressions(),
-                pageIndex: request.page,
-                pageSize: request.per_page,
-                orderBy: request.GetOrder(),
-                includeProperties: "TruckImgs"
-            );
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder(),
+                    includeProperties: "TruckImgs"
+                );
                 var listResponse = _mapper.Map<List<TruckResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckEmpty, listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckEmpty,
+                        listResponse);
                     return result;
                 }
 
                 pagin.pageSize = request.per_page;
                 pagin.totalItemsCount = entities.Count;
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckSuccess, listResponse, pagin);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTruckSuccess,
+                    listResponse, pagin);
 
                 return result;
             }
@@ -339,7 +349,8 @@ namespace MoveMate.Service.Services
                 else
                 {
                     var productResponse = _mapper.Map<TruckResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetTruckSuccess, productResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetTruckSuccess,
+                        productResponse);
                 }
 
                 return result;
@@ -400,7 +411,7 @@ namespace MoveMate.Service.Services
                     foreach (var existingImg in truck.TruckImgs.ToList())
                     {
                         _unitOfWork.TruckImgRepository.Remove(existingImg);
-                    }              
+                    }
                 }
 
                 // Add new images from the request if provided
@@ -423,7 +434,8 @@ namespace MoveMate.Service.Services
 
                 truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
                 var response = _mapper.Map<TruckResponse>(truck);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckUpdateSuccess, response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckUpdateSuccess,
+                    response);
             }
             catch (Exception ex)
             {
@@ -439,29 +451,34 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var truckCategory = await _unitOfWork.TruckCategoryRepository.GetByIdAsync((int)request.TruckCategoryId);
+                var truckCategory =
+                    await _unitOfWork.TruckCategoryRepository.GetByIdAsync((int)request.TruckCategoryId);
                 if (truckCategory == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
                     return result;
                 }
+
                 var user = await _unitOfWork.UserRepository.GetByIdAsync((int)request.UserId);
                 if (user == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
                     return result;
                 }
+
                 if (user.IsDriver == false)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.UserNotDriver);
                     return result;
                 }
+
                 var truckExist = await _unitOfWork.TruckRepository.FindByUserIdAsync((int)request.UserId);
                 if (truckExist != null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.UserHaveTruck);
                     return result;
                 }
+
                 List<TruckImg> truckImgList = _mapper.Map<List<TruckImg>>(request.TruckImgs);
 
                 var truck = _mapper.Map<Truck>(request);
@@ -470,7 +487,8 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<TruckResponse>(truck);
-                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckImg, response);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckImg,
+                    response);
 
                 return result;
             }
@@ -493,6 +511,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruck);
                     return result;
                 }
+
                 if (truck.IsDeleted == true)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckAlreadyDeleted);

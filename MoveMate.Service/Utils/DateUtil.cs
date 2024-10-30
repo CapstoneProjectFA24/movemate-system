@@ -86,7 +86,7 @@ namespace MoveMate.Service.Utils
 
         public static bool IsOutsideBusinessHours(DateTime date)
         {
-                TimeSpan startBusinessHours = new TimeSpan(8, 0, 0); // 08:00 AM
+            TimeSpan startBusinessHours = new TimeSpan(8, 0, 0); // 08:00 AM
             TimeSpan endBusinessHours = new TimeSpan(17, 0, 0); // 05:00 PM
 
             return date.TimeOfDay < startBusinessHours ||
@@ -147,17 +147,17 @@ namespace MoveMate.Service.Utils
             string dateKey = DateTime.Now.ToString("yyyyMMdd");
             return dateKey;
         }
-        
+
         public static DateTime GetDateFormat(DateTime dateTime)
         {
             string formattedDate = dateTime.ToString("yyyyMMdd");
             return DateTime.ParseExact(formattedDate, "yyyyMMdd", null);
         }
 
-        
+
         public static String GetShard(DateTime? time)
         {
-            string dateKey =  time.HasValue ? time.Value.ToString("yyyyMMdd") : GetShardNow();
+            string dateKey = time.HasValue ? time.Value.ToString("yyyyMMdd") : GetShardNow();
             return dateKey;
         }
 
@@ -168,7 +168,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
-        
+
         public static String GetKeyDriver(DateTime? time)
         {
             string dateKey = GetShard(time);
@@ -177,10 +177,18 @@ namespace MoveMate.Service.Utils
             return redisKey;
         }
 
+        public static TimeSpan TimeUntilEndOfDay(DateTime inputDateTime)
+        {
+            DateTime endOfDay = inputDateTime.Date.AddDays(2).AddTicks(-1);
+
+            TimeSpan timeUntilEndOfDay = endOfDay - DateTime.Now;
+
+            return timeUntilEndOfDay;
+        }
+
         public static bool IsAtLeast24HoursApart(DateTime startTime, DateTime endTime)
         {
             return (endTime - startTime).TotalHours >= 24;
         }
-
     }
 }
