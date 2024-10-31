@@ -26,6 +26,7 @@ using Catel.Collections;
 using Newtonsoft.Json;
 using static Grpc.Core.Metadata;
 using Microsoft.IdentityModel.Tokens;
+using Parlot.Fluent;
 
 namespace MoveMate.Service.Services
 {
@@ -780,6 +781,11 @@ namespace MoveMate.Service.Services
 
             foreach (var bookingDetailRequest in bookingDetailRequests)
             {
+                if (bookingDetailRequest.Quantity == 0)
+                {
+                    //_unitOfWork.BookingDetailRepository.GetAsyncByServiceIdAndBookingId(bookingDetailRequest.ServiceId, )
+                    continue;
+                }
                 // Check Service
                 var service =
                     await _unitOfWork.ServiceRepository.GetByIdAsyncV1(bookingDetailRequest.ServiceId, "FeeSettings");
@@ -1617,7 +1623,6 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-
                 // Fetch existing booking from the database
                 var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
@@ -1628,8 +1633,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-
-
+                
                 if (bookingDetail.Status == AssignmentStatusEnums.ASSIGNED.ToString() &&
                     existingBooking.IsReviewOnline == true)
                 {
@@ -1652,14 +1656,17 @@ namespace MoveMate.Service.Services
                 // Update the updated date
                 existingBooking.UpdatedAt = DateTime.Now;
                 var total = 0.0;
-
+                var truckCategoryId = request.TruckCategoryId.HasValue
+                    ? request.TruckCategoryId.Value
+                    : existingBooking.TruckNumber.Value;
+                
                 // Handle Service Details
                 if (request.BookingDetails != null && request.BookingDetails.Any())
                 {
                     var (sumServices, listBookingDetails, driverNo, porterNo, feeServiceDetails) =
                         await CalculateServiceFees(request.BookingDetails,
-                            (int)existingBooking.HouseTypeId,
-                            (int)existingBooking.TruckNumber, existingBooking.FloorsNumber,
+                            (int)existingBooking.HouseTypeId,truckCategoryId
+                            , existingBooking.FloorsNumber,
                             existingBooking.EstimatedDistance);
                     await CheckBookingDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
                         listBookingDetails);
@@ -1667,7 +1674,7 @@ namespace MoveMate.Service.Services
 
                 // Calculate total services and fees
                 var houseTypeId = (int)existingBooking.HouseTypeId;
-                var truckCategoryId = (int)existingBooking.TruckNumber;
+                //var truckCategoryId = (int)existingBooking.TruckNumber;
                 var floorsNumber = existingBooking.FloorsNumber;
                 var estimatedDistance = existingBooking.EstimatedDistance;
 
@@ -1689,7 +1696,7 @@ namespace MoveMate.Service.Services
 
                 existingBooking.DriverNumber = driverNumber;
                 existingBooking.PorterNumber = porterNumber;
-
+                existingBooking.TruckNumber = truckCategoryId;
                 //fee detail
                 _unitOfWork.FeeDetailRepository.RemoveRange(existingBooking.FeeDetails.ToList());
                 var (totalFee, feeCommonDetails) = await CalculateAndAddFees((DateTime)existingBooking.BookingAt);
@@ -1714,7 +1721,8 @@ namespace MoveMate.Service.Services
                     existingBooking.Status = BookingEnums.REVIEWED.ToString();
                     existingBooking.IsStaffReviewed = true;
                 }*/
-
+                // logic booking detail
+                
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
 
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
@@ -1723,6 +1731,12 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
 
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
+                
+                var bookingDetailsWithZeroQuantity  = existingBooking.BookingDetails
+                    .Where(bd => bd.Quantity == 0)
+                    .ToList();
+                _unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);
+                
                 var saveResult = _unitOfWork.Save();
 
                 // Check save result and return response
@@ -1765,6 +1779,7 @@ namespace MoveMate.Service.Services
                     existingBookingDetail.Price = requestService.Price;
                     existingBookingDetail.Name = service.Name;
                     existingBookingDetail.Description = service.Description;
+                    existingBookingDetail.Type = service.Type;
                     bookingDetails.Add(existingBookingDetail);
                 }
                 else
