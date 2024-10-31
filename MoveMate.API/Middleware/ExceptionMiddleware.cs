@@ -2,12 +2,13 @@
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using MoveMate.Service.Commons;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MoveMate.Service.Commons.Errors;
+using FluentValidation;
+using System.Net;
+using System.Linq;
 
 namespace MoveMate.API.Middleware
 {
@@ -28,50 +29,80 @@ namespace MoveMate.API.Middleware
             {
                 await _next(context);
             }
+            catch (ValidationException ex)
+            {
+                await HandleValidationExceptionAsync(context, ex);
+            }
+            catch (KeyNotFoundException ex) // Example for handling 404 errors
+            {
+                await HandleNotFoundExceptionAsync(context, ex);
+            }
             catch (Exception ex)
             {
                 await HandleExceptionAsync(context, ex);
             }
         }
 
-        private async Task HandleExceptionAsync(HttpContext context, Exception ex)
+        private Task HandleValidationExceptionAsync(HttpContext context, ValidationException ex)
         {
+            // Prepare the errors dictionary with the first validation error for each property
+            var errorsDictionary = ex.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => new[] { g.First().ErrorMessage }
+                );
+
+            // Prepare the result with the desired structure
+            var result = new
+            {
+                statusCode = (int)HttpStatusCode.BadRequest,
+                message = "Bad Request",
+                isError = true,
+                errors = errorsDictionary,
+                timestamp = DateTime.UtcNow.ToString("o") // ISO 8601 format for timestamp
+            };
+
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = ex switch
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            return context.Response.WriteAsync(JsonConvert.SerializeObject(result));
+        }
+
+        private Task HandleNotFoundExceptionAsync(HttpContext context, KeyNotFoundException ex)
+        {
+            var result = new
             {
-                NotFoundException _ => Microsoft.AspNetCore.Http.StatusCodes.Status404NotFound,
-                BadRequestException _ => Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest,
-                ConflictException _ => Microsoft.AspNetCore.Http.StatusCodes.Status409Conflict,
-                JsonReaderException _ => Microsoft.AspNetCore.Http.StatusCodes
-                    .Status400BadRequest, // Consider BadRequest for JSON errors
-                _ => Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError
+                statusCode = (int)HttpStatusCode.NotFound,
+                message = "Not Found",
+                isError = true,
+                errors = new List<string> { ex.Message },
+                timestamp = DateTime.UtcNow.ToString("o") // ISO 8601 format
             };
 
-            var errorDetails = new List<ErrorDetail>
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+
+            return context.Response.WriteAsync(JsonConvert.SerializeObject(result));
+        }
+
+        private Task HandleExceptionAsync(HttpContext context, Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+
+            var result = new
             {
-                new ErrorDetail
-                {
-                    FieldNameError = null,
-                    DescriptionError = new List<string> { ex.Message }
-                }
+                statusCode = (int)HttpStatusCode.InternalServerError,
+                message = "An unexpected error occurred.",
+                isError = true,
+                errors = new List<string> { ex.Message },
+                timestamp = DateTime.UtcNow.ToString("o") // ISO 8601 format
             };
 
-            var error = new Error
-            {
-                Code = (Service.Commons.StatusCode)context.Response.StatusCode,
-                Message = ex.Message 
-            };
-            
-            var operationResult = new OperationResult<object>
-            {
-                StatusCode = (Service.Commons.StatusCode)context.Response.StatusCode,
-                IsError = true,
-                Message = ex.Message 
-            };
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-            _logger.LogError(ex, "An error occurred while processing the request.");
-
-            await context.Response.WriteAsync(JsonConvert.SerializeObject(operationResult));
+            return context.Response.WriteAsync(JsonConvert.SerializeObject(result));
         }
     }
 }

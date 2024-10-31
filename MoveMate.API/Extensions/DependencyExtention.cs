@@ -352,11 +352,10 @@ namespace MoveMate.API.Extensions
             //Add middleware extentions
             app.ConfigureExceptionMiddleware();
             app.MapControllers();
-
-            //app.UseEndpoints(endpoints =>
-            //{
-            //    endpoints.MapControllers();
-            //});
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
             // hangfire
             /*app.UseHangfireDashboard();
 
