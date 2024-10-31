@@ -21,6 +21,9 @@ using MoveMate.Domain.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using static Grpc.Core.Metadata;
+using MoveMate.Service.Library;
+using MoveMate.Service.Services;
+using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 {
@@ -256,6 +259,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     PaymentMethod = Resource.PayOS.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = true
                 };
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
@@ -335,7 +339,35 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     PaymentMethod = Resource.PayOS.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = false
                 };
+
+                // New Transaction for RoleId 6 and Wallet.Tier 0
+                var userWithRoleId6 = await _unitOfWork.UserRepository.GetUserByRoleIdAsync();
+                if (userWithRoleId6 != null)
+                {
+                    var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userWithRoleId6.Id);
+                    if (wallet != null && wallet.Tier == 0)
+                    {
+                        var additionalTransaction = new MoveMate.Domain.Models.Transaction
+                        {
+                            PaymentId = payment.Id,
+                            Amount = command.Amount,
+                            Status = PaymentEnum.SUCCESS.ToString(),
+                            TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                            TransactionCode = "R" + Utilss.RandomString(7),
+                            CreatedAt = DateTime.Now,
+                            Resource = Resource.VNPay.ToString(),
+                            PaymentMethod = Resource.VNPay.ToString(),
+                            IsDeleted = false,
+                            UpdatedAt = DateTime.Now,
+                            IsCredit = true
+                        };
+
+                        await _unitOfWork.TransactionRepository.AddAsync(additionalTransaction);                
+                        //await _unitOfWork.SaveChangesAsync();
+                    }
+                }
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();

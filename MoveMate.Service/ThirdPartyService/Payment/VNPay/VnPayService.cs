@@ -155,7 +155,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     Resource = vnpay.GetResponseData("vnp_BankCode"),
                     PaymentMethod = Resource.VNPay.ToString(),
                     IsDeleted = false,
-                    TransactionCode = "DEP" + Utilss.RandomString(7)
+                    TransactionCode = "DEP" + Utilss.RandomString(7),
+                    IsCredit = true
                 };
 
                 // Save the transaction
@@ -360,7 +361,46 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     PaymentMethod = Resource.VNPay.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = false
                 };
+
+                // New Transaction for RoleId 6 and Wallet.Tier 0
+                var userWithRoleId6 = await _unitOfWork.UserRepository.GetUserByRoleIdAsync(); 
+                if (userWithRoleId6 != null)
+                {
+                    var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userWithRoleId6.Id);
+                    if (wallet != null && wallet.Tier == 0)
+                    {
+                        var additionalTransaction = new MoveMate.Domain.Models.Transaction
+                        {
+                            PaymentId = payment.Id,
+                            Amount = amount,
+                            Status = PaymentEnum.SUCCESS.ToString(),
+                            TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(), 
+                            TransactionCode = "R" + Utilss.RandomString(7), 
+                            CreatedAt = DateTime.Now,
+                            Resource = Resource.VNPay.ToString(),
+                            PaymentMethod = Resource.VNPay.ToString(),
+                            IsDeleted = false,
+                            UpdatedAt = DateTime.Now,
+                            IsCredit = true
+                        };
+
+                        await _unitOfWork.TransactionRepository.AddAsync(additionalTransaction);
+
+                        // Update manager wallet balance
+                        wallet.Balance += (float)amount;
+
+                        var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
+                        if (updateResult.IsError)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                            return result;
+                        }
+                        //await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
