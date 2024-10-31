@@ -151,6 +151,7 @@ namespace MoveMate.Service.Commons
             public const string TruckCategoryAlreadyDeleted = "Truck category already deleted";
             public const string TruckCategoryUpdateFail = "Update truck category failed";
             public const string TruckAlreadyDeleted = "Truck already deleted";
+            public const string TruckImgRequire = "Truck images cannot be empty";
 
 
             //Schedule
@@ -168,6 +169,7 @@ namespace MoveMate.Service.Commons
             public const string CreatePaymentFail = "Payment was not successful";
             public const string ProcessPaymentFail = "Payment was not successful";
             public const string InvalidBookingId = "Invalid booking ID";
+            public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
 
 
             //Transaction
@@ -186,12 +188,17 @@ namespace MoveMate.Service.Commons
             public const string NotFoundPromotion = "Promotion not found";
             public const string PromotionAlreadyDeleted = "Promotion category already deleted";
             public const string PromotionRunOut = "Vouchers are out of stock";
+            public const string LessAssigned ="Quantity cannot be less than the number of assigned vouchers";
 
             //Voucher
             public const string NotFoundVoucher = "Voucher not found";
             public const string VoucherAlreadyDeleted = "Voucher already deleted";
             public const string VoucherAlreadyAssigned = "Voucher received";
+            public const string VoucherHasBeenAssigned = "The user has already received the voucher";
+            public const string VoucherLessThanQuantity = "The number of vouchers provided does not match the specified quantity";
 
+            //Validate
+            public const string ValidateField = "Field is required";
 
         }
 

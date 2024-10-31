@@ -30,8 +30,8 @@ namespace MoveMate.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddControllers().ConfigureApiBehaviorOptions(opts
-                => opts.SuppressModelStateInvalidFilter = true);
+            builder.Services.AddControllers();
+
             builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddConfigSwagger();

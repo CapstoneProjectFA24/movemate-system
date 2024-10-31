@@ -77,6 +77,6 @@ public class BookingRegisterRequest
     public bool IsBookingDetailsValid()
     {
         return BookingDetails.Any();
-    }
+    } 
 
 }

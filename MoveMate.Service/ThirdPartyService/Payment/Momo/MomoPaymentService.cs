@@ -280,6 +280,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     PaymentMethod = Resource.Momo.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = true,
                 };
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
@@ -351,6 +352,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     PaymentMethod = Resource.Momo.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = false
                 }; 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
