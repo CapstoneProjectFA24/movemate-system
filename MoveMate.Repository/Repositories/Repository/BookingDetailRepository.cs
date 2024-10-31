@@ -23,5 +23,12 @@ namespace MoveMate.Repository.Repositories.Repository
         //        .Include(b => b.User)
         //        .FirstOrDefaultAsync(b => b.BookingId == bookingId);
         //}
+
+        public async Task<BookingDetail?> GetAsyncByServiceIdAndBookingId(int serviceId,int bookingId)
+        {
+            return await _context.Set<BookingDetail>()
+                    .Include(b => b.ServiceId == serviceId && b.BookingId == bookingId)
+                    .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+        }
     }
 }
