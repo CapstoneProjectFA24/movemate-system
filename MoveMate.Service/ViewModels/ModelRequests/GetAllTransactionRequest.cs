@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.Commons.Page;
+using MoveMate.Domain.Enums;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
@@ -18,6 +19,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public DateTime? CreatedAt { get; set; }
         public string? PaymentMethod { get; set; }
         public string? Status { get; set; }
+        public bool? IsCredit { get; set; }
 
         public override Expression<Func<Transaction, bool>> GetExpressions()
         {
@@ -47,6 +49,12 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             {
                 queryExpression = queryExpression.And(tran => tran.CreatedAt.HasValue && tran.CreatedAt.Value.Date == CreatedAt.Value.Date);
             }
+
+            if (IsCredit.HasValue)
+            {
+                queryExpression = queryExpression.And(tran => tran.IsCredit == IsCredit.Value);
+            }
+
 
             if (!string.IsNullOrWhiteSpace(Status))
             {

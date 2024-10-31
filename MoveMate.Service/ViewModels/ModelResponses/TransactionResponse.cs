@@ -27,6 +27,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? TransactionCode { get; set; }
 
         public string? TransactionType { get; set; }
+        public bool? IsCredit { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

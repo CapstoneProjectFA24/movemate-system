@@ -256,6 +256,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     PaymentMethod = Resource.PayOS.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = true
                 };
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
@@ -335,6 +336,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     PaymentMethod = Resource.PayOS.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = false
                 };
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);

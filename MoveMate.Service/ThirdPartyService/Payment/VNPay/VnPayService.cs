@@ -155,7 +155,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     Resource = vnpay.GetResponseData("vnp_BankCode"),
                     PaymentMethod = Resource.VNPay.ToString(),
                     IsDeleted = false,
-                    TransactionCode = "DEP" + Utilss.RandomString(7)
+                    TransactionCode = "DEP" + Utilss.RandomString(7),
+                    IsCredit = true
                 };
 
                 // Save the transaction
@@ -360,6 +361,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     PaymentMethod = Resource.VNPay.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = false
                 };
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);

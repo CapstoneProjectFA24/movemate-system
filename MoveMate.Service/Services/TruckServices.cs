@@ -367,19 +367,19 @@ namespace MoveMate.Service.Services
         {
             var result = new OperationResult<TruckResponse>();
 
-            // Validation of all fields in the request
-            var validationContext = new ValidationContext(request);
-            var validationResults = new List<ValidationResult>();
-            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+            //// Validation of all fields in the request
+            //var validationContext = new ValidationContext(request);
+            //var validationResults = new List<ValidationResult>();
+            //bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
-            if (!isValid)
-            {
-                foreach (var validationResult in validationResults)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
-                }
-                return result;
-            }
+            //if (!isValid)
+            //{
+            //    foreach (var validationResult in validationResults)
+            //    {
+            //        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+            //    }
+            //    return result;
+            //}
 
             try
             {
