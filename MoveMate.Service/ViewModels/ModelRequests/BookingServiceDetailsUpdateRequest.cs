@@ -11,7 +11,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class BookingServiceDetailsUpdateRequest
     {
 
-        public int TruckCategoryId { get; set; }
+        public int? TruckCategoryId { get; set; }
         public int? HouseTypeId { get; set; }
         public string? PickupAddress { get; set; }
         public string? PickupPoint { get; set; }
