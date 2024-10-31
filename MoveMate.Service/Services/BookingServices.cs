@@ -1361,7 +1361,8 @@ namespace MoveMate.Service.Services
                         else if (booking.IsReviewOnline == false && booking.Status == BookingEnums.REVIEWING.ToString())
                         {
                             nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
-                        }else
+                        }
+                        else
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewing);
                             return result;
@@ -1379,27 +1380,30 @@ namespace MoveMate.Service.Services
 
                     case var status when status == AssignmentStatusEnums.SUGGESTED.ToString() &&
                                          booking.Status == BookingEnums.REVIEWING.ToString():
-                        var bookingTracker =
-                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
-                        if (bookingTracker == null)
+
+                        if (booking.IsReviewOnline == false)
                         {
-                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
-                            return result;
+                            var bookingTracker =
+                                await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                            if (bookingTracker == null)
+                            {
+                                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                                return result;
+                            }
+                            if (request.ResourceList.Count() <= 0)
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                                return result;
+                            }
+                            var tracker = new BookingTracker();
+                            tracker.Type = TrackerEnums.REVIEW_OFFLINE.ToString();
+                            tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                            List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                            tracker.TrackerSources = resourceList;
+                            await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                         }
-
-                        var tracker = new BookingTracker();
-                        tracker.Type = TrackerEnums.PENDING.ToString();
-                        tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
-
-                        List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
-                        tracker.TrackerSources = resourceList;
-                        if (request.ResourceList.Count() <= 0)
-                        {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
-                            return result;
-                        }
-
-                        await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                        
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
@@ -1704,13 +1708,12 @@ namespace MoveMate.Service.Services
                                                (request.UpdatedAt - now).TotalHours >= 0)
                     ? TypeBookingEnums.NOW.ToString()
                     : TypeBookingEnums.DELAY.ToString();
-
-
-                if (existingBooking.IsReviewOnline == true)
+                
+                /*if (existingBooking.IsReviewOnline == true)
                 {
                     existingBooking.Status = BookingEnums.REVIEWED.ToString();
                     existingBooking.IsStaffReviewed = true;
-                }
+                }*/
 
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
 
@@ -1830,7 +1833,8 @@ namespace MoveMate.Service.Services
 
                 if (saveResult > 0)
                 {
-                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId, includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
@@ -1891,15 +1895,15 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (existingBooking.IsReviewOnline == true)
+                        /*if (existingBooking.IsReviewOnline == true)
                         {
                             var assignmentStatus = existingBooking.Assignments.FirstOrDefault(a =>
                                 a.Status == AssignmentStatusEnums.SUGGESTED.ToString() &&
                                 a.StaffType == RoleEnums.REVIEWER.ToString());
                             assignmentStatus!.Status = AssignmentStatusEnums.REVIEWED.ToString();
                             _unitOfWork.AssignmentsRepository.Update(assignmentStatus);
-                        }
-                        else
+                        }*/
+                        if (existingBooking.IsReviewOnline == false)
                         {
                             _producer.SendingMessage("movemate.setup_schedule_review", existingBooking.Id);
                         }
@@ -1927,7 +1931,8 @@ namespace MoveMate.Service.Services
 
                 if (saveResult > 0)
                 {
-                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId, includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
+                    var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,

@@ -22,6 +22,7 @@ public class SetScheduleReview
     [Consumer("movemate.setup_schedule_review")]
     public async Task HandleMessage(int message)
     {
+        Console.WriteLine("Message received - movemate.setup_schedule_review");
         await Task.Delay(100);
         try
         {
