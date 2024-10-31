@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using MoveMate.Service.Commons;
-using MoveMate.Service.Exceptions;
+
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using MoveMate.Service.Commons.Errors;
 using FluentValidation;
 using System.Net;
 using System.Linq;
+using MoveMate.Service.Exceptions;
 
 namespace MoveMate.API.Middleware
 {
@@ -33,6 +34,10 @@ namespace MoveMate.API.Middleware
             {
                 await HandleValidationExceptionAsync(context, ex);
             }
+            catch (BadRequestException ex)
+            {
+                await HandleValidationExceptionAsync(context, ex);
+            }
             catch (KeyNotFoundException ex) // Example for handling 404 errors
             {
                 await HandleNotFoundExceptionAsync(context, ex);
@@ -52,6 +57,27 @@ namespace MoveMate.API.Middleware
                     g => g.Key,
                     g => new[] { g.First().ErrorMessage }
                 );
+
+            // Prepare the result with the desired structure
+            var result = new
+            {
+                statusCode = (int)HttpStatusCode.BadRequest,
+                message = "Bad Request",
+                isError = true,
+                errors = errorsDictionary,
+                timestamp = DateTime.UtcNow.ToString("o") // ISO 8601 format for timestamp
+            };
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            return context.Response.WriteAsync(JsonConvert.SerializeObject(result));
+        }
+
+        private Task HandleValidationExceptionAsync(HttpContext context, BadRequestException ex)
+        {
+            // Prepare the errors dictionary with the first validation error for each property
+            var errorsDictionary = ex.Message;
 
             // Prepare the result with the desired structure
             var result = new
