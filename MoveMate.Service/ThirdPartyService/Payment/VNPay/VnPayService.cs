@@ -305,6 +305,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 // Get transaction information from the response
                 var amount = Convert.ToSingle(vnpay.GetResponseData("vnp_Amount")) / 100f;
                 var transactionId = vnpay.GetResponseData("vnp_TxnRef");
+                
                 int bookingId;
                 if (!int.TryParse(callback.vnp_OrderInfo, out bookingId))
                 {
@@ -321,11 +322,27 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     return result;
                 }
 
+                if (callback.IsSuccess == false)
+                {
+                    var paymentFail = new Domain.Models.Payment
+                    {
+                        BookingId = bookingId,
+                        Amount = amount,
+                        Success = callback.IsSuccess,
+                        BankCode = Resource.VNPay.ToString()
+                    };
+
+                    await _unitOfWork.PaymentRepository.AddAsync(paymentFail);
+                    await _unitOfWork.SaveChangesAsync();
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
+                    return result;
+                }
+
                 var payment = new Domain.Models.Payment
                 {
                     BookingId = bookingId,
                     Amount = amount,
-                    Success = true,
+                    Success = callback.IsSuccess,
                     BankCode = Resource.VNPay.ToString()
                 };
 
@@ -403,7 +420,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
-                await _unitOfWork.SaveChangesAsync();
+                
 
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {

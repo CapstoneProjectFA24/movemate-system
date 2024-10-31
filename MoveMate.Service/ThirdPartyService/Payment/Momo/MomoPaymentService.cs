@@ -321,16 +321,32 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     return operationResult;
                 }
 
+                if (callback.IsSuccess == false)
+                {
+                    var paymentFail = new Domain.Models.Payment
+                    {
+                        BookingId = bookingId,
+                        Amount = (double)callback.Amount,
+                        Success = callback.IsSuccess,
+                        BankCode = Resource.Momo.ToString()
+                    };
+
+                    await _unitOfWork.PaymentRepository.AddAsync(paymentFail);
+                    await _unitOfWork.SaveChangesAsync();
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
+                    return operationResult;
+                }
+
                 var payment = new Domain.Models.Payment
                 {
                     BookingId = bookingId,
                     Amount = (double)callback.Amount,
-                    Success = true,
+                    Success = callback.IsSuccess,
                     BankCode = Resource.Momo.ToString()
                 };
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
-                await _unitOfWork.SaveChangesAsync();
+              //  await _unitOfWork.SaveChangesAsync();
                 string transType = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
@@ -388,8 +404,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                         var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
                         if (updateResult.IsError)
                         {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
-                            return result;
+                            operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                            return operationResult;
                         }
                         //await _unitOfWork.SaveChangesAsync();
                     }

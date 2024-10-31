@@ -168,6 +168,7 @@ namespace MoveMate.Service.Commons
             public const string CreatePaymentFail = "Payment was not successful";
             public const string ProcessPaymentFail = "Payment was not successful";
             public const string InvalidBookingId = "Invalid booking ID";
+            public const string PaymentFail = "Payment was failed";
 
 
             //Transaction

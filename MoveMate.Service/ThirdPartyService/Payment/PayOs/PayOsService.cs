@@ -251,7 +251,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 {
                     WalletId = wallet.Id,
                     Amount = (float)command.Amount,
-                    Status = PaymentEnum.SUCCESS.ToString(),
+                    Status = command.IsSuccess.ToString(),
                     TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
                     TransactionCode = command.OrderCode, // Use the callback's TransactionCode
                     CreatedAt = DateTime.Now,
@@ -304,13 +304,30 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return result; // Exit without updating the wallet
             }
 
-            try
+            if (command.IsSuccess == false)
             {
                 var payment = new Domain.Models.Payment
                 {
                     BookingId = bookingId,
                     Amount = (double)command.Amount,
-                    Success = true,
+                    Success = command.IsSuccess,
+                    BankCode = Resource.PayOS.ToString()
+                };
+
+                await _unitOfWork.PaymentRepository.AddAsync(payment);
+                await _unitOfWork.SaveChangesAsync();
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
+                return result;
+            }
+
+            try
+            {
+
+                var payment = new Domain.Models.Payment
+                {
+                    BookingId = bookingId,
+                    Amount = (double)command.Amount,
+                    Success = command.IsSuccess,
                     BankCode = Resource.PayOS.ToString()
                 };
 
