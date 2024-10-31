@@ -190,5 +190,6 @@ namespace MoveMate.Service.Utils
         {
             return (endTime - startTime).TotalHours >= 24;
         }
+
     }
 }
