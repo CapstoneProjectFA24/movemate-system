@@ -26,9 +26,9 @@ namespace MoveMate.Service.Services
             this._logger = logger;
         }
 
-        public async Task<OperationResult<List<FeeSettingResponse>>> GetAll(GetAllFeeSetting request)
+        public async Task<OperationResult<List<GetFeeSettingResponse>>> GetAll(GetAllFeeSetting request)
         {
-            var result = new OperationResult<List<FeeSettingResponse>>();
+            var result = new OperationResult<List<GetFeeSettingResponse>>();
 
             var pagin = new Pagination();
 
@@ -42,7 +42,7 @@ namespace MoveMate.Service.Services
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<FeeSettingResponse>>(entities.Data);
+                var listResponse = _mapper.Map<List<GetFeeSettingResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
@@ -62,6 +62,78 @@ namespace MoveMate.Service.Services
                 _logger.LogError(e, "Error occurred in getAll Service Method");
                 throw;
             }
+        }
+
+       
+
+        public async Task<OperationResult<GetFeeSettingResponse>> GetFeeSettingById(int id)
+        {
+            var result = new OperationResult<GetFeeSettingResponse>();
+            try
+            {
+                var entity =
+                    await _unitOfWork.FeeSettingRepository.GetByIdAsync(id);
+
+                if (entity == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundFeeSetting);
+                }
+                else
+                {
+                    var productResponse = _mapper.Map<GetFeeSettingResponse>(entity);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetFeeSettingSuccess,
+                        productResponse);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public Task<OperationResult<GetFeeSettingResponse>> UpdateFeeSetting(int id, UpdatePromotionRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<OperationResult<GetFeeSettingResponse>> CreateFeeSetting(CreatePromotionRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<OperationResult<bool>> DeleteActiveFeeSetting(int id)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var feeSetting = await _unitOfWork.FeeSettingRepository.GetByIdAsync(id);
+                if (feeSetting == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundFeeSetting);
+                    return result;
+                }
+
+                if (feeSetting.IsActived == false)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.FeeSettingAlreadyDeleted);
+                    return result;
+                }
+
+                feeSetting.IsActived = false;
+
+                _unitOfWork.FeeSettingRepository.Update(feeSetting);
+                _unitOfWork.Save();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteFeeSetiing, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
         }
     }
 }

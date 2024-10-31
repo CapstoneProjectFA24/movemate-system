@@ -142,6 +142,7 @@ namespace MoveMate.Service.Commons
 
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
+            public const string FeeSettingAlreadyDeleted = "Fee setting already deleted";
 
             //Truck category
             public const string NotFoundTruckCategory = "Truck category not found";
@@ -229,6 +230,8 @@ namespace MoveMate.Service.Commons
             //FeeSetting
             public const string GetListFeeSettingEmpty = "List fee setting is empty!";
             public const string GetListFeeSettingSuccess = "Get list fee setting done";
+            public const string GetFeeSettingSuccess = "Get truck category successfully";
+            public const string DeleteFeeSetiing = "Fee setting has been deleted";
 
 
             //House Type
