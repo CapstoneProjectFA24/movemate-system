@@ -43,7 +43,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
             if (!string.IsNullOrWhiteSpace(Status))
             {
-                var statuses = Status.Split(',')
+                var statuses = Status.Split('.')
                     .Select(s => int.TryParse(s, out var statusValue) ? (int?)statusValue : null)
                     .Where(s => s.HasValue)
                     .Select(s => s.Value)

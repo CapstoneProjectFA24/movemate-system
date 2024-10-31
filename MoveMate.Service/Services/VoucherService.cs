@@ -198,46 +198,58 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<VoucherResponse>> AssignVoucherToUser(int voucherId, int userId)
+        public async Task<OperationResult<VoucherResponse>> AssignVoucherToUser(int promotionId, int userId)
         {
             var result = new OperationResult<VoucherResponse>();
             try
             {
-                var voucher = await _unitOfWork.VoucherRepository.GetByIdAsync(voucherId);
-                if (voucher == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundVoucher);
-                    return result;
-                }
-
-                var promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync((int)voucher.PromotionCategoryId);
+                // Fetch the promotion including its vouchers
+                var promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(promotionId, includeProperties: "Vouchers");
                 if (promotion == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPromotion);
                     return result;
                 }
 
-                if (voucher.UserId.HasValue)
+                // Check for available, unassigned vouchers and sort them by price if necessary
+                var availableVouchers = await _unitOfWork.VoucherRepository.GetAvailableVouchersByPromotionId(promotionId);
+
+                // Check if there are any available vouchers
+                if (!availableVouchers.Any())
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherAlreadyAssigned);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PromotionRunOut);
                     return result;
                 }
 
-                if (promotion.Quantity <= 0)
+
+                bool userHasVoucher = await _unitOfWork.VoucherRepository.UserHasVoucherForPromotionAsync(promotionId, userId);
+                if (userHasVoucher)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherHasBeenAssigned);
+                    return result;
+                }
+                // Assign the first available voucher to the user
+                var voucherToAssign = availableVouchers.First();
+                voucherToAssign.UserId = userId;
+
+                // Decrement the promotion's quantity if applicable
+                if (promotion.Quantity > 0)
+                {
+                    promotion.Quantity -= 1;
+                }
+                else
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PromotionRunOut);
+                    return result;
                 }
 
-                // Assign the UserId to the voucher
-                voucher.UserId = userId;
-                promotion.Quantity = promotion.Quantity - 1;
-
-                _unitOfWork.PromotionCategoryRepository.Update(promotion);
-                _unitOfWork.VoucherRepository.Update(voucher);
+                // Update the promotion and voucher in the repository
+                await _unitOfWork.PromotionCategoryRepository.SaveOrUpdateAsync(promotion);
+                await _unitOfWork.VoucherRepository.SaveOrUpdateAsync(voucherToAssign);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Map updated voucher to response model
-                var response = _mapper.Map<VoucherResponse>(voucher);
+                // Map the updated voucher to the response model
+                var response = _mapper.Map<VoucherResponse>(voucherToAssign);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AssignVoucherToUserSuccess, response);
             }
             catch (Exception ex)

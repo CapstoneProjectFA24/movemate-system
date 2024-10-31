@@ -53,6 +53,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public bool? IsUserConfirm { get; set; }
         [FirestoreProperty] public string? ReviewAt { get; set; }
         [FirestoreProperty] public DateTime? EstimatedEndTime { get; set; }
+        public int? TruckNumber { get; set; }
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<AssignmentResponse> Assignments { get; set; }
         public List<BookingTrackerResponse> BookingTrackers { get; set; }

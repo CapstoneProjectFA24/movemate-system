@@ -883,7 +883,7 @@ namespace MoveMate.Service.Services
                         Description = service.Description,
                         Type = service.Type
                     };
-
+                    totalServices += price.Value;
                     bookingDetails.Add(bookingDetail);
                 }
             }
@@ -1742,7 +1742,8 @@ namespace MoveMate.Service.Services
                 // Check save result and return response
                 if (saveResult > 0)
                 {
-                    //existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId);
+                    existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(existingBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
