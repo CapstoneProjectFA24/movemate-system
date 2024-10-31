@@ -883,7 +883,7 @@ namespace MoveMate.Service.Services
                         Description = service.Description,
                         Type = service.Type
                     };
-
+                    totalServices += price.Value;
                     bookingDetails.Add(bookingDetail);
                 }
             }
