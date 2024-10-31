@@ -16,6 +16,7 @@ using MoveMate.Domain.Models;
 using FirebaseAdmin.Auth;
 using MoveMate.Service.Utils;
 using System.ComponentModel.DataAnnotations;
+using Catel.Collections;
 
 namespace MoveMate.Service.Services
 {
@@ -365,28 +366,23 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<TruckResponse>> UpdateTruck(int truckId, UpdateTruckRequest request)
         {
             var result = new OperationResult<TruckResponse>();
+
+            // Validation of all fields in the request
             var validationContext = new ValidationContext(request);
             var validationResults = new List<ValidationResult>();
             bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
             if (!isValid)
             {
-                // Collect validation errors
                 foreach (var validationResult in validationResults)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
                 }
                 return result;
             }
+
             try
             {
-
-                if (request.TruckImgs == null || !request.TruckImgs.Any())
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckImgRequire);
-                    return result;
-                }
-
                 var truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
                 if (truck == null)
                 {
@@ -401,41 +397,45 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                ReflectionUtils.UpdateProperties(request, truck);
+                // Update fields except TruckImgs
+                ReflectionUtils.UpdateProperties(request, truck, excludeProperties: new List<string> { "TruckImgs" });
 
-
-
-                // Delete all existing images in the database for the truck
-                if (truck.TruckImgs.Any())
+                // Handle TruckImgs: Clear and add if empty, else update
+                if (truck.TruckImgs == null || !truck.TruckImgs.Any())
                 {
+                    // Add new TruckImgs if current TruckImgs are empty
+                    truck.TruckImgs = request.TruckImgs.Select(imgRequest => new TruckImg
+                    {
+                        TruckId = truck.Id,
+                        ImageUrl = imgRequest.ImageUrl,
+                        ImageCode = imgRequest.ImageCode
+                    }).ToList();
+                }
+                else
+                {
+                    // Remove existing TruckImgs
                     foreach (var existingImg in truck.TruckImgs.ToList())
                     {
                         _unitOfWork.TruckImgRepository.Remove(existingImg);
                     }
-                }
 
-                // Add new images from the request if provided
-                if (request.TruckImgs != null && request.TruckImgs.Any())
-                {
-                    foreach (var imgRequest in request.TruckImgs)
+                    // Add new TruckImgs from request
+                    truck.TruckImgs.AddRange(request.TruckImgs.Select(imgRequest => new TruckImg
                     {
-                        var truckImg = new TruckImg
-                        {
-                            TruckId = truck.Id,
-                            ImageUrl = imgRequest.ImageUrl,
-                            ImageCode = imgRequest.ImageCode
-                        };
-                        truck.TruckImgs.Add(truckImg);
-                    }
+                        TruckId = truck.Id,
+                        ImageUrl = imgRequest.ImageUrl,
+                        ImageCode = imgRequest.ImageCode
+                    }));
                 }
 
+                // Update truck entity
                 _unitOfWork.TruckRepository.Update(truck);
                 await _unitOfWork.SaveChangesAsync();
 
+                // Get updated truck with TruckImgs
                 truck = await _unitOfWork.TruckRepository.GetByIdAsync(truckId, includeProperties: "TruckImgs");
                 var response = _mapper.Map<TruckResponse>(truck);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckUpdateSuccess,
-                    response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TruckUpdateSuccess, response);
             }
             catch (Exception ex)
             {
@@ -444,6 +444,11 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+
+
+
+
 
         public async Task<OperationResult<TruckResponse>> CreateTruck(CreateTruckRequest request)
         {

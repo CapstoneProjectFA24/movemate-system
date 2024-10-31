@@ -134,27 +134,26 @@ namespace MoveMate.Service.Services
 
 
                 ReflectionUtils.UpdateProperties(request, promotion);
-                int currentVoucherCount = promotion.Vouchers.Count;
-                int vouchersToAdd = request.Quantity - currentVoucherCount;
-                for (int i = 0; i < vouchersToAdd; i++)
+                if (request.Quantity > assignedVoucherCount)
                 {
-                    var newVoucher = new Voucher
+                    int currentVoucherCount = promotion.Vouchers.Count;
+                    int vouchersToAdd = request.Quantity - currentVoucherCount;
+                    for (int i = 0; i < vouchersToAdd; i++)
                     {
-                        PromotionCategoryId = promotion.Id,
-                        Code = GenerateVoucherCode(), 
-                        IsActived = false,
-                        IsDeleted = false
-                    };
-                    await _unitOfWork.VoucherRepository.AddAsync(newVoucher);
-                }
-
+                        var newVoucher = new Voucher
+                        {
+                            PromotionCategoryId = promotion.Id,
+                            Code = GenerateVoucherCode(),
+                            IsActived = false,
+                            IsDeleted = false
+                        };
+                        await _unitOfWork.VoucherRepository.AddAsync(newVoucher);
+                    }
+                }   
                 _unitOfWork.PromotionCategoryRepository.Update(promotion);
                 await _unitOfWork.SaveChangesAsync();
-
-                // Fetch the updated truck with all images to ensure the response includes them
                 promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(id, includeProperties: "Vouchers");
 
-                // Map updated truck to response model
                 var response = _mapper.Map<PromotionResponse>(promotion);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PromotionUpdateSuccess, response);
             }
