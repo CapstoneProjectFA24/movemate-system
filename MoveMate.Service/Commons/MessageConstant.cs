@@ -143,6 +143,17 @@ namespace MoveMate.Service.Commons
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
             public const string FeeSettingAlreadyDeleted = "Fee setting already deleted";
+            public const string FeeTypeTruckFail = "Fee setting with Type TRUCK does not depend on house type";
+            public const string FeeUnitKMFail = "Fee setting with Type TRUCK must have unit KM";
+            public const string FeeUnitNotKMFail = "Unit can't be KM";
+            public const string FeeUnitPercentFail = "Unit musst be PERCENT";
+            public const string FeeUnitFloorFail = "Floor percent can't be null";
+            public const string NotServiceFeeFail = "This type of fee needs to be associated with 1 service";
+            public const string ServiceFeeFail = "This type of fee don't needs to be associated with 1 service";
+            public const string ServiceTypeTruck = "Service type's must be TRUCK";
+            public const string ServiceTier1 = "Cannot create fee settings for parent service";
+            public const string ServiceTruckCategory = "Service does not have a truck category";
+
 
             //Truck category
             public const string NotFoundTruckCategory = "Truck category not found";

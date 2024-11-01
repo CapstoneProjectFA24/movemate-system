@@ -134,6 +134,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
             CreateMap<FeeDetailRequest, FeeDetail>();
+            CreateMap<CreateFeeSettingRequest, FeeSetting>();
             //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
 
             // Resource
