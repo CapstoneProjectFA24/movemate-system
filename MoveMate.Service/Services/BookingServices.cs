@@ -153,6 +153,11 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidBookingDetails);
                 return result;
             }
+            if (!request.AreVouchersUnique())
+            {
+                result.AddError(StatusCode.BadRequest, "Vouchers must have unique Promotion IDs.");
+                return result;
+            }
 
             try
             {
@@ -164,6 +169,70 @@ namespace MoveMate.Service.Services
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                     return result;
+                }
+
+                if (!int.TryParse(userId, out int userIdInt))
+                {
+                    result.AddError(StatusCode.BadRequest, "Invalid user ID.");
+                    return result;
+                }
+
+                var userVouchers = await _unitOfWork.VoucherRepository.GetUserVouchersAsync(userIdInt);
+                var validVoucherIds = userVouchers.Select(v => v.Id).ToHashSet();
+
+                // Validate requested vouchers
+                var requestedVouchers = request.Vouchers.Where(v => validVoucherIds.Contains(v.Id)).ToList();
+
+                if (requestedVouchers.Count != request.Vouchers.Count)
+                {
+                    result.AddError(StatusCode.BadRequest, "Invalid or unauthorized vouchers in request.");
+                    return result;
+                }
+                //validate many promotions
+              
+
+                var serviceIds = request.BookingDetails.Select(bd => bd.ServiceId).Distinct().ToList();
+                var validPromotionIds = new List<int>();
+
+                foreach (var serviceId in serviceIds)
+                {
+                    var promotionId = await _unitOfWork.PromotionCategoryRepository.GetPromotionIdByServiceId(serviceId);
+                    if (promotionId.HasValue)
+                    {
+                        validPromotionIds.Add(promotionId.Value);
+                    }
+                }
+
+                // Validate that each voucher's PromotionId matches a promotion for one of the services
+                foreach (var voucher in requestedVouchers)
+                {
+                    if (!validPromotionIds.Contains(voucher.PromotionCategoryId))
+                    {
+                        result.AddError(StatusCode.BadRequest, "Invalid voucher: promotion does not match booking services.");
+                        return result;
+                    }
+                }
+                var vouchers = new List<Voucher>();
+                double totalVoucherPrice = 0;
+
+                // Instead of mapping DTO to entity directly, retrieve existing vouchers
+                foreach (var voucher in requestedVouchers)
+                {
+                    // Assuming you have a method to get the existing voucher by Id
+                    var existingVoucher = await _unitOfWork.VoucherRepository.GetByIdAsync(voucher.Id);
+
+                    if (existingVoucher != null)
+                    {
+                        // Attach the existing voucher to the booking
+                        vouchers.Add(existingVoucher);
+                        totalVoucherPrice += existingVoucher.Price.Value;
+                        //existingVoucher.IsActived = false;
+                    }
+                    else
+                    {
+                        result.AddError(StatusCode.BadRequest, "Voucher not found in the database.");
+                        return result;
+                    }
                 }
 
                 // setting var
@@ -206,6 +275,8 @@ namespace MoveMate.Service.Services
 
                 List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
                 tracker.TrackerSources = resourceList;
+                //use voucher
+                total -= totalVoucherPrice;
 
                 // save
                 entity.Status = status;
@@ -233,18 +304,24 @@ namespace MoveMate.Service.Services
                 {
                     entity.TypeBooking = TypeBookingEnums.DELAY.ToString();
                 }
-
+                
                 await _unitOfWork.BookingRepository.AddAsync(entity);
-                var checkResult = _unitOfWork.Save();
 
-                // create a job check booking time, if now = bookingtime and status still APPROVED then change Stastus to CANCEL
-                // logic 
+                var checkResult = await _unitOfWork.SaveChangesAsync(); // Make sure this saves the booking
 
                 if (checkResult > 0)
                 {
+                    // Now that the Booking has been saved, set the BookingId for each Voucher
+                    foreach (var voucher in vouchers)
+                    {
+                        voucher.BookingId = entity.Id; // This should now be valid
+                    }
+
+                    // Update the vouchers in the database
+                    _unitOfWork.VoucherRepository.UpdateRange(vouchers);
+                    await _unitOfWork.SaveChangesAsync(); // Save the voucher updates
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
-
                     _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created,
@@ -270,7 +347,7 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: VAlUATION a booking.
 
-        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request)
+        public async Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request, string userId)
         {
             var result = new OperationResult<BookingValuationResponse>();
 
@@ -282,6 +359,67 @@ namespace MoveMate.Service.Services
             {
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                 return result;
+            }
+
+            if (!int.TryParse(userId, out int userIdInt))
+            {
+                result.AddError(StatusCode.BadRequest, "Invalid user ID.");
+                return result;
+            }
+
+            var userVouchers = await _unitOfWork.VoucherRepository.GetUserVouchersAsync(userIdInt);
+            var validVoucherIds = userVouchers.Select(v => v.Id).ToHashSet();
+
+            // Validate requested vouchers
+            var requestedVouchers = request.Vouchers.Where(v => validVoucherIds.Contains(v.Id)).ToList();
+
+            if (requestedVouchers.Count != request.Vouchers.Count)
+            {
+                result.AddError(StatusCode.BadRequest, "Invalid or unauthorized vouchers in request.");
+                return result;
+            }
+            var serviceIds = request.BookingDetails.Select(bd => bd.ServiceId).Distinct().ToList();
+            var validPromotionIds = new List<int>();
+
+            foreach (var serviceId in serviceIds)
+            {
+                var promotionId = await _unitOfWork.PromotionCategoryRepository.GetPromotionIdByServiceId(serviceId);
+                if (promotionId.HasValue)
+                {
+                    validPromotionIds.Add(promotionId.Value);
+                }
+            }
+
+            // Validate that each voucher's PromotionId matches a promotion for one of the services
+            foreach (var voucher in requestedVouchers)
+            {
+                if (!validPromotionIds.Contains(voucher.PromotionCategoryId))
+                {
+                    result.AddError(StatusCode.BadRequest, "Invalid voucher: promotion does not match booking services.");
+                    return result;
+                }
+            }
+            var vouchers = new List<Voucher>();
+            double totalVoucherPrice = 0;
+
+            // Instead of mapping DTO to entity directly, retrieve existing vouchers
+            foreach (var voucher in requestedVouchers)
+            {
+                // Assuming you have a method to get the existing voucher by Id
+                var existingVoucher = await _unitOfWork.VoucherRepository.GetByIdAsync(voucher.Id);
+
+                if (existingVoucher != null)
+                {
+                    // Attach the existing voucher to the booking
+                    vouchers.Add(existingVoucher);
+                    totalVoucherPrice += existingVoucher.Price.Value;
+                    existingVoucher.IsActived = false;
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, "Voucher not found in the database.");
+                    return result;
+                }
             }
 
             double total = 0;
@@ -311,6 +449,9 @@ namespace MoveMate.Service.Services
                     total += updatedTotal;
                     feeDetails.AddRange(updatedFeeDetails);
                 }
+                //use voucher
+                total -= totalVoucherPrice;
+
             }
             catch (Exception e)
             {
@@ -328,7 +469,7 @@ namespace MoveMate.Service.Services
 
             response.BookingDetails = _mapper.Map<List<BookingDetailsResponse>>(bookingDetails);
             response.FeeDetails = _mapper.Map<List<FeeDetailResponse>>(feeDetails);
-
+            response.Vouchers = _mapper.Map<List<VoucherResponse>>(vouchers);
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ValuationBooking, response);
 
             return result;
@@ -1586,7 +1727,7 @@ namespace MoveMate.Service.Services
 
                 if (booking.Status != BookingEnums.REVIEWING.ToString())
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewing);
                     return result;
                 }
 
@@ -1724,7 +1865,7 @@ namespace MoveMate.Service.Services
                 // logic booking detail
                 
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
-
+               // await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(ex);
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
                     existingBooking.BookingDetails.ToList());
 

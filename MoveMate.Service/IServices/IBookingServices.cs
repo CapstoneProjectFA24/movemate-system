@@ -16,7 +16,7 @@ namespace MoveMate.Service.IServices
         public Task<OperationResult<BookingResponse>> GetById(int id);
         Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request, string userId);     
 
-        Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request);
+        Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request, string userId);
 
         Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest id);
         Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int bookingId);

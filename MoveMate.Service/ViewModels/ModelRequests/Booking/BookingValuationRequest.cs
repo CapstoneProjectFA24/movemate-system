@@ -34,4 +34,5 @@ public class BookingValuationRequest
     public bool? IsRoundTrip { get; set; } = false;
 
     public List<BookingDetailRequest> BookingDetails { get; set; } = new List<BookingDetailRequest>();
+    public List<AddVoucherRequest> Vouchers { get; set; } = new List<AddVoucherRequest>();
 }
