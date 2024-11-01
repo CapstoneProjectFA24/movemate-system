@@ -50,17 +50,7 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.FeeDetails, opt => opt.MapFrom(src => src.FeeDetails))
                 .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
                 .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers))
-                    .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src =>
-            src.Vouchers.Select(v => new VoucherResponse
-            {
-                Id = v.Id,
-                UserId = v.UserId,
-                PromotionCategoryId = v.PromotionCategoryId,
-                BookingId = v.BookingId,
-                Price = v.Price,
-                Code = v.Code,
-                IsActived = v.IsActived
-            }).ToList()));
+                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
 
             CreateMap<Booking, BookingRegisterResponse>();
             //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))

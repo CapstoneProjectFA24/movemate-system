@@ -367,6 +367,12 @@ namespace MoveMate.Service.Services
                 return result;
             }
 
+            if (!request.AreVouchersUnique())
+            {
+                result.AddError(StatusCode.BadRequest, "Vouchers must have unique Promotion IDs.");
+                return result;
+            }
+
             var userVouchers = await _unitOfWork.VoucherRepository.GetUserVouchersAsync(userIdInt);
             var validVoucherIds = userVouchers.Select(v => v.Id).ToHashSet();
 
@@ -1718,7 +1724,14 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<BookingResponse>();
             try
             {
+               
+
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(id, "Assignments");
+                if (booking.Assignments.Count == 0)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
@@ -1767,7 +1780,7 @@ namespace MoveMate.Service.Services
                 // Fetch existing booking from the database
                 var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
-                        include: b => b.Include(b => b.BookingDetails).Include(b => b.FeeDetails));
+                        include: b => b.Include(b => b.BookingDetails).Include(b => b.FeeDetails).Include(b => b.Vouchers));
 
                 if (existingBooking == null)
                 {
@@ -1800,7 +1813,15 @@ namespace MoveMate.Service.Services
                 var truckCategoryId = request.TruckCategoryId.HasValue
                     ? request.TruckCategoryId.Value
                     : existingBooking.TruckNumber.Value;
-                
+
+                double voucherTotal = 0.0;
+
+                if (request.BookingDetails.Count == 0)
+                {
+                    voucherTotal = (double)existingBooking.Vouchers.Sum(v => v.Price);
+                }
+
+
                 // Handle Service Details
                 if (request.BookingDetails != null && request.BookingDetails.Any())
                 {
@@ -1843,6 +1864,8 @@ namespace MoveMate.Service.Services
                 var (totalFee, feeCommonDetails) = await CalculateAndAddFees((DateTime)existingBooking.BookingAt);
                 existingBooking.FeeDetails = feeCommonDetails;
 
+                total -= voucherTotal;
+
                 total += (double)totalFee;
                 existingBooking.TotalReal = total;
                 existingBooking.TotalFee = totalFee;
@@ -1878,13 +1901,14 @@ namespace MoveMate.Service.Services
                     .ToList();
                 _unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);
                 
+
                 var saveResult = _unitOfWork.Save();
 
                 // Check save result and return response
                 if (saveResult > 0)
                 {
                     existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
-                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(existingBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
