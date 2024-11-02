@@ -74,9 +74,9 @@ namespace MoveMate.API.Controllers
         ///
         /// The `returnUrl` parameter should be set to: https://movemate-dashboard.vercel.app/payment-status
         /// </remarks>
-        [HttpPost("create-payment-url")]
+        [HttpPost()]
         [Authorize]
-        public async Task<IActionResult> CreatePayment(int bookingId, string returnUrl, string selectedMethod)
+        public async Task<IActionResult> Payment(int bookingId, string returnUrl, string selectedMethod)
         {
             // Validate booking ID
             if (bookingId <= 0)
