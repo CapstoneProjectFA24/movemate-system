@@ -37,8 +37,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public DateTime? EndBookingTime { get; set; }
 
         public bool? IsInfinite { get; set; }
-
-        public int? ServiceId { get; set; }
+        
+        public int ServiceId { get; set; }
 
         [JsonIgnore]
         public bool? IsDeleted { get; set; } = false;

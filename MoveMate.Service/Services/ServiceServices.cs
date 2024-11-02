@@ -420,7 +420,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddError(StatusCode.ServerError, ex.Message);
             }
             return result;
         }

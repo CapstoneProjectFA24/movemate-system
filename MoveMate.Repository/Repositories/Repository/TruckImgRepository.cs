@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
+using Microsoft.EntityFrameworkCore;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -14,6 +15,13 @@ namespace MoveMate.Repository.Repositories.Repository
     {
         public TruckImgRepository(MoveMateDbContext context) : base(context)
         {
+        }
+
+        public async Task<IEnumerable<TruckImg>> GetByTruckIdAsync(int truckId)
+        {
+            return await _context.Set<TruckImg>()
+                .Where(img => img.TruckId == truckId)
+                .ToListAsync();
         }
     }
 }

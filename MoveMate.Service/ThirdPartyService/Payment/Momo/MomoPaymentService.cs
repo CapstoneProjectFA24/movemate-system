@@ -22,6 +22,8 @@ using System.Threading.Tasks;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using static Grpc.Core.Metadata;
 using MoveMate.Service.ThirdPartyService.Firebase;
+using MoveMate.Service.Library;
+using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 {
@@ -280,6 +282,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     PaymentMethod = Resource.Momo.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
+                    IsCredit = true
                 };
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
@@ -318,16 +321,32 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     return operationResult;
                 }
 
+                if (callback.IsSuccess == false)
+                {
+                    var paymentFail = new Domain.Models.Payment
+                    {
+                        BookingId = bookingId,
+                        Amount = (double)callback.Amount,
+                        Success = callback.IsSuccess,
+                        BankCode = Resource.Momo.ToString()
+                    };
+
+                    await _unitOfWork.PaymentRepository.AddAsync(paymentFail);
+                    await _unitOfWork.SaveChangesAsync();
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
+                    return operationResult;
+                }
+
                 var payment = new Domain.Models.Payment
                 {
                     BookingId = bookingId,
                     Amount = (double)callback.Amount,
-                    Success = true,
+                    Success = callback.IsSuccess,
                     BankCode = Resource.Momo.ToString()
                 };
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
-                await _unitOfWork.SaveChangesAsync();
+              //  await _unitOfWork.SaveChangesAsync();
                 string transType = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
@@ -351,7 +370,46 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     PaymentMethod = Resource.Momo.ToString(),
                     IsDeleted = false,
                     UpdatedAt = DateTime.Now,
-                }; 
+                    IsCredit = false
+                };
+
+
+                // New Transaction for RoleId 6 and Wallet.Tier 0
+                var userWithRoleId6 = await _unitOfWork.UserRepository.GetUserByRoleIdAsync();
+                if (userWithRoleId6 != null)
+                {
+                    var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userWithRoleId6.Id);
+                    if (wallet != null && wallet.Tier == 0)
+                    {
+                        var additionalTransaction = new MoveMate.Domain.Models.Transaction
+                        {
+                            PaymentId = payment.Id,
+                            Amount = (double?)callback.Amount,
+                            Status = PaymentEnum.SUCCESS.ToString(),
+                            TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                            TransactionCode = "R" + Utilss.RandomString(7),
+                            CreatedAt = DateTime.Now,
+                            Resource = Resource.VNPay.ToString(),
+                            PaymentMethod = Resource.VNPay.ToString(),
+                            IsDeleted = false,
+                            UpdatedAt = DateTime.Now,
+                            IsCredit = true
+                        };
+
+                        await _unitOfWork.TransactionRepository.AddAsync(additionalTransaction);
+
+                        // Update manager wallet balance
+                        wallet.Balance += (float)callback.Amount;
+
+                        var updateResult = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
+                        if (updateResult.IsError)
+                        {
+                            operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                            return operationResult;
+                        }
+                        //await _unitOfWork.SaveChangesAsync();
+                    }
+                }
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
 

@@ -49,6 +49,42 @@ namespace MoveMate.Service.Utils
             }
         }
 
+        public static void UpdateProperties<TSource, TDestination>(TSource source, TDestination destination, List<string> excludeProperties = null)
+        {
+            var sourceProperties = typeof(TSource).GetProperties();
+            foreach (var property in sourceProperties)
+            {
+                if (property.CanRead && (excludeProperties == null || !excludeProperties.Contains(property.Name)))
+                {
+                    if (property.CanRead && property.Name != "Id")
+                    {
+                        var value = property.GetValue(source);
+                        if (value != null)
+                        {
+                            var destProperty = typeof(TDestination).GetProperty(property.Name);
+                            if (destProperty != null && destProperty.CanWrite)
+                            {
+                                if (typeof(IEnumerable).IsAssignableFrom(destProperty.PropertyType) && destProperty.PropertyType != typeof(string))
+                                {
+                                    HandleCollectionUpdate(value, destProperty, destination);
+                                }
+                                else if (destProperty.PropertyType.IsAssignableFrom(value.GetType()))
+                                {
+                                    destProperty.SetValue(destination, value);
+                                }
+                                else
+                                {
+                                    throw new InvalidOperationException($"Property type mismatch for {property.Name}");
+                                }
+                            }
+                        }
+
+                    }                                    
+                }
+            }
+        }
+
+
         private static void HandleCollectionUpdate(object sourceValue, PropertyInfo destProperty, object destination)
         {
             var sourceCollection = sourceValue as IEnumerable;

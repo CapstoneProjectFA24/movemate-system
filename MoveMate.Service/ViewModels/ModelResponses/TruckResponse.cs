@@ -8,6 +8,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 {
     public class TruckResponse
     {
+        public int Id { get; set; }
         public int? UserId { get; set; }
         public int? TruckCategoryId { get; set; }
 
