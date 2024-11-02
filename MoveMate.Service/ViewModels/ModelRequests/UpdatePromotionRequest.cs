@@ -9,35 +9,33 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class UpdatePromotionRequest
     {
-        [Required]
-        public bool IsPublic { get; set; }
-        [Required]
-        public DateTime StartDate { get; set; }
-        [Required]
-        public DateTime EndDate { get; set; }
-        [Required]
-        public double DiscountRate { get; set; }
-        [Required]
-        public double DiscountMax { get; set; }
-        [Required]
-        public double RequireMin { get; set; }
-        [Required]
-        public double DiscountMin { get; set; }
-        [Required]
-        public string Name { get; set; }
-        [Required]
-        public string Description { get; set; }
-        [Required]
-        public string Type { get; set; }
-        [Required]
-        public int Quantity { get; set; }
-        [Required]
+      
+        public bool? IsPublic { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+      
+        public double? DiscountRate { get; set; }
+   
+        public double? DiscountMax { get; set; }
+      
+        public double? RequireMin { get; set; }
+        
+        public double? DiscountMin { get; set; }
+  
+        public string? Name { get; set; }
+     
+        public string? Description { get; set; }
+    
+        public string? Type { get; set; }
+
+        public int? Quantity { get; set; }
+
         public DateTime StartBookingTime { get; set; }
-        [Required]
+
         public DateTime EndBookingTime { get; set; }
-        [Required]
+
         public bool IsInfinite { get; set; }
-        [Required]
+
         public int? ServiceId { get; set; }
     }
 }

@@ -202,6 +202,7 @@ namespace MoveMate.Service.Commons
             public const string PromotionAlreadyDeleted = "Promotion category already deleted";
             public const string PromotionRunOut = "Vouchers are out of stock";
             public const string LessAssigned ="Quantity cannot be less than the number of assigned vouchers";
+            public const string InvalidDates = "The start date must be less than the end date";
 
             //Voucher
             public const string NotFoundVoucher = "Voucher not found";
@@ -209,6 +210,9 @@ namespace MoveMate.Service.Commons
             public const string VoucherAlreadyAssigned = "Voucher received";
             public const string VoucherHasBeenAssigned = "The user has already received the voucher";
             public const string VoucherLessThanQuantity = "The number of vouchers provided does not match the specified quantity";
+            public const string VoucherUnique = "Vouchers must have unique Promotion IDs";
+            public const string VoucherNotUser = "Invalid or unauthorized vouchers in request";
+            public const string VoucherNotMatch = "Invalid voucher: promotion does not match booking services";
 
             //Validate
             public const string ValidateField = "Field is required";

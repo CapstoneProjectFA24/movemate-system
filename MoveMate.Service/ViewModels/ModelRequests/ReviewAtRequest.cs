@@ -6,7 +6,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class ReviewAtRequest
     {
-
+        [Required]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
         public DateTime? ReviewAt { get; set; }
         

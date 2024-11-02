@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using static Grpc.Core.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Parlot.Fluent;
+using System.ComponentModel.DataAnnotations;
 
 namespace MoveMate.Service.Services
 {
@@ -155,7 +156,16 @@ namespace MoveMate.Service.Services
             }
             if (!request.AreVouchersUnique())
             {
-                result.AddError(StatusCode.BadRequest, "Vouchers must have unique Promotion IDs.");
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherUnique);
+                return result;
+            }
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
                 return result;
             }
 
@@ -173,7 +183,7 @@ namespace MoveMate.Service.Services
 
                 if (!int.TryParse(userId, out int userIdInt))
                 {
-                    result.AddError(StatusCode.BadRequest, "Invalid user ID.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserIdInvalid);
                     return result;
                 }
 
@@ -185,7 +195,7 @@ namespace MoveMate.Service.Services
 
                 if (requestedVouchers.Count != request.Vouchers.Count)
                 {
-                    result.AddError(StatusCode.BadRequest, "Invalid or unauthorized vouchers in request.");
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherNotUser);
                     return result;
                 }
                 //validate many promotions
@@ -208,7 +218,7 @@ namespace MoveMate.Service.Services
                 {
                     if (!validPromotionIds.Contains(voucher.PromotionCategoryId))
                     {
-                        result.AddError(StatusCode.BadRequest, "Invalid voucher: promotion does not match booking services.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherNotMatch);
                         return result;
                     }
                 }
@@ -230,7 +240,7 @@ namespace MoveMate.Service.Services
                     }
                     else
                     {
-                        result.AddError(StatusCode.BadRequest, "Voucher not found in the database.");
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundVoucher);
                         return result;
                     }
                 }
@@ -491,7 +501,15 @@ namespace MoveMate.Service.Services
         {
             var result = new OperationResult<BookingResponse>();
 
-            // 
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
@@ -1722,6 +1740,15 @@ namespace MoveMate.Service.Services
             BookingServiceDetailsUpdateRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                
@@ -1972,7 +1999,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 if (!request.IsReviewAtValid())
@@ -2037,7 +2072,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<BookingResponse>> UserConfirm(int bookingId, StatusRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");

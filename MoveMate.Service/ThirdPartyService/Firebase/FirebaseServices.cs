@@ -15,6 +15,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ViewModels.ModelResponses;
+using System.ComponentModel.DataAnnotations;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -53,7 +54,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         public async Task<OperationResult<FirebaseToken>> VerifyIdTokenAsync(string idToken)
         {
             var result = new OperationResult<FirebaseToken>();
-
+            
             try
             {
                 FirebaseAuth auth = FirebaseAuth.DefaultInstance;

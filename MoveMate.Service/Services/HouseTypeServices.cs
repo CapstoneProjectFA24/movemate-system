@@ -10,6 +10,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -139,6 +140,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<HouseTypeResponse>> CreateHouseType(CreateHouseTypeRequest request)
         {
             var result = new OperationResult<HouseTypeResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var houseType = _mapper.Map<HouseType>(request);
