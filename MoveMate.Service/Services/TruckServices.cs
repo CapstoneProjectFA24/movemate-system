@@ -140,7 +140,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<TruckImageResponse>> CreateTruckImg(CreateTruckImgRequest request)
         {
             var result = new OperationResult<TruckImageResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var truck = await _unitOfWork.TruckRepository.GetByIdAsync((int)request.TruckId);
@@ -204,7 +212,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<TruckCategoryResponse>> CreateTruckCategory(TruckCategoryRequest request)
         {
             var result = new OperationResult<TruckCategoryResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var truckCategory = _mapper.Map<TruckCategory>(request);
@@ -450,7 +466,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<TruckResponse>> CreateTruck(CreateTruckRequest request)
         {
             var result = new OperationResult<TruckResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var truckCategory =

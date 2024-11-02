@@ -301,9 +301,9 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
         {
             var result = new OperationResult<AccountResponse>();
-            var validationContext = new ValidationContext(request);
+            var validationContext = new ValidationContext(customerToRegister);
             var validationResults = new List<ValidationResult>();
-            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+            bool isValid = Validator.TryValidateObject(customerToRegister, validationContext, validationResults, true);
 
             if (!isValid)
             {

@@ -354,7 +354,15 @@ namespace MoveMate.Service.Services
         {
             var result = new OperationResult<BookingResponse>();
 
-            // 
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
@@ -1585,6 +1593,15 @@ namespace MoveMate.Service.Services
             BookingServiceDetailsUpdateRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(id, "Assignments");
@@ -1817,7 +1834,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 if (!request.IsReviewAtValid())
@@ -1882,7 +1907,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<BookingResponse>> UserConfirm(int bookingId, StatusRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");

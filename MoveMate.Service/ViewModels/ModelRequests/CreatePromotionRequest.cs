@@ -1,6 +1,7 @@
 ﻿using MoveMate.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -11,17 +12,17 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class CreatePromotionRequest
     {
         public bool? IsPublic { get; set; }
-
+        [Required]
         public DateTime? StartDate { get; set; }
-
+        [Required]
         public DateTime? EndDate { get; set; }
-
+        [Required]
         public double? DiscountRate { get; set; }
-
+        [Required]
         public double? DiscountMax { get; set; }
-
+        [Required]
         public double? RequireMin { get; set; }
-
+        [Required]
         public double? DiscountMin { get; set; }
 
         public string? Name { get; set; }
@@ -37,7 +38,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public DateTime? EndBookingTime { get; set; }
 
         public bool? IsInfinite { get; set; }
-        
+        [Required]
         public int ServiceId { get; set; }
 
         [JsonIgnore]
