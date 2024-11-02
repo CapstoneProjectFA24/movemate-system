@@ -60,7 +60,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public List<BookingDetailsResponse> BookingDetails { get; set; }
 
-
+        public List<VoucherResponse> Vouchers { get; set; }
         //public virtual List<ServiceDetailsResponse> ServiceDetails { get; set; } = new List<ServiceDetailsResponse>();
 
         public virtual ICollection<FeeDetailResponse> FeeDetails { get; set; } = new List<FeeDetailResponse>();

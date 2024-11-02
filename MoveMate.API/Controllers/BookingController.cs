@@ -76,6 +76,12 @@ namespace MoveMate.API.Controllers
         ///               "quantity": 1
         ///             }
         ///           ],
+        ///           "vouchers": [
+        ///             {
+        ///               "id": 52,
+        ///               "promotionCategoryId": 24
+        ///             }
+        ///           ],
         ///           "truckCategoryId": 4,
         ///           "bookingAt": "2024-10-30T05:26:28.452Z",
         ///           "resourceList": [
@@ -138,7 +144,16 @@ namespace MoveMate.API.Controllers
         [ProducesResponseType(typeof(Error), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ValuationBooking(BookingValuationRequest request)
         {
-            var response = await _bookingServices.ValuationBooking(request);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value).ToString();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Message = "Invalid user ID in token." });
+            }
+
+            var response = await _bookingServices.ValuationBooking(request, userId);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
