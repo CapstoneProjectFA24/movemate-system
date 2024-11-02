@@ -170,6 +170,7 @@ namespace MoveMate.Service.Commons
             public const string ProcessPaymentFail = "Payment was not successful";
             public const string InvalidBookingId = "Invalid booking ID";
             public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
+            public const string PaymentFail = "Payment was failed";
 
 
             //Transaction
