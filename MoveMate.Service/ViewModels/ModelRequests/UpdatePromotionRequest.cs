@@ -11,9 +11,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
       
         public bool? IsPublic { get; set; }
-        [Required]
         public DateTime? StartDate { get; set; }
-        [Required]
         public DateTime? EndDate { get; set; }
       
         public double? DiscountRate { get; set; }
