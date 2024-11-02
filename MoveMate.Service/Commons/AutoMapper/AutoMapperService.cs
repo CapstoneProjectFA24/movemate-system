@@ -49,7 +49,8 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Assignments))
                 .ForMember(dest => dest.FeeDetails, opt => opt.MapFrom(src => src.FeeDetails))
                 .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
-                .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
+                .ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers))
+                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
 
             CreateMap<Booking, BookingRegisterResponse>();
             //.ForMember(dest => dest.ServiceDetails, opt => opt.MapFrom(src => src.ServiceDetails))
@@ -69,7 +70,8 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.BookingDetails,
                     opt => opt.Ignore()) // Ignore ServiceDetails; handle separately if needed
                 .ForMember(dest => dest.TotalFee, opt => opt.Ignore()) // Ignore TotalFee; calculate separately
-                .ForMember(dest => dest.FeeDetails, opt => opt.Ignore());
+                .ForMember(dest => dest.FeeDetails, opt => opt.Ignore())
+                .ForMember(dest => dest.Vouchers, opt => opt.Ignore());
             CreateMap<BookingBasicInfoUpdateRequest, Booking>();
             CreateMap<ReviewAtRequest, Booking>();
             CreateMap<StatusRequest, Booking>();
@@ -134,6 +136,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
             CreateMap<FeeDetailRequest, FeeDetail>();
+            CreateMap<CreateFeeSettingRequest, FeeSetting>();
             //CreateMap<List<FeeDetail>, List<FeeDetailResponse>>();
 
             // Resource
@@ -146,6 +149,7 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //Fee Setting
             CreateMap<FeeSetting, FeeSettingResponse>();
+            CreateMap<FeeSetting, GetFeeSettingResponse>();
 
             //Promotion
             CreateMap<CreatePromotionRequest, PromotionCategory>()
@@ -158,6 +162,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<VoucherRequest, Voucher>();
             CreateMap<Voucher, VoucherResponse>();
             CreateMap<CreateVoucherRequest, Voucher>();
+            CreateMap<AddVoucherRequest, Voucher>();
         }
     }
 }

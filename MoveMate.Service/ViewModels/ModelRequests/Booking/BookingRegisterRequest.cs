@@ -42,6 +42,8 @@ public class BookingRegisterRequest
     //[MinCollectionSize(1, ErrorMessage = "ServiceDetails must contain at least one item.")]
     public List<BookingDetailRequest> BookingDetails { get; set; } = new List<BookingDetailRequest>();
 
+    public List<AddVoucherRequest> Vouchers { get; set; } = new List<AddVoucherRequest>();
+
     [Required(ErrorMessage = "Filed is required")]
     public int TruckCategoryId { get; set; }
 
@@ -77,6 +79,18 @@ public class BookingRegisterRequest
     public bool IsBookingDetailsValid()
     {
         return BookingDetails.Any();
+    }
+
+    public bool IsValid()
+    {
+        return AreVouchersUnique();
+    }
+
+    public bool AreVouchersUnique()
+    {
+        
+        var promotionIds = Vouchers.Select(v => v.PromotionCategoryId).ToList();
+        return promotionIds.Distinct().Count() == promotionIds.Count;
     }
 
 }

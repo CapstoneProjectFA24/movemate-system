@@ -9,6 +9,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -96,6 +97,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<PromotionResponse>> UpdatePromotion(int id, UpdatePromotionRequest request)
         {
             var result = new OperationResult<PromotionResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(id, includeProperties: "Vouchers");
@@ -113,15 +123,91 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                if (request.StartDate.HasValue && !request.EndDate.HasValue)
+                {
+                    if (request.StartDate >= promotion.EndDate)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                        return result;
+                    }
+
+                    if (!DateUtil.IsAtLeast24HoursApart((DateTime)request.StartDate, (DateTime)promotion.EndDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                        return result;
+                    }
+                }
+                if (!request.StartDate.HasValue && request.EndDate.HasValue)
+                {
+                    if (promotion.StartDate >= request.EndDate)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                        return result;
+                    }
+
+                    if (!DateUtil.IsAtLeast24HoursApart((DateTime)promotion.StartDate, (DateTime)request.EndDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                        return result;
+                    }
+                }
+                if (request.StartDate.HasValue && request.EndDate.HasValue)
+                {
+                    if (request.StartDate >= request.EndDate)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                        return result;
+                    }
+
+                    if (!DateUtil.IsAtLeast24HoursApart((DateTime)request.StartDate, (DateTime)request.EndDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                        return result;
+                    }
+                }
+
+
+                int assignedVoucherCount = promotion.Vouchers.Count(v => v.UserId.HasValue);
+
+                // Validate that the new quantity is not less than the assigned vouchers
+                if (request.Quantity < assignedVoucherCount)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.LessAssigned);
+                    return result;
+                }
+
+                if (request.Quantity == assignedVoucherCount)
+                {
+                    // Remove all vouchers with null UserId
+                    var unassignedVouchers = promotion.Vouchers.Where(v => !v.UserId.HasValue).ToList();
+                    foreach (var voucher in unassignedVouchers)
+                    {
+                       _unitOfWork.VoucherRepository.Remove(voucher);
+                    }
+                }
+
+
                 ReflectionUtils.UpdateProperties(request, promotion);
-                
+                if (request.Quantity > assignedVoucherCount)
+                {
+                    int currentVoucherCount = promotion.Vouchers.Count;
+                    int vouchersToAdd = (int)(request.Quantity - currentVoucherCount);
+                    for (int i = 0; i < vouchersToAdd; i++)
+                    {
+                        var newVoucher = new Voucher
+                        {
+                            PromotionCategoryId = promotion.Id,
+                            Code = GenerateVoucherCode(),
+                            IsActived = false,
+                            IsDeleted = false
+                        };
+                        await _unitOfWork.VoucherRepository.AddAsync(newVoucher);
+                    }
+                }   
                 _unitOfWork.PromotionCategoryRepository.Update(promotion);
                 await _unitOfWork.SaveChangesAsync();
-
-                // Fetch the updated truck with all images to ensure the response includes them
                 promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(id, includeProperties: "Vouchers");
 
-                // Map updated truck to response model
                 var response = _mapper.Map<PromotionResponse>(promotion);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PromotionUpdateSuccess, response);
             }
@@ -132,21 +218,65 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+
+        
+
+        public static string GenerateVoucherCode(int length = 10)
+        {
+            Random _random = new Random();
+            string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var voucherCode = new StringBuilder(length);
+
+            for (int i = 0; i < length; i++)
+            {
+                voucherCode.Append(_chars[_random.Next(_chars.Length)]);
+            }
+
+            return voucherCode.ToString();
+        }
         public async Task<OperationResult<PromotionResponse>> CreatePromotion(CreatePromotionRequest request)
         {
             var result = new OperationResult<PromotionResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
+                
                 var service = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync((int)request.ServiceId);
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPromotion);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
-                }          
-                List<Voucher> voucher = _mapper.Map<List<Voucher>>(request.Vouchers);
+                }
+                if (request.StartDate >= request.EndDate)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                    return result;
+                }
+
+                if (!DateUtil.IsAtLeast24HoursApart((DateTime)request.StartDate, (DateTime)request.EndDate))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                    return result;
+                }
+
+                List<Voucher> vouchers = _mapper.Map<List<Voucher>>(request.Vouchers);
+                if (vouchers.Count != request.Quantity)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherLessThanQuantity);
+                    return result;
+                }
                 var promotion = _mapper.Map<PromotionCategory>(request);
                 await _unitOfWork.PromotionCategoryRepository.AddAsync(promotion);
                 await _unitOfWork.SaveChangesAsync();
+
                 var response = _mapper.Map<PromotionResponse>(promotion);
                 result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreatePromotion, response);
 
@@ -160,6 +290,9 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+
+
+
         public async Task<OperationResult<bool>> DeletePromotion(int id)
         {
             var result = new OperationResult<bool>();
@@ -169,6 +302,12 @@ namespace MoveMate.Service.Services
                 if (promotion == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPromotion);
+                    return result;
+                }
+                int assignedVoucherCount = promotion.Vouchers.Count(v => v.UserId.HasValue);
+                if (assignedVoucherCount > 0)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherHasBeenAssigned);
                     return result;
                 }
                 if (promotion.IsDeleted == true)

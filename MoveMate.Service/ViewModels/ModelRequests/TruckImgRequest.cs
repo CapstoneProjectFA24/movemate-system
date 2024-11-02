@@ -8,8 +8,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class TruckImgRequest
     {
-        public string? ImageUrl { get; set; }
+        public string ImageUrl { get; set; }
 
-        public string? ImageCode { get; set; }
+        public string ImageCode { get; set; }
     }
 }

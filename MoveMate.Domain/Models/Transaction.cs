@@ -34,6 +34,7 @@ public partial class Transaction
     public string? UpdatedBy { get; set; }
 
     public bool? IsDeleted { get; set; }
+    public bool? IsCredit { get; set; }
 
     public virtual Payment? Payment { get; set; }
 

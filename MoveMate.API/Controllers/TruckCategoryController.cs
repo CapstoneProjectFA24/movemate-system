@@ -340,11 +340,12 @@ public class TruckCategoryController : BaseController
     /// <response code="404">Specified user or truck category was not found.</response>
     /// <response code="409">User already owns a truck in the specified category.</response>
     /// <response code="500">Internal server error occurred during processing.</response>
-    [HttpPut("truck")]
-    public async Task<IActionResult> UpdateTruck(int id,[FromBody] UpdateTruckRequest request)
+    [HttpPut("truck/{id}")]
+    public async Task<IActionResult> UpdateTruck(int id, [FromBody] UpdateTruckRequest request)
     {
+       
         var response = await _truckServices.UpdateTruck(id, request);
-
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
+
 }

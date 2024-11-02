@@ -18,6 +18,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? DeliveryAddress { get; set; }
         public string? DeliveryPoint { get; set; }
         public string? EstimatedDistance { get; set; }
+        [Required]
         public double? EstimatedDeliveryTime { get; set; }
         public bool? IsRoundTrip { get; set; }
         public string? TypeBooking { get; set; }
@@ -31,5 +32,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
         public DateTime? BookingAt { get; set; } 
         public List<BookingDetailRequest> BookingDetails { get; set; } = new List<BookingDetailRequest>();
+        
     }
 }
