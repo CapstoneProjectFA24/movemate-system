@@ -32,5 +32,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}")]
         public DateTime? BookingAt { get; set; } 
         public List<BookingDetailRequest> BookingDetails { get; set; } = new List<BookingDetailRequest>();
+        
     }
 }

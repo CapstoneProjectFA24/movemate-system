@@ -142,6 +142,18 @@ namespace MoveMate.Service.Commons
 
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
+            public const string FeeSettingAlreadyDeleted = "Fee setting already deleted";
+            public const string FeeTypeTruckFail = "Fee setting with Type TRUCK does not depend on house type";
+            public const string FeeUnitKMFail = "Fee setting with Type TRUCK must have unit KM";
+            public const string FeeUnitNotKMFail = "Unit can't be KM";
+            public const string FeeUnitPercentFail = "Unit musst be PERCENT";
+            public const string FeeUnitFloorFail = "Floor percent can't be null";
+            public const string NotServiceFeeFail = "This type of fee needs to be associated with 1 service";
+            public const string ServiceFeeFail = "This type of fee don't needs to be associated with 1 service";
+            public const string ServiceTypeTruck = "Service type's must be TRUCK";
+            public const string ServiceTier1 = "Cannot create fee settings for parent service";
+            public const string ServiceTruckCategory = "Service does not have a truck category";
+
 
             //Truck category
             public const string NotFoundTruckCategory = "Truck category not found";
@@ -170,6 +182,7 @@ namespace MoveMate.Service.Commons
             public const string ProcessPaymentFail = "Payment was not successful";
             public const string InvalidBookingId = "Invalid booking ID";
             public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
+            public const string PaymentFail = "Payment was failed";
 
 
             //Transaction
@@ -197,6 +210,9 @@ namespace MoveMate.Service.Commons
             public const string VoucherAlreadyAssigned = "Voucher received";
             public const string VoucherHasBeenAssigned = "The user has already received the voucher";
             public const string VoucherLessThanQuantity = "The number of vouchers provided does not match the specified quantity";
+            public const string VoucherUnique = "Vouchers must have unique Promotion IDs";
+            public const string VoucherNotUser = "Invalid or unauthorized vouchers in request";
+            public const string VoucherNotMatch = "Invalid voucher: promotion does not match booking services";
 
             //Validate
             public const string ValidateField = "Field is required";
@@ -237,6 +253,8 @@ namespace MoveMate.Service.Commons
             //FeeSetting
             public const string GetListFeeSettingEmpty = "List fee setting is empty!";
             public const string GetListFeeSettingSuccess = "Get list fee setting done";
+            public const string GetFeeSettingSuccess = "Get truck category successfully";
+            public const string DeleteFeeSetiing = "Fee setting has been deleted";
 
 
             //House Type
