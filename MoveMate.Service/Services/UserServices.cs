@@ -222,7 +222,7 @@ namespace MoveMate.Service.Services
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
                 if (user == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);
                 }
 
                 user.IsBanned = true;
@@ -232,7 +232,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;
@@ -246,13 +246,13 @@ namespace MoveMate.Service.Services
                 var userInfo = await _unitOfWork.UserInfoRepository.GetByIdAsync(id);
                 if (userInfo == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUserInfo, false);
                     return result;
                 }
 
                 if (userInfo.IsDeleted == true)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoIsDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoIsDeleted, false);
                     return result;
                 }
 
@@ -264,7 +264,7 @@ namespace MoveMate.Service.Services
             }
             catch
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;

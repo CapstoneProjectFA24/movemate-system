@@ -153,7 +153,11 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidBookingDetails);
                 return result;
             }
-
+            if (!request.AreServicesUnique())
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.OnlyInscrease);
+                return result;
+            }
             try
             {
                 var existingHouseType =
@@ -394,6 +398,15 @@ namespace MoveMate.Service.Services
                 booking.CancelReason = "Is expired, Cancel by System";
                 _unitOfWork.BookingRepository.Update(booking);
                 _unitOfWork.Save();
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+            }
+            if (booking != null && booking.Status == BookingEnums.DEPOSITING.ToString())
+            {
+                booking.Status = BookingEnums.CANCEL.ToString();
+                booking.IsCancel = true;
+                booking.CancelReason = "Expired - Automatically canceled by system";
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             }
         }
@@ -1925,6 +1938,7 @@ namespace MoveMate.Service.Services
                         }
 
                         existingBooking.Status = BookingEnums.DEPOSITING.ToString();
+                        BackgroundJob.Schedule(() => CheckAndCancelBooking(existingBooking.Id), TimeSpan.FromDays(1));
                         break;
                     case "COMING":
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString())

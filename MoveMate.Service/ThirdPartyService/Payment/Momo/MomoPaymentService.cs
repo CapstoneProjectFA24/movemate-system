@@ -324,6 +324,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     BookingId = bookingId,
                     Amount = (double)callback.Amount,
                     Success = true,
+                    Date = DateTime.Now,
                     BankCode = Resource.Momo.ToString()
                 };
 

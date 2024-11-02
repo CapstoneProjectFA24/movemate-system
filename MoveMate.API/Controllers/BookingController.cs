@@ -163,8 +163,20 @@ namespace MoveMate.API.Controllers
         /// <returns></returns>
         [HttpPut("cancel-booking/{id}")]
         [Authorize]
-        public async Task<IActionResult> CancelBookingById(BookingCancelRequest request)
+        public async Task<IActionResult> CancelBookingById(int id, BookingCancelRequest request)
         {
+            if (request.Id != id)
+            {
+                return BadRequest(new
+                {
+                    statusCode = 400,
+                    message = "Bad Request",
+                    isError = true,
+                    errors = new[] { MessageConstant.FailMessage.RequestIdFail },
+                    timestamp = DateTime.UtcNow 
+                });
+            }
+
             var response = await _bookingServices.CancelBooking(request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }

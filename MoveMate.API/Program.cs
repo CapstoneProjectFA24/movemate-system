@@ -20,6 +20,7 @@ using MoveMate.Service.Services;
 using System.Configuration;
 using MoveMate.Service.Commons.AutoMapper;
 using MoveMate.Service.Commons.Validates;
+using DotNetEnv;
 
 namespace MoveMate.API
 {
@@ -57,9 +58,19 @@ namespace MoveMate.API
             builder.Services.AddRabbitMQ();
 
             // CORS Policy
-            builder.Services.AddCors(cors => cors.AddPolicy(
-                name: CorsConstants.PolicyName,
-                policy => { policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); }));
+            string[] allowedOrigins = builder.Environment.IsDevelopment()
+                 ? new[] { "http://localhost:3000", "https://movemate-dashboard.vercel.app" }
+                 : new[] { "https://movemate-dashboard.vercel.app" };
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin", builder =>
+                {
+                    builder.WithOrigins(allowedOrigins)
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
 
             // Fluent Validation
             builder.Services.AddFluentValidation(fv =>
@@ -82,6 +93,7 @@ namespace MoveMate.API
 
             // Configure the HTTP request pipeline.
             app.AddApplicationConfig();
+            app.UseCors("AllowSpecificOrigin");
             app.Run();
         }
     }

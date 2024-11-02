@@ -162,6 +162,32 @@ namespace MoveMate.API.Controllers
         }
 
 
+
+        [HttpPost]
+        public async Task<IActionResult> PaymentBooking(int bookingId, string returnUrl)
+        {
+            var claims = HttpContext.User.Claims;
+            var accountIdClaim = claims.FirstOrDefault(x => x.Type.Equals("sid", StringComparison.OrdinalIgnoreCase));
+
+            if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
+            }
+
+            var payment = await _paymentServices.PaymentByWallet(userId, bookingId, returnUrl);
+            if (payment.IsError)
+            {
+                return HandleErrorResponse(payment.Errors);
+            }
+            //var url = $"{returnUrl}?isSuccess={payment.Payload.ToString().ToLower()}";
+            return Ok(payment);
+        
+    }
+
+
+
+
+
         /// <summary>
         /// FEATURE : Recharge Payment
         /// </summary>

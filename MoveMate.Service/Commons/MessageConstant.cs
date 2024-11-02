@@ -77,6 +77,7 @@ namespace MoveMate.Service.Commons
             public const string UserInfoIsDeleted = "User info has been deleted";
             public const string UserInfoExist = "User info with this type has existed";
             public const string AccountNotLogin = "This account has been banned";
+            public const string RequestIdFail = "The input Id must match the request Id";
 
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
@@ -112,6 +113,7 @@ namespace MoveMate.Service.Commons
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
+            public const string OnlyInscrease = "Service can only increase quantity";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
@@ -170,6 +172,7 @@ namespace MoveMate.Service.Commons
             public const string ProcessPaymentFail = "Payment was not successful";
             public const string InvalidBookingId = "Invalid booking ID";
             public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
+            public const string BalanceNotEnough = "The balance in the wallet is not enough";
 
 
             //Transaction
@@ -278,6 +281,7 @@ namespace MoveMate.Service.Commons
             public const string PaymentHandle = "Payment handled successfully";
             public const string VNPPayment = "Payment with VnPay";
             public const string MomoPayment = "Payment with Momo";
+            public const string PaymentSuccess = "Payment booking successful";
 
 
             //Transaction

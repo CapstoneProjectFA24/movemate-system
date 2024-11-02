@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using MoveMate.Domain.Models;
 using MoveMate.Service.ViewModels.Annotation;
 
 namespace MoveMate.Service.ViewModels.ModelRequests;
@@ -77,6 +78,19 @@ public class BookingRegisterRequest
     public bool IsBookingDetailsValid()
     {
         return BookingDetails.Any();
-    } 
+    }
+
+    public bool IsUniqService()
+    {
+        return AreServicesUnique();
+    }
+
+    public bool AreServicesUnique()
+    {
+
+        var bookingDetails = BookingDetails.Select(v => v.ServiceId).ToList();
+        return bookingDetails.Distinct().Count() == bookingDetails.Count;
+    }
+
 
 }

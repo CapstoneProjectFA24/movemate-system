@@ -326,7 +326,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     BookingId = bookingId,
                     Amount = amount,
                     Success = true,
-                    BankCode = Resource.VNPay.ToString()
+                    BankCode = Resource.VNPay.ToString(),
+                    Date = DateTime.Now,
                 };
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
@@ -363,6 +364,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     UpdatedAt = DateTime.Now,
                     IsCredit = false
                 };
+
+
 
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();

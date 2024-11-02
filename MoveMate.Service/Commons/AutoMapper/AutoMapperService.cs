@@ -99,6 +99,9 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //Transaction 
             CreateMap<Transaction,  TransactionResponse>();
+            //Payment
+            CreateMap<Payment, PaymentResponse>()
+                .ForMember(dest => dest.Transactions, opt => opt.MapFrom(src => src.Transactions));
 
             //House Type
             CreateMap<HouseType, HouseTypesResponse>();

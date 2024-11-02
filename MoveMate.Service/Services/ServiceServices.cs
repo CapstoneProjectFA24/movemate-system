@@ -276,12 +276,12 @@ namespace MoveMate.Service.Services
                 var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService, false);
                     return result;
                 }
                 if (service.IsActived == false)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceAlreadyDeleted, false);
                     return result;
                 }
 
@@ -293,7 +293,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;

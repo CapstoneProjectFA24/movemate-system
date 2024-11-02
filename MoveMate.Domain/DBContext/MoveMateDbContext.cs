@@ -256,6 +256,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.BankCode).HasMaxLength(255);
             entity.Property(e => e.BankTransNo).HasMaxLength(255);
             entity.Property(e => e.CardType).HasMaxLength(255);
+            entity.Property(e => e.Date).HasColumnType("datetime");
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.ResponseCode).HasMaxLength(255);

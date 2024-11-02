@@ -124,6 +124,13 @@ namespace MoveMate.Repository.Repositories.Repository
             }
         }
 
+        public async Task<User> GetUserByRoleIdAsync()
+        {
+            return await _dbContext.Users
+                .Where(u => u.RoleId == 6)
+                .FirstOrDefaultAsync();
+        }
+
 
     }
 }
