@@ -18,7 +18,7 @@ namespace MoveMate.Service.IServices
 
         Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request);
 
-        Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest id);
+        Task<OperationResult<BookingResponse>> CancelBooking(int id, BookingCancelRequest request);
         Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int bookingId);
         Task<OperationResult<AssignmentResponse>> ReportFail(int bookingId, string failedReason);
         Task<OperationResult<AssignmentResponse>> DriverUpdateRoundTripBooking(int bookingId);

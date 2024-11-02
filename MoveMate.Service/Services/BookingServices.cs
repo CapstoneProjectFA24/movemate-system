@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using static Grpc.Core.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Parlot.Fluent;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MoveMate.Service.Services
 {
@@ -344,13 +345,18 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: Cancel a booking in the system.
 
-        public async Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest request)
+        public async Task<OperationResult<BookingResponse>> CancelBooking(int id, BookingCancelRequest request)
         {
             var result = new OperationResult<BookingResponse>();
 
-            // 
+            if (request.Id != id)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RequestIdFail);
+                return result;
+            }
             try
             {
+
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
                 if (entity == null)
                 {
@@ -362,13 +368,22 @@ namespace MoveMate.Service.Services
                 entity.IsCancel = true;
                 entity.CancelReason = request.CancelReason;
                 _unitOfWork.BookingRepository.Update(entity);
-                _unitOfWork.Save();
+                var saveResult = _unitOfWork.Save();
 
-                //
-                var response = _mapper.Map<BookingResponse>(entity);
-                _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking, response);
-
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    entity = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)entity.Id,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
+                    var response = _mapper.Map<BookingResponse>(entity);
+                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
                 return result;
             }
             catch (Exception ex)
