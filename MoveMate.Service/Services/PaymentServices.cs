@@ -36,34 +36,34 @@ namespace MoveMate.Service.Services
             _walletService = walletService;
         }
 
-        public async Task<OperationResult<bool>> PaymentByWallet(int userId, int bookingId, string returnUrl)
+        public async Task<OperationResult<string>> PaymentByWallet(int userId, int bookingId, string returnUrl)
         {
-            var result = new OperationResult<bool>();
+            var result = new OperationResult<string>();
             try
             {
 
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);                 
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);                 
                     return result;
                 }
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
                 if (booking == null)
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay, false);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay);
                     return result;
                 }
                 var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
                 if (wallet == null)
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet, false);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
 
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.COMPLETED.ToString())
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus, false);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return result;
                 }
 
@@ -72,7 +72,7 @@ namespace MoveMate.Service.Services
                 {
                     if (wallet.Balance < booking.Deposit)
                     {
-                        result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BalanceNotEnough, false);
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BalanceNotEnough);
                         return result;
                     } else
                     {
@@ -83,7 +83,7 @@ namespace MoveMate.Service.Services
                 {
                     if (wallet.Balance < booking.TotalReal)
                     {
-                        result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BalanceNotEnough, false);
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BalanceNotEnough);
                         return result;
                     }
                     else
@@ -97,7 +97,7 @@ namespace MoveMate.Service.Services
                 var updateWallet = await _walletService.UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
                 if (updateWallet.IsError)
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance, false);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                     return result;
                 }
 
@@ -173,7 +173,7 @@ namespace MoveMate.Service.Services
                         var updateResult = await _walletService.UpdateWalletBalance(walletManager.Id, (float)walletManager.Balance);
                         if (updateResult.IsError)
                         {
-                            result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance, false);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                             return result;
                         }
                         //await _unitOfWork.SaveChangesAsync();
@@ -196,18 +196,18 @@ namespace MoveMate.Service.Services
                 }
                 else
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus, false);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                     return result;
                 }
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PaymentSuccess, true);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PaymentSuccess, MessageConstant.SuccessMessage.PaymentSuccess);
             }
             catch (Exception ex)
             {
-                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
             return result;

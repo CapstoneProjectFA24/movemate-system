@@ -5,7 +5,7 @@ namespace MoveMate.Service.IServices
 {
     public interface IPaymentServices
     {
-        Task<OperationResult<bool>> PaymentByWallet(int userId, int bookingId, string returnUrl);
+        Task<OperationResult<string>> PaymentByWallet(int userId, int bookingId, string returnUrl);
     }
     
 }

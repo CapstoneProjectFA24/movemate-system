@@ -114,6 +114,8 @@ namespace MoveMate.Service.Commons
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
             public const string OnlyInscrease = "Service can only increase quantity";
+            public const string CancelExpirePayment = "Expired - Automatically canceled by system";
+            public const string CancelExpireBooking = "Is expired, Cancel by System";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
@@ -173,7 +175,7 @@ namespace MoveMate.Service.Commons
             public const string InvalidBookingId = "Invalid booking ID";
             public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
             public const string BalanceNotEnough = "The balance in the wallet is not enough";
-
+            public const string UnspPayment = "Unsupported payment method selected";
 
             //Transaction
             public const string TransactionExist = "Transaction has already been processed";

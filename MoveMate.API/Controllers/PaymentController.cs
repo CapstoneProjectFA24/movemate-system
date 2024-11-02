@@ -50,7 +50,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="bookingId">Booking ID for payment</param>
         /// <param name="returnUrl">URL to redirect after payment</param>
-        /// <param name="selectedMethod">The selected payment method (e.g., "Momo", "VnPay", "PayOS")</param>
+        /// <param name="selectedMethod">The selected payment method (e.g., "Momo", "VnPay", "PayOS", "Wallet")</param>
         /// <returns>Returns the result of the payment link creation</returns>
         /// <response code="200">Payment link created successfully</response>
         /// <response code="400">Booking status must be either DEPOSITING or COMPLETED</response>
@@ -139,13 +139,16 @@ namespace MoveMate.API.Controllers
                 case PaymentType.PayOS:
                     operationResult = await _payOsService.CreatePaymentLinkAsync(bookingId, userId, returnUrl);
                     break;
+                case PaymentType.Wallet:                
+                    operationResult = await _paymentServices.PaymentByWallet(userId, bookingId, returnUrl);
+                    break;
                 default:
                     return HandleErrorResponse(new List<Error>
                     {
                         new Error
                         {
                             Code = MoveMate.Service.Commons.StatusCode.BadRequest,
-                            Message = "Unsupported payment method selected."
+                            Message = MessageConstant.FailMessage.UnspPayment
                         }
                     });
             }
@@ -160,32 +163,6 @@ namespace MoveMate.API.Controllers
             // Return the successful operation result
             return Ok(operationResult);
         }
-
-
-
-        [HttpPost]
-        public async Task<IActionResult> PaymentBooking(int bookingId, string returnUrl)
-        {
-            var claims = HttpContext.User.Claims;
-            var accountIdClaim = claims.FirstOrDefault(x => x.Type.Equals("sid", StringComparison.OrdinalIgnoreCase));
-
-            if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int userId))
-            {
-                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
-            }
-
-            var payment = await _paymentServices.PaymentByWallet(userId, bookingId, returnUrl);
-            if (payment.IsError)
-            {
-                return HandleErrorResponse(payment.Errors);
-            }
-            //var url = $"{returnUrl}?isSuccess={payment.Payload.ToString().ToLower()}";
-            return Ok(payment);
-        
-    }
-
-
-
 
 
         /// <summary>

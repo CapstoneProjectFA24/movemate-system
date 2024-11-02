@@ -410,7 +410,7 @@ namespace MoveMate.Service.Services
             {
                 booking.Status = BookingEnums.CANCEL.ToString();
                 booking.IsCancel = true;
-                booking.CancelReason = "Is expired, Cancel by System";
+                booking.CancelReason = MessageConstant.FailMessage.CancelExpireBooking;
                 _unitOfWork.BookingRepository.Update(booking);
                 _unitOfWork.Save();
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
@@ -419,7 +419,7 @@ namespace MoveMate.Service.Services
             {
                 booking.Status = BookingEnums.CANCEL.ToString();
                 booking.IsCancel = true;
-                booking.CancelReason = "Expired - Automatically canceled by system";
+                booking.CancelReason = MessageConstant.FailMessage.CancelExpirePayment;
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
