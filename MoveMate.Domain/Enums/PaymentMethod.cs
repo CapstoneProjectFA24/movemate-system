@@ -10,6 +10,7 @@ namespace MoveMate.Domain.Enums
     {
         RECHARGE,
         DEPOSIT,
-        PAYMENT
+        PAYMENT,
+        RECEIVE
     }
 }
