@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using static Grpc.Core.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Parlot.Fluent;
+using System.ComponentModel.DataAnnotations;
 
 namespace MoveMate.Service.Services
 {
@@ -151,6 +152,15 @@ namespace MoveMate.Service.Services
             if (!request.IsBookingDetailsValid())
             {
                 result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidBookingDetails);
+                return result;
+            }
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
                 return result;
             }
 

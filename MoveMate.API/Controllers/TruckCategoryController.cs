@@ -343,6 +343,7 @@ public class TruckCategoryController : BaseController
     [HttpPut("truck/{id}")]
     public async Task<IActionResult> UpdateTruck(int id, [FromBody] UpdateTruckRequest request)
     {
+       
         var response = await _truckServices.UpdateTruck(id, request);
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }

@@ -18,6 +18,7 @@ using MoveMate.Service.ViewModels.ModelResponses;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace MoveMate.Service.Services
 {
@@ -199,7 +200,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<AccountResponse>> Login(AccountRequest request, JWTAuth jwtAuth)
         {
             var result = new OperationResult<AccountResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 // Check if the input is a phone number or email
@@ -292,7 +301,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
         {
             var result = new OperationResult<AccountResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
@@ -334,7 +351,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<object>> CheckCustomerExistsAsync(CustomerToRegister customer)
         {
             var result = new OperationResult<object>();
+            var validationContext = new ValidationContext(customer);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(customer, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 // Check for existing customers
