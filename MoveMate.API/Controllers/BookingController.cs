@@ -178,9 +178,16 @@ namespace MoveMate.API.Controllers
         /// <returns></returns>
         [HttpPut("cancel-booking/{id}")]
         [Authorize]
-        public async Task<IActionResult> CancelBookingById(BookingCancelRequest request)
+        public async Task<IActionResult> CancelBookingById(int id, BookingCancelRequest request)
         {
-            var response = await _bookingServices.CancelBooking(request);
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.CancelBooking(id, userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
@@ -257,7 +264,44 @@ namespace MoveMate.API.Controllers
         [HttpPut("user/confirm/{id}")]
         public async Task<IActionResult> UserConfirmChange(int id, [FromBody] StatusRequest request)
         {
-            var response = await _bookingServices.UserConfirm(id, request);
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.UserConfirm(id, userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// CHORE : Updates the booking date and time for an existing booking.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint allows a user to update the scheduled time (`BookingAt`) of an existing booking based on the booking's current status and review settings:
+        /// - If the booking is marked as reviewed online:
+        ///   - The `BookingAt` can be updated if the booking status is one of the following: "PENDING," "ASSIGNED," "REVIEWING," or "REVIEWED."
+        /// - If the booking is not reviewed online:
+        ///   - The `BookingAt` can be updated if the booking status is one of the following: "PENDING," "ASSIGNED," "WAITING," or "DEPOSITING."
+        /// - If the booking has been canceled or does not meet the criteria, an error message will be returned indicating that the update cannot proceed.
+        /// </remarks>
+        /// <param name="id">The ID of the booking to update.</param>
+        /// <param name="request">The updated booking time in the `ChangeBookingAtRequest` model.</param>
+        /// <returns>
+        /// Returns an `IActionResult` containing the updated booking information if successful. If the booking is not found, invalid, or the update criteria are not met, an appropriate error response is returned.
+        /// </returns>
+        [HttpPut("user/change-bookingAt/{id}")]
+        public async Task<IActionResult> UserChangeBookingAt(int id, [FromBody] ChangeBookingAtRequest request)
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.UserChangeBooingAt(id,userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

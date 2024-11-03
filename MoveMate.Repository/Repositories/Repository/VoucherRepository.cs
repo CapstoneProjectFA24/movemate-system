@@ -44,6 +44,20 @@ namespace MoveMate.Repository.Repositories.Repository
                     .ToListAsync();
         }
 
+
+        public async Task<List<Voucher>> GetUserVouchersByBookingIdAsync(int userId, int bookingId)
+        {
+            return await _context.Vouchers
+                .Include(v => v.PromotionCategory) // Include the PromotionCategory to access its properties
+                .Where(v => v.UserId == userId &&
+                     v.BookingId == bookingId &&
+                     v.IsActived == false &&
+                     v.PromotionCategory != null &&
+                     v.PromotionCategory.IsPublic == true &&
+                     v.PromotionCategory.StartDate <= DateTime.Now &&
+                     v.PromotionCategory.EndDate >= DateTime.Now)
+                    .ToListAsync();
+        }
         public async Task<bool> HasDuplicatePromotionCategoryIdsAsync(List<Voucher> vouchers)
         {
             var duplicateIds = vouchers

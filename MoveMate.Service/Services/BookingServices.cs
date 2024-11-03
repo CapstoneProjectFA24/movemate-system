@@ -69,7 +69,7 @@ namespace MoveMate.Service.Services
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
-                    includeProperties: "BookingDetails,FeeDetails,BookingTrackers.TrackerSources,Assignments"
+                    includeProperties: "BookingDetails.Service,FeeDetails,BookingTrackers.TrackerSources,Assignments"
                 );
                 var listResponse = _mapper.Map<List<BookingResponse>>(entities.Data);
 
@@ -199,7 +199,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
                 //validate many promotions
-              
+
 
                 var serviceIds = request.BookingDetails.Select(bd => bd.ServiceId).Distinct().ToList();
                 var validPromotionIds = new List<int>();
@@ -314,7 +314,7 @@ namespace MoveMate.Service.Services
                 {
                     entity.TypeBooking = TypeBookingEnums.DELAY.ToString();
                 }
-                
+
                 await _unitOfWork.BookingRepository.AddAsync(entity);
 
                 var checkResult = await _unitOfWork.SaveChangesAsync(); // Make sure this saves the booking
@@ -332,6 +332,14 @@ namespace MoveMate.Service.Services
                     await _unitOfWork.SaveChangesAsync(); // Save the voucher updates
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
+                    foreach (var bookingDetail in response.BookingDetails)
+                    {
+                        var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)bookingDetail.ServiceId);
+                        if (service != null)
+                        {
+                            bookingDetail.ImageUrl = service.ImageUrl;
+                        }
+                    }
                     _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created,
@@ -497,9 +505,15 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: Cancel a booking in the system.
 
-        public async Task<OperationResult<BookingResponse>> CancelBooking(BookingCancelRequest request)
+        public async Task<OperationResult<BookingResponse>> CancelBooking(int id, int userId, BookingCancelRequest request)
         {
             var result = new OperationResult<BookingResponse>();
+
+            if(request.Id != id)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RequiredId);
+                return result;
+            }
 
             var validationContext = new ValidationContext(request);
             var validationResults = new List<ValidationResult>();
@@ -518,18 +532,43 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-
+                if (entity.Status == BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+                
                 entity.Status = BookingEnums.CANCEL.ToString();
                 entity.IsCancel = true;
                 entity.CancelReason = request.CancelReason;
+
+                var vouchers = await _unitOfWork.VoucherRepository.GetUserVouchersByBookingIdAsync(userId, request.Id);
+                if (vouchers != null && vouchers.Any())
+                {
+                    foreach (var voucher in vouchers)
+                    {
+                        voucher.BookingId = null; 
+                        //voucher.IsActived = true; 
+                       await _unitOfWork.VoucherRepository.UpdateAsync(voucher);
+                    }
+                }
                 _unitOfWork.BookingRepository.Update(entity);
-                _unitOfWork.Save();
+                var saveResult = _unitOfWork.Save();
 
-                //
-                var response = _mapper.Map<BookingResponse>(entity);
-                _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking, response);
-
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    entity = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)entity.Id,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                    var response = _mapper.Map<BookingResponse>(entity);
+                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
                 return result;
             }
             catch (Exception ex)
@@ -1513,6 +1552,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
                 if (booking == null)
                 {
@@ -1520,12 +1560,19 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                if (booking.Status == BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+
+
                 string nextStatus = assigment.Status;
 
                 switch (assigment.Status)
                 {
                     case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
-                        if (booking.IsReviewOnline == true)
+                        if (booking.IsReviewOnline == true && booking.Status == BookingEnums.ASSIGNED.ToString())
                         {
                             booking.Status = BookingEnums.REVIEWING.ToString();
                         }
@@ -1574,7 +1621,7 @@ namespace MoveMate.Service.Services
                             tracker.TrackerSources = resourceList;
                             await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                         }
-                        
+
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
@@ -1751,17 +1798,22 @@ namespace MoveMate.Service.Services
             }
             try
             {
-               
+
 
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(id, "Assignments");
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
                 if (booking.Assignments.Count == 0)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
-                if (booking == null)
+                if (booking.Status == BookingEnums.CANCEL.ToString())
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
                     return result;
                 }
 
@@ -1814,7 +1866,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-                
+
                 if (bookingDetail.Status == AssignmentStatusEnums.ASSIGNED.ToString() &&
                     existingBooking.IsReviewOnline == true)
                 {
@@ -1854,7 +1906,7 @@ namespace MoveMate.Service.Services
                 {
                     var (sumServices, listBookingDetails, driverNo, porterNo, feeServiceDetails) =
                         await CalculateServiceFees(request.BookingDetails,
-                            (int)existingBooking.HouseTypeId,truckCategoryId
+                            (int)existingBooking.HouseTypeId, truckCategoryId
                             , existingBooking.FloorsNumber,
                             existingBooking.EstimatedDistance);
                     await CheckBookingDetailExist((int)bookingDetail.BookingId, existingBooking.BookingDetails.ToList(),
@@ -1906,28 +1958,28 @@ namespace MoveMate.Service.Services
                                                (request.UpdatedAt - now).TotalHours >= 0)
                     ? TypeBookingEnums.NOW.ToString()
                     : TypeBookingEnums.DELAY.ToString();
-                
+
                 /*if (existingBooking.IsReviewOnline == true)
                 {
                     existingBooking.Status = BookingEnums.REVIEWED.ToString();
                     existingBooking.IsStaffReviewed = true;
                 }*/
                 // logic booking detail
-                
+
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
-               // await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(ex);
+                // await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(ex);
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
                     existingBooking.BookingDetails.ToList());
 
                 await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
 
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
-                
-                var bookingDetailsWithZeroQuantity  = existingBooking.BookingDetails
+
+                var bookingDetailsWithZeroQuantity = existingBooking.BookingDetails
                     .Where(bd => bd.Quantity == 0)
                     .ToList();
                 _unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);
-                
+
 
                 var saveResult = _unitOfWork.Save();
 
@@ -1935,7 +1987,7 @@ namespace MoveMate.Service.Services
                 if (saveResult > 0)
                 {
                     existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
-                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments,Vouchers");
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(existingBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
@@ -2030,6 +2082,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewOnline);
                     return result;
                 }
+                if (existingBooking.Status == BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
 
                 if (existingBooking.Status == BookingEnums.ASSIGNED.ToString())
                 {
@@ -2050,7 +2107,7 @@ namespace MoveMate.Service.Services
                 if (saveResult > 0)
                 {
                     var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
-                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
@@ -2069,7 +2126,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingResponse>> UserConfirm(int bookingId, StatusRequest request)
+        public async Task<OperationResult<BookingResponse>> UserConfirm(int bookingId,int userId, StatusRequest request)
         {
             var result = new OperationResult<BookingResponse>();
             var validationContext = new ValidationContext(request);
@@ -2081,16 +2138,39 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
                 return result;
             }
+            if (!request.AreVouchersUnique())
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherUnique);
+                return result;
+            }
             try
             {
-                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");
+                var assigment = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndBookingId(RoleEnums.REVIEWER.ToString(), bookingId);
+                if (assigment == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
 
                 if (existingBooking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
+                if( existingBooking.UserId != userId)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
+                    return result;
+                }
 
+                
+                if (existingBooking.Status == BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
 
                 switch (request.Status)
                 {
@@ -2133,6 +2213,73 @@ namespace MoveMate.Service.Services
                         }
 
                         existingBooking.Status = BookingEnums.DEPOSITING.ToString();
+                        var userOnlineVouchers = await _unitOfWork.VoucherRepository.GetUserVouchersAsync(userId);
+                        var validOnlineVoucherIds = userOnlineVouchers.Select(v => v.Id).ToHashSet();
+
+                        // Validate requested vouchers
+                        var requestedVouchers = request.Vouchers.Where(v => validOnlineVoucherIds.Contains(v.Id)).ToList();
+
+                        if (requestedVouchers.Count != request.Vouchers.Count)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherNotUser);
+                            return result;
+                        }
+                        //validate many promotions
+
+
+                        var serviceOnlineIds = existingBooking.BookingDetails.Select(bd => bd.ServiceId).Distinct().ToList();
+                        var validOnlinePromotionIds = new List<int>();
+
+                        foreach (var serviceId in serviceOnlineIds)
+                        {
+                            var promotionId = await _unitOfWork.PromotionCategoryRepository.GetPromotionIdByServiceId((int)serviceId);
+                            if (promotionId.HasValue)
+                            {
+                                validOnlinePromotionIds.Add(promotionId.Value);
+                            }
+                        }
+
+                        // Validate that each voucher's PromotionId matches a promotion for one of the services
+                        foreach (var voucher in requestedVouchers)
+                        {
+                            if (!validOnlinePromotionIds.Contains(voucher.PromotionCategoryId))
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherNotMatch);
+                                return result;
+                            }
+                        }
+                        var voucherOnlines = new List<Voucher>();
+                        double totalVoucherOnlinePrice = 0;
+
+                        // Instead of mapping DTO to entity directly, retrieve existing vouchers
+                        foreach (var voucher in requestedVouchers)
+                        {
+                            // Assuming you have a method to get the existing voucher by Id
+                            var existingVoucher = await _unitOfWork.VoucherRepository.GetByIdAsync(voucher.Id);
+
+                            if (existingVoucher != null)
+                            {
+                                // Attach the existing voucher to the booking
+                                voucherOnlines.Add(existingVoucher);
+                                totalVoucherOnlinePrice += existingVoucher.Price.Value;
+                                //existingVoucher.IsActived = false;
+                            }
+                            else
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundVoucher);
+                                return result;
+                            }
+                        }
+
+                        existingBooking.Total -= totalVoucherOnlinePrice;
+                        existingBooking.TotalReal = existingBooking.Total;
+                        var deposit = existingBooking.Total * 30 / 100;
+                        existingBooking.Deposit = deposit;
+                        foreach (var voucher in voucherOnlines)
+                        {
+                            voucher.BookingId = existingBooking.Id;
+                        }                     
+                        _unitOfWork.VoucherRepository.UpdateRange(voucherOnlines);
                         break;
                     case "COMING":
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString())
@@ -2142,6 +2289,73 @@ namespace MoveMate.Service.Services
                         }
 
                         existingBooking.Status = BookingEnums.COMING.ToString();
+                        var userVouchers = await _unitOfWork.VoucherRepository.GetUserVouchersAsync(userId);
+                        var validVoucherIds = userVouchers.Select(v => v.Id).ToHashSet();
+
+                        // Validate requested vouchers
+                        var requestedOffVouchers = request.Vouchers.Where(v => validVoucherIds.Contains(v.Id)).ToList();
+
+                        if (requestedOffVouchers.Count != request.Vouchers.Count)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherNotUser);
+                            return result;
+                        }
+                        //validate many promotions
+
+
+                        var serviceIds = existingBooking.BookingDetails.Select(bd => bd.ServiceId).Distinct().ToList();
+                        var validPromotionIds = new List<int>();
+
+                        foreach (var serviceId in serviceIds)
+                        {
+                            var promotionId = await _unitOfWork.PromotionCategoryRepository.GetPromotionIdByServiceId((int)serviceId);
+                            if (promotionId.HasValue)
+                            {
+                                validPromotionIds.Add(promotionId.Value);
+                            }
+                        }
+
+                        // Validate that each voucher's PromotionId matches a promotion for one of the services
+                        foreach (var voucher in requestedOffVouchers)
+                        {
+                            if (!validPromotionIds.Contains(voucher.PromotionCategoryId))
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherNotMatch);
+                                return result;
+                            }
+                        }
+                        var vouchers = new List<Voucher>();
+                        double totalVoucherPrice = 0;
+
+                        // Instead of mapping DTO to entity directly, retrieve existing vouchers
+                        foreach (var voucher in requestedOffVouchers)
+                        {
+                            // Assuming you have a method to get the existing voucher by Id
+                            var existingVoucher = await _unitOfWork.VoucherRepository.GetByIdAsync(voucher.Id);
+
+                            if (existingVoucher != null)
+                            {
+                                // Attach the existing voucher to the booking
+                                vouchers.Add(existingVoucher);
+                                totalVoucherPrice += existingVoucher.Price.Value;
+                                //existingVoucher.IsActived = false;
+                            }
+                            else
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundVoucher);
+                                return result;
+                            }
+                        }
+
+                        existingBooking.Total -= totalVoucherPrice;
+                        existingBooking.TotalReal = existingBooking.Total;
+                        var depositOff = existingBooking.Total * 30 / 100;
+                        existingBooking.Deposit = depositOff;
+                        foreach (var voucher in vouchers)
+                        {
+                            voucher.BookingId = existingBooking.Id;
+                        }
+                        _unitOfWork.VoucherRepository.UpdateRange(vouchers);
                         break;
 
                     default:
@@ -2156,7 +2370,7 @@ namespace MoveMate.Service.Services
                 if (saveResult > 0)
                 {
                     var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
-                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
@@ -2220,6 +2434,97 @@ namespace MoveMate.Service.Services
                 return result;
             }
 
+            return result;
+        }
+
+        public async Task<OperationResult<BookingResponse>> UserChangeBooingAt(int booingId, int userId, ChangeBookingAtRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+
+            if (!request.IsBookingAtValid())
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
+                return result;
+            }
+
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
+            try
+            {
+               
+                var existingBooking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(booingId, userId);
+
+                if (existingBooking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay);
+                    return result;
+                }
+                if (existingBooking.Status == BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+
+
+                if (existingBooking.IsReviewOnline == true)
+                {
+                    if (existingBooking.Status == BookingEnums.PENDING.ToString() || existingBooking.Status == BookingEnums.ASSIGNED.ToString()
+                        || existingBooking.Status == BookingEnums.REVIEWING.ToString() || existingBooking.Status == BookingEnums.REVIEWED.ToString())
+                    {
+                        existingBooking.BookingAt = request.BookingAt;
+                        existingBooking.UpdatedAt = DateTime.Now;
+                    }
+                    else
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ChangeBookingAtFail);
+                        return result;
+                    }
+                }
+                if (existingBooking.IsReviewOnline == false)
+                {
+                    if (existingBooking.Status == BookingEnums.PENDING.ToString() || existingBooking.Status == BookingEnums.ASSIGNED.ToString()
+                        || existingBooking.Status == BookingEnums.WAITING.ToString() || existingBooking.Status == BookingEnums.DEPOSITING.ToString())
+                    {
+                        existingBooking.BookingAt = request.BookingAt;
+                        existingBooking.UpdatedAt = DateTime.Now;
+                    }
+                    else
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ChangeBookingAtFail);
+                        return result;
+                    }
+                }
+
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)existingBooking.Id,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                    var response = _mapper.Map<BookingResponse>(existingBooking);
+                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
             return result;
         }
     }
