@@ -1471,6 +1471,7 @@ namespace MoveMate.Service.Services
                                 result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                                 return result;
                             }
+
                             var tracker = new BookingTracker();
                             tracker.Type = TrackerEnums.REVIEW_OFFLINE.ToString();
                             tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
@@ -1478,6 +1479,22 @@ namespace MoveMate.Service.Services
                             List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
                             tracker.TrackerSources = resourceList;
                             await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                        }
+                        if (booking.EstimatedDeliveryTime == null)
+                        {
+                            if (request.EstimatedDeliveryTime == null)
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingNotEstimated);
+                                return result;
+                            }
+                            else
+                            {
+                                booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
+                            }
+                        }
+                        else if (booking.EstimatedDeliveryTime != null && request.EstimatedDeliveryTime.HasValue)
+                        {
+                            booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
                         }
 
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();

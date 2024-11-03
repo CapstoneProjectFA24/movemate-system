@@ -116,6 +116,7 @@ namespace MoveMate.Service.Commons
             public const string ChangeBookingAtFail = "BookingAt cannot be changed";
             public const string RequiredId = "The input id does not match the request id";
 
+            public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
