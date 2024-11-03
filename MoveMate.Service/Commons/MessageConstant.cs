@@ -112,6 +112,7 @@ namespace MoveMate.Service.Commons
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
+            public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";

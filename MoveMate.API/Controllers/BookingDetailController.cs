@@ -87,7 +87,8 @@ namespace MoveMate.API.Controllers
         ///     if offline, the assignment status advances to "ENROUTE."
         /// - If the assignment is "ENROUTE," it progresses to "ARRIVED."
         /// - If the assignment is "SUGGESTED" and the booking is in "REVIEWING" status, a new tracker is created for offline resources, 
-        ///     updating the assignment to "REVIEWED" and the booking to "REVIEWED."
+        ///     updating the assignment to "REVIEWED" and the booking to "REVIEWED". EstimatedDeliveryTime must be update right here if it wasn't 
+        ///     updated before
         ///
         /// If the conditions for a transition are not met, an error message is returned.
         /// </remarks>
