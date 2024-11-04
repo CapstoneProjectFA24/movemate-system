@@ -11,6 +11,6 @@ namespace MoveMate.Service.IServices
 {
     public interface IStaffDailyServices
     {
-        public Task<OperationResult<List<StaffDailyResponse>>> GetAll(GetAllStaffDailyRequest request);
+        public Task<OperationResult<List<BookingStaffDailyResponse>>> GetAll(GetAllStaffDailyRequest request);
     }
 }
