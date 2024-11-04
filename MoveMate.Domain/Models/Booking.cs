@@ -86,6 +86,8 @@ public partial class Booking
     public DateTime? EstimatedEndTime { get; set; }
     public bool? IsStaffReviewed { get; set; }
 
+    public bool? IsUpdated { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();

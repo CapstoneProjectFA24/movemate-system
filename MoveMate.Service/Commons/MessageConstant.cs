@@ -112,6 +112,11 @@ namespace MoveMate.Service.Commons
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
+            public const string BookingCancel = "Booking have been canceled";
+            public const string ChangeBookingAtFail = "BookingAt cannot be changed";
+            public const string RequiredId = "The input id does not match the request id";
+            public const string BookingHasBeenUpdated = "Booking can only be updated once";
+
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
 
             //Assignment
