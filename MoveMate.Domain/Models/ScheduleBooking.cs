@@ -11,5 +11,5 @@ public partial class ScheduleBooking
 
     public string? Shard { get; set; }
 
-    public virtual ICollection<ScheduleBookingDetail> ScheduleBookingDetails { get; set; } = new List<ScheduleBookingDetail>();
+    public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 }

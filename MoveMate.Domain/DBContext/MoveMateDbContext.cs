@@ -16,6 +16,7 @@ public partial class MoveMateDbContext : DbContext
     {
     }
 
+
     public virtual DbSet<Assignment> Assignments { get; set; }
 
     public virtual DbSet<Booking> Bookings { get; set; }
@@ -26,13 +27,19 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<BookingTracker> BookingTrackers { get; set; }
 
+
+
     public virtual DbSet<FeeDetail> FeeDetails { get; set; }
 
     public virtual DbSet<FeeSetting> FeeSettings { get; set; }
 
+
+
     public virtual DbSet<HolidaySetting> HolidaySettings { get; set; }
 
     public virtual DbSet<HouseType> HouseTypes { get; set; }
+
+  
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
@@ -44,11 +51,13 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<ScheduleBooking> ScheduleBookings { get; set; }
 
-    public virtual DbSet<ScheduleBookingDetail> ScheduleBookingDetails { get; set; }
-
     public virtual DbSet<ScheduleWorking> ScheduleWorkings { get; set; }
 
+   
+
     public virtual DbSet<Service> Services { get; set; }
+
+    
 
     public virtual DbSet<TrackerSource> TrackerSources { get; set; }
 
@@ -68,17 +77,21 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-
+   
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+       
+
         modelBuilder.Entity<Assignment>(entity =>
         {
             entity.ToTable("Assignment");
 
             entity.Property(e => e.AddressCurrent).HasMaxLength(255);
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.FailedReason).HasMaxLength(255);
             entity.Property(e => e.StaffType).HasMaxLength(255);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(255);
 
             entity.HasOne(d => d.BookingDetails).WithMany(p => p.Assignments)
@@ -88,6 +101,10 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.Booking).WithMany(p => p.Assignments)
                 .HasForeignKey(d => d.BookingId)
                 .HasConstraintName("FK_Assignment_Booking");
+
+            entity.HasOne(d => d.ScheduleBooking).WithMany(p => p.Assignments)
+                .HasForeignKey(d => d.ScheduleBookingId)
+                .HasConstraintName("FK_Assignment_ScheduleBooking");
 
             entity.HasOne(d => d.Truck).WithMany(p => p.Assignments)
                 .HasForeignKey(d => d.TruckId)
@@ -184,6 +201,8 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_BookingTracker_Booking");
         });
 
+       
+
         modelBuilder.Entity<FeeDetail>(entity =>
         {
             entity.Property(e => e.Description).HasMaxLength(255);
@@ -217,6 +236,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_FeeSetting_Service");
         });
 
+        
         modelBuilder.Entity<HolidaySetting>(entity =>
         {
             entity.ToTable("HolidaySetting");
@@ -232,6 +252,8 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
         });
+
+       
 
         modelBuilder.Entity<Notification>(entity =>
         {
@@ -298,25 +320,6 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Shard).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<ScheduleBookingDetail>(entity =>
-        {
-            entity.Property(e => e.EndDate).HasColumnType("datetime");
-            entity.Property(e => e.StartDate).HasColumnType("datetime");
-            entity.Property(e => e.Type).HasMaxLength(255);
-
-            entity.HasOne(d => d.Booking).WithMany(p => p.ScheduleBookingDetails)
-                .HasForeignKey(d => d.BookingId)
-                .HasConstraintName("FK_ScheduleBookingDetails_Booking");
-
-            entity.HasOne(d => d.ScheduleBooking).WithMany(p => p.ScheduleBookingDetails)
-                .HasForeignKey(d => d.ScheduleBookingId)
-                .HasConstraintName("FK_ScheduleBookingDetails_ScheduleBooking");
-
-            entity.HasOne(d => d.User).WithMany(p => p.ScheduleBookingDetails)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_ScheduleBookingDetails_User");
-        });
-
         modelBuilder.Entity<ScheduleWorking>(entity =>
         {
             entity.ToTable("ScheduleWorking");
@@ -328,6 +331,8 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
+
+      
 
         modelBuilder.Entity<Service>(entity =>
         {
@@ -347,6 +352,7 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_Service_TruckCategory");
         });
 
+       
         modelBuilder.Entity<TrackerSource>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_TrackerImg");
@@ -390,7 +396,7 @@ public partial class MoveMateDbContext : DbContext
         {
             entity.ToTable("Truck");
 
-            entity.HasIndex(e => e.UserId, "UQ__Truck__1788CC4DF1C60A2B").IsUnique();
+            entity.HasIndex(e => e.UserId, "UQ__Truck__1788CC4D11DE5635").IsUnique();
 
             entity.Property(e => e.Brand).HasMaxLength(255);
             entity.Property(e => e.Color).HasMaxLength(255);
@@ -458,6 +464,7 @@ public partial class MoveMateDbContext : DbContext
         modelBuilder.Entity<UserInfo>(entity =>
         {
             entity.ToTable("UserInfo");
+
             entity.Property(e => e.ImageUrl).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.Value).HasMaxLength(255);

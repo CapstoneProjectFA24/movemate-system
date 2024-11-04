@@ -12,6 +12,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Linq;
 using System.Security.Claims;
@@ -149,7 +150,14 @@ namespace MoveMate.Service.Services
         public async Task UpdateUserAsync(string id, UpdateUserRequest updateUserRequest)
         {
             int userId = int.Parse(id);
+            var validationContext = new ValidationContext(updateUserRequest);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(updateUserRequest, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                throw new Exception(MessageConstant.FailMessage.ValidateField);
+            }
             try
             {
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(userId);
@@ -273,7 +281,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<UserInfoResponse>> CreateUserInfo(CreateUserInfoRequest request)
         {
             var result = new OperationResult<UserInfoResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var user = await _unitOfWork.UserRepository.GetByIdAsync((int)request.UserId);
@@ -315,6 +331,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<UserInfoResponse>> UpdateUserInfoAsync(int id, UpdateUserInfoRequest request)
         {
             var result = new OperationResult<UserInfoResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(id);

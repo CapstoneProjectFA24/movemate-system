@@ -9,6 +9,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -96,6 +97,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<PromotionResponse>> UpdatePromotion(int id, UpdatePromotionRequest request)
         {
             var result = new OperationResult<PromotionResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 var promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(id, includeProperties: "Vouchers");
@@ -112,6 +122,50 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
                 }
+
+                if (request.StartDate.HasValue && !request.EndDate.HasValue)
+                {
+                    if (request.StartDate >= promotion.EndDate)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                        return result;
+                    }
+
+                    if (!DateUtil.IsAtLeast24HoursApart((DateTime)request.StartDate, (DateTime)promotion.EndDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                        return result;
+                    }
+                }
+                if (!request.StartDate.HasValue && request.EndDate.HasValue)
+                {
+                    if (promotion.StartDate >= request.EndDate)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                        return result;
+                    }
+
+                    if (!DateUtil.IsAtLeast24HoursApart((DateTime)promotion.StartDate, (DateTime)request.EndDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                        return result;
+                    }
+                }
+                if (request.StartDate.HasValue && request.EndDate.HasValue)
+                {
+                    if (request.StartDate >= request.EndDate)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
+                        return result;
+                    }
+
+                    if (!DateUtil.IsAtLeast24HoursApart((DateTime)request.StartDate, (DateTime)request.EndDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsAtLeast24HoursApart);
+                        return result;
+                    }
+                }
+
 
                 int assignedVoucherCount = promotion.Vouchers.Count(v => v.UserId.HasValue);
 
@@ -137,7 +191,7 @@ namespace MoveMate.Service.Services
                 if (request.Quantity > assignedVoucherCount)
                 {
                     int currentVoucherCount = promotion.Vouchers.Count;
-                    int vouchersToAdd = request.Quantity - currentVoucherCount;
+                    int vouchersToAdd = (int)(request.Quantity - currentVoucherCount);
                     for (int i = 0; i < vouchersToAdd; i++)
                     {
                         var newVoucher = new Voucher
@@ -183,6 +237,15 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<PromotionResponse>> CreatePromotion(CreatePromotionRequest request)
         {
             var result = new OperationResult<PromotionResponse>();
+            var validationContext = new ValidationContext(request);
+            var validationResults = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
+
+            if (!isValid)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
+                return result;
+            }
             try
             {
                 
@@ -190,6 +253,11 @@ namespace MoveMate.Service.Services
                 if (service == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
+                    return result;
+                }
+                if (request.StartDate >= request.EndDate)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
                     return result;
                 }
 

@@ -26,7 +26,7 @@ public class BookingValuationRequest
     public int TruckCategoryId { get; set; }
 
     public string? FloorsNumber { get; set; }
-    
+
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
     [Required(ErrorMessage = "Filed is required")]
     public DateTime? BookingAt { get; set; }
@@ -34,4 +34,6 @@ public class BookingValuationRequest
     public bool? IsRoundTrip { get; set; } = false;
 
     public List<BookingDetailRequest> BookingDetails { get; set; } = new List<BookingDetailRequest>();
+
+
 }

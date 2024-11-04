@@ -40,7 +40,7 @@ Quy trình nâng cấp tự động gán tài xế:
           -* Kiểm tra lịch sử năng suất*:
             - Nếu tài xế có tần suất từ chối nhiệm vụ cao, giảm ưu tiên gán.
 
-       - Nếu queue rỗng:
+       - Nếu queue rỗng, hoặc không đủ:
          - Kiểm tra chi tiết lịch làm việc (schedule booking detail) của tài xế:
            - Điều kiện kiểm tra:
              - endTime của booking_at > startTime của schedule hoặc startTime của booking < endTime của schedule.
@@ -112,24 +112,33 @@ Quy trình nâng cấp tự động gán tài xế:
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt);
 
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
-                var listScheduleBookingDetails = new List<ScheduleBookingDetail>();
+                var listAssignments = new List<Assignment>();
 
                 if (scheduleBooking == null)
                 {
-                    var timeExpiry = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+                    var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
 
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value);
-                    await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiry);
+                    
+                    await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
 
+                    // check DriverNumber in booking and driver in system
+                    var driverNumberBooking = existingBooking.DriverNumber!.Value;
+                    if (driverNumberBooking > driverIds.Count)
+                    {
+                        // đánh tag faild cần reviewer can thiệp
+                        
+                    }
+                    
                     await AssignDriversToBooking(
                         message,
                         redisKey,
                         existingBooking.BookingAt.Value,
                         existingBooking.DriverNumber!.Value,
                         existingBooking.EstimatedDeliveryTime ?? 3,
-                        listScheduleBookingDetails,
+                        listAssignments,
                         redisService,
                         unitOfWork
                     );
@@ -145,11 +154,13 @@ Quy trình nâng cấp tự động gán tài xế:
                             existingBooking.BookingAt!.Value,
                             existingBooking.DriverNumber.Value,
                             existingBooking.EstimatedDeliveryTime ?? 3,
-                            listScheduleBookingDetails,
+                            listAssignments,
                             redisService,
                             unitOfWork
                         );
                     }
+                    // nếu mà list countDriver < existingBooking.DriverNumber thì
+                    // 
                 }
             }
         }
@@ -160,8 +171,19 @@ Quy trình nâng cấp tự động gán tài xế:
         }
     }
 
+    /// <summary>
+    /// AssignDriversToBooking
+    /// </summary>
+    /// <param name="bookingId"></param>
+    /// <param name="redisKey"></param>
+    /// <param name="startTime"></param>
+    /// <param name="driverCount"></param>
+    /// <param name="estimatedDeliveryTime"></param>
+    /// <param name="listScheduleBookingDetails"></param>
+    /// <param name="redisService"></param>
+    /// <param name="unitOfWork"></param>
     private async Task AssignDriversToBooking(int bookingId, string redisKey, DateTime startTime, int driverCount,
-        double estimatedDeliveryTime, List<ScheduleBookingDetail> listScheduleBookingDetails,
+        double estimatedDeliveryTime, List<Assignment> listAssignments,
         IRedisService redisService, UnitOfWork unitOfWork)
     {
         for (int i = 0; i < driverCount; i++)
@@ -169,23 +191,31 @@ Quy trình nâng cấp tự động gán tài xế:
             var driverId = await redisService.DequeueAsync<int>(redisKey);
             var endTime = startTime.AddHours(estimatedDeliveryTime);
 
-            var newScheduleBookingDetail = new ScheduleBookingDetail()
+            var newAssignmentDriver = new Assignment()
+            {
+                BookingId = bookingId,
+                StaffType = RoleEnums.DRIVER.ToString(),
+                Status = AssignmentStatusEnums.WAITING.ToString(),
+                UserId = driverId,
+
+            };
+            /*var newScheduleBookingDetail = new ScheduleBookingDetail()
             {
                 BookingId = bookingId,
                 Type = RoleEnums.DRIVER.ToString(),
                 StartDate = startTime,
                 UserId = driverId,
                 EndDate = endTime,
-            };
+            };*/
 
-            listScheduleBookingDetails.Add(newScheduleBookingDetail);
+            //listScheduleBookingDetails.Add(newScheduleBookingDetail);
         }
 
         var newScheduleBooking = new ScheduleBooking()
         {
             Shard = DateUtil.GetShard(startTime),
             IsActived = true,
-            ScheduleBookingDetails = listScheduleBookingDetails,
+            //ScheduleBookingDetails = listScheduleBookingDetails,
         };
 
         await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(newScheduleBooking);

@@ -4,9 +4,11 @@ using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
+using static Grpc.Core.Metadata;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 
@@ -14,14 +16,16 @@ public class AssignReviewWorker
 {
     private readonly ILogger<AssignReviewWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IFirebaseServices _firebaseServices;
 
-    public AssignReviewWorker(ILogger<AssignReviewWorker> logger, IServiceScopeFactory serviceScopeFactory)
+    public AssignReviewWorker(ILogger<AssignReviewWorker> logger, IServiceScopeFactory serviceScopeFactory, IFirebaseServices firebaseServices)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
+        _firebaseServices = firebaseServices;
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task HandleMessage(int message)
     {
         await Task.Delay(TimeSpan.FromSeconds(3));
@@ -66,8 +70,9 @@ public class AssignReviewWorker
 
                 booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
                 unitOfWork.BookingRepository.Update(booking);
-                unitOfWork.Save();
 
+                unitOfWork.Save();
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 redisService.EnqueueAsync(redisKey, reviewerId);
 
                 Console.WriteLine($"Booking info: {booking}");

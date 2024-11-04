@@ -16,30 +16,43 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
         public string? Search { get; set; }
         public string? Name { get; set; }
+        public string? Type { get; set; }
 
 
         public override Expression<Func<FeeSetting, bool>> GetExpressions()
         {
+            // Start with a base expression
+            var queryExpression = PredicateBuilder.New<FeeSetting>(true);
+
+            // Search filtering
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
-
-                var queryExpression = PredicateBuilder.New<FeeSetting>(true);
-                queryExpression.Or(cus => cus.Name.ToLower().Contains(Search));
-
-
-                Expression = Expression.And(queryExpression);
+                queryExpression = queryExpression.Or(cus => cus.Name != null && cus.Name.ToLower().Contains(Search));
             }
 
+            // Name filtering
             if (!string.IsNullOrWhiteSpace(Name))
             {
-                Expression = Expression.And(u => u.Name == Name);
+                queryExpression = queryExpression.And(u => u.Name != null && u.Name == Name);
             }
 
-            Expression = Expression.And(u => u.IsActived == true);
-            Expression = Expression.And(i => i.Type == TypeFeeEnums.SYSTEM.ToString());
+            // Type filtering
+            if (!string.IsNullOrWhiteSpace(Type))
+            {
+                var statuses = Type.Split('.')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToArray();
 
-            return Expression;
+                Expression = Expression.And(tran => statuses.Contains(tran.Type));
+            }
+
+            // Ensure only active settings are included
+            queryExpression = queryExpression.And(u => u.IsActived == true);
+
+            return queryExpression;
         }
+
     }
 }

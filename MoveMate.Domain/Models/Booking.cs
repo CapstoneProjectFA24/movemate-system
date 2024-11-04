@@ -84,7 +84,10 @@ public partial class Booking
     public DateTime? ReviewAt { get; set; }
 
     public DateTime? EstimatedEndTime { get; set; }
+
     public bool? IsStaffReviewed { get; set; }
+
+    public bool? IsUpdated { get; set; }
 
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
@@ -97,8 +100,6 @@ public partial class Booking
     public virtual HouseType? HouseType { get; set; }
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
-
-    public virtual ICollection<ScheduleBookingDetail> ScheduleBookingDetails { get; set; } = new List<ScheduleBookingDetail>();
 
     public virtual User? User { get; set; }
 
