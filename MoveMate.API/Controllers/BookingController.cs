@@ -295,7 +295,7 @@ namespace MoveMate.API.Controllers
             }
 
             var userId = int.Parse(accountIdClaim.Value);
-            var response = await _bookingServices.UserChangeBooingAt(id,userId, request);g
+            var response = await _bookingServices.UserChangeBooingAt(id,userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }
