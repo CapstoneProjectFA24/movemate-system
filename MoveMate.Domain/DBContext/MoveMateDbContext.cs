@@ -88,7 +88,6 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("Assignment");
 
             entity.Property(e => e.AddressCurrent).HasMaxLength(255);
-            entity.Property(e => e.DurationTime).HasColumnType("datetime");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.FailedReason).HasMaxLength(255);
             entity.Property(e => e.StaffType).HasMaxLength(255);

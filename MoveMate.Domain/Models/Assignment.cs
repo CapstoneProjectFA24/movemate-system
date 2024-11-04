@@ -33,7 +33,7 @@ public partial class Assignment
 
     public DateTime? EndDate { get; set; }
 
-    public DateTime? DurationTime { get; set; }
+    public double? DurationTime { get; set; }
 
     public virtual Booking? Booking { get; set; }
 
