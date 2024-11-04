@@ -128,7 +128,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             return await _dbContext.Users
                 .Where(u => u.RoleId == 6)
-                .FirstOrDefaultAsync(); 
+                .FirstOrDefaultAsync();
         }
 
 

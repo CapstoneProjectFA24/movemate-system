@@ -176,13 +176,13 @@ namespace MoveMate.Service.Services
                 var houseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync(id);
                 if (houseType == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType, false);
                     return result;
                 }
 
                 if (houseType.IsActived == false)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.HouseTypeAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.HouseTypeAlreadyDeleted, false);
                     return result;
                 }
 
@@ -194,7 +194,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;

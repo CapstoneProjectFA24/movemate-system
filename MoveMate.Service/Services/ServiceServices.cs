@@ -203,7 +203,15 @@ namespace MoveMate.Service.Services
                     }
                 }
                 var service = _mapper.Map<MoveMate.Domain.Models.Service>(request);
-                service.Tier = request.InverseParentService.Count < 1 ? 1 : 0;
+                if (request.IsTierZeroOverride)
+                {
+                    service.Tier = 0;
+                }
+                else
+                {
+                    service.Tier = request.InverseParentService.Count < 1 ? 1 : 0;
+                }
+
 
                 if (service.Tier == 1)
                 {
@@ -276,12 +284,12 @@ namespace MoveMate.Service.Services
                 var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
                 if (service == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService, false);
                     return result;
                 }
                 if (service.IsActived == false)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceAlreadyDeleted, false);
                     return result;
                 }
 
@@ -293,7 +301,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;

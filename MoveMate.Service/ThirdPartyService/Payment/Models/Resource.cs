@@ -10,6 +10,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Models
     {
         Momo,
         PayOS,
-        VNPay
+        VNPay,
+        Wallet
     }
 }

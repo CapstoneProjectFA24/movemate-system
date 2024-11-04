@@ -36,6 +36,7 @@ using MoveMate.Service.ThirdPartyService.RabbitMQ.Config;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 using MoveMate.Service.ThirdPartyService.Redis.Connection;
 using Index = MoveMate.Service.ThirdPartyService.RabbitMQ.Config.Index;
+using DotNetEnv;
 
 
 namespace MoveMate.API.Extensions
@@ -344,7 +345,7 @@ namespace MoveMate.API.Extensions
             // Configure the HTTP request pipeline.
             app.UseSwagger();
             app.UseSwaggerUI();
-            app.UseCors(CorsConstants.PolicyName);
+        
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

@@ -16,7 +16,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Search { get; set; }
         public string? Name { get; set; }
         public string? RoleName { get; set; }
-        public string? Status { get; set; }
+  
 
         public override Expression<Func<User, bool>> GetExpressions()
         {
@@ -41,14 +41,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.Role.Name.Contains(RoleName));
             }
 
-            if (!string.IsNullOrWhiteSpace(Status))
-            {
-                var statuses = Status.Split('.')
-                    .Select(s => int.TryParse(s, out var statusValue) ? (int?)statusValue : null)
-                    .Where(s => s.HasValue)
-                    .Select(s => s.Value)
-                    .ToArray();
-            }
+          
 
             Expression = Expression.And(u => u.IsDeleted == false);
 
