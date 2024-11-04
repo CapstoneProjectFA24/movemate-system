@@ -75,13 +75,7 @@ namespace MoveMate.API.Controllers
         ///               "serviceId": 2,
         ///               "quantity": 1
         ///             }
-        ///           ],
-        ///           "vouchers": [
-        ///             {
-        ///               "id": 52,
-        ///               "promotionCategoryId": 24
-        ///             }
-        ///           ],
+        ///           ],          
         ///           "truckCategoryId": 4,
         ///           "bookingAt": "2024-10-30T05:26:28.452Z",
         ///           "resourceList": [
@@ -301,7 +295,7 @@ namespace MoveMate.API.Controllers
             }
 
             var userId = int.Parse(accountIdClaim.Value);
-            var response = await _bookingServices.UserChangeBooingAt(id,userId, request);
+            var response = await _bookingServices.UserChangeBooingAt(id,userId, request);g
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

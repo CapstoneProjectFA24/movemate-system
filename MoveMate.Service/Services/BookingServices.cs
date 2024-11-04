@@ -2346,7 +2346,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
                     return result;
                 }
-
+                if(existingBooking.IsUpdated == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingHasBeenUpdated);
+                    return result;
+                }
 
                 if (existingBooking.IsReviewOnline == true)
                 {
@@ -2354,6 +2358,7 @@ namespace MoveMate.Service.Services
                         || existingBooking.Status == BookingEnums.REVIEWING.ToString() || existingBooking.Status == BookingEnums.REVIEWED.ToString())
                     {
                         existingBooking.BookingAt = request.BookingAt;
+                        existingBooking.IsUpdated = true;
                         existingBooking.UpdatedAt = DateTime.Now;
                     }
                     else
@@ -2368,6 +2373,7 @@ namespace MoveMate.Service.Services
                         || existingBooking.Status == BookingEnums.WAITING.ToString() || existingBooking.Status == BookingEnums.DEPOSITING.ToString())
                     {
                         existingBooking.BookingAt = request.BookingAt;
+                        existingBooking.IsUpdated = true;
                         existingBooking.UpdatedAt = DateTime.Now;
                     }
                     else
