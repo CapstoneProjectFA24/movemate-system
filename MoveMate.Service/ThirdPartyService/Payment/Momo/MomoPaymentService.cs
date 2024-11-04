@@ -346,7 +346,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 };
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
-              //  await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
                 string transType = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
