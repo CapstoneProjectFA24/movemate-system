@@ -28,6 +28,7 @@ using static Grpc.Core.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Parlot.Fluent;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MoveMate.Service.Services
 {
@@ -266,7 +267,7 @@ namespace MoveMate.Service.Services
                             bookingDetail.ImageUrl = service.ImageUrl;
                         }
                     }
-                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
@@ -384,6 +385,7 @@ namespace MoveMate.Service.Services
             }
             try
             {
+
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(request.Id);
                 if (entity == null)
                 {
@@ -453,9 +455,18 @@ namespace MoveMate.Service.Services
             {
                 booking.Status = BookingEnums.CANCEL.ToString();
                 booking.IsCancel = true;
-                booking.CancelReason = "Is expired, Cancel by System";
+                booking.CancelReason = MessageConstant.FailMessage.CancelExpireBooking;
                 _unitOfWork.BookingRepository.Update(booking);
                 _unitOfWork.Save();
+                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+            }
+            if (booking != null && booking.Status == BookingEnums.DEPOSITING.ToString())
+            {
+                booking.Status = BookingEnums.CANCEL.ToString();
+                booking.IsCancel = true;
+                booking.CancelReason = MessageConstant.FailMessage.CancelExpirePayment;
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             }
         }
@@ -2215,6 +2226,7 @@ namespace MoveMate.Service.Services
                             voucher.BookingId = existingBooking.Id;
                         }                     
                         _unitOfWork.VoucherRepository.UpdateRange(voucherOnlines);
+                        BackgroundJob.Schedule(() => CheckAndCancelBooking(existingBooking.Id), TimeSpan.FromDays(1));
                         break;
                     case "COMING":
                         if (existingBooking.Status != BookingEnums.REVIEWED.ToString())

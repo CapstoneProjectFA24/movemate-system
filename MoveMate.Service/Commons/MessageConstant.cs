@@ -77,6 +77,7 @@ namespace MoveMate.Service.Commons
             public const string UserInfoIsDeleted = "User info has been deleted";
             public const string UserInfoExist = "User info with this type has existed";
             public const string AccountNotLogin = "This account has been banned";
+            public const string RequestIdFail = "The input Id must match the request Id";
 
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
@@ -116,6 +117,9 @@ namespace MoveMate.Service.Commons
             public const string ChangeBookingAtFail = "BookingAt cannot be changed";
             public const string RequiredId = "The input id does not match the request id";
             public const string BookingHasBeenUpdated = "Booking can only be updated once";
+            public const string OnlyInscrease = "Service can only increase quantity";
+            public const string CancelExpirePayment = "Expired - Automatically canceled by system";
+            public const string CancelExpireBooking = "Is expired, Cancel by System";
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
 
@@ -190,6 +194,8 @@ namespace MoveMate.Service.Commons
             public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
             public const string PaymentFail = "Payment was failed";
 
+            public const string BalanceNotEnough = "The balance in the wallet is not enough";
+            public const string UnspPayment = "Unsupported payment method selected";
 
             //Transaction
             public const string TransactionExist = "Transaction has already been processed";
@@ -303,6 +309,7 @@ namespace MoveMate.Service.Commons
             public const string PaymentHandle = "Payment handled successfully";
             public const string VNPPayment = "Payment with VnPay";
             public const string MomoPayment = "Payment with Momo";
+            public const string PaymentSuccess = "Payment booking successful";
 
 
             //Transaction

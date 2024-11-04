@@ -25,7 +25,7 @@ public class AssignReviewWorker
         _firebaseServices = firebaseServices;
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task HandleMessage(int message)
     {
         await Task.Delay(TimeSpan.FromSeconds(3));
