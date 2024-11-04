@@ -1598,6 +1598,27 @@ namespace MoveMate.Service.Services
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
                         break;
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
+                                         booking.Status == BookingEnums.REVIEWING.ToString():
+                        if(booking.IsReviewOnline == true)
+                        {
+                            if (booking.EstimatedDeliveryTime == null)
+                            {
+                                if (request.EstimatedDeliveryTime == null)
+                                {
+                                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingNotEstimated);
+                                    return result;
+                                }
+                                else
+                                {
+                                    booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
+                                }
+                            }
+                            nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+                            booking.Status = BookingEnums.REVIEWED.ToString();
+                            booking.IsStaffReviewed = true;
+                        }
+                        break;
                     default:
                         result.AddError(StatusCode.BadRequest,
                             MessageConstant.FailMessage.CanNotUpdateStatus);
