@@ -84,6 +84,10 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
 
+            CreateMap<ScheduleBooking, ScheduleBookingResponse>()
+                .ForMember(dest => dest.ScheduleBookingDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
+            CreateMap<ScheduleBookingDetail, ScheduleBookingDetailsResponse>();
+            CreateMap<CreateScheduleBookingRequest, ScheduleBooking>();
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
             CreateMap<TruckCategory, TruckCateDetailResponse>();
