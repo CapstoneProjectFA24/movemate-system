@@ -36,6 +36,7 @@ public partial class PromotionCategory
     public bool? IsInfinite { get; set; }
 
     public int? ServiceId { get; set; }
+
     public bool? IsDeleted { get; set; }
 
     public virtual Service? Service { get; set; }
