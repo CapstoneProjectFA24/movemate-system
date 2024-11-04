@@ -1526,6 +1526,65 @@ namespace MoveMate.Service.Services
 
                 switch (assigment.Status)
                 {
+
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
+                                         booking.Status == BookingEnums.REVIEWING.ToString() && booking.IsReviewOnline == true:
+                     
+                        if (request.EstimatedDeliveryTime == null)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingNotEstimated);
+                            return result;
+                        }
+                        else
+                        {
+                            booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
+                        }
+                        
+                        nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+                        booking.Status = BookingEnums.REVIEWED.ToString();
+                        booking.IsStaffReviewed = true;
+                        break;
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString() &&
+                                         booking.Status == BookingEnums.REVIEWING.ToString() && booking.IsReviewOnline == false:
+
+                        if (booking.IsReviewOnline == false)
+                        {
+                            var bookingTracker =
+                                await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                            if (bookingTracker == null)
+                            {
+                                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                                return result;
+                            }
+                            if (request.ResourceList.Count() <= 0)
+                            {
+                                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                                return result;
+                            }
+
+                            var tracker = new BookingTracker();
+                            tracker.Type = TrackerEnums.REVIEW_OFFLINE.ToString();
+                            tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                            List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                            tracker.TrackerSources = resourceList;
+                            await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                        }
+                        if (request.EstimatedDeliveryTime == null)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingNotEstimated);
+                            return result;
+                        }
+                        else
+                        {
+                            booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
+                        }
+
+                        nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+                        booking.Status = BookingEnums.REVIEWED.ToString();
+                        booking.IsStaffReviewed = true;
+                        break;
+
                     case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
                         if (booking.IsReviewOnline == true)
                         {
@@ -1598,27 +1657,7 @@ namespace MoveMate.Service.Services
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
                         break;
-                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
-                                         booking.Status == BookingEnums.REVIEWING.ToString():
-                        if(booking.IsReviewOnline == true)
-                        {
-                            if (booking.EstimatedDeliveryTime == null)
-                            {
-                                if (request.EstimatedDeliveryTime == null)
-                                {
-                                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingNotEstimated);
-                                    return result;
-                                }
-                                else
-                                {
-                                    booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
-                                }
-                            }
-                            nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
-                            booking.Status = BookingEnums.REVIEWED.ToString();
-                            booking.IsStaffReviewed = true;
-                        }
-                        break;
+                    
                     default:
                         result.AddError(StatusCode.BadRequest,
                             MessageConstant.FailMessage.CanNotUpdateStatus);
