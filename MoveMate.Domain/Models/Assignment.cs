@@ -13,6 +13,10 @@ public partial class Assignment
 
     public int? TruckId { get; set; }
 
+    public int? BookingId { get; set; }
+
+    public int? ScheduleBookingId { get; set; }
+
     public string? Status { get; set; }
 
     public double? Price { get; set; }
@@ -23,13 +27,19 @@ public partial class Assignment
 
     public string? AddressCurrent { get; set; }
 
-    public int? BookingId { get; set; }
-
     public string? FailedReason { get; set; }
+
+    public DateTime? StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public DateTime? DurationTime { get; set; }
 
     public virtual Booking? Booking { get; set; }
 
     public virtual BookingDetail? BookingDetails { get; set; }
+
+    public virtual ScheduleBooking? ScheduleBooking { get; set; }
 
     public virtual Truck? Truck { get; set; }
 

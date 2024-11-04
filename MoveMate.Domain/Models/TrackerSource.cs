@@ -15,7 +15,7 @@ public partial class TrackerSource
 
     public string? Type { get; set; }
 
-    public bool? IsDeleted { get; set; } 
+    public bool? IsDeleted { get; set; }
 
     public virtual BookingTracker? BookingTracker { get; set; }
 }
