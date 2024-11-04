@@ -203,7 +203,15 @@ namespace MoveMate.Service.Services
                     }
                 }
                 var service = _mapper.Map<MoveMate.Domain.Models.Service>(request);
-                service.Tier = request.InverseParentService.Count < 1 ? 1 : 0;
+                if (request.IsTierZeroOverride)
+                {
+                    service.Tier = 0;
+                }
+                else
+                {
+                    service.Tier = request.InverseParentService.Count < 1 ? 1 : 0;
+                }
+
 
                 if (service.Tier == 1)
                 {
