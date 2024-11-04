@@ -175,8 +175,7 @@ namespace MoveMate.Service.Services
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                             return result;
-                        }
-                        //await _unitOfWork.SaveChangesAsync();
+                        }                      
                     }
                 }
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
