@@ -26,7 +26,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public Task<string> Save<T>(T saveObj, long id, string collectionName);
         public Task<string?> SaveBooking(Booking saveObj, long id, string collectionName);
-
+        Task SendNotificationAsync(string title, string body, string fcmToken, Dictionary<string, string>? data = null);
         public Task<T> GetByKey<T>(string key, string collectionName);
         public Task<bool> Delete(string key, string collectionName);
 

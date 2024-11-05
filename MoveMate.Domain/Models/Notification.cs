@@ -20,6 +20,7 @@ public partial class Notification
     public string? Description { get; set; }
 
     public string? Topic { get; set; }
+    public string? FcmToken { get; set; }
 
     public virtual User? User { get; set; }
 }
