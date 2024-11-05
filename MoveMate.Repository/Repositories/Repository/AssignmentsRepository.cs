@@ -13,10 +13,10 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class AssignmentsRepository : GenericRepository<Assignment>, IAssignmentsRepository
     {
-        private readonly MoveMateDbContext _dbContext;
+        private readonly MoveMateDbContext _context;
         public AssignmentsRepository(MoveMateDbContext context) : base(context)
         {
-            _dbContext = context;
+            _context = context;
         }
 
         public Assignment GetByStaffTypeAndBookingId(string staffType, int bookingId)
@@ -28,7 +28,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<Assignment>> GetByBookingId(int bookingId)
         {
-            return await _dbContext.Assignments
+            return await _context.Assignments
                 .Where(p => p.BookingId == bookingId).ToListAsync();
 
         }
@@ -40,6 +40,20 @@ namespace MoveMate.Repository.Repositories.Repository
             var assignment = Get(a => a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)
                                 .FirstOrDefault();
             return assignment;
+        }
+      
+
+        public async Task<Assignment> GetByUserIdAndStaffTypeAndIsResponsible(int userId, string staffType, int bookingId)
+        {
+            return await _context.Assignments
+                .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)
+                .FirstOrDefaultAsync();
+        }
+        public async Task<Assignment> GetByUserIdAndStaffType(int userId, string staffType, int bookingId)
+        {
+            return await _context.Assignments
+                .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId)
+                .FirstOrDefaultAsync();
         }
 
     }
