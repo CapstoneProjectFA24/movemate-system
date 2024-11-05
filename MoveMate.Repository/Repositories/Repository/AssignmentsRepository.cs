@@ -26,6 +26,15 @@ namespace MoveMate.Repository.Repositories.Repository
             return assignment;
         }
 
+        public async Task<List<Assignment>> GetByBookingId(int bookingId)
+        {
+            return await _context.Assignments
+                .Where(p => p.BookingId == bookingId).ToListAsync();
+
+        }
+
+      
+
         public Assignment GetByStaffTypeAndIsResponsible(string staffType, int bookingId)
         {
             var assignment = Get(a => a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)

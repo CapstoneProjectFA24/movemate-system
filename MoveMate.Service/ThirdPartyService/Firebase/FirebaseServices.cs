@@ -16,6 +16,7 @@ using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System.ComponentModel.DataAnnotations;
+using FirebaseAdmin.Messaging;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -135,6 +136,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     _producer.SendingMessage("movemate.booking_assign_driver_local", saveObj.Id);
 
                 }
+
+                _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
 
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);
@@ -267,6 +270,35 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         }
 
 
+        public async Task SendNotificationAsync(string title, string body, string fcmToken, Dictionary<string, string>? data = null)
+        {
+            try
+            {
+                var message = new Message()
+                {
+                    Notification = new FirebaseAdmin.Messaging.Notification
+                    {
+                        Title = title,
+                        Body = body
+                    },
+                    Token = fcmToken,
+                    Data = data ?? new Dictionary<string, string>()
+                };
 
+                // Gửi thông báo
+                string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                Console.WriteLine($"Thông báo đã được gửi thành công với ID: {response}");
+            }
+            catch (FirebaseMessagingException ex)
+            {
+                Console.WriteLine($"Lỗi khi gửi thông báo: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi không xác định khi gửi thông báo: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

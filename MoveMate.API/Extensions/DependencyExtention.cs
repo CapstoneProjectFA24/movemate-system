@@ -39,6 +39,7 @@ using Index = MoveMate.Service.ThirdPartyService.RabbitMQ.Config.Index;
 using DotNetEnv;
 
 
+
 namespace MoveMate.API.Extensions
 {
     public static class DependencyExtention
@@ -114,6 +115,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<AssignReviewWorker>();   
             services.AddScoped<SetScheduleReview>();
             services.AddScoped<AssignDriverWorker>();
+            services.AddScoped<NotificationWorker>();
             
             services.AddScoped<Index>();
 

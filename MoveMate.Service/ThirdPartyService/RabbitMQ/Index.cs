@@ -19,6 +19,7 @@ public class Index : BackgroundService
         _consumer.StartConsuming<AssignReviewWorker>();
         _consumer.StartConsuming<SetScheduleReview>();
         _consumer.StartConsuming<AssignDriverWorker>();
+        _consumer.StartConsuming<NotificationWorker>();
         return Task.CompletedTask;
     }
 }

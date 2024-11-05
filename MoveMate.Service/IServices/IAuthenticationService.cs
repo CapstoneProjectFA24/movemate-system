@@ -3,6 +3,7 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponse;
 using MoveMate.Service.ViewModels.ModelResponses;
+using System.Security.Claims;
 
 namespace MoveMate.Service.IServices
 {
@@ -20,5 +21,7 @@ namespace MoveMate.Service.IServices
 
         public Task<OperationResult<AccountResponse>> LoginWithEmailAsync(string email);
         public Task<OperationResult<AccountResponse>> Login(AccountRequest request, JWTAuth jwtAuth);
+        public Task CreateUserDeviceAsync(CreateUserDeviceRequest userDeviceRequest, IEnumerable<Claim> claims);
+        public Task DeleteUserDeviceAsync(int userDeviceId);
     }
 }
