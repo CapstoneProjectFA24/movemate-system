@@ -33,12 +33,12 @@ namespace MoveMate.Service.Services
                 var trackerSource = await _unitOfWork.TrackerSourceRepository.GetByIdAsync(trackerSourceId);
                 if (trackerSource == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTrackerSource);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTrackerSource, false);
                     return result;
                 }
                 if (trackerSource.IsDeleted == true) 
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TrackerSourceIsDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.TrackerSourceIsDeleted, false);
                     return result;
                 }
                 trackerSource.IsDeleted = true;
@@ -49,7 +49,7 @@ namespace MoveMate.Service.Services
             }
             catch 
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
             return result;
         }

@@ -57,10 +57,13 @@ namespace MoveMate.Service.Commons.AutoMapper
             //.ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails))
             //.ForMember(dest => dest.HouseTypes, opt => opt.MapFrom(src => src.HouseTypes))
             //.ForMember(dest => dest.BookingTrackers, opt => opt.MapFrom(src => src.BookingTrackers));
-
+            CreateMap<ChangeBookingAtRequest, Booking>();
             CreateMap<BookingServiceDetailsUpdateRequest, Booking>()
                 .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails));
-            CreateMap<BookingDetail, BookingDetailsResponse>();
+            
+            CreateMap<BookingDetail, BookingDetailsResponse>()
+                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Service != null ? src.Service.ImageUrl : null));
+
             CreateMap<BookingDetailRequest, BookingDetail>();
             
             CreateMap<BookingTracker, BookingTrackerResponse>();
@@ -74,15 +77,17 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.Vouchers, opt => opt.Ignore());
             CreateMap<BookingBasicInfoUpdateRequest, Booking>();
             CreateMap<ReviewAtRequest, Booking>();
-            CreateMap<StatusRequest, Booking>();
+            CreateMap<StatusRequest, Booking>()
+                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
 
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
-            CreateMap<ScheduleBooking, ScheduleResponse>()
-                .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
+            //CreateMap<ScheduleBooking, ScheduleResponse>()
+            //    .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
 
-            CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
+            //CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
+           
             CreateMap<CreateScheduleWorkingRequest, ScheduleWorking>();
            // CreateMap<UpdateScheduleWorkingRequest, ScheduleWorking>();
             CreateMap<ScheduleWorking, ScheduleWorkingResponse>()
@@ -106,6 +111,9 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //Transaction 
             CreateMap<Transaction,  TransactionResponse>();
+            //Payment
+            CreateMap<Payment, PaymentResponse>()
+                .ForMember(dest => dest.Transactions, opt => opt.MapFrom(src => src.Transactions));
 
             //House Type
             CreateMap<HouseType, HouseTypesResponse>();

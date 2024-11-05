@@ -55,8 +55,6 @@ public partial class User
 
     public virtual Role? Role { get; set; }
 
-    public virtual ICollection<ScheduleBookingDetail> ScheduleBookingDetails { get; set; } = new List<ScheduleBookingDetail>();
-
     public virtual Truck? Truck { get; set; }
 
     public virtual ICollection<UserInfo> UserInfos { get; set; } = new List<UserInfo>();

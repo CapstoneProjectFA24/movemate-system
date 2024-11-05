@@ -19,5 +19,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string? Type { get; set; }
         [FirestoreProperty] public string? Name { get; set; }
         [FirestoreProperty] public string? Description { get; set; }
+        [FirestoreProperty] public string? ImageUrl { get; set; }
     }
 }

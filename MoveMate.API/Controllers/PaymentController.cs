@@ -50,7 +50,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="bookingId">Booking ID for payment</param>
         /// <param name="returnUrl">URL to redirect after payment</param>
-        /// <param name="selectedMethod">The selected payment method (e.g., "Momo", "VnPay", "PayOS")</param>
+        /// <param name="selectedMethod">The selected payment method (e.g., "Momo", "VnPay", "PayOS", "Wallet")</param>
         /// <returns>Returns the result of the payment link creation</returns>
         /// <response code="200">Payment link created successfully</response>
         /// <response code="400">Booking status must be either DEPOSITING or COMPLETED</response>
@@ -74,9 +74,9 @@ namespace MoveMate.API.Controllers
         ///
         /// The `returnUrl` parameter should be set to: https://movemate-dashboard.vercel.app/payment-status
         /// </remarks>
-        [HttpPost("create-payment-url")]
+        [HttpPost()]
         [Authorize]
-        public async Task<IActionResult> CreatePayment(int bookingId, string returnUrl, string selectedMethod)
+        public async Task<IActionResult> Payment(int bookingId, string returnUrl, string selectedMethod)
         {
             // Validate booking ID
             if (bookingId <= 0)
@@ -139,13 +139,16 @@ namespace MoveMate.API.Controllers
                 case PaymentType.PayOS:
                     operationResult = await _payOsService.CreatePaymentLinkAsync(bookingId, userId, returnUrl);
                     break;
+                case PaymentType.Wallet:                
+                    operationResult = await _paymentServices.PaymentByWallet(userId, bookingId, returnUrl);
+                    break;
                 default:
                     return HandleErrorResponse(new List<Error>
                     {
                         new Error
                         {
                             Code = MoveMate.Service.Commons.StatusCode.BadRequest,
-                            Message = "Unsupported payment method selected."
+                            Message = MessageConstant.FailMessage.UnspPayment
                         }
                     });
             }

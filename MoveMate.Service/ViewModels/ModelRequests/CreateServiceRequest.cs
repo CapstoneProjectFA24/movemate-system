@@ -17,6 +17,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public double Amount { get; set; }
         public string Type { get; set; }
         public bool IsQuantity { get; set; }
+        public bool IsTierZeroOverride { get; set; } 
         public int QuantityMax { get; set; }
         public int? TruckCategoryId { get; set; }
         public int? ParentServiceId { get; set; }

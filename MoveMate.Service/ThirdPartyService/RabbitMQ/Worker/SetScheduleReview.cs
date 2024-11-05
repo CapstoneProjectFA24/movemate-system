@@ -36,14 +36,14 @@ public class SetScheduleReview
                     a.Status == AssignmentStatusEnums.ASSIGNED.ToString()&&
                     a.StaffType == RoleEnums.REVIEWER.ToString());
                 
-                var newScheduleReview = new ScheduleBookingDetail()
+                /*var newScheduleReview = new ScheduleBookingDetail()
                 {
                     BookingId = message,
                     Type = RoleEnums.REVIEWER + " OFFLINE",
                     StartDate = existingBooking.ReviewAt,
                     UserId = assignmentStatus!.UserId,
-                };
-                existingBooking.ScheduleBookingDetails.Add(newScheduleReview);
+                };*/
+                //existingBooking.ScheduleBookingDetails.Add(newScheduleReview);
                 existingBooking.UpdatedAt = DateTime.Now;
                 unitOfWork.BookingRepository.Update(existingBooking);
                 await unitOfWork.SaveChangesAsync();

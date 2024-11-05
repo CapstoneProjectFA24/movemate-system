@@ -121,7 +121,7 @@ namespace MoveMate.Service.Services
                 var truckImg = await _unitOfWork.TruckImgRepository.GetByIdAsync(id);
                 if (truckImg == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckImg);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckImg, false);
                     return result;
                 }
 
@@ -131,7 +131,7 @@ namespace MoveMate.Service.Services
             }
             catch
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;
@@ -185,13 +185,13 @@ namespace MoveMate.Service.Services
                 var truck = await _unitOfWork.TruckCategoryRepository.GetByIdAsync(id);
                 if (truck == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory, false);
                     return result;
                 }
 
                 if (truck.IsDeleted == true)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryAlreadyDeleted, false);
                     return result;
                 }
 
@@ -203,7 +203,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;
@@ -534,13 +534,13 @@ namespace MoveMate.Service.Services
                 var truck = await _unitOfWork.TruckRepository.GetByIdAsync(id);
                 if (truck == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruck);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruck, false);
                     return result;
                 }
 
                 if (truck.IsDeleted == true)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.TruckAlreadyDeleted, false);
                     return result;
                 }
 
@@ -552,7 +552,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;

@@ -301,18 +301,18 @@ namespace MoveMate.Service.Services
                 var promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(id);
                 if (promotion == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPromotion);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPromotion, false);
                     return result;
                 }
                 int assignedVoucherCount = promotion.Vouchers.Count(v => v.UserId.HasValue);
                 if (assignedVoucherCount > 0)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherHasBeenAssigned);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherHasBeenAssigned, false);
                     return result;
                 }
                 if (promotion.IsDeleted == true)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PromotionAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.PromotionAlreadyDeleted, false);
                     return result;
                 }
                 promotion.IsDeleted = true;
@@ -323,7 +323,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;
