@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelRequests;
+using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
 {
@@ -21,9 +23,12 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("driver/update-status/{id}")]
-        public async Task<IActionResult> DriverUpdateStatusBooking(int id)
+        public async Task<IActionResult> DriverUpdateStatusBooking(int id, [FromBody] TrackerByReviewOfflineRequest request)
         {
-            var response = await _bookingServices.DriverUpdateStatusBooking(id);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _bookingServices.DriverUpdateStatusBooking(userId, id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
@@ -97,7 +102,11 @@ namespace MoveMate.API.Controllers
         [HttpPut("reviewer/update-status/{id}")]
         public async Task<IActionResult> ReviewerUpdateStatus(int id , [FromBody] TrackerByReviewOfflineRequest request)
         {
-            var response = await _bookingServices.ReviewerUpdateStatusBooking(id, request);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+
+            var response = await _bookingServices.ReviewerUpdateStatusBooking(userId, id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
