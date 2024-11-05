@@ -1433,15 +1433,15 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int bookingId,
+        public async Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int userId, int bookingId,
             TrackerByReviewOfflineRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();
 
             try
             {
-                var assigment =
-                    _unitOfWork.AssignmentsRepository.GetByStaffTypeAndBookingId(RoleEnums.REVIEWER.ToString(),
+                var assigment = await
+                    _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(userId, RoleEnums.REVIEWER.ToString(),
                         bookingId);
                 if (assigment == null)
                 {

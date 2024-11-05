@@ -40,5 +40,12 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)
                 .FirstOrDefaultAsync();
         }
+        public async Task<Assignment> GetByUserIdAndStaffType(int userId, string staffType, int bookingId)
+        {
+            return await _context.Assignments
+                .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId)
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

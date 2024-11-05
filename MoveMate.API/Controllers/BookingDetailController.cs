@@ -102,7 +102,11 @@ namespace MoveMate.API.Controllers
         [HttpPut("reviewer/update-status/{id}")]
         public async Task<IActionResult> ReviewerUpdateStatus(int id , [FromBody] TrackerByReviewOfflineRequest request)
         {
-            var response = await _bookingServices.ReviewerUpdateStatusBooking(id, request);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+
+            var response = await _bookingServices.ReviewerUpdateStatusBooking(userId, id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
