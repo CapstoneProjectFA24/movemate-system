@@ -284,7 +284,18 @@ namespace MoveMate.Service.Services
 
                 await _unitOfWork.UserRepository.AddAsync(newUser);
                 await _unitOfWork.SaveChangesAsync();
+                var newWallet = new Wallet
+                {
+                    UserId = newUser.Id,
+                    Balance = 0,     
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsLocked = false,
+                    Tier = 1
+                };
 
+                await _unitOfWork.WalletRepository.AddAsync(newWallet);
+                await _unitOfWork.SaveChangesAsync();
                 var userResponse = _mapper.Map<RegisterResponse>(newUser);
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess , userResponse);
