@@ -1,4 +1,5 @@
-﻿using MoveMate.Service.Commons;
+﻿using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelRequests.Booking;
 using MoveMate.Service.ViewModels.ModelResponses;
@@ -19,10 +20,10 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingValuationResponse>> ValuationBooking(BookingValuationRequest request, string userId);
 
         Task<OperationResult<BookingResponse>> CancelBooking(int id, int userId, BookingCancelRequest request);
-        Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int bookingId);
+        Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int userId, int bookingId, TrackerByReviewOfflineRequest request);
         Task<OperationResult<AssignmentResponse>> ReportFail(int bookingId, string failedReason);
         Task<OperationResult<AssignmentResponse>> DriverUpdateRoundTripBooking(int bookingId);      
-        Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int bookingId,TrackerByReviewOfflineRequest request);
+        Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int userId, int bookingId,TrackerByReviewOfflineRequest request);
         Task<OperationResult<AssignmentResponse>> ReviewerCancelBooking(int bookingId);
         Task<OperationResult<AssignmentResponse>> ReviewerCompletedBooking(int bookingId);
         Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int bookingId, ResourceRequest request);
