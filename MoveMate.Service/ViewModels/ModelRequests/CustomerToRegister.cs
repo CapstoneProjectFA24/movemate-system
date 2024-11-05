@@ -1,8 +1,10 @@
-﻿using System;
+﻿using MoveMate.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
@@ -18,5 +20,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string Name { get; set; }
         [Required]
         public string Password { get; set; }
+        [JsonIgnore]
+        public Wallet Wallet { get; set; }
     }
 }

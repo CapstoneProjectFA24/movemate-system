@@ -281,20 +281,15 @@ namespace MoveMate.Service.Services
                     Phone = customerToRegister.Phone,
                     RoleId = 3
                 };
-
-                await _unitOfWork.UserRepository.AddAsync(newUser);
-                await _unitOfWork.SaveChangesAsync();
-                var newWallet = new Wallet
-                {
-                    UserId = newUser.Id,
-                    Balance = 0,     
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    IsLocked = false,
-                    Tier = 1
-                };
-
-                await _unitOfWork.WalletRepository.AddAsync(newWallet);
+                newUser.Wallet = new Wallet                    
+                     {
+                         Balance = 0,
+                         CreatedAt = DateTime.UtcNow,
+                         UpdatedAt = DateTime.UtcNow,
+                         IsLocked = false,
+                         Tier = 1
+                     };
+                await _unitOfWork.UserRepository.AddAsync(newUser);             
                 await _unitOfWork.SaveChangesAsync();
                 var userResponse = _mapper.Map<RegisterResponse>(newUser);
 
