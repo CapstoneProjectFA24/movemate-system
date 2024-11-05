@@ -337,5 +337,43 @@ namespace MoveMate.API.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("fcmtoken")]
+        public async Task<IActionResult> PostCreateUserDeviceAsync([FromBody] CreateUserDeviceRequest userDeviceRequest)
+        {
+            try
+            {
+                IEnumerable<Claim> claims = Request.HttpContext.User.Claims;
+                await _authenticationService.CreateUserDeviceAsync(userDeviceRequest, claims); // Await the async call
+
+                return Ok(new
+                {
+                    statusCode = 200,
+                    message = "Device registered successfully.",
+                    isError = false
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    statusCode = 500,
+                    message = "An unexpected error occurred.",
+                    isError = true,
+                    errors = new[] { ex.Message } // Provide the error message in the response
+                });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUserDeviceAsync(int id)
+        {
+           
+            await this._authenticationService.DeleteUserDeviceAsync(id);
+            return Ok(new
+            {
+                Message = MessageConstant.SuccessMessage.DeletedUserDeviceSuccessfully
+            });
+        }
     }
 }

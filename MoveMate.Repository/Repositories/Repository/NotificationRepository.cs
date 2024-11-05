@@ -17,6 +17,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public NotificationRepository(MoveMateDbContext context) : base(context)
         {
+            _dbContext = context;
         }
 
         public async Task<Notification?> FirstOrDefaultAsync(int accountId, string deviceId)
@@ -31,5 +32,21 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception($"An error occurred while fetching the notification: {ex.Message}");
             }
         }
+
+
+
+        public async Task<List<Notification>> GetNotiAsync(string fcmToken)
+        {
+            return await _dbContext.Notifications
+                .Where(p => p.FcmToken == fcmToken).ToListAsync();
+                
+        }
+
+        public async Task<Notification> GetByUserIdAsync(int userId)
+        {         
+                return await _dbContext.Notifications
+                    .FirstOrDefaultAsync(x => x.UserId == userId);          
+        }
+
     }
 }

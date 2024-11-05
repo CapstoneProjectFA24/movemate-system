@@ -29,6 +29,9 @@ using Microsoft.IdentityModel.Tokens;
 using Parlot.Fluent;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using CorePush.Interfaces;
+
+
 
 namespace MoveMate.Service.Services
 {
@@ -423,7 +426,7 @@ namespace MoveMate.Service.Services
                     var response = _mapper.Map<BookingResponse>(entity);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking,
-                        response);
+                        response);                  
                 }
                 else
                 {

@@ -37,6 +37,7 @@ using MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 using MoveMate.Service.ThirdPartyService.Redis.Connection;
 using Index = MoveMate.Service.ThirdPartyService.RabbitMQ.Config.Index;
 using DotNetEnv;
+using MoveMate.Service.ThirdPartyService.Firebase.Notification;
 
 
 namespace MoveMate.API.Extensions
@@ -113,6 +114,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<AssignReviewWorker>();   
             services.AddScoped<SetScheduleReview>();
             services.AddScoped<AssignDriverWorker>();
+            services.AddScoped<NotificationWorker>();
             
             services.AddScoped<Index>();
 
