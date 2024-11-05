@@ -37,7 +37,7 @@ using MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 using MoveMate.Service.ThirdPartyService.Redis.Connection;
 using Index = MoveMate.Service.ThirdPartyService.RabbitMQ.Config.Index;
 using DotNetEnv;
-using MoveMate.Service.ThirdPartyService.Firebase.Notification;
+
 
 
 namespace MoveMate.API.Extensions
