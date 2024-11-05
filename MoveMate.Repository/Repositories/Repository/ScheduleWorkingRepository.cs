@@ -1,4 +1,5 @@
-﻿using MoveMate.Domain.DBContext;
+﻿using Microsoft.EntityFrameworkCore;
+using MoveMate.Domain.DBContext;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
@@ -14,6 +15,26 @@ namespace MoveMate.Repository.Repositories.Repository
     {
         public ScheduleWorkingRepository(MoveMateDbContext context) : base(context)
         {
+        }
+
+        public virtual async Task<ScheduleWorking?> GetByIdAsync(int id, string includeProperties = "")
+        {
+            IQueryable<ScheduleWorking> query = _dbSet;
+
+            // Apply includes
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter by ID
+            query = query.Where(a => a.Id == id);
+
+            // Execute the query and get the result
+            var result = await query.FirstOrDefaultAsync();
+
+            return result;
         }
     }
 }

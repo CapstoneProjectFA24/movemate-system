@@ -26,7 +26,7 @@ namespace MoveMate.Service.Services
             this._logger = logger;
         }
 
-        public Task<OperationResult<List<StaffDailyResponse>>> GetAll(GetAllStaffDailyRequest request)
+        public Task<OperationResult<List<BookingStaffDailyResponse>>> GetAll(GetAllStaffDailyRequest request)
         {
             throw new NotImplementedException();
         }
