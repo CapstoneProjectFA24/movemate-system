@@ -15,6 +15,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public string? Shard { get; set; }
 
-        public virtual ICollection<ScheduleBookingDetailsResponse> ScheduleBookingDetails { get; set; } = new List<ScheduleBookingDetailsResponse>();
+        public virtual ICollection<AssignmentResponse> Assignments { get; set; } = new List<AssignmentResponse>();
     }
 }

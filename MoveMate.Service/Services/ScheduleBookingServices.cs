@@ -45,7 +45,7 @@ namespace MoveMate.Service.Services
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
-                    includeProperties: "ScheduleBookingDetails"
+                    includeProperties: "Assignments"
                 );
                 var listResponse = _mapper.Map<List<ScheduleBookingResponse>>(entities.Data);
 
@@ -77,7 +77,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.ScheduleBookingRepository.GetByIdAsync(id, includeProperties: "ScheduleBookingDetails");
+                    await _unitOfWork.ScheduleBookingRepository.GetByIdAsync(id, includeProperties: "Assignments");
 
                 if (entity == null)
                 {

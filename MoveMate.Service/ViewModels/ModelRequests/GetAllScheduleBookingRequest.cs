@@ -30,13 +30,13 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
             if (BookingId.HasValue)
             {
-                queryExpression = queryExpression.And(sb => sb.ScheduleBookingDetails.Any(sbd => sbd.BookingId == BookingId.Value));
+                queryExpression = queryExpression.And(sb => sb.Assignments.Any(sbd => sbd.BookingId == BookingId.Value));
             }
 
             // Filter by UserId if specified
             if (UserId.HasValue)
             {
-                queryExpression = queryExpression.And(sb => sb.ScheduleBookingDetails.Any(sbd => sbd.UserId == UserId.Value));
+                queryExpression = queryExpression.And(sb => sb.Assignments.Any(sbd => sbd.UserId == UserId.Value));
             }
 
             // Ensure only active settings are included
