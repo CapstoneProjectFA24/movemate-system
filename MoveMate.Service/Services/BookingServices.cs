@@ -29,6 +29,7 @@ using Microsoft.IdentityModel.Tokens;
 using Parlot.Fluent;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MoveMate.Service.Services
 {
@@ -968,61 +969,88 @@ namespace MoveMate.Service.Services
 
         //
         //Driver update status booking  detail
-        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int bookingId)
+        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int userId, int bookingId, [FromBody] TrackerByReviewOfflineRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();
 
             try
             {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
-                if (bookingDetail == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
-                    return result;
-                }
-
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
 
-                string nextStatus = bookingDetail.Status;
-
-                switch (bookingDetail.Status)
+                var assignment = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.DRIVER.ToString(), bookingId);
+                if (assignment == null)
                 {
-                    case var status when status == AssignmentStatusEnums.WAITING.ToString():
-                        nextStatus = AssignmentStatusEnums.ASSIGNED.ToString();
-                        break;
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
 
-                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+
+                string nextStatus = assignment.Status;
+
+                switch (assignment.Status)
+                {
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
+                    booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
-                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
-                        break;
+                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString() &&
+                    booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTracker =
+        await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTracker == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
 
-                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                        var tracker = new BookingTracker();
+                        tracker.Type = TrackerEnums.DRIVER_ARRIVED.ToString();
+                        tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        tracker.TrackerSources = resourceList;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
+                        break;   
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString() &&
+                    booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
-                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
-                        break;
-
-                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
-                        if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
+                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString() &&
+                    booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackers =
+        await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackers == null)
                         {
-                            nextStatus = AssignmentStatusEnums.ROUND_TRIP.ToString();
-                            bookingDetail.IsRoundTripCompleted = true;
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
                         }
 
-                        break;
+                        var trackers = new BookingTracker();
+                        trackers.Type = TrackerEnums.DRIVER_COMPLETED.ToString();
+                        trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
-                    case var status when status == AssignmentStatusEnums.ROUND_TRIP.ToString():
-                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
+                        List<TrackerSource> resourceLists = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackers.TrackerSources = resourceLists;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackers);
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
 
                     default:
@@ -1030,12 +1058,12 @@ namespace MoveMate.Service.Services
                         return result;
                 }
 
-                bookingDetail.Status = nextStatus;
-                _unitOfWork.BookingDetailRepository.Update(bookingDetail);
+                assignment.Status = nextStatus;
+                _unitOfWork.AssignmentsRepository.Update(assignment);
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(assignment);
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
