@@ -181,6 +181,9 @@ namespace MoveMate.Service.Commons
             public const string NotFoundScheduleWorking = "Schedule working not found";
             public const string ScheduleWorkingAlreadyDeleted = "Schedule working already deleted";
             public const string ScheduleWorkingUpdateFail = "Update truck category failed";
+            public const string NotFoundScheduleBooking = "Schedule booking not found";
+            public const string ScheduleBookingAlreadyDeleted = "Truck already deleted";
+            public const string ScheduleBookingUpdateFail = "Update schedule booking failed";
             //Wallet
             public const string NotFoundWallet = "Wallet not found";
             public const string UpdateWalletBalance = "Failed to update wallet balance";
@@ -290,6 +293,12 @@ namespace MoveMate.Service.Commons
             public const string ScheduleWorkingUpdateSuccess = "Update truck category succesful";
 
 
+            public const string GetListScheduleBookingEmpty = "List schedule booking is empty!";
+            public const string GetListScheduleBookingSuccess = "Get list schedule booking done";
+            public const string GetScheduleBookingSuccess = "Get truck successfully";
+            public const string DeleteScheduleBooking = "Schedule booking has been deleted";
+            public const string CreateScheduleBookingCategory = "Create a new schedule booking successful";
+            public const string ScheduleBookingUpdateSuccess = "Update schedule booking succesful";
 
             //Truck
             public const string GetListTruckEmpty = "List truck is empty!";
