@@ -342,11 +342,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     BookingId = bookingId,
                     Amount = (double)callback.Amount,
                     Success = callback.IsSuccess,
+                    Date = DateTime.Now,
                     BankCode = Resource.Momo.ToString()
                 };
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
-              //  await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
                 string transType = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {

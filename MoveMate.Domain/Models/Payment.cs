@@ -27,6 +27,8 @@ public partial class Payment
 
     public string? Description { get; set; }
 
+    public DateTime? Date { get; set; }
+
     public virtual Booking? Booking { get; set; }
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

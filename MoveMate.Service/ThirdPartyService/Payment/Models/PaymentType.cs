@@ -11,7 +11,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Models
     {
         [Description("Momo Payment")] Momo,
         [Description("VnPay Payment")] VnPay,
-        [Description("PayOS Payment")] PayOS
+        [Description("PayOS Payment")] PayOS,
+        [Description("Wallet Payment")] Wallet
+
     }
 
     public static class PaymentMethodHelper
