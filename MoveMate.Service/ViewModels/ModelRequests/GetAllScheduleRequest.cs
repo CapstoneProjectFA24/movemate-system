@@ -32,10 +32,10 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             if (!string.IsNullOrWhiteSpace(Status))
             {
                 var statuses = Status.Split('.')
-                    .Select(s => int.TryParse(s, out var statusValue) ? (int?)statusValue : null)
-                    .Where(s => s.HasValue)
-                    .Select(s => s.Value)
+                    .Select(s => s.Trim())
                     .ToArray();
+
+                Expression = Expression.And(sb => sb.Assignments.Any(a => statuses.Contains(a.Status)));
             }
 
             Expression = Expression.And(u => u.IsActived == true);

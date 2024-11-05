@@ -20,6 +20,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Type { get; set; }
 
 
+
         public override Expression<Func<MoveMate.Domain.Models.Service, bool>> GetExpressions()
         {
             if (!string.IsNullOrWhiteSpace(Search))
@@ -43,6 +44,16 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             if (!string.IsNullOrWhiteSpace(Name))
             {
                 Expression = Expression.And(u => u.Name == Name);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Type))
+            {
+                var statuses = Type.Split('.')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToArray();
+
+                Expression = Expression.And(tran => statuses.Contains(tran.Type));
             }
 
             Expression = Expression.And(u => u.IsActived == true);

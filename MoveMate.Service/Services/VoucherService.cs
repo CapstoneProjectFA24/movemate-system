@@ -186,12 +186,12 @@ namespace MoveMate.Service.Services
                 var voucher = await _unitOfWork.VoucherRepository.GetByIdAsync(id);
                 if (voucher == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundVoucher);
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundVoucher, false);
                     return result;
                 }
                 if (voucher.IsDeleted == true)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherAlreadyDeleted);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherAlreadyDeleted, false);
                     return result;
                 }
                 voucher.IsDeleted = true;
@@ -202,7 +202,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
             }
 
             return result;

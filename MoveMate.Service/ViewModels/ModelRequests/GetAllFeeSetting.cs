@@ -40,8 +40,12 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             // Type filtering
             if (!string.IsNullOrWhiteSpace(Type))
             {
-                Type = Type.Trim().ToLower();
-                queryExpression = queryExpression.And(tran => tran.Type != null && tran.Type.ToLower().Contains(Type));
+                var statuses = Type.Split('.')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToArray();
+
+                Expression = Expression.And(tran => statuses.Contains(tran.Type));
             }
 
             // Ensure only active settings are included

@@ -31,6 +31,15 @@ namespace MoveMate.Service.Commons
         {
             HandleResponse(code, message, payload, metaData);
         }
+        public void AddResponseErrorStatusCode(
+          StatusCode code,
+          string message,
+          T? payload,
+          object? metaData = null
+      )
+        {
+            HandleResponseError(code, message, payload, metaData);
+        }
 
         public static OperationResult<T> Failure(StatusCode statusCode, List<string> messages)
         {
@@ -67,6 +76,17 @@ namespace MoveMate.Service.Commons
         {
             StatusCode = code;
             IsError = false;
+            Message = message;
+            Payload = payload;
+            MetaData ??= metaData;
+        }
+
+        private void HandleResponseError(StatusCode code, string message,
+           T? payload, object? metaData)
+        {
+            StatusCode = code;
+            Errors.Add(new Error { Code = code, Message = message });
+            IsError = true;
             Message = message;
             Payload = payload;
             MetaData ??= metaData;

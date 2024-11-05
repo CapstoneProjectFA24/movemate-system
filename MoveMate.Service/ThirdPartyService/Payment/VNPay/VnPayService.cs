@@ -342,8 +342,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 {
                     BookingId = bookingId,
                     Amount = amount,
+                    BankCode = Resource.VNPay.ToString(),
+                    Date = DateTime.Now,
                     Success = callback.IsSuccess,
-                    BankCode = Resource.VNPay.ToString()
                 };
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
