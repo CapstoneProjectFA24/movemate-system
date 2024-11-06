@@ -34,7 +34,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request);
         Task<OperationResult<BookingResponse>> UpdateBookingAsync(int assignmentId, BookingServiceDetailsUpdateRequest request);
         Task<OperationResult<BookingResponse>> UpdateBookingByBookingIdAsync(int id, BookingServiceDetailsUpdateRequest request);
-        Task<OperationResult<AssignmentResponse>> AssignedLeader(int assignmentId);
+        Task<OperationResult<AssignmentResponse>> AssignedLeader(int userId, int assignmentId);
         Task<OperationResult<BookingResponse>> UserChangeBooingAt(int booingId, int userId, ChangeBookingAtRequest request);
     }
 }

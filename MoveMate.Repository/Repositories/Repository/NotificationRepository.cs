@@ -24,8 +24,9 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             try
             {
-                return await _dbContext.Notifications
-                    .FirstOrDefaultAsync(n => n.UserId == accountId && n.DeviceId == deviceId);
+                IQueryable<Notification> query = _dbSet;
+                return await query
+                        .FirstOrDefaultAsync(n => n.UserId == accountId && n.DeviceId == deviceId);
             }
             catch (Exception ex)
             {
@@ -37,15 +38,17 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<Notification>> GetNotiAsync(string fcmToken)
         {
-            return await _dbContext.Notifications
-                .Where(p => p.FcmToken == fcmToken).ToListAsync();
+            IQueryable<Notification> query = _dbSet;
+            return await query
+                           .Where(p => p.FcmToken == fcmToken).ToListAsync();
                 
         }
 
         public async Task<Notification> GetByUserIdAsync(int userId)
-        {         
-                return await _dbContext.Notifications
-                    .FirstOrDefaultAsync(x => x.UserId == userId);          
+        {
+            IQueryable<Notification> query = _dbSet;
+            return await query
+                               .FirstOrDefaultAsync(x => x.UserId == userId);          
         }
 
     }

@@ -2400,11 +2400,13 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<AssignmentResponse>> AssignedLeader(int assignmentId)
+        public async Task<OperationResult<AssignmentResponse>> AssignedLeader(int userId, int assignmentId)
         {
             var result = new OperationResult<AssignmentResponse>();
             try
             {
+                
+
                 var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
                 if (assignment == null)
                 {
@@ -2412,6 +2414,19 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                var reviewer = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndBookingId(RoleEnums.REVIEWER.ToString(), (int)assignment.BookingId);
+                if (reviewer.UserId != userId)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                    return result;
+                }
+
+                if (assignment.Status != AssignmentStatusEnums.WAITING.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentWaiting);
+                    return result;
+                }
+                //Assign lead
                 var checkLeader =
                     _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(assignment.StaffType,
                         (int)assignment.BookingId);
@@ -2422,7 +2437,16 @@ namespace MoveMate.Service.Services
                 }
 
                 assignment.IsResponsible = true;
-                _unitOfWork.AssignmentsRepository.Update(assignment);
+                assignment.Status = AssignmentStatusEnums.ASSIGNED.ToString();
+                //Change status Assignment for other ASSIGNED
+                var assigned = await _unitOfWork.AssignmentsRepository.GetByStaffTypeAsync(assignment.StaffType, (int)assignment.BookingId, assignmentId);
+                foreach (var assign in assigned)
+                {
+                    assign.Status = AssignmentStatusEnums.ASSIGNED.ToString();
+                }
+
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(assigned);
                 var saveResult = _unitOfWork.Save();
 
                 // Check save result and return response

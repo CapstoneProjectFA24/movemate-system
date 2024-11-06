@@ -25,7 +25,8 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             try
             {
-                return await this._dbContext.Users.Include(x => x.Role)
+                IQueryable<User> query = _dbSet;
+                return await query.Include(x => x.Role)
                     .SingleOrDefaultAsync(x => x.Id == accountId);
             }
             catch (Exception ex)
@@ -39,7 +40,8 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             try
             {
-                return await this._dbContext.Users.Include(x => x.Role)
+                IQueryable<User> query = _dbSet;
+                return await query.Include(x => x.Role)
                     .SingleOrDefaultAsync(x => x.Email == email);
             }
             catch (Exception ex)
@@ -53,7 +55,8 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             try
             {
-                return await this._dbContext.Users.Include(x => x.Role)
+                IQueryable<User> query = _dbSet;
+                return await query.Include(x => x.Role)
                     .SingleOrDefaultAsync(x => x.Email == email);
             }
             catch (Exception ex)
@@ -64,14 +67,16 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<bool> AnyAsync(Expression<Func<User, bool>> predicate)
         {
-            return await _dbContext.Users.AnyAsync(predicate);
+            IQueryable<User> query = _dbSet;
+            return await query.AnyAsync(predicate);
         }
 
         public async Task<User> GetUserByPhoneAsync(string phone)
         {
             try
             {
-                return await this._dbContext.Users.Include(x => x.Role)
+                IQueryable<User> query = _dbSet;
+                return await query.Include(x => x.Role)
                     .SingleOrDefaultAsync(x => x.Phone == phone);
             }
             catch (Exception ex)
@@ -82,15 +87,17 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<User?> FindByEmailAsync(string email)
         {
-            return await this._dbContext.Users
-                .AsNoTracking() // No tracking is needed for read operations
+            IQueryable<User> query = _dbSet;
+            return await query
+            .AsNoTracking() // No tracking is needed for read operations
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<List<int>> FindAllUserByRoleIdAsync(int roleId)
         {
-            return await _dbContext.Users
-                .Where(u => u.RoleId == roleId)
+            IQueryable<User> query = _dbSet;
+            return await query
+            .Where(u => u.RoleId == roleId)
                 .Select(u => u.Id)
                 .ToListAsync();
         }
@@ -99,7 +106,8 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             try
             {
-                return await this._dbContext.Users.Include(x => x.Role)
+                IQueryable<User> query = _dbSet;
+                return await query.Include(x => x.Role)
                     .SingleOrDefaultAsync(x => x.Id == accountId);
             }
             catch (Exception ex)
@@ -112,7 +120,8 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             try
             {
-                return await _dbContext.Users
+                IQueryable<User> query = _dbSet;
+                return await query
                     .Include(u => u.Truck) 
                     .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
                     .Select(u => u.Id)
@@ -126,8 +135,9 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<User> GetUserByRoleIdAsync()
         {
-            return await _dbContext.Users
-                .Where(u => u.RoleId == 6)
+            IQueryable<User> query = _dbSet;
+            return await query
+            .Where(u => u.RoleId == 6)
                 .FirstOrDefaultAsync();
         }
 

@@ -39,7 +39,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<Truck> FindByUserIdAsync(int userId)
         {
-            return await _dbSet
+            IQueryable<Truck> query = _dbSet;
+            return await query
                 .FirstOrDefaultAsync(s => s.UserId == userId);
         }
     }

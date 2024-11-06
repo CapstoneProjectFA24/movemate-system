@@ -39,28 +39,30 @@ namespace MoveMate.Service.Services
         {
             var result = new OperationResult<List<UserResponse>>();
 
+            var pagin = new Pagination();
+
             var filter = request.GetExpressions();
 
             try
             {
-                var entities = _unitOfWork.UserRepository.Get(
-                    filter: filter,
-                    pageIndex: request.page,
-                    pageSize: request.per_page,
-                    orderBy: request.GetOrder(),
-                    includeProperties: "Role"
-                );
-                var listResponse = _mapper.Map<List<UserResponse>>(entities);
+                var entities = _unitOfWork.UserRepository.GetWithCount(
+                filter: request.GetExpressions(),
+                pageIndex: request.page,
+                pageSize: request.per_page,
+                orderBy: request.GetOrder()
+            );
+                var listResponse = _mapper.Map<List<UserResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.GetListUserFail,
-                        listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserEmpty, listResponse);
                     return result;
                 }
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserSuccess,
-                    listResponse);
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListUserSuccess, listResponse, pagin);
 
                 return result;
             }
