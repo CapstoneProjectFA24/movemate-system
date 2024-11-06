@@ -25,10 +25,10 @@ public class AssignReviewWorker
         _firebaseServices = firebaseServices;
     }
 
-    [Consumer("movemate.booking_assign_review_local")]
+    [Consumer("movemate.booking_assign_review")]
     public async Task HandleMessage(int message)
     {
-        await Task.Delay(TimeSpan.FromSeconds(3));
+        //await Task.Delay(TimeSpan.FromSeconds(3));
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
@@ -41,7 +41,7 @@ public class AssignReviewWorker
 
                 string redisKey = DateUtil.GetKeyReview();
                 var reviewerId = await redisService.DequeueAsync<int>(redisKey);
-
+                var date = DateUtil.GetShard(booking!.BookingAt);
                 if (reviewerId == 0)
                 {
                     var checkExistQueue = await redisService.KeyExistsQueueAsync(redisKey);
@@ -53,19 +53,43 @@ public class AssignReviewWorker
                     {
                         List<int> listReviewer = await unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
                         await redisService.EnqueueMultipleAsync(redisKey, listReviewer);
+
                         throw new Exception($"Queue {redisKey} has been added");
                     }
                 }
 
-
+                var startDate = booking!.BookingAt;
+                var isResponsible = false;
+                if (booking.IsReviewOnline == false)
+                {
+                    startDate = booking!.ReviewAt;
+                    isResponsible = true;
+                }
+                
                 var reviewer = new Assignment()
                 {
                     BookingId = message,
                     Status = AssignmentStatusEnums.ASSIGNED.ToString(),
                     UserId = reviewerId,
                     StaffType = RoleEnums.REVIEWER.ToString(),
+                    IsResponsible = isResponsible,
+                    StartDate = startDate,
                 };
+                var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
 
+                if (scheduleBooking == null)
+                {
+                    scheduleBooking = new ScheduleBooking()
+                    {
+                        Shard = date,
+                        IsActived = true,
+                         
+                    };
+                    await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(scheduleBooking);
+                    
+                }
+                scheduleBooking!.Assignments.Add(reviewer);
+                
                 booking.Assignments.Add(reviewer);
 
                 booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();

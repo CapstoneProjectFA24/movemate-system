@@ -133,7 +133,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
-                    _producer.SendingMessage("movemate.booking_assign_driver_local", saveObj.Id);
+                    _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
 
                 }
 
