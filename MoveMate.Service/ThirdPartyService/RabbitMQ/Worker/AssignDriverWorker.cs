@@ -23,73 +23,86 @@ public class AssignDriverWorker
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
     }
+
 /*
-Quy trình nâng cấp tự động gán tài xế:
+Auto-Assign Driver Workflow:
 
-1. Kiểm tra shard:
-   - Nếu không tồn tại:
-     - Tạo mới shard.
-     - Tìm danh sách tài xế có loại xe và lịch làm việc phù hợp.
-     - Bổ sung: Kiểm tra xem tài xế có đang thực hiện nhiệm vụ ưu tiên cao hay không.
-     - Thêm vào Redis queue _booking_at.
-     - Thêm vào danh sách phân công (assignment).
+1. Shard Check:
+   - If the shard does not exist:
+     - Create a new shard.
+     - Find a list of drivers with the appropriate truck type and schedule.
+     - Additional check: Verify if the driver is currently handling a high-priority task.
+     - Add to Redis queue _booking_at.
+     - Add to the assignment list.
 
-   - Nếu shard đã tồn tại:
-     - Kiểm tra Redis queue _booking_at:
-       - Nếu queue có phần tử:
-          - Lấy phần tử từ queue và gán vào assignment.
-          -* Kiểm tra lịch sử năng suất*:
-            - Nếu tài xế có tần suất từ chối nhiệm vụ cao, giảm ưu tiên gán.
+   - If the shard exists:
+     - Check the Redis queue _booking_at:
+       - If the queue has elements:
+          - Dequeue and add to assignment.
+          -* Performance history check*:
+            - If a driver has a high refusal rate, lower their assignment priority.
 
-       - Nếu queue rỗng, hoặc không đủ:
-         - Kiểm tra chi tiết lịch làm việc (schedule booking detail) của tài xế:
-           - Điều kiện kiểm tra:
-             - endTime của booking_at > startTime của schedule hoặc startTime của booking < endTime của schedule.
-           - Nếu có lịch rảnh:
-             - Nếu count > 1:
-               - Chọn lịch theo location.
-               - Tính rate cho mỗi lịch:
-                 - Xem xét loại nhiệm vụ (như hàng hóa nguy hiểm) để điều chỉnh rate.
-               - Kiểm tra lịch kết thúc trong vòng từ 1 - 2 giờ:
-                 - Tính toán rate:
-                   - Trong vòng 1 giờ: rate += 1.
-                   - Trong vòng 2 giờ: rate += 0.5.
-               - So sánh và chọn tài xế:
-                 - Tính toán rate dựa trên khoảng cách: rate = rate / khoảng cách.
-                 - ! Bổ sung: Tính toán yếu tố môi trường (thời tiết, tắc đường) vào rate.
-             - Nếu count = 1: Chọn ngay.
-             - Nếu count < 1: Đánh tag "auto-assign failed, cần review can thiệp".
-           - Nếu không có lịch rảnh thỏa điều kiện, đánh tag "auto-assign failed, cần review can thiệp".
+       - If the queue is empty or insufficient:
+         - Check driver schedule booking details:
+           - Condition check:
+             - endTime of booking_at > startTime of schedule or startTime of booking < endTime of schedule.
+           - If there is available time:
+             - If count > 1:
+               - Choose schedule by location.
+               - Calculate rate for each schedule:
+                 - Consider task type (e.g., hazardous materials) to adjust rate.
+               - Check if schedule ends within 1-2 hours:
+                 - Rate calculations:
+                   - Within 1 hour: rate += 1.
+                   - Within 2 hours: rate += 0.5.
+               - Compare and choose driver:
+                 - Calculate rate based on distance: rate = rate / distance.
+                 - ! Additional: Calculate environmental factors (weather, traffic) into the rate.
+             - If count = 1: Select immediately.
+             - If count < 1: Tag "auto-assign failed, needs review intervention".
+           - If no free schedule meets conditions, tag "auto-assign failed, needs review intervention".
 
-2. Bổ sung các tình huống đặc biệt:
-   - Trường hợp khẩn cấp - khi nào tình huống khẩn cấp:
-     - Khi có yêu cầu khẩn cấp, hệ thống tạm ngừng gán tự động khác và ưu tiên tài xế gần nhất.
-   - Dự phòng khi thiếu tài xế:
-     - Nếu không có tài xế phù hợp, tự động đặt lệnh chờ (standby) và tìm kiếm manager.
-   - Lựa chọn tài xế dự phòng:
-     - Nếu tài xế có lịch xung đột, đưa họ vào danh sách dự phòng để tái gán khi tài xế chính không khả dụng.
-   - Cảnh báo cho quản lý:
-     - Gửi cảnh báo cho quản lý khi tỷ lệ gán thất bại quá cao hoặc không có tài xế phù hợp.
-   -* Phân bổ dựa trên xếp hạng - cần công thức tính toán:
-     - Tính toán điểm xếp hạng dựa trên hiệu suất, độ uy tín, và phản hồi từ khách hàng để ưu tiên tài xế chất lượng cao cho nhiệm vụ phức tạp.
+2. Special Case Additions:
+   - Emergency Case - when an emergency arises:
+     - For an urgent request, the system pauses other auto-assignments and prioritizes the nearest driver.
+   - Backup when lacking drivers:
+     - If no suitable driver is found, automatically place a standby order and seek a manager.
+   - Alternative driver selection:
+     - If a driver has conflicting schedules, put them on a standby list for reassignment if the primary driver is unavailable.
+   - Management alert:
+     - Alert management if the failure rate for assignment is too high or no suitable driver is found.
+   -* Ranking-based allocation - requires a scoring formula:
+     - Calculate ranking score based on performance, reliability, and customer feedback to prioritize high-quality drivers for complex tasks.
 
-3. Giám sát và cải tiến quy trình:
-   - ! Phân tích định kỳ:
-     - Thực hiện phân tích định kỳ để đánh giá hiệu quả của quy trình gán tài xế, từ đó điều chỉnh các tham số và quy định.
-   - ! Phản hồi từ tài xế:
-     - Tạo kênh phản hồi cho tài xế để thu thập thông tin về quy trình gán và cải tiến dựa trên ý kiến của họ.
-   - ! Cập nhật công nghệ:
-     - Nghiên cứu và áp dụng các công nghệ mới như AI và machine learning để tự động hóa và tối ưu hóa quy trình gán tài xế.
+3. Process Monitoring and Improvement:
+   - ! Periodic analysis:
+     - Conduct periodic analysis to evaluate the effectiveness of the driver assignment process and adjust parameters and rules accordingly.
+   - ! Driver feedback:
+     - Create a feedback channel for drivers to provide input on the assignment process and make improvements based on their opinions.
+   - ! Technology updates:
+     - Explore and apply new technologies such as AI and machine learning to automate and optimize the driver assignment process.
 */
 
+
     /// <summary>
-    ///  An automation assign drivers to booking
+    /// Automatically assigns drivers to a booking based on the booking ID received in the message.
     /// </summary>
-    /// <param name="message">int</param>
-    /// <exception cref="NotFoundException"></exception>
+    /// <param name="message">An integer representing the booking ID to which drivers need to be assigned.</param>
+    /// <exception cref="NotFoundException">Thrown when the booking ID does not exist or cannot be found in the system.</exception>
     [Consumer("movemate.booking_assign_driver")]
     public async Task HandleMessage(int message)
     {
+        
+        // Implementation of driver assignment logic will go here.
+        // The method should use the booking ID (message) to find the relevant booking,
+        // check available drivers, and assign them as necessary.
+        // This method is marked as asynchronous to support non-blocking operations.
+
+        // Example logic:
+        // 1. Retrieve the booking details by booking ID (message).
+        // 2. Check the availability of drivers based on the booking requirements.
+        // 3. Assign a driver to the booking if an appropriate driver is found.
+        // 4. Save the updated booking details.
         await Task.Delay(100);
         Console.WriteLine("movemate.booking_assign_driver");
         try
@@ -207,7 +220,7 @@ Quy trình nâng cấp tự động gán tài xế:
                         var googleMapsService = scope.ServiceProvider.GetRequiredService<IGoogleMapsService>();
                         var booking = unitOfWork.BookingRepository.GetByIdAsync(existingBooking.Id);
                         // xử lý
-                        await AssignDriversToBookingV2(
+                        await AllocateDriversToBookingAsync(
                             existingBooking,
                             existingBooking.BookingAt!.Value,
                             countRemaining,
@@ -276,7 +289,22 @@ Quy trình nâng cấp tự động gán tài xế:
         unitOfWork.Save();
     }
 
-    private async Task AssignDriversToBookingV2(
+    /// <summary>
+    /// Assigns available drivers to a booking based on proximity and estimated travel time.
+    /// Calculates a rating for each driver based on travel duration, then selects the most suitable drivers.
+    /// </summary>
+    /// <param name="booking">The current booking that requires driver assignment.</param>
+    /// <param name="startTime">The start time for the booking's assigned drivers.</param>
+    /// <param name="driverCount">The number of drivers needed for this booking.</param>
+    /// <param name="estimatedDeliveryTime">The estimated time needed to complete the delivery for this booking.</param>
+    /// <param name="listAssignments">The list of Assignment records to be updated and saved to the database.</param>
+    /// <param name="listDriverAvailable1Hours">The list of drivers available within 1 hour.</param>
+    /// <param name="listDriverAvailable2Hours">The list of drivers available within 2 hours.</param>
+    /// <param name="listDriverAvailableOthers">The list of drivers available beyond 2 hours.</param>
+    /// <param name="unitOfWork">The UnitOfWork instance used to save data to the database.</param>
+    /// <param name="scheduleBookingId">The schedule booking ID for identifying driver details.</param>
+    /// <param name="googleMapsService">The Google Maps service for calculating distance and travel time between locations.</param>
+    private async Task AllocateDriversToBookingAsync(
         Booking booking,
         DateTime startTime,
         int driverCount,
