@@ -129,11 +129,11 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             try
             {
                 var save = _mapper.Map<BookingResponse>(saveObj);
-                if (saveObj.Status == BookingEnums.DEPOSITING.ToString())
+                if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
-                    _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
+                    //_producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
 
                 }
 
