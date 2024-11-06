@@ -149,32 +149,105 @@ namespace MoveMate.Repository.Repositories.Repository
             return availableDrivers;
         }
 
-        public async Task<List<int>> GetAvailableWithExtendedAsync(DateTime newStartTime, DateTime newEndTime,
-            int scheduleBookingId, int truckCategoryId, double? useExtendedTime = 1)
+        public async Task<List<int>> GetListDriverIdAvailableWithExtendedAsync(DateTime newStartTime, DateTime newEndTime,
+            int scheduleBookingId, int truckCategoryId, double? useExtendedTime = 1, double? useBufferTime = 0)
         {
+            newStartTime = newStartTime.AddMinutes(-(30 + useBufferTime!.Value));
+            newEndTime = newEndTime.AddMinutes((30 + useBufferTime!.Value));
+
             var newStartTimeExtended = newStartTime.AddHours(-useExtendedTime!.Value);
             var newEndTimeExtended = newEndTime.AddHours(useExtendedTime!.Value);
 
             IQueryable<Assignment>
-                query = _dbSet.Include(a => a.Truck); // Bao gồm Truck để truy xuất thông tin về xe tải
+                query = _dbSet.Include(a => a.Truck);
 
-            var allDrivers = await query
+            var conflictedDrivers = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
-                            a.Truck.TruckCategoryId == truckCategoryId) // Lọc theo TruckCategoryId
+                            a.Truck.TruckCategoryId == truckCategoryId)
                 .Where(a =>
-                    a.ScheduleBookingId == scheduleBookingId
-                    && (((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
-                         (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime))))
+                    (a.StartDate < newEndTime && a.EndDate > newStartTime))
                 .Select(a => a.UserId)
                 .Distinct()
                 .ToListAsync();
 
-            var availableDrivers = allDrivers
+            var availableDrivers = await query
+                .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                            a.Truck.TruckCategoryId == truckCategoryId)
+                .Where(a =>
+                    a.ScheduleBookingId == scheduleBookingId
+                    && (((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
+                         (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime))))
+                .Where(a => !conflictedDrivers.Contains(a.UserId))
+                .Select(a => a.UserId)
+                .Distinct()
                 .Where(id => id.HasValue)
                 .Select(id => id!.Value)
-                .ToList();
+                .ToListAsync();
+
+            /*var availableDrivers = allDrivers
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToList();*/
 
             return availableDrivers;
         }
+        
+        public async Task<List<Assignment>> GetDriverAvailableWithExtendedAsync(DateTime newStartTime, DateTime newEndTime,
+            int scheduleBookingId, int truckCategoryId, double? useExtendedTime = 1, double? useBufferTime = 0)
+        {
+            newStartTime = newStartTime.AddMinutes(-(30 + useBufferTime!.Value));
+            newEndTime = newEndTime.AddMinutes((30 + useBufferTime!.Value));
+
+            var newStartTimeExtended = newStartTime.AddHours(-useExtendedTime!.Value);
+            var newEndTimeExtended = newEndTime.AddHours(useExtendedTime!.Value);
+
+            IQueryable<Assignment> query = _dbSet
+                .Include(a => a.Truck)          // Include Truck information
+                .Include(a => a.Booking);        // Include Booking information
+
+            // Tìm các tài xế có xung đột thời gian với khoảng thời gian yêu cầu
+            var conflictedDrivers = await query
+                .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                            a.Truck.TruckCategoryId == truckCategoryId)
+                .Where(a => a.StartDate < newEndTime && a.EndDate > newStartTime)
+                .Select(a => a.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            // Tìm danh sách Assignment cho các tài xế rảnh
+            var availableAssignments = await query
+                .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                            a.Truck.TruckCategoryId == truckCategoryId)
+                .Where(a => a.ScheduleBookingId == scheduleBookingId
+                            && ((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
+                                (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime)))
+                .Where(a => !conflictedDrivers.Contains(a.UserId))
+                .Distinct()
+                .ToListAsync();
+
+            return availableAssignments;
+        }
+        
+        public async Task<List<Assignment>> GetDriverAvailableAsync(DateTime newStartTime, DateTime newEndTime,
+            int scheduleBookingId, int truckCategoryId, double? useBufferTime = 0)
+        {
+            newStartTime = newStartTime.AddMinutes(-(30 + useBufferTime!.Value));
+            newEndTime = newEndTime.AddMinutes((30 + useBufferTime!.Value));
+
+            IQueryable<Assignment> query = _dbSet
+                .Include(a => a.Truck)          
+                .Include(a => a.Booking);        
+            
+            var Drivers = await query
+                .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                            a.Truck.TruckCategoryId == truckCategoryId)
+                .Where(a => a.StartDate > newEndTime && a.EndDate < newStartTime)
+                .Distinct()
+                .ToListAsync();
+
+  
+            return Drivers;
+        }
+
     }
 }

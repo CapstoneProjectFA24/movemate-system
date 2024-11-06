@@ -37,10 +37,12 @@ namespace MoveMate.Repository.Repositories.Repository
             return result;
         }
 
-        public async Task<Truck> FindByUserIdAsync(int userId)
+        public async Task<Truck?> FindByUserIdAsync(int userId)
         {
-            return await _dbSet
-                .FirstOrDefaultAsync(s => s.UserId == userId);
+            IQueryable<Truck?> query = _dbSet;
+            
+            return await query
+                .FirstOrDefaultAsync(s => s!.UserId == userId);
         }
     }
 }

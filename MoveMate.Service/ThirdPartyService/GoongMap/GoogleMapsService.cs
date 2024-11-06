@@ -1,8 +1,9 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MoveMate.Service.ThirdPartyService.GoongMap.Models;
 
-namespace MoveMate.Service.ThirdPartyService;
+namespace MoveMate.Service.ThirdPartyService.GoongMap;
 
 public class GoogleMapsService : IGoogleMapsService
 {
@@ -35,7 +36,7 @@ public class GoogleMapsService : IGoogleMapsService
         }
     }
 
-    public async Task<string?> GetDistanceAndDuration(string origins, string destinations)
+    public async Task<GoogleMapDTO?> GetDistanceAndDuration(string origins, string destinations)
     {
         try
         {
@@ -52,13 +53,27 @@ public class GoogleMapsService : IGoogleMapsService
 
                 var elements = rows.GetProperty("elements").EnumerateArray().FirstOrDefault();
 
+                /*
                 var distanceText = elements.GetProperty("distance").GetProperty("text").GetString();
-                var durationText = elements.GetProperty("duration").GetProperty("text").GetString();
+                var durationText = elements.GetProperty("duration").GetProperty("text").GetString();*/
 
-                return durationText;
+                var googleMapDto = new GoogleMapDTO()
+                {
+                    Distance = new DistanceInfo
+                    {
+                        Text = elements.GetProperty("distance").GetProperty("text").GetString(),
+                        Value = elements.GetProperty("distance").GetProperty("value").GetInt32()
+                    },
+                    Duration = new DurationInfo
+                    {
+                        Text = elements.GetProperty("duration").GetProperty("text").GetString(),
+                        Value = elements.GetProperty("duration").GetProperty("value").GetInt32()
+                    },
+                };
+                return googleMapDto;
             }
 
-            return "0";
+           
         }
         catch (Exception ex)
         {
