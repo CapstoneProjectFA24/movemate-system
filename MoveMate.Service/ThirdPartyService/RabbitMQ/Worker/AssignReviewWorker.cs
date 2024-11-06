@@ -16,13 +16,13 @@ public class AssignReviewWorker
 {
     private readonly ILogger<AssignReviewWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly IFirebaseServices _firebaseServices;
+    /*private readonly IFirebaseServices _firebaseServices;*/
 
-    public AssignReviewWorker(ILogger<AssignReviewWorker> logger, IServiceScopeFactory serviceScopeFactory, IFirebaseServices firebaseServices)
+    public AssignReviewWorker(ILogger<AssignReviewWorker> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
-        _firebaseServices = firebaseServices;
+
     }
 
     [Consumer("movemate.booking_assign_review")]
@@ -36,7 +36,8 @@ public class AssignReviewWorker
                 var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-
+                var firebaseServices = scope.ServiceProvider.GetRequiredService<IFirebaseServices>();
+                
                 var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
 
                 string redisKey = DateUtil.GetKeyReview();
@@ -93,10 +94,10 @@ public class AssignReviewWorker
                 booking.Assignments.Add(reviewer);
 
                 booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
-                unitOfWork.BookingRepository.Update(booking);
+                await unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
 
                 unitOfWork.Save();
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 redisService.EnqueueAsync(redisKey, reviewerId);
 
                 Console.WriteLine($"Booking info: {booking}");
