@@ -164,25 +164,28 @@ Quy trình nâng cấp tự động gán tài xế:
                             scheduleBooking!.Id
                         );
                     }
+
                     // nếu mà list countDriver < existingBooking.DriverNumber thì
                     //  
                     // 1H
-                    var assignedDriverAvailable1Hours  =
+                    var assignedDriverAvailable1Hours =
                         await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
                             existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                            existingBooking.TruckNumber!.Value );
-                    
+                            existingBooking.TruckNumber!.Value);
+
                     // 2H
-                    var assignedDriverAvailable2Hours  =
+                    var assignedDriverAvailable2Hours =
                         await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
                             existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                            existingBooking.TruckNumber!.Value, 2,1 );
+                            existingBooking.TruckNumber!.Value, 2, 1);
                     // OTHER
                     var assignedDriverAvailableOther =
-                        await unitOfWork.AssignmentsRepository.GetAvailableWithOverlapAsync(existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                        await unitOfWork.AssignmentsRepository.GetAvailableWithOverlapAsync(
+                            existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
                             existingBooking.TruckNumber!.Value, 2);
-                    
-                    var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count();
+
+                    var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count() +
+                                         assignedDriverAvailable2Hours.Count() + assignedDriverAvailableOther.Count();
                     if (countRemaining > countDriverNumberBooking)
                     {
                         if (countDriver > 0)
@@ -211,6 +214,8 @@ Quy trình nâng cấp tự động gán tài xế:
                             existingBooking.EstimatedDeliveryTime ?? 3,
                             listAssignments,
                             assignedDriverAvailable1Hours,
+                            assignedDriverAvailable2Hours,
+                            assignedDriverAvailableOther,
                             unitOfWork,
                             scheduleBooking!.Id,
                             googleMapsService
@@ -271,51 +276,65 @@ Quy trình nâng cấp tự động gán tài xế:
         unitOfWork.Save();
     }
 
-    /*
-    private async Task AssignDriversToBookingV2(Booking booking, string redisKey, DateTime startTime, int driverCount,
-        double estimatedDeliveryTime, List<Assignment> listAssignments,
-        List<Assignment> listDriverAvailables, UnitOfWork unitOfWork, int scheduleBookingId, IGoogleMapsService googleMapsService)
-    {
-        foreach  (var assignment in listDriverAvailables)
-        {
-            var test = await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!, booking.PickupPoint!);
-            var driverId = assignment.UserId!.Value;
-            var endTime = startTime.AddHours(estimatedDeliveryTime);
-
-
-        }
-
-        await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
-        unitOfWork.Save();
-    }*/
-
     private async Task AssignDriversToBookingV2(
         Booking booking,
         DateTime startTime,
         int driverCount,
         double estimatedDeliveryTime,
         List<Assignment> listAssignments,
-        List<Assignment> listDriverAvailables,
+        List<Assignment> listDriverAvailable1Hours,
+        List<Assignment> listDriverAvailable2Hours,
+        List<Assignment> listDriverAvailableOthers,
         UnitOfWork unitOfWork,
         int scheduleBookingId,
         IGoogleMapsService googleMapsService)
     {
-        var driverDistances = new List<(Assignment Driver, double Distance, double Duration)>();
+        var driverDistances = new List<(Assignment Driver, double rate)>();
 
-        foreach (var assignment in listDriverAvailables)
+        // 1 H
+        foreach (var assignment in listDriverAvailable1Hours)
         {
+            var rate = 2;
             var googleMapDto =
                 await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
                     booking.PickupPoint!);
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
+            rate = rate / duration;
+            driverDistances.Add((assignment, rate));
+        }
 
-            driverDistances.Add((assignment, distance, duration));
+        // 2 H
+        foreach (var assignment in listDriverAvailable2Hours)
+        {
+            var rate = 1.5;
+            var googleMapDto =
+                await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                    booking.PickupPoint!);
+
+            var distance = googleMapDto.Distance.Value;
+            var duration = googleMapDto.Duration.Value;
+            rate = rate / duration;
+            driverDistances.Add((assignment, rate));
+        }
+
+        // Other
+        foreach (var assignment in listDriverAvailableOthers)
+        {
+            var rate = 1;
+            var googleMapDto =
+                await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                    booking.PickupPoint!);
+
+            var distance = googleMapDto.Distance.Value;
+            var duration = googleMapDto.Duration.Value;
+            rate = rate / duration;
+            driverDistances.Add((assignment, rate));
         }
 
         var closestDrivers = driverDistances
-            .OrderBy(x => x.Distance)
+            .OrderBy(x => x.rate)
             .Take(driverCount)
             .ToList();
 

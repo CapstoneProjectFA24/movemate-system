@@ -87,7 +87,7 @@ namespace MoveMate.Repository.Repositories.Repository
             return availableDrivers;
         }
 
-        public async Task<List<int>> GetAvailableWithOverlapAsync(
+        public async Task<List<Assignment>> GetAvailableWithOverlapAsync(
             DateTime newStartTime,
             DateTime newEndTime,
             int scheduleBookingId,
@@ -99,41 +99,42 @@ namespace MoveMate.Repository.Repositories.Repository
             newStartTime = newStartTime.AddHours(-useExtendedTime!.Value);
             newEndTime = newEndTime.AddHours(useExtendedTime!.Value);
 
+
             var driversWithCorrectTruck = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
-                            a.Truck.TruckCategoryId == truckCategoryId && a.ScheduleBookingId == scheduleBookingId)
-                .Select(a => a.UserId)
+                            a.Truck.TruckCategoryId == truckCategoryId &&
+                            a.ScheduleBookingId == scheduleBookingId)
                 .Distinct()
                 .ToListAsync();
 
-            var overlappingDrivers = await query
+
+            var overlappingAssignments = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                             a.ScheduleBookingId == scheduleBookingId &&
                             a.UserId.HasValue &&
-                            driversWithCorrectTruck.Contains(a.UserId.Value) &&
+                            driversWithCorrectTruck.Select(d => d.UserId).Contains(a.UserId) &&
                             ((a.EndDate > newStartTime && a.StartDate < newEndTime)))
-                .Select(a => a.UserId)
                 .Distinct()
                 .ToListAsync();
 
-            var availableDrivers = driversWithCorrectTruck
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .Except(overlappingDrivers.Where(id => id.HasValue).Select(id => id.Value))
+
+            var availableAssignments = driversWithCorrectTruck
+                .Where(a => a.UserId.HasValue &&
+                            !overlappingAssignments.Any(o => o.UserId == a.UserId))
                 .ToList();
 
-            return availableDrivers;
+            return availableAssignments;
         }
+
 
         public async Task<List<int>> GetAvailableAsync(DateTime newStartTime, DateTime newEndTime,
             int scheduleBookingId, int truckCategoryId)
         {
             IQueryable<Assignment>
-                query = _dbSet.Include(a => a.Truck); // Bao gồm Truck để truy xuất thông tin về xe tải
-
+                query = _dbSet.Include(a => a.Truck); 
             var allDrivers = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
-                            a.Truck.TruckCategoryId == truckCategoryId) // Lọc theo TruckCategoryId
+                            a.Truck.TruckCategoryId == truckCategoryId) 
                 .Where(a =>
                     a.ScheduleBookingId == scheduleBookingId
                     && ((a.EndDate <= newStartTime || a.StartDate >= newEndTime)))
@@ -149,7 +150,8 @@ namespace MoveMate.Repository.Repositories.Repository
             return availableDrivers;
         }
 
-        public async Task<List<int>> GetListDriverIdAvailableWithExtendedAsync(DateTime newStartTime, DateTime newEndTime,
+        public async Task<List<int>> GetListDriverIdAvailableWithExtendedAsync(DateTime newStartTime,
+            DateTime newEndTime,
             int scheduleBookingId, int truckCategoryId, double? useExtendedTime = 1, double? useBufferTime = 0)
         {
             newStartTime = newStartTime.AddMinutes(-(30 + useBufferTime!.Value));
@@ -184,15 +186,11 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Select(id => id!.Value)
                 .ToListAsync();
 
-            /*var availableDrivers = allDrivers
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .ToList();*/
-
             return availableDrivers;
         }
-        
-        public async Task<List<Assignment>> GetDriverAvailableWithExtendedAsync(DateTime newStartTime, DateTime newEndTime,
+
+        public async Task<List<Assignment>> GetDriverAvailableWithExtendedAsync(DateTime newStartTime,
+            DateTime newEndTime,
             int scheduleBookingId, int truckCategoryId, double? useExtendedTime = 1, double? useBufferTime = 0)
         {
             newStartTime = newStartTime.AddMinutes(-(30 + useBufferTime!.Value));
@@ -202,10 +200,9 @@ namespace MoveMate.Repository.Repositories.Repository
             var newEndTimeExtended = newEndTime.AddHours(useExtendedTime!.Value);
 
             IQueryable<Assignment> query = _dbSet
-                .Include(a => a.Truck)          // Include Truck information
-                .Include(a => a.Booking);        // Include Booking information
+                .Include(a => a.Truck) 
+                .Include(a => a.Booking); 
 
-            // Tìm các tài xế có xung đột thời gian với khoảng thời gian yêu cầu
             var conflictedDrivers = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                             a.Truck.TruckCategoryId == truckCategoryId)
@@ -227,7 +224,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return availableAssignments;
         }
-        
+
         public async Task<List<Assignment>> GetDriverAvailableAsync(DateTime newStartTime, DateTime newEndTime,
             int scheduleBookingId, int truckCategoryId, double? useBufferTime = 0)
         {
@@ -235,9 +232,9 @@ namespace MoveMate.Repository.Repositories.Repository
             newEndTime = newEndTime.AddMinutes((30 + useBufferTime!.Value));
 
             IQueryable<Assignment> query = _dbSet
-                .Include(a => a.Truck)          
-                .Include(a => a.Booking);        
-            
+                .Include(a => a.Truck)
+                .Include(a => a.Booking);
+
             var Drivers = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                             a.Truck.TruckCategoryId == truckCategoryId)
@@ -245,9 +242,8 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Distinct()
                 .ToListAsync();
 
-  
+
             return Drivers;
         }
-
     }
 }
