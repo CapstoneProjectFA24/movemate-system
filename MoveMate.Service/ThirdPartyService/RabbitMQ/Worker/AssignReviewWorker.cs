@@ -94,7 +94,7 @@ public class AssignReviewWorker
                 booking.Assignments.Add(reviewer);
 
                 booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
-                unitOfWork.BookingRepository.Update(booking);
+                await unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
 
                 unitOfWork.Save();
                 firebaseServices.SaveBooking(booking, booking.Id, "bookings");
