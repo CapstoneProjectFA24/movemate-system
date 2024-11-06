@@ -86,7 +86,7 @@ Quy trình nâng cấp tự động gán tài xế:
     /// </summary>
     /// <param name="message">int</param>
     /// <exception cref="NotFoundException"></exception>
-    [Consumer("movemate.booking_assign_driver_local")]
+    [Consumer("movemate.booking_assign_driver")]
     public async Task HandleMessage(int message)
     {
         await Task.Delay(100);
@@ -110,18 +110,19 @@ Quy trình nâng cấp tự động gán tài xế:
 
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt);
+                var checkExistQueue = await redisService.KeyExistsQueueAsync(redisKey);
 
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
                 var listAssignments = new List<Assignment>();
 
-                if (scheduleBooking == null)
+                if (checkExistQueue == false)
                 {
                     var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
 
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value);
-                    
+
                     await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
 
                     // check DriverNumber in booking and driver in system
@@ -129,9 +130,8 @@ Quy trình nâng cấp tự động gán tài xế:
                     if (driverNumberBooking > driverIds.Count)
                     {
                         // đánh tag faild cần reviewer can thiệp
-                        
                     }
-                    
+
                     await AssignDriversToBooking(
                         message,
                         redisKey,
@@ -140,7 +140,8 @@ Quy trình nâng cấp tự động gán tài xế:
                         existingBooking.EstimatedDeliveryTime ?? 3,
                         listAssignments,
                         redisService,
-                        unitOfWork
+                        unitOfWork,
+                        scheduleBooking!.Id
                     );
                 }
                 else
@@ -156,11 +157,13 @@ Quy trình nâng cấp tự động gán tài xế:
                             existingBooking.EstimatedDeliveryTime ?? 3,
                             listAssignments,
                             redisService,
-                            unitOfWork
+                            unitOfWork,
+                            scheduleBooking!.Id
                         );
                     }
                     // nếu mà list countDriver < existingBooking.DriverNumber thì
                     // 
+                    
                 }
             }
         }
@@ -172,19 +175,22 @@ Quy trình nâng cấp tự động gán tài xế:
     }
 
     /// <summary>
-    /// AssignDriversToBooking
+    /// Assigns drivers to a booking by dequeuing driver IDs from Redis, creating assignments,
+    /// and saving them in the schedule booking repository.
     /// </summary>
-    /// <param name="bookingId"></param>
-    /// <param name="redisKey"></param>
-    /// <param name="startTime"></param>
-    /// <param name="driverCount"></param>
-    /// <param name="estimatedDeliveryTime"></param>
-    /// <param name="listScheduleBookingDetails"></param>
-    /// <param name="redisService"></param>
-    /// <param name="unitOfWork"></param>
+    /// <param name="bookingId">The ID of the booking to assign drivers to.</param>
+    /// <param name="redisKey">The Redis key used to dequeue available driver IDs.</param>
+    /// <param name="startTime">The start time for the assignment schedule.</param>
+    /// <param name="driverCount">The number of drivers to assign to the booking.</param>
+    /// <param name="estimatedDeliveryTime">The estimated time in hours for delivery.</param>
+    /// <param name="listAssignments">The list of assignments where new driver assignments will be added.</param>
+    /// <param name="redisService">Service used for interacting with Redis.</param>
+    /// <param name="unitOfWork">Unit of work for handling database operations.</param>
+    /// <param name="scheduleBookingId">The ID of the scheduleBooking to assign drivers to.</param>
+    /// <returns>A task that represents the asynchronous operation of assigning drivers and saving schedule data.</returns>
     private async Task AssignDriversToBooking(int bookingId, string redisKey, DateTime startTime, int driverCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
-        IRedisService redisService, UnitOfWork unitOfWork)
+        IRedisService redisService, UnitOfWork unitOfWork, int scheduleBookingId)
     {
         for (int i = 0; i < driverCount; i++)
         {
@@ -197,28 +203,16 @@ Quy trình nâng cấp tự động gán tài xế:
                 StaffType = RoleEnums.DRIVER.ToString(),
                 Status = AssignmentStatusEnums.WAITING.ToString(),
                 UserId = driverId,
-
-            };
-            /*var newScheduleBookingDetail = new ScheduleBookingDetail()
-            {
-                BookingId = bookingId,
-                Type = RoleEnums.DRIVER.ToString(),
                 StartDate = startTime,
-                UserId = driverId,
                 EndDate = endTime,
-            };*/
-
-            //listScheduleBookingDetails.Add(newScheduleBookingDetail);
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId
+            };
+           
+            listAssignments.Add(newAssignmentDriver);
         }
-
-        var newScheduleBooking = new ScheduleBooking()
-        {
-            Shard = DateUtil.GetShard(startTime),
-            IsActived = true,
-            //ScheduleBookingDetails = listScheduleBookingDetails,
-        };
-
-        await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(newScheduleBooking);
+        
+        await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
         unitOfWork.Save();
     }
 
