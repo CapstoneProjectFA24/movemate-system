@@ -6,6 +6,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
+using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
@@ -86,7 +87,7 @@ Quy trình nâng cấp tự động gán tài xế:
     /// </summary>
     /// <param name="message">int</param>
     /// <exception cref="NotFoundException"></exception>
-    [Consumer("movemate.booking_assign_driver_local")]
+    [Consumer("movemate.booking_assign_driver")]
     public async Task HandleMessage(int message)
     {
         await Task.Delay(100);
@@ -102,26 +103,28 @@ Quy trình nâng cấp tự động gán tài xế:
 
                 // check booking
                 var existingBooking = await unitOfWork.BookingRepository.GetByIdAsync(message);
-
                 if (existingBooking == null)
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
                 }
 
+                var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt);
+                var checkExistQueue = await redisService.KeyExistsQueueAsync(redisKey);
 
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
                 var listAssignments = new List<Assignment>();
 
-                if (scheduleBooking == null)
+                if (checkExistQueue == false)
                 {
                     var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
 
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value);
-                    
+
                     await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
 
                     // check DriverNumber in booking and driver in system
@@ -129,9 +132,8 @@ Quy trình nâng cấp tự động gán tài xế:
                     if (driverNumberBooking > driverIds.Count)
                     {
                         // đánh tag faild cần reviewer can thiệp
-                        
                     }
-                    
+
                     await AssignDriversToBooking(
                         message,
                         redisKey,
@@ -140,13 +142,15 @@ Quy trình nâng cấp tự động gán tài xế:
                         existingBooking.EstimatedDeliveryTime ?? 3,
                         listAssignments,
                         redisService,
-                        unitOfWork
+                        unitOfWork,
+                        scheduleBooking!.Id
                     );
                 }
                 else
                 {
+                    int countDriverNumberBooking = existingBooking.DriverNumber!.Value;
                     var countDriver = await redisService.CheckQueueCountAsync(redisKey);
-                    if (countDriver > existingBooking.DriverNumber)
+                    if (countDriver > countDriverNumberBooking)
                     {
                         await AssignDriversToBooking(
                             message,
@@ -156,11 +160,64 @@ Quy trình nâng cấp tự động gán tài xế:
                             existingBooking.EstimatedDeliveryTime ?? 3,
                             listAssignments,
                             redisService,
-                            unitOfWork
+                            unitOfWork,
+                            scheduleBooking!.Id
                         );
                     }
                     // nếu mà list countDriver < existingBooking.DriverNumber thì
-                    // 
+                    //  
+                    // 1H
+                    var assignedDriverAvailable1Hours  =
+                        await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
+                            existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                            existingBooking.TruckNumber!.Value );
+                    
+                    // 2H
+                    var assignedDriverAvailable2Hours  =
+                        await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
+                            existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                            existingBooking.TruckNumber!.Value, 2,1 );
+                    // OTHER
+                    var assignedDriverAvailableOther =
+                        await unitOfWork.AssignmentsRepository.GetAvailableWithOverlapAsync(existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                            existingBooking.TruckNumber!.Value, 2);
+                    
+                    var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count();
+                    if (countRemaining > countDriverNumberBooking)
+                    {
+                        if (countDriver > 0)
+                        {
+                            countRemaining -= (int)countDriver;
+                            await AssignDriversToBooking(
+                                message,
+                                redisKey,
+                                existingBooking.BookingAt!.Value,
+                                existingBooking.DriverNumber.Value,
+                                existingBooking.EstimatedDeliveryTime ?? 3,
+                                listAssignments,
+                                redisService,
+                                unitOfWork,
+                                scheduleBooking!.Id
+                            );
+                        }
+
+                        var googleMapsService = scope.ServiceProvider.GetRequiredService<IGoogleMapsService>();
+                        var booking = unitOfWork.BookingRepository.GetByIdAsync(existingBooking.Id);
+                        // xử lý
+                        await AssignDriversToBookingV2(
+                            existingBooking,
+                            existingBooking.BookingAt!.Value,
+                            countRemaining,
+                            existingBooking.EstimatedDeliveryTime ?? 3,
+                            listAssignments,
+                            assignedDriverAvailable1Hours,
+                            unitOfWork,
+                            scheduleBooking!.Id,
+                            googleMapsService
+                        );
+                    }
+
+                    //đánh tag faild cần reviewer can thiệp
                 }
             }
         }
@@ -172,134 +229,117 @@ Quy trình nâng cấp tự động gán tài xế:
     }
 
     /// <summary>
-    /// AssignDriversToBooking
+    /// Assigns drivers to a booking by dequeuing driver IDs from Redis, creating assignments,
+    /// and saving them in the schedule booking repository.
     /// </summary>
-    /// <param name="bookingId"></param>
-    /// <param name="redisKey"></param>
-    /// <param name="startTime"></param>
-    /// <param name="driverCount"></param>
-    /// <param name="estimatedDeliveryTime"></param>
-    /// <param name="listScheduleBookingDetails"></param>
-    /// <param name="redisService"></param>
-    /// <param name="unitOfWork"></param>
+    /// <param name="bookingId">The ID of the booking to assign drivers to.</param>
+    /// <param name="redisKey">The Redis key used to dequeue available driver IDs.</param>
+    /// <param name="startTime">The start time for the assignment schedule.</param>
+    /// <param name="driverCount">The number of drivers to assign to the booking.</param>
+    /// <param name="estimatedDeliveryTime">The estimated time in hours for delivery.</param>
+    /// <param name="listAssignments">The list of assignments where new driver assignments will be added.</param>
+    /// <param name="redisService">Service used for interacting with Redis.</param>
+    /// <param name="unitOfWork">Unit of work for handling database operations.</param>
+    /// <param name="scheduleBookingId">The ID of the scheduleBooking to assign drivers to.</param>
+    /// <returns>A task that represents the asynchronous operation of assigning drivers and saving schedule data.</returns>
     private async Task AssignDriversToBooking(int bookingId, string redisKey, DateTime startTime, int driverCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
-        IRedisService redisService, UnitOfWork unitOfWork)
+        IRedisService redisService, UnitOfWork unitOfWork, int scheduleBookingId)
     {
         for (int i = 0; i < driverCount; i++)
         {
             var driverId = await redisService.DequeueAsync<int>(redisKey);
             var endTime = startTime.AddHours(estimatedDeliveryTime);
-
+            var truckId = unitOfWork.TruckRepository.FindByUserIdAsync(driverId).Id;
             var newAssignmentDriver = new Assignment()
             {
                 BookingId = bookingId,
                 StaffType = RoleEnums.DRIVER.ToString(),
                 Status = AssignmentStatusEnums.WAITING.ToString(),
                 UserId = driverId,
-
-            };
-            /*var newScheduleBookingDetail = new ScheduleBookingDetail()
-            {
-                BookingId = bookingId,
-                Type = RoleEnums.DRIVER.ToString(),
                 StartDate = startTime,
-                UserId = driverId,
                 EndDate = endTime,
-            };*/
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId,
+                TruckId = truckId
+            };
 
-            //listScheduleBookingDetails.Add(newScheduleBookingDetail);
+            listAssignments.Add(newAssignmentDriver);
         }
 
-        var newScheduleBooking = new ScheduleBooking()
-        {
-            Shard = DateUtil.GetShard(startTime),
-            IsActived = true,
-            //ScheduleBookingDetails = listScheduleBookingDetails,
-        };
-
-        await unitOfWork.ScheduleBookingRepository.SaveOrUpdateAsync(newScheduleBooking);
+        await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
         unitOfWork.Save();
     }
 
-
-    //[Consumer("movemate.booking_assign_driver_local")]
-    //public async Task HandleMessage(int message)
-    //{
-    //    try
-    //    {
-    //        using (var scope = _serviceScopeFactory.CreateScope())
-    //        {
-    //            var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-    //            var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
-    //            var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-
-    //            var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
-
-    //            if (booking == null)
-    //            {
-    //                throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
-    //            }
-
-    //            var driverList = await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(booking!.TruckNumber!.Value);
-
-    //            string redisKey = DateUtil.GetKeyReview();
-
-    //            var date = DateUtil.GetShard(booking.BookingAt);
-
-    //            var checkBookingStaffDaily =
-    //                await unitOfWork.BookingStaffDailyRepository.GetStaffActiveNowBookingStaffDailies(4);
-
-    //            if (checkBookingStaffDaily.Count > 0)
-    //            {
-    //                var driver = checkBookingStaffDaily.FirstOrDefault();
-
-    //                var driverDetail = new BookingDetail()
-    //                {
-    //                    BookingId = message,
-    //                    Status = AssignmentStatusEnums.ASSIGNED.ToString(),
-    //                    UserId = driver!.UserId,
-    //                    StaffType = RoleEnums.DRIVER.ToString(),
-    //                };
-
-    //                driver.Status = BookingStaffDailyEnums.BUSSY.ToString();
-
-    //                booking.BookingDetails.Add(driverDetail);
-
-    //                booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
-
-    //                var endtime = booking.BookingAt!.Value.AddHours(booking.EstimatedDeliveryTime ?? 3);
-    //                var workDate = new ScheduleDetail()
-    //                {
-    //                    UserId = driver.UserId,
-    //                    WorkingDays = DateTime.Now,
-    //                    StartDate = booking.BookingAt,
-    //                    EndDate = endtime
-    //                };
-
-    //                //save BookingStaffDaily
-    //                await unitOfWork.ScheduleDetailRepository.AddAsync(workDate);
-    //                unitOfWork.BookingStaffDailyRepository.UpdateRange(checkBookingStaffDaily);
-    //            }
-    //            else
-    //            {
-    //                // logic nếu ko đủ
-    //                //khó quá à
-    //            }
+    /*
+    private async Task AssignDriversToBookingV2(Booking booking, string redisKey, DateTime startTime, int driverCount,
+        double estimatedDeliveryTime, List<Assignment> listAssignments,
+        List<Assignment> listDriverAvailables, UnitOfWork unitOfWork, int scheduleBookingId, IGoogleMapsService googleMapsService)
+    {
+        foreach  (var assignment in listDriverAvailables)
+        {
+            var test = await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!, booking.PickupPoint!);
+            var driverId = assignment.UserId!.Value;
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
 
 
-    //            unitOfWork.BookingRepository.Update(booking);
-    //            unitOfWork.Save();
+        }
 
-    //            Console.WriteLine($"Booking assign_driver info: {booking.Id}");
-    //        }
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        _logger.LogError(e, "Error processing booking review for message {Message}", message);
-    //        throw;
-    //    }
+        await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
+        unitOfWork.Save();
+    }*/
 
-    //    Console.WriteLine($"Received booking_assign_driver message: {message}");
-    //}
+    private async Task AssignDriversToBookingV2(
+        Booking booking,
+        DateTime startTime,
+        int driverCount,
+        double estimatedDeliveryTime,
+        List<Assignment> listAssignments,
+        List<Assignment> listDriverAvailables,
+        UnitOfWork unitOfWork,
+        int scheduleBookingId,
+        IGoogleMapsService googleMapsService)
+    {
+        var driverDistances = new List<(Assignment Driver, double Distance, double Duration)>();
+
+        foreach (var assignment in listDriverAvailables)
+        {
+            var googleMapDto =
+                await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                    booking.PickupPoint!);
+
+            var distance = googleMapDto.Distance.Value;
+            var duration = googleMapDto.Duration.Value;
+
+            driverDistances.Add((assignment, distance, duration));
+        }
+
+        var closestDrivers = driverDistances
+            .OrderBy(x => x.Distance)
+            .Take(driverCount)
+            .ToList();
+
+        foreach (var driver in closestDrivers)
+        {
+            var assignment = driver.Driver;
+            var driverId = assignment.UserId!.Value;
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
+
+            listAssignments.Add(new Assignment
+            {
+                BookingId = booking.Id,
+                StaffType = RoleEnums.DRIVER.ToString(),
+                Status = AssignmentStatusEnums.WAITING.ToString(),
+                UserId = driverId,
+                StartDate = startTime,
+                EndDate = endTime,
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId,
+                TruckId = assignment.TruckId
+            });
+        }
+
+        await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
+        unitOfWork.Save();
+    }
 }
