@@ -281,10 +281,16 @@ namespace MoveMate.Service.Services
                     Phone = customerToRegister.Phone,
                     RoleId = 3
                 };
-
-                await _unitOfWork.UserRepository.AddAsync(newUser);
+                newUser.Wallet = new Wallet                    
+                     {
+                         Balance = 0,
+                         CreatedAt = DateTime.UtcNow,
+                         UpdatedAt = DateTime.UtcNow,
+                         IsLocked = false,
+                         Tier = 1
+                     };
+                await _unitOfWork.UserRepository.AddAsync(newUser);             
                 await _unitOfWork.SaveChangesAsync();
-
                 var userResponse = _mapper.Map<RegisterResponse>(newUser);
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess , userResponse);
@@ -483,6 +489,74 @@ namespace MoveMate.Service.Services
                 AccessToken = jwtTokenHandler.WriteToken(token),
                 RefreshToken = GenerateRefreshToken()
             };
+        }
+
+        public async Task CreateUserDeviceAsync(CreateUserDeviceRequest userDeviceRequest, IEnumerable<Claim> claims)
+        {
+            try
+            {
+                Claim sidClaim = claims.First(x => x.Type.ToLower() == "sid");
+                string idAccount = sidClaim.Value;
+                int userId = int.Parse(idAccount);
+
+                // Check if the device already exists
+                var existedUserDevice = await this._unitOfWork.NotificationRepository.GetNotiAsync(userDeviceRequest.FCMToken);
+
+                if (existedUserDevice.Count == 0) // Only proceed if device doesn't exist
+                {
+                    // Retrieve the existing user without adding it again
+                    User existedAccount = await this._unitOfWork.UserRepository.GetByIdAsync(userId);
+                    if (existedAccount == null)
+                    {
+                        throw new Exception("User does not exist.");
+                    }
+
+                    // Create a new Notification object with the existing user's ID
+                    Notification userDevice = new Notification()
+                    {
+                        UserId = userId, // Set only the UserId
+                        FcmToken = userDeviceRequest.FCMToken
+                    };
+
+                    // Add the new notification
+                    await this._unitOfWork.NotificationRepository.AddAsync(userDevice);
+                    var check = await _unitOfWork.SaveChangesAsync(); // Ensure this is awaited
+                    if (check > 0)
+                    {
+                        // Optionally handle success logic here
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                string error = ErrorUtil.GetErrorString("Exception", ex.Message);
+                throw new Exception(error);
+            }
+        }
+
+
+        public async Task DeleteUserDeviceAsync(int userDeviceId)
+        {
+            try
+            {
+                Notification existedUserDevice = await this._unitOfWork.NotificationRepository.GetByIdAsync(userDeviceId);
+                if (existedUserDevice is null)
+                {
+                    throw new NotFoundException(MessageConstant.CommonMessage.UserDeviceIdNotExist);
+                }
+                this._unitOfWork.NotificationRepository.Remove(existedUserDevice);
+                await this._unitOfWork.CommitAsync();
+            }
+            catch (NotFoundException ex)
+            {
+                string error = ErrorUtil.GetErrorString("User device id", ex.Message);
+                throw new NotFoundException(error);
+            }
+            catch (Exception ex)
+            {
+                string error = ErrorUtil.GetErrorString("Exception", ex.Message);
+                throw new Exception(error);
+            }
         }
     }
 }

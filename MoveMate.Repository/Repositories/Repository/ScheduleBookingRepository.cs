@@ -36,7 +36,25 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
+        public virtual async Task<ScheduleBooking?> GetByIdAsync(int id, string includeProperties = "")
+        {
+            IQueryable<ScheduleBooking> query = _dbSet;
 
+            // Apply includes
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter by ID
+            query = query.Where(a => a.Id == id);
+
+            // Execute the query and get the result
+            var result = await query.FirstOrDefaultAsync();
+
+            return result;
+        }
         public virtual async Task<ScheduleBooking?> GetByShard(string shard)
         {
             IQueryable<ScheduleBooking> query = _dbSet;

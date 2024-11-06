@@ -261,6 +261,7 @@ public partial class MoveMateDbContext : DbContext
 
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.DeviceId).HasMaxLength(255);
+            entity.Property(e => e.FcmToken).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.Receive).HasMaxLength(255);
             entity.Property(e => e.SentFrom).HasMaxLength(255);

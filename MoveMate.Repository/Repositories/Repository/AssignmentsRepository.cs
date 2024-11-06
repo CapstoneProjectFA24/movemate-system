@@ -14,8 +14,11 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class AssignmentsRepository : GenericRepository<Assignment>, IAssignmentsRepository
     {
+        private readonly MoveMateDbContext _context;
+
         public AssignmentsRepository(MoveMateDbContext context) : base(context)
         {
+            _context = context;
         }
 
         public Assignment GetByStaffTypeAndBookingId(string staffType, int bookingId)
@@ -25,11 +28,35 @@ namespace MoveMate.Repository.Repositories.Repository
             return assignment;
         }
 
+        public async Task<List<Assignment>> GetByBookingId(int bookingId)
+        {
+            return await _context.Assignments
+                .Where(p => p.BookingId == bookingId).ToListAsync();
+        }
+
+
         public Assignment GetByStaffTypeAndIsResponsible(string staffType, int bookingId)
         {
             var assignment = Get(a => a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)
                 .FirstOrDefault();
             return assignment;
+        }
+
+
+        public async Task<Assignment> GetByUserIdAndStaffTypeAndIsResponsible(int userId, string staffType,
+            int bookingId)
+        {
+            return await _context.Assignments
+                .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId &&
+                            a.IsResponsible == true)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Assignment> GetByUserIdAndStaffType(int userId, string staffType, int bookingId)
+        {
+            return await _context.Assignments
+                .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<List<int>> GetAvailableAsync(DateTime newStartTime, DateTime newEndTime,
@@ -121,13 +148,13 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return availableDrivers;
         }
-        
+
         public async Task<List<int>> GetAvailableWithExtendedAsync(DateTime newStartTime, DateTime newEndTime,
             int scheduleBookingId, int truckCategoryId, double? useExtendedTime = 1)
         {
             var newStartTimeExtended = newStartTime.AddHours(-useExtendedTime!.Value);
             var newEndTimeExtended = newEndTime.AddHours(useExtendedTime!.Value);
-            
+
             IQueryable<Assignment>
                 query = _dbSet.Include(a => a.Truck); // Bao gồm Truck để truy xuất thông tin về xe tải
 
@@ -136,7 +163,8 @@ namespace MoveMate.Repository.Repositories.Repository
                             a.Truck.TruckCategoryId == truckCategoryId) // Lọc theo TruckCategoryId
                 .Where(a =>
                     a.ScheduleBookingId == scheduleBookingId
-                    && (((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) || (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime))))
+                    && (((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
+                         (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime))))
                 .Select(a => a.UserId)
                 .Distinct()
                 .ToListAsync();

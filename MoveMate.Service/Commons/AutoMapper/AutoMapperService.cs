@@ -16,7 +16,8 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
             CreateMap<UpdateUserRequest, User>();
-
+            CreateMap<CustomerToRegister, User>()
+                .ForMember(dest => dest.Wallet, opt => opt.Ignore());
             // Mapping for AccountToken
             CreateMap<AccountTokenRequest, AccountToken>();
             CreateMap<AccountToken, AccountTokenRequest>();
@@ -87,7 +88,17 @@ namespace MoveMate.Service.Commons.AutoMapper
             //    .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
 
             //CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
+           
+            CreateMap<CreateScheduleWorkingRequest, ScheduleWorking>();
+           // CreateMap<UpdateScheduleWorkingRequest, ScheduleWorking>();
+            CreateMap<ScheduleWorking, ScheduleWorkingResponse>()
+                .ForMember(dest => dest.BookingStaffDailies, opt => opt.MapFrom(src => src.BookingStaffDailies));
+            CreateMap<BookingStaffDaily, BookingStaffDailyResponse>();
 
+            CreateMap<ScheduleBooking, ScheduleBookingResponse>()
+                .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Assignments));
+            
+            CreateMap<CreateScheduleBookingRequest, ScheduleBooking>();
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
             CreateMap<TruckCategory, TruckCateDetailResponse>();
