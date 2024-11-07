@@ -18,7 +18,7 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// CHORE: Driver update status booking details happy case 
+        /// FEATURE: Driver update status booking details happy case 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -46,7 +46,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Porter update status booking details happy case 
+        /// FEATURE: Porter update status booking details happy case 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>

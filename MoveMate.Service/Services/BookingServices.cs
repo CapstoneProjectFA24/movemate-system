@@ -1049,6 +1049,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var tracker = new BookingTracker();
+                        tracker.BookingId = booking.Id;
                         tracker.Type = TrackerEnums.DRIVER_ARRIVED.ToString();
                         tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1079,6 +1080,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var trackers = new BookingTracker();
+                        trackers.BookingId = booking.Id;
                         trackers.Type = TrackerEnums.DRIVER_COMPLETED.ToString();
                         trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1301,6 +1303,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var tracker = new BookingTracker();
+                        tracker.BookingId = booking.Id;
                         tracker.Type = TrackerEnums.PORTER_ARRIVED.ToString();
                         tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1331,6 +1334,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var trackers = new BookingTracker();
+                        trackers.BookingId = booking.Id;
                         trackers.Type = TrackerEnums.PORTER_ONGOING.ToString();
                         trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1356,15 +1360,67 @@ namespace MoveMate.Service.Services
                         }
 
                         var trackerDelis = new BookingTracker();
-                        trackerDelis.Type = TrackerEnums.PORTER_ONGOING.ToString();
+                        trackerDelis.BookingId = booking.Id;
+                        trackerDelis.Type = TrackerEnums.PORTER_DELIVERED.ToString();
                         trackerDelis.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
                         List<TrackerSource> resourceListDelis = _mapper.Map<List<TrackerSource>>(request.ResourceList);
                         trackerDelis.TrackerSources = resourceListDelis;
                         await _unitOfWork.BookingTrackerRepository.AddAsync(trackerDelis);
-                        nextStatus = AssignmentStatusEnums.ONGOING.ToString();
+                        nextStatus = AssignmentStatusEnums.DELIVERED.ToString();
                         break;
+                    case var status when status == AssignmentStatusEnums.DELIVERED.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackerUnloads =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackerUnloads == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
 
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+
+                        var trackerUnloads = new BookingTracker();
+                        trackerUnloads.BookingId = booking.Id;
+                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADED.ToString();
+                        trackerUnloads.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceListUnloads = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerUnloads.TrackerSources = resourceListUnloads;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUnloads);
+                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
+                        break;
+                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackerComs =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackerComs == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+
+                        var trackerComs = new BookingTracker();
+                        trackerComs.BookingId = booking.Id;
+                        trackerComs.Type = TrackerEnums.PORTER_COMPLETED.ToString();
+                        trackerComs.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceListComs = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerComs.TrackerSources = resourceListComs;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerComs);
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
+                        break;
                     default:
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
