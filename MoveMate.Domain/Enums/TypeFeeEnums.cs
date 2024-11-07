@@ -10,4 +10,5 @@ public enum TypeFeeEnums
     WEEKEND,
     HOLIDAY,
     OUTSIDE_BUSINESS_HOURS,
+    REVIEWER
 }
