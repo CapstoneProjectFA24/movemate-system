@@ -120,6 +120,7 @@ namespace MoveMate.Service.Commons
             public const string OnlyInscrease = "Service can only increase quantity";
             public const string CancelExpirePayment = "Expired - Automatically canceled by system";
             public const string CancelExpireBooking = "Is expired, Cancel by System";
+            public const string UpdateTimeNotAllowed = "It's not time yet";
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
             public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
@@ -128,6 +129,8 @@ namespace MoveMate.Service.Commons
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
             public const string AssignmentSuggeted = "The assignment status must be SUGGESTED";
+            public const string AssignmentWaiting = "The assignment status must be WAITING";
+            public const string AssignWrongReview = "Booking is not from this reviewer";
 
             //House type
             public const string NotFoundHouseType = "House type not found";
@@ -256,7 +259,8 @@ namespace MoveMate.Service.Commons
             public const string CreateUserInfo = "Create a new user info successful";
             public const string UserInfoUpdateSuccess = "Update user info succesful";
             public const string GetUserSuccess = "Get user done";
-            
+            public const string GetListUserEmpty = "List user is empty!";
+
 
             //Booking
             public const string GetListBookingEmpty = "List booking is empty!";

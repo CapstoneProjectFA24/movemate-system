@@ -18,8 +18,9 @@ namespace MoveMate.Repository.Repositories.Repository
         }
         public async Task<BookingTracker> GetBookingTrackerByBookingIdAsync(int bookingId)
         {
-            return await _dbSet
-                .Where(a => a.BookingId == bookingId)
+            IQueryable<BookingTracker> query = _dbSet;
+            return await query
+                            .Where(a => a.BookingId == bookingId)
                 .FirstOrDefaultAsync();
         }
     }

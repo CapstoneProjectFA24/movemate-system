@@ -989,8 +989,7 @@ namespace MoveMate.Service.Services
 
         //
         //Driver update status booking  detail
-        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int userId, int bookingId,
-            [FromBody] TrackerByReviewOfflineRequest request)
+        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int userId, int bookingId, TrackerSourceRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();
 
@@ -1010,6 +1009,17 @@ namespace MoveMate.Service.Services
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
+                }
+
+                DateTime currentTime = DateTime.Now;
+                if (booking.BookingAt.HasValue)
+                {
+                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
+                    if (currentTime < earliestUpdateTime)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                        return result;
+                    }
                 }
 
 
@@ -1629,13 +1639,6 @@ namespace MoveMate.Service.Services
                             booking.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
                         }
 
-                        var googleMapDto = await _googleMapsService.GetDistanceAndDuration(booking.PickupPoint, booking.DeliveryPoint);
-                        var estimatedDeliveryTime = (googleMapDto.Duration.Value / 1000)+ 0.5;
-                        if (booking.EstimatedDeliveryTime < estimatedDeliveryTime)
-                        {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.EstimatedNotEnough);
-                            return result;
-                        }
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
@@ -1646,9 +1649,6 @@ namespace MoveMate.Service.Services
                             MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
-                
-                // bibi
-                
 
                 assigment.Status = nextStatus;
                 booking.UpdatedAt = DateTime.Now;
@@ -2430,11 +2430,13 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<AssignmentResponse>> AssignedLeader(int assignmentId)
+        public async Task<OperationResult<AssignmentResponse>> AssignedLeader(int userId, int assignmentId)
         {
             var result = new OperationResult<AssignmentResponse>();
             try
             {
+                
+
                 var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
                 if (assignment == null)
                 {
@@ -2442,6 +2444,19 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                var reviewer = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndBookingId(RoleEnums.REVIEWER.ToString(), (int)assignment.BookingId);
+                if (reviewer.UserId != userId)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                    return result;
+                }
+
+                if (assignment.Status != AssignmentStatusEnums.WAITING.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentWaiting);
+                    return result;
+                }
+                //Assign lead
                 var checkLeader =
                     _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(assignment.StaffType,
                         (int)assignment.BookingId);
@@ -2452,7 +2467,16 @@ namespace MoveMate.Service.Services
                 }
 
                 assignment.IsResponsible = true;
-                _unitOfWork.AssignmentsRepository.Update(assignment);
+                assignment.Status = AssignmentStatusEnums.ASSIGNED.ToString();
+                //Change status Assignment for other ASSIGNED
+                var assigned = await _unitOfWork.AssignmentsRepository.GetByStaffTypeAsync(assignment.StaffType, (int)assignment.BookingId, assignmentId);
+                foreach (var assign in assigned)
+                {
+                    assign.Status = AssignmentStatusEnums.ASSIGNED.ToString();
+                }
+
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(assigned);
                 var saveResult = _unitOfWork.Save();
 
                 // Check save result and return response
