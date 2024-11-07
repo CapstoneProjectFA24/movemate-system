@@ -122,8 +122,9 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<Service?> GetTierZeroServiceByParentIdAsync(int parentServiceId)
         {
-            return await _dbSet
-                .Where(s => s.Id == parentServiceId && s.Tier == 0) 
+            IQueryable<Service> query = _dbSet;
+            return await query
+                           .Where(s => s.Id == parentServiceId && s.Tier == 0) 
                 .Include(s => s.InverseParentService) 
                 .Include(s => s.TruckCategory)        
                 .FirstOrDefaultAsync();
@@ -131,7 +132,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<Service> FindByParentTypeAndTruckCategoryAsync(int parentServiceId, string type, int truckCategoryId)
         {
-            return await _dbSet
+            IQueryable<Service> query = _dbSet;
+            return await query
                 .FirstOrDefaultAsync(s => s.ParentServiceId == parentServiceId
                                           && s.Type == type
                                           && s.TruckCategoryId == truckCategoryId);

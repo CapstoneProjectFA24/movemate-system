@@ -19,7 +19,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<Wallet> GetWalletByAccountIdAsync(int accountId)
         {
-            return await _dbSet
+            IQueryable<Wallet> query = _dbSet;
+            return await query
                 .Where(a => a.UserId == accountId)
                 .FirstOrDefaultAsync();
         }

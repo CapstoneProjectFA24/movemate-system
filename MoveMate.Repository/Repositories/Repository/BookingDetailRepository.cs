@@ -24,11 +24,13 @@ namespace MoveMate.Repository.Repositories.Repository
         //        .FirstOrDefaultAsync(b => b.BookingId == bookingId);
         //}
 
-        public async Task<BookingDetail?> GetAsyncByServiceIdAndBookingId(int serviceId,int bookingId)
+        public async Task<BookingDetail?> GetAsyncByServiceIdAndBookingId(int serviceId, int bookingId)
         {
-            return await _context.Set<BookingDetail>()
-                    .Include(b => b.ServiceId == serviceId && b.BookingId == bookingId)
-                    .FirstOrDefaultAsync(b => b.BookingId == bookingId);
+            IQueryable<BookingDetail> query = _dbSet;
+            return await query
+                .Where(b => b.ServiceId == serviceId && b.BookingId == bookingId)
+                .FirstOrDefaultAsync();
         }
+
     }
 }
