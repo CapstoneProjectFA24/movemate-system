@@ -26,7 +26,7 @@ namespace MoveMate.Domain.Enums;
     {
         WAITING,
         ASSIGNED,
-        ENROUTE,
+        INCOMING,
         ARRIVED,
         IN_PROGRESS,
         COMPLETED,

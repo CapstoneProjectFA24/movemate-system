@@ -54,10 +54,10 @@ namespace MoveMate.API.Controllers
         ///
         ///         POST /api/v1/bookings/register-booking
         ///         {
-        ///           "pickupAddress": "string",
-        ///           "pickupPoint": "string",
-        ///           "deliveryAddress": "string",
-        ///           "deliveryPoint": "string",
+        ///           "pickupAddress": "428/39-NHÀ-5 Đường Chiến Lược,Phường Bình Trị Đông A,Quận Bình Tân,Thành Phố Hồ Chí Minh",
+        ///           "pickupPoint": "10.764632,106.599717",
+        ///           "deliveryAddress": "KHU2 Tỉnh Lộ 932,Xã Phú Tâm,Huyện Châu Thành,Tỉnh Sóc Trăng",
+        ///           "deliveryPoint": "9.699092,105.963458",
         ///           "estimatedDistance": "3",
         ///           "houseTypeId": 1,
         ///           "note": "string",

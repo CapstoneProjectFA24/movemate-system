@@ -1029,10 +1029,10 @@ namespace MoveMate.Service.Services
                 {
                     case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
-                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                        nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString() &&
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         var bookingTracker =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
@@ -1142,10 +1142,10 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
-                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                        nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
                         nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
@@ -1215,7 +1215,7 @@ namespace MoveMate.Service.Services
                         nextStatus = AssignmentStatusEnums.FAILED.ToString();
                         assignment.FailedReason = failedReason;
                         break;
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
                         nextStatus = AssignmentStatusEnums.FAILED.ToString();
                         assignment.FailedReason = failedReason;
                         break;
@@ -1271,10 +1271,10 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
-                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                        nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
                         nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
@@ -1382,10 +1382,10 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
-                        nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                        nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
                         nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
 
@@ -1574,7 +1574,7 @@ namespace MoveMate.Service.Services
                         }
                         else if (booking.IsReviewOnline == false && booking.Status == BookingEnums.REVIEWING.ToString())
                         {
-                            nextStatus = AssignmentStatusEnums.ENROUTE.ToString();
+                            nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         }
                         else
                         {
@@ -1584,7 +1584,7 @@ namespace MoveMate.Service.Services
 
                         break;
 
-                    case var status when status == AssignmentStatusEnums.ENROUTE.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
                         nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
                     //case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
