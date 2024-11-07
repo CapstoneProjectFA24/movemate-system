@@ -25,10 +25,10 @@ public class AssignReviewWorker
 
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task HandleMessage(int message)
     {
-        //await Task.Delay(TimeSpan.FromSeconds(3));
+        await Task.Delay(TimeSpan.FromSeconds(1));
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
@@ -60,12 +60,7 @@ public class AssignReviewWorker
                 }
 
                 var startDate = booking!.BookingAt;
-                var isResponsible = false;
-                if (booking.IsReviewOnline == false)
-                {
-                    startDate = booking!.ReviewAt;
-                    isResponsible = true;
-                }
+                var isResponsible = true;
                 
                 var reviewer = new Assignment()
                 {
@@ -76,6 +71,9 @@ public class AssignReviewWorker
                     IsResponsible = isResponsible,
                     StartDate = startDate,
                 };
+
+                await unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(reviewer);
+                
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
 
                 if (scheduleBooking == null)
@@ -94,8 +92,10 @@ public class AssignReviewWorker
                 booking.Assignments.Add(reviewer);
 
                 booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
+                
+                
                 await unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
-
+                
                 unitOfWork.Save();
                 firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 redisService.EnqueueAsync(redisKey, reviewerId);

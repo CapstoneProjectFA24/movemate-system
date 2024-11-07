@@ -123,6 +123,8 @@ namespace MoveMate.Service.Commons
             public const string UpdateTimeNotAllowed = "It's not time yet";
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
+            public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
+
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";

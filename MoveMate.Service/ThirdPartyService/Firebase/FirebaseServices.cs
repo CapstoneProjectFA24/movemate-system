@@ -42,12 +42,14 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 };
 
                 _firebaseApp = FirebaseApp.Create(appOptions);
+              
             }
-
+            
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
             _dbFirestore = FirestoreDb.Create("movemate-firebase");
+
         }
 
 
@@ -133,11 +135,11 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
-                    //_producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
+                    _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
 
                 }
 
-                _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
+                //_producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
 
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);

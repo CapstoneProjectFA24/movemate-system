@@ -92,7 +92,6 @@ Auto-Assign Driver Workflow:
     [Consumer("movemate.booking_assign_driver")]
     public async Task HandleMessage(int message)
     {
-        
         // Implementation of driver assignment logic will go here.
         // The method should use the booking ID (message) to find the relevant booking,
         // check available drivers, and assign them as necessary.
