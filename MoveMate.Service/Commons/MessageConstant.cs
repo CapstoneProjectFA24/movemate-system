@@ -122,6 +122,8 @@ namespace MoveMate.Service.Commons
             public const string CancelExpireBooking = "Is expired, Cancel by System";
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
+            public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
+
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
