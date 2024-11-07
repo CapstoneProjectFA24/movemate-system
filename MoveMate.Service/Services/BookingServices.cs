@@ -178,8 +178,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                     return result;
                 }
-
-
+                
                 // setting var
                 var bookingDetails = new List<BookingDetail>();
                 var feeDetails = new List<FeeDetail>();
@@ -232,6 +231,13 @@ namespace MoveMate.Service.Services
                 entity.FeeDetails = feeDetails;
 
                 var deposit = total * 30 / 100;
+
+                if (entity.IsReviewOnline == false)
+                {
+                    var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
+                    deposit = feeReviewerOffline!.Amount!.Value;
+                }
+                
                 entity.Deposit = deposit;
                 entity.TotalFee = totalFee;
                 entity.TotalReal = total;
@@ -348,6 +354,13 @@ namespace MoveMate.Service.Services
             response.Total = total;
 
             var deposit = total * 30 / 100;
+            
+            if (request.IsReviewOnline == false)
+            {
+                var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
+                deposit = feeReviewerOffline!.Amount!.Value;
+            }
+            
             response.Deposit = deposit;
 
             response.BookingDetails = _mapper.Map<List<BookingDetailsResponse>>(bookingDetails);
@@ -864,7 +877,7 @@ namespace MoveMate.Service.Services
                     //_unitOfWork.BookingDetailRepository.GetAsyncByServiceIdAndBookingId(bookingDetailRequest.ServiceId, )
                     continue;
                 }
-
+                
                 // Check Service
                 var service =
                     await _unitOfWork.ServiceRepository.GetByIdAsyncV1(bookingDetailRequest.ServiceId, "FeeSettings");
@@ -881,8 +894,7 @@ namespace MoveMate.Service.Services
                 var quantity = bookingDetailRequest.Quantity;
                 var price = service.Amount * quantity - service.Amount * quantity * ((service.DiscountRate ?? 0) / 100);
 
-                if (service.Type == TypeServiceEnums.TRUCK.ToString() ||
-                    service.Type == TypeServiceEnums.PORTER.ToString())
+                if (service.FeeSettings.Count() > 0)
                 {
                     // Logic fee 
 
