@@ -66,6 +66,8 @@ public class BookingRegisterRequest
     [JsonIgnore] public bool? IsDeposited { get; set; } = false;
 
     [JsonIgnore] public bool? IsStaffReviewed { get; set; } = false;
+    
+    [Required(ErrorMessage = "Filed is required")]
     public bool? IsReviewOnline { get; set; } = true;
 
     public virtual ICollection<ResourceRequest> ResourceList { get; set; } = new List<ResourceRequest>();
