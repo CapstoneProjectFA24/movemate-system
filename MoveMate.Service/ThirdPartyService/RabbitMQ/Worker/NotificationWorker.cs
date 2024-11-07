@@ -30,62 +30,64 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
         }
 
         [Consumer("movemate.notification_update_booking")]
-        public async Task HandleMessage(int message)
+        public async Task HandleMessage(int bookingId)
         {
-
-            var booking = await _unitOfWork.BookingRepository.GetByIdAsync(message);
-            if (booking == null)
+            try
             {
-                throw new Exception($"Booking with Id {message} not found");
-            }
-
-
-            var notificationUser = await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)booking.UserId);
-            if (notificationUser == null)
-            {
-                throw new Exception($"Can't send notification to user with Id {booking.UserId}");
-            }
-
-            var assignments = await _unitOfWork.AssignmentsRepository.GetByBookingId(booking.Id);
-            if (assignments == null)
-            {
-                throw new Exception($"Not found assignment with booking Id {booking.UserId}");
-            }
-
-            // Define title, body, and data for the notification
-            var title = "Change Status Booking";
-            var body = $"Your booking with ID {notificationUser.Id} has been changed.";
-            var fcmToken = notificationUser.FcmToken;
-            var data = new Dictionary<string, string>
-        {
-            { "bookingId", booking.Id.ToString() },
-            { "status", booking.Status.ToString() },
-            { "message", "The booking has been change status successfully." }
-        };
-
-            // Send notification to Firebase
-            await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
-
-            foreach (var assignment in assignments)
-            {
-                // Retrieve the staff's notification token
-                var notificationStaff = await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignment.UserId);
-                if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                if (booking == null)
                 {
-                    var titleAssignment = "Change Status Booking";
-                    var bodyAssignment = $"Your assignment with ID {assignment.Id} has been changed.";
-                    var fcmTokenAssignment = notificationStaff.FcmToken;
-                    var dataAssignment = new Dictionary<string, string>
-            {
-                { "bookingId", booking.Id.ToString() },
-                { "status", booking.Status.ToString() },
-                { "message", "The booking has been changed successfully." }
-            };
+                    throw new Exception($"Booking with ID {bookingId} not found.");               
+                }
 
-                    // Send notification for each assignment to staff
-                    await _firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment, fcmTokenAssignment, dataAssignment);
+                var notificationUser = await _unitOfWork.NotificationRepository.GetByUserIdAsync(booking.UserId ?? 0);
+                if (notificationUser?.FcmToken == null)
+                {
+                    throw new Exception($"Notification token for user with ID {booking.UserId} not found.");
+                }
+
+                // Send notification to the booking user
+                await SendNotificationAsync(
+                    "Change Status Booking",
+                    $"Your booking with ID {booking.Id} has been updated.",
+                    notificationUser.FcmToken,
+                    booking.Id,
+                    booking.Status
+                );
+
+                // Notify each assignment related to the booking
+                var assignments = await _unitOfWork.AssignmentsRepository.GetByBookingId(booking.Id);
+                foreach (var assignment in assignments)
+                {
+                    var notificationStaff = await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignment.UserId);
+                    if (notificationStaff?.FcmToken != null)
+                    {
+                        await SendNotificationAsync(
+                            "Change Status Booking",
+                            $"Your assignment with ID {assignment.Id} has been updated.",
+                            notificationStaff.FcmToken,
+                            booking.Id,
+                            booking.Status
+                        );
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+               throw new Exception($"Error handling notification for booking ID {bookingId}: {ex.Message}", ex);
+            }
+        }
+
+        private async Task SendNotificationAsync(string title, string body, string fcmToken, int bookingId, string status)
+        {
+            var data = new Dictionary<string, string>
+            {
+                { "bookingId", bookingId.ToString() },
+                { "status", status.ToString() },
+                { "message", "The booking status has been updated successfully." }
+            };
+
+            await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
         }
     }
 }

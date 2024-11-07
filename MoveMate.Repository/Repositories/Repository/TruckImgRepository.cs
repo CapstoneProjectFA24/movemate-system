@@ -19,7 +19,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<IEnumerable<TruckImg>> GetByTruckIdAsync(int truckId)
         {
-            return await _context.Set<TruckImg>()
+            IQueryable<TruckImg> query = _dbSet;
+            return await query
                 .Where(img => img.TruckId == truckId)
                 .ToListAsync();
         }

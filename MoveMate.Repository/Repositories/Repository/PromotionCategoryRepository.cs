@@ -42,7 +42,9 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<int?> GetPromotionIdByServiceId(int serviceId)
         {
-            var promotion = await _context.PromotionCategories
+            IQueryable<PromotionCategory> query = _dbSet;
+
+            var promotion = await query
                 .Where(p => p.ServiceId == serviceId)
                 .Select(p => p.Id)
                 .FirstOrDefaultAsync();
@@ -52,8 +54,9 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<PromotionCategory>> GetPromotionByServiceIdAsync(int serviceId)
         {
-            return await _context.PromotionCategories
-                .Where(p => p.ServiceId == serviceId)
+            IQueryable<PromotionCategory> query = _dbSet;
+            return await query
+                           .Where(p => p.ServiceId == serviceId)
                 .ToListAsync();
         }
 

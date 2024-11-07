@@ -22,8 +22,9 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<Voucher>> GetAvailableVouchersByPromotionId(int promotionId)
         {
-            return await _context.Vouchers
-                .Where(v => v.PromotionCategoryId == promotionId && !v.UserId.HasValue)
+            IQueryable<Voucher> query = _dbSet;
+            return await query
+            .Where(v => v.PromotionCategoryId == promotionId && !v.UserId.HasValue)
                 .OrderByDescending(v => v.Price) 
                 .ToListAsync();
         }
@@ -33,7 +34,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<Voucher>> GetUserVouchersAsync(int userId)
         {
-            return await _context.Vouchers
+            IQueryable<Voucher> query = _dbSet;
+            return await query
                 .Include(v => v.PromotionCategory) // Include the PromotionCategory to access its properties
                 .Where(v => v.UserId == userId &&
                      v.IsActived == true &&
@@ -47,7 +49,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<Voucher>> GetUserVouchersByBookingIdAsync(int userId, int bookingId)
         {
-            return await _context.Vouchers
+            IQueryable<Voucher> query = _dbSet;
+            return await query
                 .Include(v => v.PromotionCategory) // Include the PromotionCategory to access its properties
                 .Where(v => v.UserId == userId &&
                      v.BookingId == bookingId &&
@@ -72,7 +75,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<bool> UserHasVoucherForPromotionAsync(int promotionId, int userId)
         {
-            return await _context.Vouchers
+            IQueryable<Voucher> query = _dbSet;
+            return await query
                 .AnyAsync(v => v.PromotionCategoryId == promotionId && v.UserId == userId);
         }
 

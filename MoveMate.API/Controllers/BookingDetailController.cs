@@ -23,7 +23,7 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("driver/update-status/{id}")]
-        public async Task<IActionResult> DriverUpdateStatusBooking(int id, [FromBody] TrackerByReviewOfflineRequest request)
+        public async Task<IActionResult> DriverUpdateStatusBooking(int id, [FromBody] TrackerSourceRequest request)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));

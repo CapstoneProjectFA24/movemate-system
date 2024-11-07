@@ -19,7 +19,8 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<UserInfo?> GetUserInfoByUserIdAndTypeAsync(int userId, string type)
         {
-            return await _dbSet
+            IQueryable<UserInfo> query = _dbSet;
+            return await query
                 .Include(ui => ui.User)
                 .FirstOrDefaultAsync(ui => ui.UserId == userId && ui.Type == type);
         }
