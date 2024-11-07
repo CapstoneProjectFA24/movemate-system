@@ -24,6 +24,8 @@ public class BookingValuationRequest
 
     [Required(ErrorMessage = "Filed is required")]
     public int TruckCategoryId { get; set; }
+    
+    public bool? IsReviewOnline { get; set; } = true;
 
     public string? FloorsNumber { get; set; }
 
