@@ -7,6 +7,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.ThirdPartyService.GoongMap;
+using MoveMate.Service.ThirdPartyService.GoongMap.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
@@ -176,65 +177,68 @@ Auto-Assign Driver Workflow:
                             scheduleBooking!.Id
                         );
                     }
-
-                    // nếu mà list countDriver < existingBooking.DriverNumber thì
-                    //  
-                    // 1H
-                    var assignedDriverAvailable1Hours =
-                        await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
-                            existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                            existingBooking.TruckNumber!.Value);
-
-                    // 2H
-                    var assignedDriverAvailable2Hours =
-                        await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
-                            existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                            existingBooking.TruckNumber!.Value, 2, 1);
-                    // OTHER
-                    var assignedDriverAvailableOther =
-                        await unitOfWork.AssignmentsRepository.GetAvailableWithOverlapAsync(
-                            existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                            existingBooking.TruckNumber!.Value, 2);
-
-                    var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count() +
-                                         assignedDriverAvailable2Hours.Count() + assignedDriverAvailableOther.Count();
-                    if (countRemaining > countDriverNumberBooking)
+                    else
                     {
-                        if (countDriver > 0)
+                        // nếu mà list countDriver < existingBooking.DriverNumber thì
+                        //  
+                        // 1H
+                        var assignedDriverAvailable1Hours =
+                            await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
+                                existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                                existingBooking.TruckNumber!.Value);
+
+                        // 2H
+                        var assignedDriverAvailable2Hours =
+                            await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
+                                existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                                existingBooking.TruckNumber!.Value, 2, 1);
+                        // OTHER
+                        var assignedDriverAvailableOther =
+                            await unitOfWork.AssignmentsRepository.GetAvailableWithOverlapAsync(
+                                existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                                existingBooking.TruckNumber!.Value, 2);
+
+                        var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count() +
+                                             assignedDriverAvailable2Hours.Count() +
+                                             assignedDriverAvailableOther.Count();
+                        if (countRemaining > countDriverNumberBooking)
                         {
-                            countRemaining -= (int)countDriver;
-                            await AssignDriversToBooking(
-                                message,
-                                redisKey,
+                            if (countDriver > 0)
+                            {
+                                countRemaining -= (int)countDriver;
+                                await AssignDriversToBooking(
+                                    message,
+                                    redisKey,
+                                    existingBooking.BookingAt!.Value,
+                                    existingBooking.DriverNumber.Value,
+                                    existingBooking.EstimatedDeliveryTime ?? 3,
+                                    listAssignments,
+                                    redisService,
+                                    unitOfWork,
+                                    scheduleBooking!.Id
+                                );
+                            }
+
+                            var googleMapsService = scope.ServiceProvider.GetRequiredService<IGoogleMapsService>();
+                            var booking = unitOfWork.BookingRepository.GetByIdAsync(existingBooking.Id);
+                            // xử lý
+                            await AllocateDriversToBookingAsync(
+                                existingBooking,
                                 existingBooking.BookingAt!.Value,
-                                existingBooking.DriverNumber.Value,
+                                countRemaining,
                                 existingBooking.EstimatedDeliveryTime ?? 3,
                                 listAssignments,
-                                redisService,
+                                assignedDriverAvailable1Hours,
+                                assignedDriverAvailable2Hours,
+                                assignedDriverAvailableOther,
                                 unitOfWork,
-                                scheduleBooking!.Id
+                                scheduleBooking!.Id,
+                                googleMapsService
                             );
                         }
 
-                        var googleMapsService = scope.ServiceProvider.GetRequiredService<IGoogleMapsService>();
-                        var booking = unitOfWork.BookingRepository.GetByIdAsync(existingBooking.Id);
-                        // xử lý
-                        await AllocateDriversToBookingAsync(
-                            existingBooking,
-                            existingBooking.BookingAt!.Value,
-                            countRemaining,
-                            existingBooking.EstimatedDeliveryTime ?? 3,
-                            listAssignments,
-                            assignedDriverAvailable1Hours,
-                            assignedDriverAvailable2Hours,
-                            assignedDriverAvailableOther,
-                            unitOfWork,
-                            scheduleBooking!.Id,
-                            googleMapsService
-                        );
+                        //đánh tag faild cần reviewer can thiệp
                     }
-
-                    //đánh tag faild cần reviewer can thiệp
                 }
             }
         }
@@ -322,9 +326,20 @@ Auto-Assign Driver Workflow:
         foreach (var assignment in listDriverAvailable1Hours)
         {
             var rate = 2;
-            var googleMapDto =
-                await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
-                    booking.PickupPoint!);
+            GoogleMapDTO? googleMapDto = null;
+            if (assignment.StartDate >= booking.BookingAt!.Value)
+            {
+                googleMapDto =
+                    await googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
+                        booking.PickupPoint!);
+            }
+            else
+            {
+                googleMapDto =
+                    await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                        booking.PickupPoint!);
+            }
+
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
@@ -336,9 +351,19 @@ Auto-Assign Driver Workflow:
         foreach (var assignment in listDriverAvailable2Hours)
         {
             var rate = 1.5;
-            var googleMapDto =
-                await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
-                    booking.PickupPoint!);
+            GoogleMapDTO? googleMapDto = null;
+            if (assignment.StartDate >= booking.BookingAt!.Value)
+            {
+                googleMapDto =
+                    await googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
+                        booking.PickupPoint!);
+            }
+            else
+            {
+                googleMapDto =
+                    await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                        booking.PickupPoint!);
+            }
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
@@ -350,9 +375,19 @@ Auto-Assign Driver Workflow:
         foreach (var assignment in listDriverAvailableOthers)
         {
             var rate = 1;
-            var googleMapDto =
-                await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
-                    booking.PickupPoint!);
+            GoogleMapDTO? googleMapDto = null;
+            if (assignment.StartDate >= booking.BookingAt!.Value)
+            {
+                googleMapDto =
+                    await googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
+                        booking.PickupPoint!);
+            }
+            else
+            {
+                googleMapDto =
+                    await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                        booking.PickupPoint!);
+            }
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
@@ -381,7 +416,7 @@ Auto-Assign Driver Workflow:
                 EndDate = endTime,
                 IsResponsible = false,
                 ScheduleBookingId = scheduleBookingId,
-                TruckId = assignment.TruckId
+                TruckId = assignment.TruckId,
             });
         }
 

@@ -89,8 +89,8 @@ namespace MoveMate.API.Controllers
         /// <remarks>
         /// This endpoint allows a reviewer to progress through the booking review process based on current assignment and booking statuses. The status transitions vary based on the existing state:
         /// - If the current assignment status is "ASSIGNED" and the booking is online, the booking status changes to "REVIEWING"; 
-        ///     if offline, the assignment status advances to "ENROUTE."
-        /// - If the assignment is "ENROUTE," it progresses to "ARRIVED."
+        ///     if offline, the assignment status advances to "INCOMING."
+        /// - If the assignment is "INCOMING," it progresses to "ARRIVED."
         /// - If the assignment is "SUGGESTED" and the booking is in "REVIEWING" status, a new tracker is created for offline resources, 
         ///     updating the assignment to "REVIEWED" and the booking to "REVIEWED". EstimatedDeliveryTime must be update right here if it wasn't 
         ///     updated before
