@@ -51,9 +51,12 @@ namespace MoveMate.API.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpPut("porter/update-status/{id}")]
-        public async Task<IActionResult> PorterUpdateStatusBooking(int id, [FromBody] ResourceRequest request)
+        public async Task<IActionResult> PorterUpdateStatusBooking(int id, [FromBody] TrackerSourceRequest request)
         {
-            var response = await _bookingServices.PorterUpdateStatusBooking(id, request);
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _bookingServices.PorterUpdateStatusBooking(userId, id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 

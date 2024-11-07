@@ -37,7 +37,7 @@ namespace MoveMate.Domain.Enums;
         CANCELLED,
         REFUNDED,
         REVIEWED,
-        IN_TRANSIT,
+        ONGOING,
         DELIVERED,
         UNLOAD
     }
