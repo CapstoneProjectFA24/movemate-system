@@ -120,6 +120,7 @@ namespace MoveMate.Service.Commons
             public const string OnlyInscrease = "Service can only increase quantity";
             public const string CancelExpirePayment = "Expired - Automatically canceled by system";
             public const string CancelExpireBooking = "Is expired, Cancel by System";
+            public const string UpdateTimeNotAllowed = "It's not time yet";
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
 

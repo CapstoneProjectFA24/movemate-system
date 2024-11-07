@@ -986,7 +986,7 @@ namespace MoveMate.Service.Services
 
         //
         //Driver update status booking  detail
-        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int userId, int bookingId, [FromBody] TrackerByReviewOfflineRequest request)
+        public async Task<OperationResult<AssignmentResponse>> DriverUpdateStatusBooking(int userId, int bookingId, TrackerSourceRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();
 
@@ -1004,6 +1004,17 @@ namespace MoveMate.Service.Services
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
+                }
+
+                DateTime currentTime = DateTime.Now;
+                if (booking.BookingAt.HasValue)
+                {
+                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
+                    if (currentTime < earliestUpdateTime)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                        return result;
+                    }
                 }
 
 
