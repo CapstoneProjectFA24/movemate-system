@@ -1043,6 +1043,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var tracker = new BookingTracker();
+                        tracker.BookingId = booking.Id;
                         tracker.Type = TrackerEnums.DRIVER_ARRIVED.ToString();
                         tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1072,6 +1073,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var trackers = new BookingTracker();
+                        trackers.BookingId = booking.Id;
                         trackers.Type = TrackerEnums.DRIVER_COMPLETED.ToString();
                         trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
