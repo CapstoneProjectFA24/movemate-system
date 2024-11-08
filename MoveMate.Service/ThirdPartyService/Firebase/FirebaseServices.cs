@@ -17,6 +17,7 @@ using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System.ComponentModel.DataAnnotations;
 using FirebaseAdmin.Messaging;
+using MoveMate.Repository.Repositories.UnitOfWork;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -26,6 +27,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly FirestoreDb _dbFirestore;
         private readonly IMapper _mapper;
         private readonly IMessageProducer _producer;
+
 
 
         public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer)
@@ -42,14 +44,13 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 };
 
                 _firebaseApp = FirebaseApp.Create(appOptions);
-              
+
             }
-            
+
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
             _dbFirestore = FirestoreDb.Create("movemate-firebase");
-
         }
 
 
@@ -128,8 +129,11 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
         {
+          
             try
             {
+               
+
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
