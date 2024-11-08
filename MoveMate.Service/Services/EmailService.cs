@@ -26,7 +26,7 @@ namespace MoveMate.Service.Services
             using (var client = new SmtpClient())
             {
                 client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls); // Use TLS for security
-                client.Authenticate("movemate202@gmail.com", "Ps@12345"); // Gmail email and app password
+                client.Authenticate("movemate202@gmail.com", "ievp xmil kxhv tqtr"); // Gmail email and app password
                 await client.SendAsync(message); // Send the email
                 client.Disconnect(true); // Disconnect from the SMTP server
             }
