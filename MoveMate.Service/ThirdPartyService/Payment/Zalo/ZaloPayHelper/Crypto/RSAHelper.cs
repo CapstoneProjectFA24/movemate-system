@@ -9,31 +9,31 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Zalo.ZaloPayHelper.Crypto
 {
     public class RSAHelper
     {
-        public static string Encrypt(string data, string publicKey)
-        {
-            byte[] publicKeyBytes = Convert.FromBase64String(publicKey);
-            AsymmetricKeyParameter asymmetricKeyParameter = PublicKeyFactory.CreateKey(publicKeyBytes);
-            RsaKeyParameters rsaKeyParameters = (RsaKeyParameters)asymmetricKeyParameter;
+        //public static string Encrypt(string data, string publicKey)
+        //{
+        //    byte[] publicKeyBytes = Convert.FromBase64String(publicKey);
+        //    AsymmetricKeyParameter asymmetricKeyParameter = PublicKeyFactory.CreateKey(publicKeyBytes);
+        //    RsaKeyParameters rsaKeyParameters = (RsaKeyParameters)asymmetricKeyParameter;
 
-            RSAParameters rsaParameters = new RSAParameters
-            {
-                Modulus = rsaKeyParameters.Modulus.ToByteArrayUnsigned(),
-                Exponent = rsaKeyParameters.Exponent.ToByteArrayUnsigned()
-            };
+        //    RSAParameters rsaParameters = new RSAParameters
+        //    {
+        //        Modulus = rsaKeyParameters.Modulus.ToByteArrayUnsigned(),
+        //        Exponent = rsaKeyParameters.Exponent.ToByteArrayUnsigned()
+        //    };
 
-            //You can then easily import the key parameters into RSACryptoServiceProvider:
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-            rsa.ImportParameters(rsaParameters);
+        //    //You can then easily import the key parameters into RSACryptoServiceProvider:
+        //    RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+        //    rsa.ImportParameters(rsaParameters);
 
-            //Finally, do your encryption:
-            byte[] dataToEncrypt = Encoding.UTF8.GetBytes(data);
-            // Sign data with Pkcs1
-            byte[] encryptedData = rsa.Encrypt(dataToEncrypt, false);
-            // Convert Bytes to Hash
-            var hash = Convert.ToBase64String(encryptedData);
+        //    //Finally, do your encryption:
+        //    byte[] dataToEncrypt = Encoding.UTF8.GetBytes(data);
+        //    // Sign data with Pkcs1
+        //    byte[] encryptedData = rsa.Encrypt(dataToEncrypt, false);
+        //    // Convert Bytes to Hash
+        //    var hash = Convert.ToBase64String(encryptedData);
 
-            return hash;
-        }
+        //    return hash;
+        //}
 
         public static string EncryptV1(string data, string publicKey)
         {
