@@ -42,9 +42,10 @@ namespace MoveMate.Service.Services
         private readonly IMessageProducer _producer;
         private readonly IFirebaseServices _firebaseServices;
         private readonly IGoogleMapsService _googleMapsService;
+        private readonly IEmailService _emailService;
         
         public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger,
-            IMessageProducer producer, IFirebaseServices firebaseServices, IGoogleMapsService googleMapsService)
+            IMessageProducer producer, IFirebaseServices firebaseServices, IGoogleMapsService googleMapsService, IEmailService emailService)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -52,6 +53,7 @@ namespace MoveMate.Service.Services
             _producer = producer;
             _firebaseServices = firebaseServices;
             _googleMapsService = googleMapsService;
+            _emailService = emailService;
         }
 
         // FEATURE    
@@ -278,6 +280,9 @@ namespace MoveMate.Service.Services
 
                     _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    int userid = int.Parse(userId);
+                    var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
+                    await _emailService.SendBookingConfirmationEmailAsync(user.Email, response);
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
                 }
