@@ -27,10 +27,10 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly FirestoreDb _dbFirestore;
         private readonly IMapper _mapper;
         private readonly IMessageProducer _producer;
-        private readonly UnitOfWork _unitOfWork;
 
 
-        public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer, IUnitOfWork unitOfWork)
+
+        public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer)
         {
             _mapper = mapper;
             _producer = producer;
@@ -51,7 +51,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
             _dbFirestore = FirestoreDb.Create("movemate-firebase");
-            _unitOfWork = (UnitOfWork)unitOfWork;
         }
 
 
@@ -130,16 +129,12 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
         {
-            if (saveObj.Status != BookingEnums.PENDING.ToString() && saveObj.Status != BookingEnums.ASSIGNED.ToString())
-            {
-                Console.WriteLine(saveObj.Id);
-            }
-
+          
             try
             {
-                var existBooking = _unitOfWork.BookingRepository.GetByIdAsync(saveObj.Id, includeProperties: "Assignments");
+               
 
-                var save = _mapper.Map<BookingResponse>(existBooking);
+                var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
