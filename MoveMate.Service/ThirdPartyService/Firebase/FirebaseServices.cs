@@ -17,6 +17,7 @@ using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System.ComponentModel.DataAnnotations;
 using FirebaseAdmin.Messaging;
+using MoveMate.Repository.Repositories.UnitOfWork;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -26,9 +27,10 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly FirestoreDb _dbFirestore;
         private readonly IMapper _mapper;
         private readonly IMessageProducer _producer;
+        private readonly UnitOfWork _unitOfWork;
 
 
-        public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer)
+        public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer, IUnitOfWork unitOfWork)
         {
             _mapper = mapper;
             _producer = producer;
@@ -42,14 +44,14 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 };
 
                 _firebaseApp = FirebaseApp.Create(appOptions);
-              
+
             }
-            
+
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
 
             _dbFirestore = FirestoreDb.Create("movemate-firebase");
-
+            _unitOfWork = (UnitOfWork)unitOfWork;
         }
 
 
@@ -128,9 +130,16 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
         {
+            if (saveObj.Status != BookingEnums.PENDING.ToString() && saveObj.Status != BookingEnums.ASSIGNED.ToString())
+            {
+                Console.WriteLine(saveObj.Id);
+            }
+
             try
             {
-                var save = _mapper.Map<BookingResponse>(saveObj);
+                var existBooking = _unitOfWork.BookingRepository.GetByIdAsync(saveObj.Id, includeProperties: "Assignments");
+
+                var save = _mapper.Map<BookingResponse>(existBooking);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
