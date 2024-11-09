@@ -72,7 +72,7 @@ namespace MoveMate.Service.Services
                 {
                     if (wallet.Balance < booking.Deposit)
                     {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BalanceNotEnough);
+                        result.AddError(StatusCode.BadRequest, $"{returnUrl}?isSuccess=false&message={MessageConstant.FailMessage.BalanceNotEnough}");
                         return result;
                     } else
                     {
@@ -83,7 +83,7 @@ namespace MoveMate.Service.Services
                 {
                     if (wallet.Balance < booking.TotalReal)
                     {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BalanceNotEnough);
+                        result.AddError(StatusCode.BadRequest, $"{returnUrl}?isSuccess=false&message={MessageConstant.FailMessage.BalanceNotEnough}");
                         return result;
                     }
                     else
@@ -207,7 +207,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, $"{returnUrl}?isSuccess=false");
+                result.AddError(StatusCode.ServerError, $"{returnUrl}?isSuccess=false&message={MessageConstant.FailMessage.BalanceNotEnough}");
                 return result;
             }
             return result;
