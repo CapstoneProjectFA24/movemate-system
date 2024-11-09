@@ -215,6 +215,7 @@ namespace MoveMate.Service.Commons
             public const string VerifyReviewOffline= "Must have image or video to verify from SUGGESTED to REVIEWED";
             public const string NotFoundTrackerSource = "Tracker source not found";
             public const string TrackerSourceIsDeleted = "Tracker source has been deleted";
+            public const string TrackerSourceFail = "Can not create tracker source";
 
             //Assignment
             public const string AssignmentUpdateFail = "Update assignment failed";
@@ -351,6 +352,7 @@ namespace MoveMate.Service.Commons
 
             //Tracker Source
             public const string DeleteTrackerSource = "Tracker source has been deleted";
+            public const string AddTrackerSuccess = "Add tracker successful";
 
             //HouseType
             public const string HouseTypeUpdateSuccess = "Update house type succesful";

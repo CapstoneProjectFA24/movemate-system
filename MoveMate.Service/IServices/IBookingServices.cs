@@ -26,7 +26,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<AssignmentResponse>> ReviewerUpdateStatusBooking(int userId, int bookingId,TrackerByReviewOfflineRequest request);
         Task<OperationResult<AssignmentResponse>> ReviewerCancelBooking(int bookingId);
         Task<OperationResult<AssignmentResponse>> ReviewerCompletedBooking(int bookingId);
-        Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int bookingId, ResourceRequest request);
+        Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int userId, int bookingId, TrackerSourceRequest request);
         Task<OperationResult<AssignmentResponse>> PorterRoundTripBooking(int bookingId, ResourceRequest request);
         Task<OperationResult<BookingResponse>> UserConfirmRoundTrip(int bookingId);
 
