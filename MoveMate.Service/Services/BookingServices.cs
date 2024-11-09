@@ -2096,7 +2096,7 @@ namespace MoveMate.Service.Services
                 }
 
                 // Retrieve the existing booking by ID
-                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
 
                 if (existingBooking == null)
                 {

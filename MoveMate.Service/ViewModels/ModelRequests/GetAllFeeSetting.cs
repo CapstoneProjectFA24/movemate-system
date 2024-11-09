@@ -17,6 +17,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Search { get; set; }
         public string? Name { get; set; }
         public string? Type { get; set; }
+        public int? ServiceId { get; set; }
 
 
         public override Expression<Func<FeeSetting, bool>> GetExpressions()
@@ -35,6 +36,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             if (!string.IsNullOrWhiteSpace(Name))
             {
                 queryExpression = queryExpression.And(u => u.Name != null && u.Name == Name);
+            }
+
+            if (ServiceId.HasValue)
+            {
+                queryExpression = queryExpression.And(u => u.ServiceId == ServiceId.Value);
             }
 
             // Type filtering
