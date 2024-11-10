@@ -266,7 +266,6 @@ namespace MoveMate.Service.Services
 
                 if (checkResult > 0)
                 {
-                    await _unitOfWork.SaveChangesAsync(); // Save the voucher updates
                     BackgroundJob.Schedule(() => CheckAndCancelBooking(entity.Id), entity.BookingAt ?? DateTime.Now);
                     var response = _mapper.Map<BookingResponse>(entity);
                     foreach (var bookingDetail in response.BookingDetails)
