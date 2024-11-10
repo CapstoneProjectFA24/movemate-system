@@ -95,6 +95,7 @@ namespace MoveMate.Service.Commons
             public const string UserInfoUpdateFail = "Update user info failed";
             public const string UserNotDriver = "User is not a driver";
             public const string UserHaveTruck = "The user has already registered a truck";
+            public const string NotManager = "You do not have permission to perform this operation";
 
             //Booking
             public const string NotFoundBooking = "Booking not found";
@@ -127,11 +128,13 @@ namespace MoveMate.Service.Commons
             public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
 
 
+
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
             public const string AssignmentSuggeted = "The assignment status must be SUGGESTED";
             public const string AssignmentWaiting = "The assignment status must be WAITING";
             public const string AssignWrongReview = "Booking is not from this reviewer";
+            public const string CanNotFix = "Booking detail is completely fine";
 
             //House type
             public const string NotFoundHouseType = "House type not found";

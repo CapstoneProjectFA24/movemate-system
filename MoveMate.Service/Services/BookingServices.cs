@@ -1086,6 +1086,11 @@ namespace MoveMate.Service.Services
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
                         }
+                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
+                            return result;
+                        }
 
                         var trackers = new BookingTracker();
                         trackers.BookingId = booking.Id;
@@ -2728,12 +2733,30 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                var checkLeader =  _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.PORTER.ToString(), (int)bookingDetail.BookingId);
+                var checkLeader = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.PORTER.ToString(), (int)bookingDetail.BookingId);
                 if (checkLeader == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignedLeader);
                     return result;
                 }
+
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+
+
+
+                if (booking.Status != BookingEnums.IN_PROGRESS.ToString() && (checkLeader.Status != AssignmentStatusEnums.IN_PROGRESS.ToString() 
+                    || checkLeader.Status != AssignmentStatusEnums.ONGOING.ToString() 
+                    || checkLeader.Status != AssignmentStatusEnums.DELIVERED.ToString() 
+                    || checkLeader.Status != AssignmentStatusEnums.UNLOAD.ToString()))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                    return result;
+                } 
 
                 bookingDetail.Status = request.Status;
                 bookingDetail.FailReason = request.FailReason;
@@ -2763,5 +2786,138 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<BookingDetailsResponse>> ManagerFix(int bookingDetailId, int userId)
+        {
+            var result = new OperationResult<BookingDetailsResponse>();
+            try
+            {
+                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingDetailId);
+                if (bookingDetail == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    return result;
+                }
+
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+                if (user.RoleId != 6 || user.RoleId != 1)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotManager);
+                    return result;
+                }
+                if ( bookingDetail.Status != BookingDetailStatusEnums.WAITING.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotFix);
+                    return result;
+                }
+
+                bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
+                await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
+                    var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<BookingResponse>> TrackerReport(int userId, int bookingId, TrackerSourceRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                // Retrieve the booking with related properties
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+
+                var checkLeader = await _unitOfWork.AssignmentsRepository.GetByUserIdAndIsResponsible(userId, bookingId);
+                if (checkLeader == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignedLeader);
+                    return result;
+                }
+
+                if (booking.Status != BookingEnums.IN_PROGRESS.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                    return result;
+                }
+
+                // Check if the leader's status allows updates
+                if (booking.Status != BookingEnums.IN_PROGRESS.ToString() &&
+                    (checkLeader.Status != AssignmentStatusEnums.IN_PROGRESS.ToString()
+                    || checkLeader.Status != AssignmentStatusEnums.ONGOING.ToString()
+                    || checkLeader.Status != AssignmentStatusEnums.DELIVERED.ToString()
+                    || checkLeader.Status != AssignmentStatusEnums.UNLOAD.ToString()))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                    return result;
+                }
+
+                // Create a new booking tracker
+                var tracker = new BookingTracker
+                {
+                    BookingId = booking.Id,
+                    Type = TrackerEnums.REPORT.ToString(),
+                    Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss"),
+                    TrackerSources = _mapper.Map<List<TrackerSource>>(request.ResourceList)
+                };
+
+
+
+                await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                var saveResult = _unitOfWork.Save();
+
+                if (saveResult > 0)
+                {
+                    booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)booking.Id,
+                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+
+                    var response = _mapper.Map<BookingResponse>(booking);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess, response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+
+            return result;
+        }
+
     }
 }
