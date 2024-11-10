@@ -1340,11 +1340,6 @@ namespace MoveMate.Service.Services
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
                         }
-                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
-                        {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
-                            return result;
-                        }
 
                         var trackers = new BookingTracker();
                         trackers.BookingId = booking.Id;
@@ -1371,11 +1366,6 @@ namespace MoveMate.Service.Services
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
                         }
-                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
-                        {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
-                            return result;
-                        }
 
                         var trackerDelis = new BookingTracker();
                         trackerDelis.BookingId = booking.Id;
@@ -1400,11 +1390,6 @@ namespace MoveMate.Service.Services
                         if (request.ResourceList.Count() <= 0)
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
-                            return result;
-                        }
-                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
-                        {
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
                             return result;
                         }
 
