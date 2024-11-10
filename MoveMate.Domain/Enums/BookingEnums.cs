@@ -42,3 +42,10 @@ namespace MoveMate.Domain.Enums;
         UNLOAD
     }
 
+public enum BookingDetailStatusEnums
+{
+    AVAILABLE,
+    WAITING,
+    COMPLETED
+}
+

@@ -138,5 +138,21 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.ReviewerCancelBooking(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// CHORE: Staff report fail booking details
+        /// </summary>
+        /// <param name="id">Booking Details Id</param>
+        /// <returns></returns>
+        [HttpPut("report/{id}")]
+        public async Task<IActionResult> StaffReportBookingDetail(int id, FailReportRequest request )
+        {
+
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _bookingServices.StaffReportFail(id, userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

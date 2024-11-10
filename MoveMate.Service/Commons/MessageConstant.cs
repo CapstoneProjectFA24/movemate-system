@@ -121,6 +121,7 @@ namespace MoveMate.Service.Commons
             public const string CancelExpirePayment = "Expired - Automatically canceled by system";
             public const string CancelExpireBooking = "Is expired, Cancel by System";
             public const string UpdateTimeNotAllowed = "It's not time yet";
+            public const string SomethingWrong = "An error has occurred, please wait patiently for the manager to handle it";
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
             public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
@@ -273,6 +274,7 @@ namespace MoveMate.Service.Commons
             public const string UpdateStatusSuccess = "Status updated successfully";
             public const string UserConfirm = "Confirm round trip successfully";
             public const string BookingUpdateSuccess = "Update booking succesful";
+            public const string BookingDetailUpdateSuccess = "Update booking detail succesful";
 
             //FeeSetting
             public const string GetListFeeSettingEmpty = "List fee setting is empty!";

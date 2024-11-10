@@ -31,6 +31,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.ThirdPartyService.GoongMap;
+using Sprache;
 
 namespace MoveMate.Service.Services
 {
@@ -965,6 +966,7 @@ namespace MoveMate.Service.Services
                         Quantity = quantity,
                         Price = amount,
                         Name = service.Name,
+                        Status = BookingDetailStatusEnums.AVAILABLE.ToString(),
                         Description = service.Description,
                         Type = service.Type
                     };
@@ -979,6 +981,7 @@ namespace MoveMate.Service.Services
                         Quantity = quantity,
                         Price = price,
                         Name = service.Name,
+                        Status = BookingDetailStatusEnums.AVAILABLE.ToString(),
                         Description = service.Description,
                         Type = service.Type
                     };
@@ -1000,7 +1003,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "BookingDetails");
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
@@ -1254,7 +1257,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "BookingDetails");
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
@@ -1337,6 +1340,11 @@ namespace MoveMate.Service.Services
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
                         }
+                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
+                            return result;
+                        }
 
                         var trackers = new BookingTracker();
                         trackers.BookingId = booking.Id;
@@ -1361,6 +1369,11 @@ namespace MoveMate.Service.Services
                         if (request.ResourceList.Count() <= 0)
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
                             return result;
                         }
 
@@ -1389,6 +1402,11 @@ namespace MoveMate.Service.Services
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
                         }
+                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
+                            return result;
+                        }
 
                         var trackerUnloads = new BookingTracker();
                         trackerUnloads.BookingId = booking.Id;
@@ -1413,6 +1431,11 @@ namespace MoveMate.Service.Services
                         if (request.ResourceList.Count() <= 0)
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+                        if (booking.BookingDetails.Any(bd => bd.Status != BookingDetailStatusEnums.AVAILABLE.ToString()))
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SomethingWrong);
                             return result;
                         }
 
@@ -2692,6 +2715,54 @@ namespace MoveMate.Service.Services
                     var response = _mapper.Map<BookingResponse>(existingBooking);
                     _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<BookingDetailsResponse>> StaffReportFail(int bookingDetailId, int userId, FailReportRequest request)
+        {
+            var result = new OperationResult<BookingDetailsResponse>();
+            try
+            {
+                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingDetailId);
+                if (bookingDetail == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    return result;
+                }
+
+                var checkLeader =  _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.PORTER.ToString(), (int)bookingDetail.BookingId);
+                if (checkLeader == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignedLeader);
+                    return result;
+                }
+
+                bookingDetail.Status = request.Status;
+                bookingDetail.FailReason = request.FailReason;
+
+                await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
+                var saveResult = _unitOfWork.Save();
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
+                    var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
+                   
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
                         response);
                 }
                 else
