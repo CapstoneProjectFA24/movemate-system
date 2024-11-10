@@ -282,7 +282,11 @@ namespace MoveMate.Service.Services
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     int userid = int.Parse(userId);
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
-                    await _emailService.SendBookingConfirmationEmailAsync(user.Email, response);
+                    // Sending a booking confirmation email
+                    // Inside RegisterBooking method, after the booking is successfully created:
+                    await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+
+
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
                 }

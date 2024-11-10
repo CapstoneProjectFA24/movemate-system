@@ -9,7 +9,9 @@ namespace MoveMate.Service.IServices
 {
     public interface IEmailService
     {
-        Task SendBookingConfirmationEmailAsync(string toEmail, BookingResponse bookingResponse);
+        Task SendBookingCancellationEmailAsync(string toEmail, BookingResponse bookingResponse);
+        Task SendBookingSuccessfulEmailAsync(string toEmail, BookingResponse bookingResponse);
+        Task SendEmailAsync(string toEmail, string subject, string templateFileName, Dictionary<string, string> placeholders);
     }
 
 }

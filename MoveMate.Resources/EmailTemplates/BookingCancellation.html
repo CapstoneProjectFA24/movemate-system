@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Cancellation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            background-color: #ff6b6b;
+            padding: 10px;
+            color: #ffffff;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .content p {
+            line-height: 1.6;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Booking Cancellation Notice</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{UserName}},</p>
+            <p>We regret to inform you that your booking with ID <strong>{{BookingId}}</strong> has been cancelled.</p>
+            <p>If you have any questions or need further assistance, please feel free to contact us.</p>
+            <p>Thank you for choosing our service. We look forward to serving you in the future.</p>
+            <p>Best regards,</p>
+            <p>The MoveMate Team</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 MoveMate. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

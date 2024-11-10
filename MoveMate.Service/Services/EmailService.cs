@@ -1,35 +1,143 @@
-﻿using MailKit.Net.Smtp;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using MailKit.Net.Smtp;
 using MimeKit;
 using MailKit.Security;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelResponses;
-using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
+using MoveMate.Repository.Repositories.UnitOfWork;
+using MoveMate.Service.Commons;
+using System.Globalization;
 
 namespace MoveMate.Service.Services
 {
     public class EmailService : IEmailService
     {
-        public async Task SendBookingConfirmationEmailAsync(string toEmail, BookingResponse bookingResponse)
+        private readonly UnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+        private readonly ILogger<EmailService> _logger;
+
+        public EmailService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<EmailService> logger)
         {
-            // Email subject and body content
-            var subject = "Booking Confirmation";
-            var messageBody = $"Hello, your booking with ID {bookingResponse.Id} has been confirmed!";
+            _unitOfWork = (UnitOfWork)unitOfWork;
+            _mapper = mapper;
+            _logger = logger;
+        }
 
-            // Create a new MimeMessage object
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("FromName", "movemate202@gmail.com")); // Your email address
-            message.To.Add(new MailboxAddress("", toEmail)); // Recipient's email address
-            message.Subject = subject; // Email subject
-            message.Body = new TextPart("plain") { Text = messageBody }; // Body content
-
-            // Connect to Gmail SMTP server and send the email
-            using (var client = new SmtpClient())
+        // Method to load an embedded resource (email template)
+        private async Task<string> LoadEmbeddedResourceAsync(string resourceName)
+        {
+            try
             {
-                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls); // Use TLS for security
-                client.Authenticate("movemate202@gmail.com", "ievp xmil kxhv tqtr"); // Gmail email and app password
-                await client.SendAsync(message); // Send the email
-                client.Disconnect(true); // Disconnect from the SMTP server
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourcePath = $"MoveMate.Service.Resources.EmailTemplates.{resourceName}";
+
+
+                // Check if the resource exists
+                using (Stream stream = assembly.GetManifestResourceStream(resourcePath))
+                {
+                    if (stream == null)
+                    {
+                        throw new FileNotFoundException("Email template file not found.");
+                    }
+
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        return await reader.ReadToEndAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error loading resource: {ex.Message}");
+                throw;
             }
         }
+
+        // Method to send email using the template and placeholders
+        public async Task SendEmailAsync(string toEmail, string subject, string templateFileName, Dictionary<string, string> placeholders)
+        {
+            // Load the HTML template
+            var messageBody = await LoadEmbeddedResourceAsync(templateFileName);
+
+            // Replace placeholders in the HTML template
+            foreach (var placeholder in placeholders)
+            {
+                messageBody = messageBody.Replace($"{{{{{placeholder.Key}}}}}", placeholder.Value);
+            }
+
+            // Create the email message
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("MoveMate", "movemate202@gmail.com"));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart("html") { Text = messageBody }; // Use HTML content
+
+            // Send the email using an SMTP client
+            using (var client = new SmtpClient())
+            {
+                try
+                {
+                    await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                    await client.AuthenticateAsync("movemate202@gmail.com", "ievp xmil kxhv tqtr"); // Use proper authentication
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error sending email: {ex.Message}");
+                    throw;
+                }
+            }
+        }
+
+        // Example method for booking confirmation that calls the generic SendEmailAsync
+        public async Task SendBookingCancellationEmailAsync(string toEmail, BookingResponse bookingResponse)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(bookingResponse.UserId);
+            if (user == null)
+            {
+                throw new Exception("User not found.");
+            }
+
+            // Replace placeholders in the template
+            var placeholders = new Dictionary<string, string>
+            {
+                { "UserName", user.Name },
+                { "BookingId", bookingResponse.Id.ToString() }
+            };
+
+            // Call the SendEmailAsync method with the cancellation template
+            await SendEmailAsync(toEmail, "Booking Cancellation", "BookingCancellation.html", placeholders);
+        }
+
+        public async Task SendBookingSuccessfulEmailAsync(string toEmail, BookingResponse bookingResponse)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(bookingResponse.UserId);
+            if (user == null)
+            {
+                throw new Exception("User not found.");
+            }
+
+            // Replace placeholders in the template
+            var placeholders = new Dictionary<string, string>
+    {
+        { "UserName", user.Name },
+        { "BookingId", bookingResponse.Id.ToString() },
+        { "BookingDate", bookingResponse.BookingAt },
+        { "TotalAmount", bookingResponse.Total.ToString("C0", new CultureInfo("vi-VN")) }
+                 };
+
+
+            // Call the SendEmailAsync method with the booking successful template
+            await SendEmailAsync(toEmail, "Booking Successful", "BookingSuccessful.html", placeholders);
+        }
+
+        // Add more methods for other email types, calling SendEmailAsync with different templates and placeholders
     }
 }

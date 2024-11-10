@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông Báo Hủy Đặt Phòng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            background-color: #ff6b6b;
+            padding: 10px;
+            color: #ffffff;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .content {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+            .content p {
+                line-height: 1.6;
+            }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Thông Báo Hủy Đặt Phòng</h2>
+        </div>
+        <div class="content">
+            <p>Kính gửi {{UserName}},</p>
+            <p>Chúng tôi rất tiếc phải thông báo rằng đặt phòng của bạn với mã số <strong>{{BookingId}}</strong> đã bị hủy.</p>
+            <p>Chúng tôi xin lỗi về sự bất tiện này và nếu bạn có bất kỳ câu hỏi nào hoặc cần thêm sự trợ giúp, vui lòng liên hệ với chúng tôi.</p>
+            <p>Cảm ơn bạn đã chọn dịch vụ của chúng tôi. Chúng tôi hy vọng sẽ có cơ hội phục vụ bạn trong tương lai.</p>
+            <p>Trân trọng,</p>
+            <p>Đội ngũ MoveMate</p>
+        </div>
+        <div class="footer">
+            <p>© 2024 MoveMate. Bảo lưu mọi quyền.</p>
+        </div>
+    </div>
+</body>
+</html>
