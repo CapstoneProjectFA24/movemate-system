@@ -284,7 +284,7 @@ namespace MoveMate.Service.Services
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
                     // Sending a booking confirmation email
                     // Inside RegisterBooking method, after the booking is successfully created:
-                    await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+                    //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
 
 
                     result.AddResponseStatusCode(StatusCode.Created,
@@ -1962,8 +1962,7 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
-
+        
         public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int assignmentId,
             BookingServiceDetailsUpdateRequest request)
         {
@@ -1982,10 +1981,6 @@ namespace MoveMate.Service.Services
                     .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
                         include: b =>
                             b.Include(b => b.BookingDetails).Include(b => b.FeeDetails).Include(b => b.Vouchers));
-                
-                /*var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
-                    includeProperties:
-                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");*/
 
                 if (existingBooking == null)
                 {
