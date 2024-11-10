@@ -25,10 +25,10 @@ public class AssignReviewWorker
 
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task HandleMessage(int message)
     {
-        //await Task.Delay(TimeSpan.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromSeconds(1));
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
@@ -93,10 +93,14 @@ public class AssignReviewWorker
 
                 booking.Status = AssignmentStatusEnums.ASSIGNED.ToString();
                 
-                
                 await unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 
                 unitOfWork.Save();
+                
+                booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(booking.Id,
+                    includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                
                 firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 redisService.EnqueueAsync(redisKey, reviewerId);
 
