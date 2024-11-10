@@ -133,7 +133,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
           
             try
             {
-               
 
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
