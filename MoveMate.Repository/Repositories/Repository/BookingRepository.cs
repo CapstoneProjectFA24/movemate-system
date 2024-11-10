@@ -15,7 +15,6 @@ namespace MoveMate.Repository.Repositories.Repository
 {
     public class BookingRepository : GenericRepository<Booking>, IBookingRepository
     {
-        
         public BookingRepository(MoveMateDbContext context) : base(context)
         {
         }
@@ -72,8 +71,8 @@ namespace MoveMate.Repository.Repositories.Repository
         }
 
         public virtual async Task<Booking?> GetAsync(
-     Expression<Func<Booking, bool>> filter,
-     Func<IQueryable<Booking>, IIncludableQueryable<Booking, object>>? include = null)
+            Expression<Func<Booking, bool>> filter,
+            Func<IQueryable<Booking>, IIncludableQueryable<Booking, object>>? include = null)
         {
             IQueryable<Booking> query = _dbSet;
 
@@ -87,9 +86,9 @@ namespace MoveMate.Repository.Repositories.Repository
             query = query.Where(filter);
 
             // Execute the query and return the first result or null if no matches
-            return await query.AsNoTracking().FirstOrDefaultAsync(); // Note: Using AsNoTracking to avoid unintended tracking
+            return
+                await query.AsNoTracking()
+                    .FirstOrDefaultAsync(); // Note: Using AsNoTracking to avoid unintended tracking
         }
-
-
     }
 }

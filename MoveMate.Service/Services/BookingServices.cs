@@ -1978,10 +1978,15 @@ namespace MoveMate.Service.Services
                 }
 
                 // Fetch existing booking from the database
-                var existingBooking = await _unitOfWork.BookingRepository
+                /*var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
                         include: b =>
                             b.Include(b => b.BookingDetails).Include(b => b.FeeDetails).Include(b => b.Vouchers));
+                            */
+                
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
+                    includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
 
                 if (existingBooking == null)
                 {
@@ -2093,17 +2098,30 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
                     existingBooking.BookingDetails.ToList());
 
-                await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
-
+                //await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
 
                 var bookingDetailsWithZeroQuantity = existingBooking.BookingDetails
                     .Where(bd => bd.Quantity == 0)
+                    .AsEnumerable()
                     .ToList();
-                _unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);
-
-
-                var saveResult = _unitOfWork.Save();
+                
+                /*var detailsToRemove = bookingDetailsWithZeroQuantity.Select(id => new BookingDetail { Id = id.Id }).ToList();
+                _unitOfWork.BookingDetailRepository.RemoveRange(detailsToRemove);*/
+                
+                //_unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);  
+                
+                foreach (var id in bookingDetailsWithZeroQuantity)
+                {
+                    var bookingRemove = await _unitOfWork.BookingDetailRepository.GetByIdAsync(id.Id);
+                    if (bookingRemove != null)
+                    {
+                        _unitOfWork.BookingDetailRepository.Remove(bookingRemove);
+                    }
+                }
+                /*await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(existingBooking.BookingDetails.ToList());*/
+               
+                var saveResult =  _unitOfWork.Save();
 
                 // Check save result and return response
                 if (saveResult > 0)
@@ -2147,6 +2165,7 @@ namespace MoveMate.Service.Services
                     existingBookingDetail.Name = service.Name;
                     existingBookingDetail.Description = service.Description;
                     existingBookingDetail.Type = service.Type;
+                    existingBookingDetail.BookingId = bookingId;
                     bookingDetails.Add(existingBookingDetail);
                 }
                 else
