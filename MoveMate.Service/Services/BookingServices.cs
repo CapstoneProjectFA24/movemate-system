@@ -42,9 +42,10 @@ namespace MoveMate.Service.Services
         private readonly IMessageProducer _producer;
         private readonly IFirebaseServices _firebaseServices;
         private readonly IGoogleMapsService _googleMapsService;
+        private readonly IEmailService _emailService;
         
         public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger,
-            IMessageProducer producer, IFirebaseServices firebaseServices, IGoogleMapsService googleMapsService)
+            IMessageProducer producer, IFirebaseServices firebaseServices, IGoogleMapsService googleMapsService, IEmailService emailService)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -52,6 +53,7 @@ namespace MoveMate.Service.Services
             _producer = producer;
             _firebaseServices = firebaseServices;
             _googleMapsService = googleMapsService;
+            _emailService = emailService;
         }
 
         // FEATURE    
@@ -276,8 +278,15 @@ namespace MoveMate.Service.Services
                         }
                     }
 
-                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    int userid = int.Parse(userId);
+                    var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
+                    // Sending a booking confirmation email
+                    // Inside RegisterBooking method, after the booking is successfully created:
+                    await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+
+
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
                 }
@@ -1049,6 +1058,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var tracker = new BookingTracker();
+                        tracker.BookingId = booking.Id;
                         tracker.Type = TrackerEnums.DRIVER_ARRIVED.ToString();
                         tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1079,6 +1089,7 @@ namespace MoveMate.Service.Services
                         }
 
                         var trackers = new BookingTracker();
+                        trackers.BookingId = booking.Id;
                         trackers.Type = TrackerEnums.DRIVER_COMPLETED.ToString();
                         trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -1241,104 +1252,195 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int bookingId,
-            ResourceRequest request)
+        public async Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int userId, int bookingId, TrackerSourceRequest request)
         {
             var result = new OperationResult<AssignmentResponse>();
 
             try
             {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingId);
-                if (bookingDetail == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
-                    return result;
-                }
-
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
                 if (booking == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
 
-                string nextStatus = bookingDetail.Status;
-
-                switch (bookingDetail.Status)
+                var assignment =
+                    await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId,
+                        RoleEnums.PORTER.ToString(), bookingId);
+                if (assignment == null)
                 {
-                    case var status when status == AssignmentStatusEnums.WAITING.ToString():
-                        nextStatus = AssignmentStatusEnums.ASSIGNED.ToString();
-                        break;
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
 
-                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString():
+                DateTime currentTime = DateTime.Now;
+                if (booking.BookingAt.HasValue)
+                {
+                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
+                    if (currentTime < earliestUpdateTime)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                        return result;
+                    }
+                }
+
+
+                string nextStatus = assignment.Status;
+
+                switch (assignment.Status)
+                {
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTracker =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTracker == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+
+                        var tracker = new BookingTracker();
+                        tracker.BookingId = booking.Id;
+                        tracker.Type = TrackerEnums.PORTER_ARRIVED.ToString();
+                        tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        tracker.TrackerSources = resourceList;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                         nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
-
-                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString():
+                    case var status when status == AssignmentStatusEnums.ARRIVED.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
-                        nextStatus = AssignmentStatusEnums.IN_TRANSIT.ToString();
-                        break;
-                    case var status when status == AssignmentStatusEnums.IN_TRANSIT.ToString():
-                        nextStatus = AssignmentStatusEnums.DELIVERED.ToString();
-                        break;
-
-                    case var status when status == AssignmentStatusEnums.DELIVERED.ToString():
-                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
-                        break;
-                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString():
-                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
-                        break;
-                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
-                        if (booking.IsRoundTrip == true && bookingDetail.IsRoundTripCompleted == false)
+                    case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackers =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackers == null)
                         {
-                            nextStatus = AssignmentStatusEnums.ROUND_TRIP.ToString();
-                            bookingDetail.IsRoundTripCompleted = true;
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
                         }
 
-                        break;
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
 
-                    case var status when status == AssignmentStatusEnums.ROUND_TRIP.ToString():
-                        nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
-                        break;
+                        var trackers = new BookingTracker();
+                        trackers.BookingId = booking.Id;
+                        trackers.Type = TrackerEnums.PORTER_ONGOING.ToString();
+                        trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
+                        List<TrackerSource> resourceLists = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackers.TrackerSources = resourceLists;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackers);
+                        nextStatus = AssignmentStatusEnums.ONGOING.ToString();
+                        break;
+                    case var status when status == AssignmentStatusEnums.ONGOING.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackerDelis =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackerDelis == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+
+                        var trackerDelis = new BookingTracker();
+                        trackerDelis.BookingId = booking.Id;
+                        trackerDelis.Type = TrackerEnums.PORTER_DELIVERED.ToString();
+                        trackerDelis.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceListDelis = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerDelis.TrackerSources = resourceListDelis;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerDelis);
+                        nextStatus = AssignmentStatusEnums.DELIVERED.ToString();
+                        break;
+                    case var status when status == AssignmentStatusEnums.DELIVERED.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackerUnloads =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackerUnloads == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+
+                        var trackerUnloads = new BookingTracker();
+                        trackerUnloads.BookingId = booking.Id;
+                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADED.ToString();
+                        trackerUnloads.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceListUnloads = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerUnloads.TrackerSources = resourceListUnloads;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUnloads);
+                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
+                        break;
+                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                        var bookingTrackerComs =
+                            await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
+                        if (bookingTrackerComs == null)
+                        {
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                            return result;
+                        }
+
+                        if (request.ResourceList.Count() <= 0)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
+                            return result;
+                        }
+
+                        var trackerComs = new BookingTracker();
+                        trackerComs.BookingId = booking.Id;
+                        trackerComs.Type = TrackerEnums.PORTER_COMPLETED.ToString();
+                        trackerComs.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                        List<TrackerSource> resourceListComs = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerComs.TrackerSources = resourceListComs;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerComs);
+                        nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
+                        break;
                     default:
-                        result.AddError(StatusCode.BadRequest,
-                            MessageConstant.FailMessage.CanNotUpdateStatus);
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
 
-                bookingDetail.Status = nextStatus;
-
-                var bookingTracker =
-                    await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
-                if (bookingTracker == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
-                    return result;
-                }
-
-                var trackerSource = new TrackerSource
-                {
-                    BookingTrackerId = bookingTracker.Id,
-                    ResourceUrl = request.ResourceUrl,
-                    ResourceCode = request.ResourceCode,
-                    Type = request.Type,
-                    IsDeleted = false
-                };
-                await _unitOfWork.TrackerSourceRepository.AddAsync(trackerSource);
-                _unitOfWork.BookingDetailRepository.Update(bookingDetail);
+                assignment.Status = nextStatus;
+                _unitOfWork.AssignmentsRepository.Update(assignment);
                 _unitOfWork.BookingRepository.Update(booking);
-
                 await _unitOfWork.SaveChangesAsync();
 
-                var response = _mapper.Map<AssignmentResponse>(bookingDetail);
+                var response = _mapper.Map<AssignmentResponse>(assignment);
                 _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
@@ -1346,7 +1448,7 @@ namespace MoveMate.Service.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating booking status");
-                throw;
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 
             return result;
@@ -1394,9 +1496,9 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.IN_PROGRESS.ToString():
-                        nextStatus = AssignmentStatusEnums.IN_TRANSIT.ToString();
+                        nextStatus = AssignmentStatusEnums.ONGOING.ToString();
                         break;
-                    case var status when status == AssignmentStatusEnums.IN_TRANSIT.ToString():
+                    case var status when status == AssignmentStatusEnums.ONGOING.ToString():
                         nextStatus = AssignmentStatusEnums.DELIVERED.ToString();
                         break;
 
@@ -2091,7 +2193,7 @@ namespace MoveMate.Service.Services
                 }
 
                 // Retrieve the existing booking by ID
-                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
 
                 if (existingBooking == null)
                 {
