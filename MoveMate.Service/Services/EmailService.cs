@@ -104,12 +104,14 @@ namespace MoveMate.Service.Services
             {
                 throw new Exception("User not found.");
             }
+            var currentDateTime = DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss", new CultureInfo("vi-VN"));
 
             // Replace placeholders in the template
             var placeholders = new Dictionary<string, string>
             {
                 { "UserName", user.Name },
-                { "BookingId", bookingResponse.Id.ToString() }
+                { "BookingId", bookingResponse.Id.ToString() },
+                { "CurrentDateTime", currentDateTime }
             };
 
             // Call the SendEmailAsync method with the cancellation template
@@ -123,6 +125,7 @@ namespace MoveMate.Service.Services
             {
                 throw new Exception("User not found.");
             }
+            var currentDateTime = DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss", new CultureInfo("vi-VN"));
 
             // Replace placeholders in the template
             var placeholders = new Dictionary<string, string>
@@ -130,7 +133,8 @@ namespace MoveMate.Service.Services
         { "UserName", user.Name },
         { "BookingId", bookingResponse.Id.ToString() },
         { "BookingDate", bookingResponse.BookingAt },
-        { "TotalAmount", bookingResponse.Total.ToString("C0", new CultureInfo("vi-VN")) }
+        { "TotalAmount", bookingResponse.Total.ToString("C0", new CultureInfo("vi-VN")) },
+        { "CurrentDateTime", currentDateTime }
                  };
 
 
