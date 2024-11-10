@@ -1978,15 +1978,14 @@ namespace MoveMate.Service.Services
                 }
 
                 // Fetch existing booking from the database
-                /*var existingBooking = await _unitOfWork.BookingRepository
+                var existingBooking = await _unitOfWork.BookingRepository
                     .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
                         include: b =>
                             b.Include(b => b.BookingDetails).Include(b => b.FeeDetails).Include(b => b.Vouchers));
-                            */
                 
-                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
+                /*var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
                     includeProperties:
-                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");*/
 
                 if (existingBooking == null)
                 {
@@ -2077,39 +2076,27 @@ namespace MoveMate.Service.Services
                 existingBooking.TotalFee = totalFee;
                 existingBooking.Total = total; // Ensure total includes service and fee totals
                 existingBooking.Deposit = existingBooking.Total * 0.30;
-
-
+                
                 // Update booking type based on timing
                 DateTime now = DateTime.Now;
                 existingBooking.TypeBooking = ((request.UpdatedAt - now).TotalHours <= 3 &&
                                                (request.UpdatedAt - now).TotalHours >= 0)
                     ? TypeBookingEnums.NOW.ToString()
                     : TypeBookingEnums.DELAY.ToString();
-
-                /*if (existingBooking.IsReviewOnline == true)
-                {
-                    existingBooking.Status = BookingEnums.REVIEWED.ToString();
-                    existingBooking.IsStaffReviewed = true;
-                }*/
+                
                 // logic booking detail
 
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
-                // await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(ex);
+            
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
                     existingBooking.BookingDetails.ToList());
-
-                //await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
+                
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
 
                 var bookingDetailsWithZeroQuantity = existingBooking.BookingDetails
                     .Where(bd => bd.Quantity == 0)
                     .AsEnumerable()
                     .ToList();
-                
-                /*var detailsToRemove = bookingDetailsWithZeroQuantity.Select(id => new BookingDetail { Id = id.Id }).ToList();
-                _unitOfWork.BookingDetailRepository.RemoveRange(detailsToRemove);*/
-                
-                //_unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);  
                 
                 foreach (var id in bookingDetailsWithZeroQuantity)
                 {
@@ -2119,7 +2106,6 @@ namespace MoveMate.Service.Services
                         _unitOfWork.BookingDetailRepository.Remove(bookingRemove);
                     }
                 }
-                /*await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(existingBooking.BookingDetails.ToList());*/
                
                 var saveResult =  _unitOfWork.Save();
 
