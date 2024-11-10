@@ -284,7 +284,7 @@ namespace MoveMate.Service.Services
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
                     // Sending a booking confirmation email
                     // Inside RegisterBooking method, after the booking is successfully created:
-                    await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+                    //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
 
 
                     result.AddResponseStatusCode(StatusCode.Created,
@@ -1962,8 +1962,7 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
-
+        
         public async Task<OperationResult<BookingResponse>> UpdateBookingAsync(int assignmentId,
             BookingServiceDetailsUpdateRequest request)
         {
@@ -2072,38 +2071,38 @@ namespace MoveMate.Service.Services
                 existingBooking.TotalFee = totalFee;
                 existingBooking.Total = total; // Ensure total includes service and fee totals
                 existingBooking.Deposit = existingBooking.Total * 0.30;
-
-
+                
                 // Update booking type based on timing
                 DateTime now = DateTime.Now;
                 existingBooking.TypeBooking = ((request.UpdatedAt - now).TotalHours <= 3 &&
                                                (request.UpdatedAt - now).TotalHours >= 0)
                     ? TypeBookingEnums.NOW.ToString()
                     : TypeBookingEnums.DELAY.ToString();
-
-                /*if (existingBooking.IsReviewOnline == true)
-                {
-                    existingBooking.Status = BookingEnums.REVIEWED.ToString();
-                    existingBooking.IsStaffReviewed = true;
-                }*/
+                
                 // logic booking detail
 
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(bookingDetail);
-                // await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(ex);
+            
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateRangeAsync(
                     existingBooking.BookingDetails.ToList());
-
-                await _unitOfWork.FeeDetailRepository.SaveOrUpdateRangeAsync(existingBooking.FeeDetails.ToList());
-
+                
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
 
                 var bookingDetailsWithZeroQuantity = existingBooking.BookingDetails
                     .Where(bd => bd.Quantity == 0)
+                    .AsEnumerable()
                     .ToList();
-                _unitOfWork.BookingDetailRepository.RemoveRange(bookingDetailsWithZeroQuantity);
-
-
-                var saveResult = _unitOfWork.Save();
+                
+                foreach (var id in bookingDetailsWithZeroQuantity)
+                {
+                    var bookingRemove = await _unitOfWork.BookingDetailRepository.GetByIdAsync(id.Id);
+                    if (bookingRemove != null)
+                    {
+                        _unitOfWork.BookingDetailRepository.Remove(bookingRemove);
+                    }
+                }
+               
+                var saveResult =  _unitOfWork.Save();
 
                 // Check save result and return response
                 if (saveResult > 0)
@@ -2147,6 +2146,7 @@ namespace MoveMate.Service.Services
                     existingBookingDetail.Name = service.Name;
                     existingBookingDetail.Description = service.Description;
                     existingBookingDetail.Type = service.Type;
+                    existingBookingDetail.BookingId = bookingId;
                     bookingDetails.Add(existingBookingDetail);
                 }
                 else
