@@ -331,7 +331,7 @@ Auto-Assign Driver Workflow:
             {
                 googleMapDto =
                     await googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
-                        booking.PickupPoint!);
+                        booking.DeliveryPoint!);
             }
             else
             {
@@ -356,7 +356,7 @@ Auto-Assign Driver Workflow:
             {
                 googleMapDto =
                     await googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
-                        booking.PickupPoint!);
+                        booking.DeliveryPoint!);
             }
             else
             {
@@ -380,7 +380,7 @@ Auto-Assign Driver Workflow:
             {
                 googleMapDto =
                     await googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
-                        booking.PickupPoint!);
+                        booking.DeliveryPoint!);
             }
             else
             {
