@@ -38,14 +38,15 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
             {
-                var appOptions = new AppOptions()
-                {
-                    Credential = GoogleCredential.FromFile(authJsonFile)
-                };
-
-                _firebaseApp = FirebaseApp.Create(appOptions);
+              
 
             }
+            //var appOptions = new AppOptions()
+            //{
+            //    Credential = GoogleCredential.FromFile(authJsonFile)
+            //};
+
+            //_firebaseApp = FirebaseApp.Create(appOptions);
 
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
