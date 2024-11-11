@@ -27,5 +27,7 @@ namespace MoveMate.Service.IServices
         Task <OperationResult<UserInfoResponse>> UpdateUserInfoAsync(int id, UpdateUserInfoRequest request);
 
         Task<OperationResult<UserInfoResponse>> CreateUserInfo(CreateUserInfoRequest request);
+
+
     }
 }
