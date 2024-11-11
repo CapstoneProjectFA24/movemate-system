@@ -18,6 +18,7 @@ using MoveMate.Service.ViewModels.ModelResponses;
 using System.ComponentModel.DataAnnotations;
 using FirebaseAdmin.Messaging;
 using MoveMate.Repository.Repositories.UnitOfWork;
+using Microsoft.Extensions.Configuration;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -27,11 +28,15 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly FirestoreDb _dbFirestore;
         private readonly IMapper _mapper;
         private readonly IMessageProducer _producer;
-        
-        public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer)
+        private readonly IConfiguration _config;
+
+
+
+        public FirebaseServices(IConfiguration config, IMapper mapper, IMessageProducer producer)
         {
             _mapper = mapper;
             _producer = producer;
+            _config = config;
 
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
@@ -60,6 +65,11 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             
             try
             {
+                string authJsonFile = _config["FirebaseSettings:ConfigFile"];
+                var app = FirebaseApp.DefaultInstance ?? FirebaseApp.Create(new AppOptions
+                {
+                    Credential = GoogleCredential.FromFile(authJsonFile)
+                });
                 FirebaseAuth auth = FirebaseAuth.DefaultInstance;
                 FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
                 result.AddResponseStatusCode(StatusCode.Ok, "Token verified successfully", decodedToken);
@@ -75,6 +85,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
             return result;
         }
+
 
         public async Task<UserRecord> CreateUser(string username, string password, string email, string phoneNumber)
         {
