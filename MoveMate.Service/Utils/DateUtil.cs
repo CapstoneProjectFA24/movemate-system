@@ -169,10 +169,10 @@ namespace MoveMate.Service.Utils
             return redisKey;
         }
 
-        public static String GetKeyDriver(DateTime? time)
+        public static String GetKeyDriver(DateTime? time, int truckCateId)
         {
             string dateKey = GetShard(time);
-            string redisKey = $"driverQueue_{dateKey}";
+            string redisKey = $"driverQueue_{truckCateId}_{dateKey}";
 
             return redisKey;
         }
