@@ -2154,6 +2154,7 @@ namespace MoveMate.Service.Services
                     existingBookingDetail.Quantity = requestService.Quantity;
                     existingBookingDetail.Price = requestService.Price;
                     existingBookingDetail.Name = service.Name;
+                    existingBookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
                     existingBookingDetail.Description = service.Description;
                     existingBookingDetail.Type = service.Type;
                     bookingDetails.Add(existingBookingDetail);
@@ -2168,6 +2169,7 @@ namespace MoveMate.Service.Services
                         Quantity = requestService.Quantity,
                         Price = requestService.Price,
                         Name = service.Name,
+                        Status = BookingDetailStatusEnums.AVAILABLE.ToString(),
                         Description = service.Description,
                         Type = service.Type
                     };
