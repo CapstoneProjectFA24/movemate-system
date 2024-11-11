@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Hàng Thành Công</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            background-color: #28a745;
+            padding: 10px;
+            color: #ffffff;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .content {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+            .content p {
+                line-height: 1.6;
+            }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Đặt Hàng Thành Công</h2>
+        </div>
+        <div class="content">
+            <p>Chào {{UserName}},</p>
+            <p>Chúng tôi rất vui thông báo rằng đơn đặt hàng của bạn với mã số <strong>{{BookingId}}</strong> đã được xác nhận thành công.</p>
+            <p>Chi tiết đơn đặt hàng của bạn như sau:</p>
+            <p><strong>Ngày Đặt:</strong> {{BookingDate}}</p>
+            <p><strong>Tổng Số Tiền:</strong> {{TotalAmount}}</p>
+            <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi.</p>
+            <p>Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi. Chúng tôi mong được phục vụ bạn trong thời gian tới.</p>
+            <p><strong>Lúc:</strong> {{CurrentDateTime}}</p>
+            <p>Trân trọng,</p>
+            <p>Đội ngũ MoveMate</p>
+
+        </div>
+        <div class="footer">
+            <p>© 2024 MoveMate. Bảo lưu mọi quyền.</p>
+        </div>
+    </div>
+</body>
+</html>
