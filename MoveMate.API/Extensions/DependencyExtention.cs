@@ -169,7 +169,7 @@ namespace MoveMate.API.Extensions
 
             // Register FirebaseServices as a singleton to ensure only one instance is created
             services.AddSingleton<IFirebaseServices>(sp =>
-                new FirebaseServices(firebaseConfigPath, sp.GetRequiredService<IMapper>(), sp.GetRequiredService<IMessageProducer>()));
+                new FirebaseServices(configuration, sp.GetRequiredService<IMapper>(), sp.GetRequiredService<IMessageProducer>()));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 
