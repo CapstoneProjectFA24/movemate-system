@@ -64,6 +64,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             
             CreateMap<BookingDetail, BookingDetailsResponse>()
                  .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Service != null ? src.Service.ImageUrl : null));
+            CreateMap<FailReportRequest, BookingDetail>();
 
             CreateMap<BookingDetailRequest, BookingDetail>();
             
@@ -160,6 +161,8 @@ namespace MoveMate.Service.Commons.AutoMapper
             // Resource
             CreateMap<ResourceRequest, TrackerSource>();
             CreateMap<TrackerSource, TrackerSourceResponse>();
+            CreateMap<TrackerSourceRequest, BookingTracker>()
+                .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.ResourceList));
 
             //Tracker
             CreateMap<BookingTracker, BookingTrackerResponse>()

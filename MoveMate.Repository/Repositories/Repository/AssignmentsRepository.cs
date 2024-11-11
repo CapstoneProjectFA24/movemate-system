@@ -65,6 +65,16 @@ namespace MoveMate.Repository.Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<Assignment> GetByUserIdAndIsResponsible(int userId,  int bookingId)
+        {
+            IQueryable<Assignment> query = _dbSet;
+            return await query
+                .Where(a => a.UserId == userId
+                            && a.BookingId == bookingId
+                            && a.IsResponsible == true)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<Assignment> GetByUserIdAndStaffType(int userId, string staffType, int bookingId)
         {
             IQueryable<Assignment> query = _dbSet;

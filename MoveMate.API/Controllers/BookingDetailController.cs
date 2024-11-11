@@ -138,5 +138,54 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.ReviewerCancelBooking(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// CHORE: Staff report fail booking details
+        /// </summary>
+        /// <param name="id">Booking Details Id</param>
+        /// <returns></returns>
+        [HttpPut("report-booking-detail/{id}")]
+        public async Task<IActionResult> StaffReportBookingDetail(int id, FailReportRequest request )
+        {
+
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _bookingServices.StaffReportFail(id, userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// CHORE: Manager fix booking details
+        /// </summary>
+        /// <param name="id">Booking Details Id</param>
+        /// <returns></returns>
+        [HttpPut("report/{id}")]
+        public async Task<IActionResult> ManagerFixing(int id)
+        {
+
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _bookingServices.ManagerFix(id, userId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE: Manager fix booking details
+        /// </summary>
+        /// <param name="id">Booking Id</param>
+        /// <returns></returns>
+        [HttpPut("report-damage/{id}")]
+        public async Task<IActionResult> ReportDamage(int id, [FromBody] TrackerSourceRequest request)
+        {
+
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _bookingServices.TrackerReport(userId, id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
