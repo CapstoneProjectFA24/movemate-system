@@ -3,6 +3,7 @@
 public enum TrackerEnums
 {
     PENDING,
+    REPORT,
     REVIEW_OFFLINE,
     DRIVER_ARRIVED,
     DRIVER_COMPLETED,

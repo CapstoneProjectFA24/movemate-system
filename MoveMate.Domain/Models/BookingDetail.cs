@@ -29,6 +29,8 @@ public partial class BookingDetail
 
     public bool? IsRoundTripCompleted { get; set; }
 
+    public string? FailReason { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual Booking? Booking { get; set; }
