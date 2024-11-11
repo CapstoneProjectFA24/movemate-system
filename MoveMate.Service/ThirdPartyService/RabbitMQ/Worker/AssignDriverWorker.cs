@@ -6,6 +6,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ThirdPartyService.GoongMap.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
@@ -113,6 +114,7 @@ Auto-Assign Driver Workflow:
                 var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
+                var firebaseServices = scope.ServiceProvider.GetRequiredService<IFirebaseServices>();
 
                 // check booking
                 var existingBooking = await unitOfWork.BookingRepository.GetByIdAsync(message);
@@ -124,8 +126,11 @@ Auto-Assign Driver Workflow:
                 var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
 
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
+                
                 var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
-                var checkExistQueue = await redisService.KeyExistsQueueAsync(redisKey);
+                var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
+
+                var checkExistQueue = await redisService.KeyExistsQueueAsync(redisKeyV2);
 
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
                 var listAssignments = new List<Assignment>();
@@ -137,8 +142,9 @@ Auto-Assign Driver Workflow:
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value);
-
+                    
                     await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
+                    await redisService.EnqueueMultipleAsync(redisKeyV2, driverIds, timeExpiryRedisQueue);
 
                     // check DriverNumber in booking and driver in system
                     var driverNumberBooking = existingBooking.DriverNumber!.Value;
@@ -161,6 +167,12 @@ Auto-Assign Driver Workflow:
                     
                     await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                     unitOfWork.Save();
+                    
+                    var bookingFirebase = await unitOfWork.BookingRepository.GetByIdAsyncV1(existingBooking.Id,
+                        includeProperties:
+                        "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                
+                    firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                 }
                 else
                 {
@@ -181,6 +193,12 @@ Auto-Assign Driver Workflow:
                         );
                         await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                         unitOfWork.Save();
+                        
+                        var bookingFirebase = await unitOfWork.BookingRepository.GetByIdAsyncV1(existingBooking.Id,
+                            includeProperties:
+                            "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                
+                        firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                     }
                     else
                     {
@@ -226,7 +244,6 @@ Auto-Assign Driver Workflow:
                             }
 
                             var googleMapsService = scope.ServiceProvider.GetRequiredService<IGoogleMapsService>();
-                            var booking = unitOfWork.BookingRepository.GetByIdAsync(existingBooking.Id);
                             // xử lý
                             await AllocateDriversToBookingAsync(
                                 existingBooking,
@@ -243,6 +260,12 @@ Auto-Assign Driver Workflow:
                             );
                             await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                             unitOfWork.Save();
+                            
+                            var bookingFirebase = await unitOfWork.BookingRepository.GetByIdAsyncV1(existingBooking.Id,
+                                includeProperties:
+                                "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                
+                            firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                         }
 
                         //đánh tag faild cần reviewer can thiệp
@@ -346,8 +369,7 @@ Auto-Assign Driver Workflow:
                     await googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
                         booking.PickupPoint!);
             }
-
-
+            
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
             rate = rate / duration;
