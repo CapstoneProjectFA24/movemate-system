@@ -25,7 +25,7 @@ public class AssignReviewWorker
 
     }
 
-    [Consumer("movemate.booking_assign_review_local")]
+    [Consumer("movemate.booking_assign_review")]
     public async Task HandleMessage(int message)
     {
         await Task.Delay(TimeSpan.FromSeconds(1));
@@ -37,7 +37,8 @@ public class AssignReviewWorker
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
                 var firebaseServices = scope.ServiceProvider.GetRequiredService<IFirebaseServices>();
-                
+                var producer = scope.ServiceProvider.GetRequiredService<IMessageProducer>();
+
                 var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
 
                 string redisKey = DateUtil.GetKeyReview();
@@ -96,12 +97,15 @@ public class AssignReviewWorker
                 await unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 
                 unitOfWork.Save();
+
+
+                producer.SendingMessage("movemate.push_to_firebase_local", booking.Id);
                 
-                booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(booking.Id,
-                    includeProperties:
-                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                //booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(booking.Id,
+                //    includeProperties:
+                //    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                 
-                firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                //firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 redisService.EnqueueAsync(redisKey, reviewerId);
 
                 Console.WriteLine($"Booking info: {booking}");

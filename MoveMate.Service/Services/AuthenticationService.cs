@@ -19,6 +19,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity.Data;
 using System.ComponentModel.DataAnnotations;
+using FirebaseAdmin.Auth;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 
 namespace MoveMate.Service.Services
 {
@@ -257,6 +260,7 @@ namespace MoveMate.Service.Services
 
             try
             {
+                // Kiểm tra nếu Email hoặc SĐT đã tồn tại trong cơ sở dữ liệu của bạn
                 var existingUser = await _unitOfWork.UserRepository.GetUserAsync(customerToRegister.Email);
                 if (existingUser != null)
                 {
@@ -264,36 +268,73 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                var existingUserByPhone =
-                    await _unitOfWork.UserRepository.GetUserByPhoneAsync(customerToRegister.Phone);
+                var existingUserByPhone = await _unitOfWork.UserRepository.GetUserByPhoneAsync(customerToRegister.Phone);
                 if (existingUserByPhone != null)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PhoneExist);
                     return result;
                 }
 
-
-                var newUser = new User
+                // Khởi tạo Firebase Authentication
+                string authJsonFile = _configuration["FirebaseSettings:ConfigFile"];
+                if (FirebaseApp.DefaultInstance == null)
                 {
-                    Email = customerToRegister.Email,
-                    Password = customerToRegister.Password,
-                    Name = customerToRegister.Name,
-                    Phone = customerToRegister.Phone,
-                    RoleId = 3
-                };
-                newUser.Wallet = new Wallet                    
-                     {
-                         Balance = 0,
-                         CreatedAt = DateTime.UtcNow,
-                         UpdatedAt = DateTime.UtcNow,
-                         IsLocked = false,
-                         Tier = 1
-                     };
-                await _unitOfWork.UserRepository.AddAsync(newUser);             
-                await _unitOfWork.SaveChangesAsync();
-                var userResponse = _mapper.Map<RegisterResponse>(newUser);
+                    FirebaseApp.Create(new AppOptions
+                    {
+                        Credential = GoogleCredential.FromFile(authJsonFile)
+                    });
+                }
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess , userResponse);
+                var firebaseAuth = FirebaseAuth.DefaultInstance;
+
+                try
+                {
+                    // Tạo người dùng mới trên Firebase
+                    var firebaseUser = await firebaseAuth.CreateUserAsync(new UserRecordArgs
+                    {
+                        Email = customerToRegister.Email,
+                        EmailVerified = false,
+                        Password = customerToRegister.Password,
+                        DisplayName = customerToRegister.Name,
+                        Disabled = false,
+                    });
+
+                    // Lưu thông tin người dùng vào cơ sở dữ liệu của bạn
+                    var newUser = new User
+                    {
+                        Email = customerToRegister.Email,
+                        Password = customerToRegister.Password, // Có thể mã hóa mật khẩu trước khi lưu
+                        Name = customerToRegister.Name,
+                        Phone = customerToRegister.Phone,
+                        RoleId = 3,
+                        Wallet = new Wallet
+                        {
+                            Balance = 0,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow,
+                            IsLocked = false,
+                            Tier = 1
+                        }
+                    };
+
+                    await _unitOfWork.UserRepository.AddAsync(newUser);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    var userResponse = _mapper.Map<RegisterResponse>(newUser);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, userResponse);
+                }
+                catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
+                {
+                    // Xử lý lỗi email đã tồn tại trên Firebase
+                    result.AddError(StatusCode.BadRequest, "Email đã tồn tại trên hệ thống Firebase.");
+                }
+              
+                catch (FirebaseAuthException ex)
+                {
+                    // Các lỗi Firebase khác
+                    result.AddError(StatusCode.BadRequest, $"Lỗi Firebase: {ex.Message}");
+                }
+
                 return result;
             }
             catch (Exception ex)
@@ -303,6 +344,7 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
+
 
         public async Task<OperationResult<AccountResponse>> RegisterV2(CustomerToRegister customerToRegister)
         {
@@ -499,33 +541,35 @@ namespace MoveMate.Service.Services
                 string idAccount = sidClaim.Value;
                 int userId = int.Parse(idAccount);
 
-                // Check if the device already exists
-                var existedUserDevice = await this._unitOfWork.NotificationRepository.GetNotiAsync(userDeviceRequest.FCMToken);
-
-                if (existedUserDevice.Count == 0) // Only proceed if device doesn't exist
+                // Retrieve existing user
+                User existedAccount = await this._unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (existedAccount == null)
                 {
-                    // Retrieve the existing user without adding it again
-                    User existedAccount = await this._unitOfWork.UserRepository.GetByIdAsync(userId);
-                    if (existedAccount == null)
-                    {
-                        throw new Exception("User does not exist.");
-                    }
+                    throw new Exception("User does not exist.");
+                }
 
-                    // Create a new Notification object with the existing user's ID
+                // Check if a notification already exists for this user
+                var existedUserDevice = await this._unitOfWork.NotificationRepository
+                    .GetByUserIdAsync(userId); // Assuming you have a method to get Notification by userId
+
+                if (existedUserDevice != null) // If notification exists, update the FCM token
+                {
+                    existedUserDevice.FcmToken = userDeviceRequest.FCMToken;
+                    _unitOfWork.NotificationRepository.Update(existedUserDevice);
+                }
+                else // If no notification exists, create a new one
+                {
                     Notification userDevice = new Notification()
                     {
-                        UserId = userId, // Set only the UserId
+                        UserId = userId,
                         FcmToken = userDeviceRequest.FCMToken
                     };
-
-                    // Add the new notification
                     await this._unitOfWork.NotificationRepository.AddAsync(userDevice);
-                    var check = await _unitOfWork.SaveChangesAsync(); // Ensure this is awaited
-                    if (check > 0)
-                    {
-                        // Optionally handle success logic here
-                    }
                 }
+
+                // Save changes
+                var check = await _unitOfWork.SaveChangesAsync();
+              
             }
             catch (Exception ex)
             {
@@ -533,6 +577,7 @@ namespace MoveMate.Service.Services
                 throw new Exception(error);
             }
         }
+
 
 
         public async Task DeleteUserDeviceAsync(int userDeviceId)

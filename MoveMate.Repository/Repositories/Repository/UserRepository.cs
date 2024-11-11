@@ -141,6 +141,20 @@ namespace MoveMate.Repository.Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<User?> GetManagerAsync()
+        {
+            try
+            {
+                IQueryable<User> query = _dbSet;
+                return await query
+                    .Where(u => u.RoleId == 6)
+                    .FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
 
     }
 }

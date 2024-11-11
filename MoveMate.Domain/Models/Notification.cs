@@ -22,5 +22,7 @@ public partial class Notification
     public string? Topic { get; set; }
     public string? FcmToken { get; set; }
 
+    public bool? IsRead { get; set; }
+
     public virtual User? User { get; set; }
 }
