@@ -237,18 +237,28 @@ public class RedisService : IRedisService
         }
     }
 
-
     public async Task<T?> DequeueAsync<T>(string queueKey)
     {
+        var length = await _database.ListLengthAsync(queueKey);
+        if (length == 0)
+        {
+            return default;
+        }
         var jsonData = await _database.ListLeftPopAsync(queueKey);
         if (jsonData.IsNull)
         {
             return default;
         }
+        
+        var expiryTime = await _database.KeyTimeToLiveAsync(queueKey);
+        if (expiryTime.HasValue)
+        {
+            await _database.KeyExpireAsync(queueKey, expiryTime.Value);
+        }
 
         return JsonSerializer.Deserialize<T>(jsonData);
     }
-
+    
     public async Task<long> GetQueueLengthAsync(string queueKey)
     {
         return await _database.ListLengthAsync(queueKey);
