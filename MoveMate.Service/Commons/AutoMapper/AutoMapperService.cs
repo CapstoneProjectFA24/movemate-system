@@ -184,6 +184,9 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<Voucher, VoucherResponse>();
             CreateMap<CreateVoucherRequest, Voucher>();
             CreateMap<AddVoucherRequest, Voucher>();
+
+            //Notification
+            CreateMap<MoveMate.Domain.Models.Notification, NotificationResponse>();
         }
     }
 }

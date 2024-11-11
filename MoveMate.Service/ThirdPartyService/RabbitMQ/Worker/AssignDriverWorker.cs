@@ -6,6 +6,7 @@ using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ThirdPartyService.GoongMap.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ.Annotation;
@@ -113,7 +114,7 @@ Auto-Assign Driver Workflow:
                 var unitOfWork = (UnitOfWork)scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
-
+                var firebaseServices = scope.ServiceProvider.GetRequiredService<IFirebaseServices>();
                 // check booking
                 var existingBooking = await unitOfWork.BookingRepository.GetByIdAsync(message);
                 if (existingBooking == null)
@@ -144,7 +145,23 @@ Auto-Assign Driver Workflow:
                     var driverNumberBooking = existingBooking.DriverNumber!.Value;
                     if (driverNumberBooking > driverIds.Count)
                     {
-                        // đánh tag faild cần reviewer can thiệp
+                        var user = await unitOfWork.UserRepository.GetManagerAsync();
+
+                        var notification = new Notification
+                        {
+                           
+                            UserId = user.Id,  
+                            SentFrom = "System",  
+                            Receive = user.Name,    
+                            Name = "Driver Shortage Notification",
+                            Description = $"Only {driverIds.Count} drivers available for {driverNumberBooking} bookings.",
+                            Topic = "DriverAssignment",                         
+                            IsRead = false
+                        };
+
+                        // Save the notification to Firestore
+                        await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+
                     }
 
                     await AssignDriversToBooking(

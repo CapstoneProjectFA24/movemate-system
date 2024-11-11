@@ -283,6 +283,28 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             return canceledBookings;
         }
 
+        public async Task<string?> SaveMailManager(MoveMate.Domain.Models.Notification saveObj, long id, string collectionName)
+        {
+            try
+            {
+                var save = _mapper.Map<NotificationResponse>(saveObj); // Map to response model if needed
+
+                // Optional: Add specific logic here if required for 'mail-manager'
+
+                DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
+                await docRef.SetAsync(save);
+
+                var saved = (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
+                Console.WriteLine($"SaveMailManager message to firebase: {id}, time: {saved}");
+
+                return saved;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving document to mail-manager: {e.Message}");
+                throw;
+            }
+        }
 
         public async Task SendNotificationAsync(string title, string body, string fcmToken, Dictionary<string, string>? data = null)
         {

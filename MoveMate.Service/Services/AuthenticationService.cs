@@ -499,33 +499,35 @@ namespace MoveMate.Service.Services
                 string idAccount = sidClaim.Value;
                 int userId = int.Parse(idAccount);
 
-                // Check if the device already exists
-                var existedUserDevice = await this._unitOfWork.NotificationRepository.GetNotiAsync(userDeviceRequest.FCMToken);
-
-                if (existedUserDevice.Count == 0) // Only proceed if device doesn't exist
+                // Retrieve existing user
+                User existedAccount = await this._unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (existedAccount == null)
                 {
-                    // Retrieve the existing user without adding it again
-                    User existedAccount = await this._unitOfWork.UserRepository.GetByIdAsync(userId);
-                    if (existedAccount == null)
-                    {
-                        throw new Exception("User does not exist.");
-                    }
+                    throw new Exception("User does not exist.");
+                }
 
-                    // Create a new Notification object with the existing user's ID
+                // Check if a notification already exists for this user
+                var existedUserDevice = await this._unitOfWork.NotificationRepository
+                    .GetByUserIdAsync(userId); // Assuming you have a method to get Notification by userId
+
+                if (existedUserDevice != null) // If notification exists, update the FCM token
+                {
+                    existedUserDevice.FcmToken = userDeviceRequest.FCMToken;
+                    _unitOfWork.NotificationRepository.Update(existedUserDevice);
+                }
+                else // If no notification exists, create a new one
+                {
                     Notification userDevice = new Notification()
                     {
-                        UserId = userId, // Set only the UserId
+                        UserId = userId,
                         FcmToken = userDeviceRequest.FCMToken
                     };
-
-                    // Add the new notification
                     await this._unitOfWork.NotificationRepository.AddAsync(userDevice);
-                    var check = await _unitOfWork.SaveChangesAsync(); // Ensure this is awaited
-                    if (check > 0)
-                    {
-                        // Optionally handle success logic here
-                    }
                 }
+
+                // Save changes
+                var check = await _unitOfWork.SaveChangesAsync();
+              
             }
             catch (Exception ex)
             {
@@ -533,6 +535,7 @@ namespace MoveMate.Service.Services
                 throw new Exception(error);
             }
         }
+
 
 
         public async Task DeleteUserDeviceAsync(int userDeviceId)
