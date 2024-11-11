@@ -215,6 +215,18 @@ namespace MoveMate.Service.Services
                     total += updatedTotal;
                     feeDetails.AddRange(updatedFeeDetails);
                 }
+                
+                var isHoliday = await _unitOfWork.HolidaySettingRepository.IsHolidayAsync(dateBooking);
+                if (isHoliday)
+                {
+
+                    (double updatedTotal, List<FeeDetail> updatedFeeDetails) =
+                        await ApplyPercentHolidayFeesAsync(total);
+                    total += updatedTotal;
+                    feeDetails.AddRange(updatedFeeDetails);
+                
+                }
+                
 
                 // resource logic 
 
@@ -284,8 +296,7 @@ namespace MoveMate.Service.Services
                     // Sending a booking confirmation email
                     // Inside RegisterBooking method, after the booking is successfully created:
                     //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
-
-
+                    
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
                 }
@@ -352,6 +363,18 @@ namespace MoveMate.Service.Services
                     total += updatedTotal;
                     feeDetails.AddRange(updatedFeeDetails);
                 }
+                
+                var isHoliday = await _unitOfWork.HolidaySettingRepository.IsHolidayAsync(dateBooking);
+                if (isHoliday)
+                {
+
+                    (double updatedTotal, List<FeeDetail> updatedFeeDetails) =
+                        await ApplyPercentHolidayFeesAsync(total);
+                    total += updatedTotal;
+                    feeDetails.AddRange(updatedFeeDetails);
+                
+                }
+
             }
             catch (Exception e)
             {
@@ -508,7 +531,35 @@ namespace MoveMate.Service.Services
 
         private async Task<(double updatedTotal, List<FeeDetail> feeDetails)> ApplyPercentFeesAsync(double total)
         {
-            var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentFeeSettingsAsync();
+            var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentSystemFeeSettingsAsync();
+
+            var feeDetails = new List<FeeDetail>();
+
+            var totalAmount = 0d;
+
+            foreach (var feeSetting in feePercentSettings)
+            {
+                var value = feeSetting.Amount ?? 100;
+                var amount = total * value / 100;
+
+                var feeDetail = new FeeDetail
+                {
+                    FeeSettingId = feeSetting.Id,
+                    Name = feeSetting.Name,
+                    Description = feeSetting.Description,
+                    Amount = amount,
+                };
+
+                feeDetails.Add(feeDetail);
+                totalAmount += amount;
+            }
+
+            return (totalAmount, feeDetails);
+        }
+        
+        private async Task<(double updatedTotal, List<FeeDetail> feeDetails)> ApplyPercentHolidayFeesAsync(double total)
+        {
+            var feePercentSettings = await _unitOfWork.FeeSettingRepository.GetPercentHolidayFeeSettingsAsync();
 
             var feeDetails = new List<FeeDetail>();
 
@@ -935,7 +986,7 @@ namespace MoveMate.Service.Services
                                 double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity ?? 1);
                             amount += totalTruckFee;
                             driverNumber = quantity ?? 0;
-                            feeDetails.AddRange(feeTruckDetails);
+                            //feeDetails.AddRange(feeTruckDetails);
                             break;
                         case "PORTER":
                             // FEE FLOOR
@@ -948,7 +999,7 @@ namespace MoveMate.Service.Services
                                 int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
                             amount += floorTotalFee;
                             porterNumber = quantity ?? 0;
-                            feeDetails.AddRange(floorUnitFeeDetails);
+                            //feeDetails.AddRange(floorUnitFeeDetails);
                             break;
                     }
 
@@ -2061,6 +2112,25 @@ namespace MoveMate.Service.Services
                 //fee detail
                 _unitOfWork.FeeDetailRepository.RemoveRange(existingBooking.FeeDetails.ToList());
                 var (totalFee, feeCommonDetails) = await CalculateAndAddFees((DateTime)existingBooking.BookingAt);
+                
+                if (request.IsRoundTrip == true)
+                {
+                    (double updatedTotal, List<FeeDetail> updatedFeeDetails) = await ApplyPercentFeesAsync(total);
+                    total += updatedTotal;
+                    feeCommonDetails.AddRange(updatedFeeDetails);
+                }
+                
+                var isHoliday = await _unitOfWork.HolidaySettingRepository.IsHolidayAsync(existingBooking.BookingAt.Value);
+                if (isHoliday)
+                {
+
+                    (double updatedTotal, List<FeeDetail> updatedFeeDetails) =
+                        await ApplyPercentHolidayFeesAsync(total);
+                    total += updatedTotal;
+                    feeCommonDetails.AddRange(updatedFeeDetails);
+                
+                }
+                
                 existingBooking.FeeDetails = feeCommonDetails;
 
                 total -= voucherTotal;
@@ -2100,6 +2170,8 @@ namespace MoveMate.Service.Services
                         _unitOfWork.BookingDetailRepository.Remove(bookingRemove);
                     }
                 }
+                
+                
                
                 var saveResult =  _unitOfWork.Save();
 

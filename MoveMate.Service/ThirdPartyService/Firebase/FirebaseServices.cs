@@ -27,9 +27,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly FirestoreDb _dbFirestore;
         private readonly IMapper _mapper;
         private readonly IMessageProducer _producer;
-
-
-
+        
         public FirebaseServices(string authJsonFile, IMapper mapper, IMessageProducer producer)
         {
             _mapper = mapper;
@@ -77,7 +75,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
             return result;
         }
-
 
         public async Task<UserRecord> CreateUser(string username, string password, string email, string phoneNumber)
         {
