@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -14,6 +15,15 @@ namespace MoveMate.Repository.Repositories.Repository
     {
         public HolidaySettingRepository(MoveMateDbContext context) : base(context)
         {
+            
+        }
+        
+        public async Task<bool> IsHolidayAsync(DateTime bookingAt)
+        {
+            var bookingDateOnly = DateOnly.FromDateTime(bookingAt);
+
+            return await _context.Set<HolidaySetting>()
+                .AnyAsync(holiday => holiday.Day.HasValue && holiday.Day.Value == bookingDateOnly);
         }
     }
 }

@@ -41,10 +41,17 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
         }
 
-        public async Task<List<FeeSetting>> GetPercentFeeSettingsAsync()
+        public async Task<List<FeeSetting>> GetPercentSystemFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
-                .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true)
+                .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true && f.Type == TypeFeeEnums.SYSTEM.ToString())
+                .ToListAsync();
+        }
+        
+        public async Task<List<FeeSetting>> GetPercentHolidayFeeSettingsAsync()
+        {
+            return await _context.Set<FeeSetting>()
+                .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true && f.Type == TypeFeeEnums.HOLIDAY.ToString())
                 .ToListAsync();
         }
         
