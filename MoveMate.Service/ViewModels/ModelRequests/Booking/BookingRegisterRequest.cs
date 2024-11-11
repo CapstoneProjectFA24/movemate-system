@@ -25,8 +25,7 @@ public class BookingRegisterRequest
 
     [Required(ErrorMessage = "Filed is required")]
     public int HouseTypeId { get; set; }
-
-    [Required(ErrorMessage = "Filed is required")]
+    
     public string? Note { get; set; }
 
     public bool? IsRoundTrip { get; set; } = false;
