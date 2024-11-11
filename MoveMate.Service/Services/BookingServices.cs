@@ -290,7 +290,7 @@ namespace MoveMate.Service.Services
                         }
                     }
 
-                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     int userid = int.Parse(userId);
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
@@ -2816,6 +2816,12 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignedLeader);
                     return result;
                 }
+                var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (staffLeader == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
 
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
                 if (booking == null)
@@ -2846,7 +2852,22 @@ namespace MoveMate.Service.Services
                 {
                     bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
                     var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                   
+                    var user = await _unitOfWork.UserRepository.GetManagerAsync();
+
+                    var notification = new Notification
+                    {
+
+                        UserId = user.Id,
+                        SentFrom = staffLeader.Name,
+                        Receive = user.Name,
+                        Name = "Service Fail Notification",
+                        Description = $"Booking with id {booking.Id} have some problem {request.FailReason}",
+                        Topic = "StaffReportFail",
+                        IsRead = false
+                    };
+
+                    // Save the notification to Firestore
+                    await _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
                         response);
                 }
@@ -2926,12 +2947,21 @@ namespace MoveMate.Service.Services
             try
             {
                 // Retrieve the booking with related properties
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId,
-                        includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
 
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+
+                var notificationUser =
+                        await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)booking.UserId);
+
+                var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (staffLeader == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
 
@@ -2972,6 +3002,22 @@ namespace MoveMate.Service.Services
 
                 await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+
+                var user = await _unitOfWork.UserRepository.GetManagerAsync();
+                var notification = new MoveMate.Domain.Models.Notification
+                {
+
+                    UserId = user.Id,
+                    SentFrom = staffLeader.Name,
+                    Receive = user.Name,
+                    Name = "Report Damage Items Notification",
+                    Description = $"Items damaged during transportation in booking {booking.Id}",
+                    Topic = "TrackerReport",
+                    IsRead = false
+                };
+                await _unitOfWork.NotificationRepository.AddAsync(notification);
+
+                
                 var saveResult = _unitOfWork.Save();
 
                 if (saveResult > 0)
@@ -2980,6 +3026,24 @@ namespace MoveMate.Service.Services
                         includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
 
                     var response = _mapper.Map<BookingResponse>(booking);
+
+                    // Save the notification to Firestore
+                    _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+
+                    var title = "Báo cáo hư hại: Đã phân công trách nhiệm";
+                    var body = $"Thông báo: Đã phân công trách nhiệm cho việc hư hại đồ vật trong quá trình vận chuyển hoặc đóng gói cho đơn hàng {booking.Id}.";
+                    var fcmToken = notificationUser.FcmToken;
+                    var data = new Dictionary<string, string>
+                    {
+                        { "bookingId", booking.Id.ToString() },
+                        { "status", booking.Status.ToString() },
+                        { "message", "Đã phân công trách nhiệm cho việc hư hại." }
+                    };
+
+                    // Gửi thông báo đến Firebase
+                    await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+
+
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess, response);
                 }
                 else

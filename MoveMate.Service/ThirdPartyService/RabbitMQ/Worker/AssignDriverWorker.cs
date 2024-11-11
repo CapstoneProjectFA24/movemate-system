@@ -150,7 +150,23 @@ Auto-Assign Driver Workflow:
                     var driverNumberBooking = existingBooking.DriverNumber!.Value;
                     if (driverNumberBooking > driverIds.Count)
                     {
-                        // đánh tag faild cần reviewer can thiệp
+                        var user = await unitOfWork.UserRepository.GetManagerAsync();
+
+                        var notification = new Notification
+                        {
+                           
+                            UserId = user.Id,  
+                            SentFrom = "System",  
+                            Receive = user.Name,    
+                            Name = "Driver Shortage Notification",
+                            Description = $"Only {driverIds.Count} drivers available for {driverNumberBooking} bookings.",
+                            Topic = "DriverAssignment",                         
+                            IsRead = false
+                        };
+
+                        // Save the notification to Firestore
+                        await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+
                     }
 
                     await AssignDriversToBooking(
