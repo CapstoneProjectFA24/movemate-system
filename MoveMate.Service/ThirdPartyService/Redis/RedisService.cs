@@ -193,6 +193,50 @@ public class RedisService : IRedisService
             Console.WriteLine($"An error occurred while enqueueing to queue '{queueKey}': {ex.Message}");
         }
     }
+    
+    public async Task EnqueueMultipleAsyncV2<T>(string queueKey, IEnumerable<T> values, TimeSpan? expiry = null)
+    {
+        var expiryTime = expiry ?? TimeSpan.FromHours(20);
+
+        try
+        {
+            // Lấy tất cả các phần tử hiện có trong hàng đợi Redis
+            var existingItems = await _database.ListRangeAsync(queueKey);
+            var existingValues = existingItems.Select(item => JsonSerializer.Deserialize<T>(item)).ToHashSet();
+
+            // Chuyển các phần tử không trùng lặp thành RedisValue để chuẩn bị đẩy vào Redis một lần
+            var uniqueValues = values
+                .Where(value => !existingValues.Contains(value))
+                .Select(value => (RedisValue)JsonSerializer.Serialize(value))
+                .ToArray();
+
+            if (uniqueValues.Length > 0)
+            {
+                // Đẩy tất cả các phần tử vào Redis một lần duy nhất
+                await _database.ListRightPushAsync(queueKey, uniqueValues);
+
+                // Thiết lập thời gian hết hạn cho key
+                var expiryResult = await _database.KeyExpireAsync(queueKey, expiryTime);
+                if (expiryResult)
+                {
+                    Console.WriteLine($"Successfully set expiry for queue '{queueKey}' to {expiryTime.TotalHours} hours.");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to set expiry for queue '{queueKey}'.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No unique items to enqueue in queue '{queueKey}'.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while enqueueing to queue '{queueKey}': {ex.Message}");
+        }
+    }
+
 
     public async Task<T?> DequeueAsync<T>(string queueKey)
     {
