@@ -206,7 +206,7 @@ Auto-Assign Driver Workflow:
                         var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count() +
                                              assignedDriverAvailable2Hours.Count() +
                                              assignedDriverAvailableOther.Count();
-                        if (countRemaining > countDriverNumberBooking)
+                        if (countRemaining >= countDriverNumberBooking)
                         {
                             if (countDriver > 0)
                             {
@@ -279,7 +279,7 @@ Auto-Assign Driver Workflow:
         {
             var driverId = await redisService.DequeueAsync<int>(redisKey);
             var endTime = startTime.AddHours(estimatedDeliveryTime);
-            var truckId = unitOfWork.TruckRepository.FindByUserIdAsync(driverId).Id;
+            var truck = await unitOfWork.TruckRepository.FindByUserIdAsync(driverId);
             var newAssignmentDriver = new Assignment()
             {
                 BookingId = bookingId,
@@ -290,7 +290,7 @@ Auto-Assign Driver Workflow:
                 EndDate = endTime,
                 IsResponsible = false,
                 ScheduleBookingId = scheduleBookingId,
-                TruckId = truckId
+                TruckId = truck.Id
             };
 
             listAssignments.Add(newAssignmentDriver);

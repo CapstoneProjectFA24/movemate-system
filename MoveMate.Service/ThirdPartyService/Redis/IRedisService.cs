@@ -31,6 +31,8 @@ public interface IRedisService
     Task<bool> RemoveFromQueueAsync<T>(string queueKey, T value);
 
     Task EnqueueMultipleAsync<T>(string queueKey, IEnumerable<T> values, TimeSpan? expiry = null);
+    Task EnqueueMultipleAsyncV2<T>(string queueKey, IEnumerable<T> values, TimeSpan? expiry = null);
+
     Task EnqueueWithExpiryAsync<T>(string queueKey, T value, TimeSpan? expiry = null);
 
     Task<T?> DequeueWithExpiryAsync<T>(string queueKey);
