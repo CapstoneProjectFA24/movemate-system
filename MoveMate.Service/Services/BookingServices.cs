@@ -1057,7 +1057,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "BookingDetails");
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "BookingDetails,Assignments");
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
@@ -2672,6 +2672,8 @@ namespace MoveMate.Service.Services
                 {
                     assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignment.Id);
                     var response = _mapper.Map<AssignmentResponse>(assignment);
+                    var entity = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId, includeProperties: "Assignments");
+                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
 
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateAssignment,
                         response);
