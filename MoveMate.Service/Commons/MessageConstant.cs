@@ -142,6 +142,9 @@ namespace MoveMate.Service.Commons
             public const string HouseTypeUpdateFail = "Update house type failed";
             public const string HouseTypeAlreadyDeleted = "House type already deleted";
 
+            //Noti
+            public const string NotFoundNotification = "Notification not found";
+
             //Service
             public const string NotFoundService = "Service not found";
             public const string TypeTruckRequire = "Type must be TRUCK when TruckCategoryId is provided";
@@ -384,6 +387,8 @@ namespace MoveMate.Service.Commons
             //Notification
             public const string CreatedUserDeviceSuccessfully = "Created User Device Successfully.";
             public const string DeletedUserDeviceSuccessfully = "Delete User Device Successfully.";
+            public const string ReadNoti = "Notification have been read";
+
         }
 
 
