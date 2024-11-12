@@ -1,4 +1,5 @@
 ﻿using LinqKit;
+using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Service.Commons.Page;
 using System;
@@ -10,31 +11,32 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllNotificationRequest : PaginationRequestV2<Notification>
+    public class GetAllBookingTrackerReport : PaginationRequestV2<BookingTracker>
     {
         public string? Search { get; set; }
-        public int? UserId { get; set; }
+        public int? BookingId { get; set; }
 
-        public override Expression<Func<Notification, bool>> GetExpressions()
+        public override Expression<Func<BookingTracker, bool>> GetExpressions()
         {
-            bool isStaff = false;
+
 
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<Notification>(true);
-                queryExpression.Or(cus => cus.Topic.ToLower().Contains(Search));
-                queryExpression.Or(cus => cus.Name.ToLower().Contains(Search));
+                var queryExpression = PredicateBuilder.New<BookingTracker>(true);
                 queryExpression.Or(cus => cus.Description.ToLower().Contains(Search));
+
 
                 Expression = Expression.And(queryExpression);
             }
 
-            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
+            if (BookingId.HasValue)
             {
-                Expression = Expression.And(u => u.UserId == UserId);
+                Expression = Expression.And(u => u.BookingId == BookingId.Value);
             }
+
+            Expression = Expression.And(u => u.Type == TrackerEnums.REPORT.ToString());
 
             return Expression;
         }

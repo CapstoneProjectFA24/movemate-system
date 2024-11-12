@@ -12,6 +12,7 @@ namespace MoveMate.Service.IServices
     public interface INotificationService
     {
         public Task<OperationResult<bool>> ManagerReadMail(int userId, int notiId);
-        //public Task<OperationResult<List<NotificationResponse>>> GetAll(GetAllBookingRequest request);
+        public Task<OperationResult<List<NotificationResponse>>> GetAll(GetAllNotificationRequest request);
+        public Task<OperationResult<List<BookingTrackerResponse>>> GetAllBookingTracker(GetAllBookingTrackerReport request);
     }
 }

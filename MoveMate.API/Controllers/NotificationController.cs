@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Services;
+using MoveMate.Service.ViewModels.ModelRequests;
 using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
@@ -30,6 +33,38 @@ namespace MoveMate.API.Controllers
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
             var userId = int.Parse(accountId.Value);
             var response = await _notificationService.ManagerReadMail(userId, id);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// 
+        /// CHORE: Get all notification 
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("")]
+        public async Task<IActionResult> GetAll([FromQuery] GetAllNotificationRequest request)
+        {
+            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+            var response = await _notificationService.GetAll(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// 
+        /// CHORE: Get all notification 
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("report")]
+        public async Task<IActionResult> GetAllReport([FromQuery] GetAllBookingTrackerReport request)
+        {
+            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+            var response = await _notificationService.GetAllBookingTracker(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
