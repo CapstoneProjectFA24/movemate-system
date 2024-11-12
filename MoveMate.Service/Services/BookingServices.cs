@@ -1349,13 +1349,11 @@ namespace MoveMate.Service.Services
 
                 switch (assignment.Status)
                 {
-                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() &&
-                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                    case var status when status == AssignmentStatusEnums.ASSIGNED.ToString() :
                         nextStatus = AssignmentStatusEnums.INCOMING.ToString();
                         break;
 
-                    case var status when status == AssignmentStatusEnums.INCOMING.ToString() &&
-                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
+                    case var status when status == AssignmentStatusEnums.INCOMING.ToString():
                         var bookingTracker =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
                         if (bookingTracker == null)
@@ -1377,7 +1375,9 @@ namespace MoveMate.Service.Services
 
                         List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
                         tracker.TrackerSources = resourceList;
+
                         await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                        booking.Status = BookingEnums.IN_PROGRESS.ToString();
                         nextStatus = AssignmentStatusEnums.ARRIVED.ToString();
                         break;
                     case var status when status == AssignmentStatusEnums.ARRIVED.ToString() &&
