@@ -40,7 +40,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     var booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(message,
                     includeProperties:
                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
-                    firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                    await firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 }
 
 

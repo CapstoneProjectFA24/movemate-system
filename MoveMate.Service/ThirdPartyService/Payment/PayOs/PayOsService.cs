@@ -409,7 +409,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
 
                 result = OperationResult<string>.Success(command.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.PaymentHandle);
             }

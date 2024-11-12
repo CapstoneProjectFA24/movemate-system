@@ -188,7 +188,7 @@ Auto-Assign Driver Workflow:
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                 
-                    firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
+                    await firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                 }
                 else
                 {
@@ -214,7 +214,7 @@ Auto-Assign Driver Workflow:
                             includeProperties:
                             "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                 
-                        firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
+                        await firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                     }
                     else
                     {
@@ -281,7 +281,7 @@ Auto-Assign Driver Workflow:
                                 includeProperties:
                                 "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                 
-                            firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
+                            await firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                         }
 
                         //đánh tag faild cần reviewer can thiệp
