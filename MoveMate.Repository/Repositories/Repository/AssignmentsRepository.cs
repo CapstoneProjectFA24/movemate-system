@@ -236,15 +236,26 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
 
             // Tìm danh sách Assignment cho các tài xế rảnh
+            //var availableAssignments = await query
+            //    .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+            //                a.Truck.TruckCategoryId == truckCategoryId)
+            //    .Where(a => a.ScheduleBookingId == scheduleBookingId
+            //                && ((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
+            //                    (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime)))
+            //    .Where(a => !conflictedDrivers.Contains(a.UserId))
+            //    .Distinct()
+            //    .ToListAsync();
             var availableAssignments = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
-                            a.Truck.TruckCategoryId == truckCategoryId)
+                     a.Truck.TruckCategoryId == truckCategoryId)
                 .Where(a => a.ScheduleBookingId == scheduleBookingId
-                            && ((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
-                                (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime)))
+                    && ((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
+                    (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime)))
                 .Where(a => !conflictedDrivers.Contains(a.UserId))
-                .Distinct()
+                .GroupBy(a => a.UserId) // Nhóm theo UserId để loại bỏ bản ghi trùng lặp
+                .Select(g => g.First()) // Lấy bản ghi đầu tiên của mỗi nhóm
                 .ToListAsync();
+
 
             return availableAssignments;
         }
