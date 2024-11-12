@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelRequests;
+using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
 {
@@ -8,14 +9,16 @@ namespace MoveMate.API.Controllers
     public class AdminController : BaseController
     {
         private readonly IUserServices _userServices;
+        private readonly IEmailService _emailService;
 
-        public AdminController(IUserServices userServices)
+        public AdminController(IUserServices userServices, IEmailService emailService)
         {
             _userServices = userServices;
+            _emailService = emailService;
         }
 
         /// <summary>
-        /// Creates a new user with information provided in the admin's request.
+        /// CHORE : Creates a new user with information provided in the admin's request.
         /// </summary>
         /// <param name="request">An <see cref="AdminCreateUserRequest"/> object containing the user information.</param>
         /// <returns>Returns a response containing the result of user creation.</returns>
@@ -48,7 +51,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Bans a user by setting the user's banned status to true.
+        /// CHORE : Bans a user by setting the user's banned status to true.
         /// </summary>
         /// <param name="id">The ID of the user to be banned.</param>
         /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
@@ -63,7 +66,7 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-
+      
 
 
     }

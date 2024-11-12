@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using System.Globalization;
+using MoveMate.Domain.Models;
 
 namespace MoveMate.Service.Services
 {
@@ -143,5 +144,9 @@ namespace MoveMate.Service.Services
         }
 
         // Add more methods for other email types, calling SendEmailAsync with different templates and placeholders
+
+
+       
+
     }
 }
