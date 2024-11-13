@@ -434,7 +434,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 operationResult =
                     OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
                 

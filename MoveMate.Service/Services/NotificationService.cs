@@ -6,6 +6,8 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +60,90 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
             return result;
+        }
+
+        public async Task<OperationResult<List<NotificationResponse>>> GetAll(GetAllNotificationRequest request)
+        {
+            var result = new OperationResult<List<NotificationResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.NotificationRepository.GetWithCount(
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder()
+                );
+                var listResponse = _mapper.Map<List<NotificationResponse>>(entities.Data);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListNotificationEmpty,
+                        listResponse);
+                    return result;
+                }
+
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListNotificationSuccess,
+                    listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+
+
+
+        }
+
+        public async Task<OperationResult<List<BookingTrackerResponse>>> GetAllBookingTracker(GetAllBookingTrackerReport request)
+        {
+            var result = new OperationResult<List<BookingTrackerResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.BookingTrackerRepository.GetWithCount(
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder(),
+                    includeProperties: "TrackerSources"
+                );
+                var listResponse = _mapper.Map<List<BookingTrackerResponse>>(entities.Data);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListReportSuccess,
+                        listResponse);
+                    return result;
+                }
+
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListReportSuccess,
+                    listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
         }
     }
 }
