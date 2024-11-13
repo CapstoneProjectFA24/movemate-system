@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
-    public class BookingStaffDailyResponse
+    public class GroupResponse
     {
         public int Id { get; set; }
 

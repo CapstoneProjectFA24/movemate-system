@@ -120,20 +120,20 @@ namespace MoveMate.Service.Services
                     }
 
                     // Validate that StartDate is in the future
-                    if (request.StartDate <= DateTime.Now)
-                    {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
-                        return result;
-                    }
+                    //if (request.StartDate <= DateTime.Now)
+                    //{
+                    //    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
+                    //    return result;
+                    //}
                 }
 
                 if (!request.EndDate.HasValue && request.StartDate.HasValue)
                 {
-                    if (request.StartDate <= DateTime.Now)
-                    {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
-                        return result;
-                    }
+                    //if (request.StartDate <= DateTime.Now)
+                    //{
+                    //    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
+                    //    return result;
+                    //}
 
                     if (request.StartDate >= schedule.EndDate)
                     {
