@@ -291,7 +291,7 @@ namespace MoveMate.Service.Services
                     }
 
                     _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
-                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     int userid = int.Parse(userId);
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
                     // Sending a booking confirmation email
@@ -472,7 +472,7 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(entity);
-                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelBooking,
                         response);
                 }
@@ -510,7 +510,7 @@ namespace MoveMate.Service.Services
                 booking.CancelReason = MessageConstant.FailMessage.CancelExpireBooking;
                 _unitOfWork.BookingRepository.Update(booking);
                 _unitOfWork.Save();
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             }
 
             if (booking != null && booking.Status == BookingEnums.DEPOSITING.ToString())
@@ -520,7 +520,7 @@ namespace MoveMate.Service.Services
                 booking.CancelReason = MessageConstant.FailMessage.CancelExpirePayment;
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             }
         }
 
@@ -1169,7 +1169,7 @@ namespace MoveMate.Service.Services
 
                 var response = _mapper.Map<AssignmentResponse>(assignment);
                 booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1251,7 +1251,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<AssignmentResponse>(bookingDetail);
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1505,7 +1505,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(assignment);
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1620,7 +1620,7 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(bookingDetail);
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1822,7 +1822,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<AssignmentResponse>(assigment);
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
@@ -1954,7 +1954,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<BookingResponse>(booking);
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserConfirm, response);
             }
             catch (Exception ex)
@@ -2196,7 +2196,7 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(existingBooking);
-                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+                    await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }
@@ -2322,7 +2322,7 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
-                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+                    await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }
@@ -2602,7 +2602,7 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
-                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+                    await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }
@@ -2674,7 +2674,7 @@ namespace MoveMate.Service.Services
                     assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignment.Id);
                     var response = _mapper.Map<AssignmentResponse>(assignment);
                     var entity = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId, includeProperties: "Assignments");
-                    _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
 
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateAssignment,
                         response);
@@ -2783,7 +2783,7 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(existingBooking);
-                    _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+                    await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }

@@ -388,6 +388,10 @@ namespace MoveMate.Service.Commons
             public const string CreatedUserDeviceSuccessfully = "Created User Device Successfully.";
             public const string DeletedUserDeviceSuccessfully = "Delete User Device Successfully.";
             public const string ReadNoti = "Notification have been read";
+            public const string GetListNotificationEmpty = "List notification is empty!";
+            public const string GetListNotificationSuccess = "Get list notification done";
+            public const string GetListReportEmpty = "List report is empty!";
+            public const string GetListReportSuccess = "Get list report done";
 
         }
 
