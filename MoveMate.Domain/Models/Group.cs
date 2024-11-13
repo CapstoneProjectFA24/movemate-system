@@ -3,13 +3,9 @@ using System.Collections.Generic;
 
 namespace MoveMate.Domain.Models;
 
-public partial class BookingStaffDaily
+public partial class Group
 {
     public int Id { get; set; }
-
-    public int? UserId { get; set; }
-
-    public int? ScheduleWorkingId { get; set; }
 
     public string? Status { get; set; }
 
@@ -21,7 +17,7 @@ public partial class BookingStaffDaily
 
     public int? DurationTimeActived { get; set; }
 
-    public virtual ScheduleWorking? ScheduleWorking { get; set; }
+    public virtual ICollection<ScheduleWorking> ScheduleWorkings { get; set; } = new List<ScheduleWorking>();
 
-    public virtual User? User { get; set; }
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

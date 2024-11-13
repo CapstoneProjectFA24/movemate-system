@@ -25,6 +25,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
-        public virtual ICollection<BookingStaffDailyResponse> BookingStaffDailies { get; set; } = new List<BookingStaffDailyResponse>();
+        public virtual ICollection<GroupResponse> BookingStaffDailies { get; set; } = new List<GroupResponse>();
     }
 }

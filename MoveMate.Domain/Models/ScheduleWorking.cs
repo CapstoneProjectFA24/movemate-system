@@ -19,9 +19,15 @@ public partial class ScheduleWorking
 
     public string? Type { get; set; }
 
-    public DateTime? StartDate { get; set; }
+    public TimeOnly? StartDate { get; set; }
 
-    public DateTime? EndDate { get; set; }
+    public TimeOnly? EndDate { get; set; }
 
-    public virtual ICollection<BookingStaffDaily> BookingStaffDailies { get; set; } = new List<BookingStaffDaily>();
+    public int? GroupId { get; set; }
+
+    public TimeOnly? ExtentStartDate { get; set; }
+
+    public TimeOnly? ExtentEndDate { get; set; }
+
+    public virtual Group? Group { get; set; }
 }

@@ -13,13 +13,13 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Status { get; set; }
 
         [JsonIgnore]
-        public DateTime? UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; } 
 
 
         public string? Type { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        public TimeOnly? StartDate { get; set; }
 
-        public DateTime? EndDate { get; set; }
+        public TimeOnly? EndDate { get; set; }
     }
 }
