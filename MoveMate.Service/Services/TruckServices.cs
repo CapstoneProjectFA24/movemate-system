@@ -316,7 +316,7 @@ namespace MoveMate.Service.Services
 
             var pagin = new Pagination();
 
-            var filter = request.GetExpressions();
+            request.SortColumn = "TruckCategoryId";
 
             try
             {
