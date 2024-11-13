@@ -91,7 +91,7 @@ Auto-Assign Driver Workflow:
     /// </summary>
     /// <param name="message">An integer representing the booking ID to which drivers need to be assigned.</param>
     /// <exception cref="NotFoundException">Thrown when the booking ID does not exist or cannot be found in the system.</exception>
-    [Consumer("movemate.booking_assign_driver")]
+    [Consumer("movemate.booking_assign_driver_local")]
     public async Task HandleMessage(int message)
     {
         // Implementation of driver assignment logic will go here.
@@ -105,7 +105,7 @@ Auto-Assign Driver Workflow:
         // 3. Assign a driver to the booking if an appropriate driver is found.
         // 4. Save the updated booking details.
         await Task.Delay(100);
-        Console.WriteLine("movemate.booking_assign_driver");
+        Console.WriteLine("movemate.booking_assign_driver_local");
         try
         {
             using (var scope = _serviceScopeFactory.CreateScope())
@@ -230,10 +230,10 @@ Auto-Assign Driver Workflow:
                         var assignedDriverAvailable2Hours =
                             await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
                                 existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                                existingBooking.TruckNumber!.Value, 2, 1);
+                                existingBooking.TruckNumber!.Value, 1, 1);
                         // OTHER
                         var assignedDriverAvailableOther =
-                            await unitOfWork.AssignmentsRepository.GetAvailableWithOverlapAsync(
+                            await unitOfWork.AssignmentsRepository.GetDriverAvailableWithOverlapAsync(
                                 existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
                                 existingBooking.TruckNumber!.Value, 2);
 
@@ -245,17 +245,19 @@ Auto-Assign Driver Workflow:
                             if (countDriver > 0)
                             {
                                 countRemaining -= (int)countDriver;
+                                
                                 await AssignDriversToBooking(
                                     message,
                                     redisKey,
                                     existingBooking.BookingAt!.Value,
-                                    existingBooking.DriverNumber.Value,
+                                    countDriverNumberBooking,
                                     existingBooking.EstimatedDeliveryTime ?? 3,
                                     listAssignments,
                                     redisService,
                                     unitOfWork,
                                     scheduleBooking!.Id
                                 );
+                                countDriverNumberBooking -= (int)countDriver;
                                 
                             }
 
@@ -388,7 +390,7 @@ Auto-Assign Driver Workflow:
             
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
-            rate = rate / duration;
+            rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
 
@@ -412,7 +414,7 @@ Auto-Assign Driver Workflow:
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
-            rate = rate / duration;
+            rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
 
@@ -436,12 +438,17 @@ Auto-Assign Driver Workflow:
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
-            rate = rate / duration;
+            rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
+        
+        driverDistances = driverDistances
+            .GroupBy(d => d.Driver.UserId)        
+            .Select(g => g.First())               
+            .ToList();
 
         var closestDrivers = driverDistances
-            .OrderBy(x => x.rate)
+            .OrderByDescending(x => x.rate)
             .Take(driverCount)
             .ToList();
 

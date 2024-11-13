@@ -183,6 +183,22 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+        
+        // porter
+        public static String GetKeyPorter(DateTime? time)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"porterQueue_{dateKey}";
+
+            return redisKey;
+        }
+        public static String GetKeyPorterV2(DateTime? time)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"porterQueueV2_{dateKey}";
+
+            return redisKey;
+        }
 
         public static TimeSpan TimeUntilEndOfDay(DateTime inputDateTime)
         {
