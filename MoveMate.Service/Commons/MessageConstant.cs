@@ -111,6 +111,7 @@ namespace MoveMate.Service.Commons
             public const string InvalidBookingDetailDifferent = "Invalid booking details list, truck Category Id in request is different from truck CategoryId in services";
             public const string BookingReviewed = "The booking status must be REVIEWED";
             public const string BookingWaiting = "The booking status must be WAITING";
+            public const string BookingConfirmed = "The booking status must be CONFIRMED";
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
