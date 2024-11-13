@@ -44,10 +44,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.Type == Type);
             }
 
-            if (UserId.HasValue)
-            {
-                queryExpression = queryExpression.And(u => u.BookingStaffDailies.Any(bsd => bsd.UserId == UserId.Value));
-            }
+          
 
             // Filter by IsActived
             queryExpression = queryExpression.And(u => u.IsActived == true);

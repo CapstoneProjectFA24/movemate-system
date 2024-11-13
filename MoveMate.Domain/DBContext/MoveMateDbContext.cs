@@ -23,7 +23,7 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<BookingDetail> BookingDetails { get; set; }
 
-    public virtual DbSet<BookingStaffDaily> BookingStaffDailies { get; set; }
+    public virtual DbSet<Group> Groups { get; set; }
 
     public virtual DbSet<BookingTracker> BookingTrackers { get; set; }
 
@@ -169,21 +169,15 @@ public partial class MoveMateDbContext : DbContext
                 .HasConstraintName("FK_BookingDetails_Service");
         });
 
-        modelBuilder.Entity<BookingStaffDaily>(entity =>
+        modelBuilder.Entity<Group>(entity =>
         {
-            entity.ToTable("BookingStaffDaily");
+            entity.HasKey(e => e.Id).HasName("PK_Group");
+
+            entity.ToTable("Group");
 
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-
-            entity.HasOne(d => d.ScheduleWorking).WithMany(p => p.BookingStaffDailies)
-                .HasForeignKey(d => d.ScheduleWorkingId)
-                .HasConstraintName("FK_BookingStaffDaily_ScheduleWorking");
-
-            entity.HasOne(d => d.User).WithMany(p => p.BookingStaffDailies)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK_BookingStaffDaily_User");
         });
 
         modelBuilder.Entity<BookingTracker>(entity =>
@@ -327,14 +321,16 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("ScheduleWorking");
 
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.EndDate).HasColumnType("datetime");
-            entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Group).WithMany(p => p.ScheduleWorkings)
+                .HasForeignKey(d => d.GroupId)
+                .HasConstraintName("FK_ScheduleWorking_Group");
         });
 
-      
+
 
         modelBuilder.Entity<Service>(entity =>
         {
@@ -457,6 +453,10 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+
+            entity.HasOne(d => d.Group).WithMany(p => p.Users)
+                .HasForeignKey(d => d.GroupId)
+                .HasConstraintName("FK_User_Group");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)

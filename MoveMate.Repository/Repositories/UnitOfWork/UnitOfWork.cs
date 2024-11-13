@@ -21,7 +21,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         //private LoyalUserSettingRepository _loyalUserSettingRepository;
         private BookingRepository _bookingRepository;
         private BookingDetailRepository _bookingDetailRepository;
-        private BookingStaffDailyRepository _bookingStaffDailyRepository;
+        private GroupRepository _GroupRepository;
         private BookingTrackerRepository _bookingTrackerRepository;
         private FeeDetailRepository _feeDetailRepository;
         private FeeSettingRepository _feeSettingRepository;
@@ -170,16 +170,16 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
-        public BookingStaffDailyRepository BookingStaffDailyRepository
+        public GroupRepository GroupRepository
         {
             get
             {
-                if (_bookingStaffDailyRepository == null)
+                if (_GroupRepository == null)
                 {
-                    _bookingStaffDailyRepository = new BookingStaffDailyRepository(_dbContext);
+                    _GroupRepository = new GroupRepository(_dbContext);
                 }
 
-                return _bookingStaffDailyRepository;
+                return _GroupRepository;
             }
         }
 

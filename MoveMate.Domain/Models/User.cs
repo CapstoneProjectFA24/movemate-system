@@ -45,11 +45,13 @@ public partial class User
 
     public string? NumberIntroduce { get; set; }
 
+    public int? GroupId { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
-    public virtual ICollection<BookingStaffDaily> BookingStaffDailies { get; set; } = new List<BookingStaffDaily>();
-
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public virtual Group? Group { get; set; }
 
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 

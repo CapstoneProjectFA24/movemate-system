@@ -1,6 +1,6 @@
 ﻿namespace MoveMate.Domain.Enums;
 
-public enum BookingStaffDailyEnums
+public enum GroupEnums
 {
     NOW,
     CLOSE,

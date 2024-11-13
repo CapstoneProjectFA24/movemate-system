@@ -12,29 +12,29 @@ using MoveMate.Service.Commons.Page;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllStaffDailyRequest : PaginationRequest<BookingStaffDaily>
+    public class GetAllStaffDailyRequest : PaginationRequest<Group>
     {
         public string? Search { get; set; }
         public string? UserName { get; set; }
         public string? Status { get; set; }
 
-        public override Expression<Func<BookingStaffDaily, bool>> GetExpressions()
+        public override Expression<Func<Group, bool>> GetExpressions()
         {
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<BookingStaffDaily>(true);
+                var queryExpression = PredicateBuilder.New<Group>(true);
                 queryExpression.Or(cus => cus.DurationTimeActived.ToString().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);
             }
 
-            if (!string.IsNullOrWhiteSpace(UserName))
-            {
-                Expression = Expression.And(u => u.User.Name == UserName);
-            }
+            //if (!string.IsNullOrWhiteSpace(UserName))
+            //{
+            //    Expression = Expression.And(u => u.User.Name == UserName);
+            //}
 
 
             if (!string.IsNullOrWhiteSpace(Status))
