@@ -31,7 +31,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly IConfiguration _config;
 
 
-
         public FirebaseServices(IConfiguration config, IMapper mapper, IMessageProducer producer)
         {
             _mapper = mapper;
@@ -41,8 +40,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
             {
-              
-
             }
             //var appOptions = new AppOptions()
             //{
@@ -62,7 +59,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         public async Task<OperationResult<FirebaseToken>> VerifyIdTokenAsync(string idToken)
         {
             var result = new OperationResult<FirebaseToken>();
-            
+
             try
             {
                 string authJsonFile = _config["FirebaseSettings:ConfigFile"];
@@ -138,17 +135,24 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
         public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
         {
-          
             try
             {
-
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
-                    _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
 
+                    if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()))
+                    {
+                        _producer.SendingMessage("movemate.booking_assign_driver_local", saveObj.Id);
+                    }
+
+                    if (saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
+                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString()))
+                    {
+                        _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
+                    }
                 }
 
                 //_producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
@@ -205,13 +209,15 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
-        
+
         // SubCollection
-        public async Task SaveSubcollection<T>(T saveObj, long parentId, string parentCollectionName, string subcollectionName, long subId)
+        public async Task SaveSubcollection<T>(T saveObj, long parentId, string parentCollectionName,
+            string subcollectionName, long subId)
         {
             try
             {
-                DocumentReference parentDocRef = _dbFirestore.Collection(parentCollectionName).Document(parentId.ToString());
+                DocumentReference parentDocRef =
+                    _dbFirestore.Collection(parentCollectionName).Document(parentId.ToString());
 
                 DocumentReference subDocRef = parentDocRef.Collection(subcollectionName).Document(subId.ToString());
 
@@ -224,12 +230,14 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
-        
-        public async Task<T> GetSubcollectionByKey<T>(long parentId, string parentCollectionName, string subcollectionName, string subKey)
+
+        public async Task<T> GetSubcollectionByKey<T>(long parentId, string parentCollectionName,
+            string subcollectionName, string subKey)
         {
             try
             {
-                DocumentReference parentDocRef = _dbFirestore.Collection(parentCollectionName).Document(parentId.ToString());
+                DocumentReference parentDocRef =
+                    _dbFirestore.Collection(parentCollectionName).Document(parentId.ToString());
 
                 DocumentReference subDocRef = parentDocRef.Collection(subcollectionName).Document(subKey);
 
@@ -241,7 +249,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 }
                 else
                 {
-                    throw new NotFoundException($"Document with key '{subKey}' not found in subcollection '{subcollectionName}'.");
+                    throw new NotFoundException(
+                        $"Document with key '{subKey}' not found in subcollection '{subcollectionName}'.");
                 }
             }
             catch (Exception e)
@@ -250,6 +259,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
+
         public async Task<List<Booking>> GetCanceledBookingsOlderThanAsync(DateTime cutoffDate)
         {
             var canceledBookings = new List<Booking>();
@@ -283,7 +293,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             return canceledBookings;
         }
 
-        public async Task<string?> SaveMailManager(MoveMate.Domain.Models.Notification saveObj, long id, string collectionName)
+        public async Task<string?> SaveMailManager(MoveMate.Domain.Models.Notification saveObj, long id,
+            string collectionName)
         {
             try
             {
@@ -306,7 +317,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             }
         }
 
-        public async Task SendNotificationAsync(string title, string body, string fcmToken, Dictionary<string, string>? data = null)
+        public async Task SendNotificationAsync(string title, string body, string fcmToken,
+            Dictionary<string, string>? data = null)
         {
             try
             {

@@ -21,6 +21,8 @@ public class Index : BackgroundService
         _consumer.StartConsuming<AssignDriverWorker>();
         _consumer.StartConsuming<NotificationWorker>();
         _consumer.StartConsuming<PushToFirebaseWorker>();
+        _consumer.StartConsuming<AssignPorterWorker>();
+
         return Task.CompletedTask;
     }
 }
