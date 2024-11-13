@@ -61,7 +61,10 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<ChangeBookingAtRequest, Booking>();
             CreateMap<BookingServiceDetailsUpdateRequest, Booking>()
                 .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails));
-            
+            CreateMap<DriverUpdateBookingRequest, Booking>()
+                .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails));
+            CreateMap<PorterUpdateDriverRequest, Booking>()
+                .ForMember(dest => dest.BookingDetails, opt => opt.MapFrom(src => src.BookingDetails));
             CreateMap<BookingDetail, BookingDetailsResponse>()
                  .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Service != null ? src.Service.ImageUrl : null));
             CreateMap<FailReportRequest, BookingDetail>();

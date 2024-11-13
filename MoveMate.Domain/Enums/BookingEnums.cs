@@ -17,6 +17,7 @@ namespace MoveMate.Domain.Enums;
         COMING,
         WAITING,
         IN_PROGRESS,
+        CONFIRMED,
         COMPLETED,
         CANCEL,
         REFUNDED
