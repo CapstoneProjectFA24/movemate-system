@@ -2016,6 +2016,22 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                if (reviewer.Status == AssignmentStatusEnums.ASSIGNED.ToString() &&
+                   booking.IsReviewOnline == true)
+                {
+                    reviewer.Status = AssignmentStatusEnums.SUGGESTED.ToString();
+                }
+                else if (reviewer.Status == AssignmentStatusEnums.ARRIVED.ToString() &&
+                         booking.IsReviewOnline == false)
+                {
+                    reviewer.Status = AssignmentStatusEnums.SUGGESTED.ToString();
+                }
+
+                else if (reviewer.Status != AssignmentStatusEnums.SUGGESTED.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentSuggeted);
+                    return result;
+                }
 
                 return await UpdateBookingAsync(reviewer.Id, request);
             }
@@ -2052,22 +2068,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                if (bookingDetail.Status == AssignmentStatusEnums.ASSIGNED.ToString() &&
-                    existingBooking.IsReviewOnline == true)
-                {
-                    bookingDetail.Status = AssignmentStatusEnums.SUGGESTED.ToString();
-                }
-                else if (bookingDetail.Status == AssignmentStatusEnums.ARRIVED.ToString() &&
-                         existingBooking.IsReviewOnline == false)
-                {
-                    bookingDetail.Status = AssignmentStatusEnums.SUGGESTED.ToString();
-                }
-
-                else if (bookingDetail.Status != AssignmentStatusEnums.SUGGESTED.ToString())
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentSuggeted);
-                    return result;
-                }
+               
 
                 ReflectionUtils.UpdateProperties(request, existingBooking);
 
@@ -3062,6 +3063,53 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+
+        public async Task<OperationResult<BookingResponse>> UpdateLimitedBookingAsync(int userId, int bookingId, DriverUpdateBookingRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+
+                var assignment = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.DRIVER.ToString(), bookingId);
+                if (assignment == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
+
+
+
+                if (booking.Status == BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+
+                var limitedUpdateRequest = new BookingServiceDetailsUpdateRequest
+                {
+                    TruckCategoryId = request.TruckCategoryId,
+                    BookingDetails = request.BookingDetails ?? new List<BookingDetailRequest>()
+                };
+
+               
+                return await UpdateBookingAsync(assignment.Id, limitedUpdateRequest);
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+            
+           
+        }
+
 
     }
 }

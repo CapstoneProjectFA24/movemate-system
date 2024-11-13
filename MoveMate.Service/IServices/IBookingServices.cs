@@ -39,6 +39,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingDetailsResponse>> StaffReportFail(int bookingDetailId, int userId, FailReportRequest request);
         Task<OperationResult<BookingDetailsResponse>> ManagerFix(int bookingDetailId, int userId);
         Task<OperationResult<BookingResponse>> TrackerReport(int userId, int bookingId, TrackerSourceRequest request);
+        Task<OperationResult<BookingResponse>> UpdateLimitedBookingAsync(int userId,int bookingId, DriverUpdateBookingRequest request);
 
     }
 }

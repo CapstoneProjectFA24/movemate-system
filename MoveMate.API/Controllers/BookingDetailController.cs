@@ -114,6 +114,17 @@ namespace MoveMate.API.Controllers
         }
 
 
+        [HttpPut("driver/update-booking/{id}")]
+        public async Task<IActionResult> DriverUpdateBooking(int id, [FromBody] DriverUpdateBookingRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+
+            var response = await _bookingServices.UpdateLimitedBookingAsync(userId, id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
         /// <summary>
         /// CHORE: Reviewer update status booking details when booking completely reasonable  
