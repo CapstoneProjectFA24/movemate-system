@@ -10,6 +10,7 @@ public class GetAllTruckRequest : PaginationRequestV2<Truck>
 {
     public string? Search { get; set; }
     public int? UserId { get; set; }
+    public int? TruckCategoryId { get; set; }
 
     public override Expression<Func<Truck, bool>> GetExpressions()
     {
@@ -28,6 +29,11 @@ public class GetAllTruckRequest : PaginationRequestV2<Truck>
         if (UserId.HasValue)
         {
             Expression = Expression.And(u => u.UserId == UserId.Value);
+        }
+
+        if (TruckCategoryId.HasValue)
+        {
+            Expression = Expression.And(u => u.TruckCategoryId == TruckCategoryId.Value);
         }
 
 
