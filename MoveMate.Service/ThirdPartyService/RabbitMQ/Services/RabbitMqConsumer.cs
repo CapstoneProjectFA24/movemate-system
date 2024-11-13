@@ -221,7 +221,6 @@ public class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         var properties = ea.BasicProperties;
         properties.Headers ??= new Dictionary<string, object>();
         properties.Headers["x-retry-count"] = currentRetryCount + 1;
-
         
         //var message = ea.Body;
         

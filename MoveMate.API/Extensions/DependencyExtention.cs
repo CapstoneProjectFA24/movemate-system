@@ -120,6 +120,8 @@ namespace MoveMate.API.Extensions
             services.AddScoped<AssignDriverWorker>();
             services.AddScoped<NotificationWorker>();
             services.AddScoped<PushToFirebaseWorker>();
+            services.AddScoped<AssignPorterWorker>();
+
             services.AddScoped<Index>();
 
             services.AddHostedService<Index>();
