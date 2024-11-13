@@ -201,7 +201,7 @@ namespace MoveMate.Service.Services
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 var url = $"{returnUrl}?isSuccess=true&amount={amount}&payDate={DateTime.Now}&bookingId={bookingId}&transactionCode={transaction.TransactionCode}&userId={userId}&paymentMethod={Resource.Wallet}";
                 result.AddResponseStatusCode(StatusCode.Ok, url, MessageConstant.SuccessMessage.PaymentSuccess);
             }
