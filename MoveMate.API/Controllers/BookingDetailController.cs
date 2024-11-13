@@ -113,7 +113,11 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-
+        /// <summary>
+        /// CHORE: Driver update booking by bookingId
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpPut("driver/update-booking/{id}")]
         public async Task<IActionResult> DriverUpdateBooking(int id, [FromBody] DriverUpdateBookingRequest request)
         {
@@ -121,7 +125,24 @@ namespace MoveMate.API.Controllers
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
             var userId = int.Parse(accountId.Value);
 
-            var response = await _bookingServices.UpdateLimitedBookingAsync(userId, id, request);
+            var response = await _bookingServices.DriverUpdateBooking(userId, id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE: Porter update booking by bookingId
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("porter/update-booking/{id}")]
+        public async Task<IActionResult> PorterUpdateBooking(int id, [FromBody] PorterUpdateDriverRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+
+            var response = await _bookingServices.PorterUpdateBooking(userId, id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
