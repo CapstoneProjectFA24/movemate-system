@@ -115,7 +115,7 @@ Auto-Assign Driver Workflow:
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var redisService = scope.ServiceProvider.GetRequiredService<IRedisService>();
                 var firebaseServices = scope.ServiceProvider.GetRequiredService<IFirebaseServices>();
-
+                
                 // check booking
                 var existingBooking = await unitOfWork.BookingRepository.GetByIdAsync(message);
                 if (existingBooking == null)
@@ -123,6 +123,15 @@ Auto-Assign Driver Workflow:
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
                 }
 
+                var bookingDetailTruck =
+                    await unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
+                        TypeServiceEnums.TRUCK.ToString(), message);
+
+                if (bookingDetailTruck == null)
+                {
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
+                
                 var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
 
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
@@ -178,7 +187,8 @@ Auto-Assign Driver Workflow:
                         listAssignments,
                         redisService,
                         unitOfWork,
-                        scheduleBooking!.Id
+                        scheduleBooking!.Id,
+                        bookingDetailTruck
                     );
                     
                     await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
@@ -205,7 +215,8 @@ Auto-Assign Driver Workflow:
                             listAssignments,
                             redisService,
                             unitOfWork,
-                            scheduleBooking!.Id
+                            scheduleBooking!.Id,
+                            bookingDetailTruck
                         );
                         await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                         unitOfWork.Save();
@@ -255,7 +266,8 @@ Auto-Assign Driver Workflow:
                                     listAssignments,
                                     redisService,
                                     unitOfWork,
-                                    scheduleBooking!.Id
+                                    scheduleBooking!.Id,
+                                    bookingDetailTruck
                                 );
                                 countDriverNumberBooking -= (int)countDriver;
                                 
@@ -274,7 +286,8 @@ Auto-Assign Driver Workflow:
                                 assignedDriverAvailableOther,
                                 unitOfWork,
                                 scheduleBooking!.Id,
-                                googleMapsService
+                                googleMapsService,
+                                bookingDetailTruck
                             );
                             await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                             unitOfWork.Save();
@@ -285,8 +298,28 @@ Auto-Assign Driver Workflow:
                 
                             await firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
                         }
+                        else
+                        {
+                            //đánh tag faild cần reviewer can thiệp
+                            var user = await unitOfWork.UserRepository.GetManagerAsync();
 
-                        //đánh tag faild cần reviewer can thiệp
+                            var notification = new Notification
+                            {
+                                UserId = user.Id,  
+                                SentFrom = "System",  
+                                Receive = user.Name,    
+                                Name = "Driver Shortage Notification",
+                                Description = $"Only {countRemaining} drivers available for {countDriverNumberBooking} bookings.",
+                                Topic = "DriverAssignment",                         
+                                IsRead = false
+                            };
+
+                            // Save the notification to Firestore
+                            await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+
+                        }
+
+                        
                     }
                 }
             }
@@ -311,10 +344,11 @@ Auto-Assign Driver Workflow:
     /// <param name="redisService">Service used for interacting with Redis.</param>
     /// <param name="unitOfWork">Unit of work for handling database operations.</param>
     /// <param name="scheduleBookingId">The ID of the scheduleBooking to assign drivers to.</param>
+    /// <param name="bookingDetailTruck">The ID of the bookingDetail</param>
     /// <returns>A task that represents the asynchronous operation of assigning drivers and saving schedule data.</returns>
     private async Task<List<Assignment>> AssignDriversToBooking(int bookingId, string redisKey, DateTime startTime, int driverCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
-        IRedisService redisService, UnitOfWork unitOfWork, int scheduleBookingId)
+        IRedisService redisService, UnitOfWork unitOfWork, int scheduleBookingId, BookingDetail bookingDetailTruck)
     {
         for (int i = 0; i < driverCount; i++)
         {
@@ -331,7 +365,8 @@ Auto-Assign Driver Workflow:
                 EndDate = endTime,
                 IsResponsible = false,
                 ScheduleBookingId = scheduleBookingId,
-                TruckId = truck.Id
+                TruckId = truck.Id,
+                BookingDetailsId = bookingDetailTruck.Id
             };
 
             listAssignments.Add(newAssignmentDriver);
@@ -355,6 +390,7 @@ Auto-Assign Driver Workflow:
     /// <param name="unitOfWork">The UnitOfWork instance used to save data to the database.</param>
     /// <param name="scheduleBookingId">The schedule booking ID for identifying driver details.</param>
     /// <param name="googleMapsService">The Google Maps service for calculating distance and travel time between locations.</param>
+    /// <param name="bookingDetailTruck">The Id of booking Detail</param>
     private async Task<List<Assignment>> AllocateDriversToBookingAsync(
         Booking booking,
         DateTime startTime,
@@ -366,7 +402,8 @@ Auto-Assign Driver Workflow:
         List<Assignment> listDriverAvailableOthers,
         UnitOfWork unitOfWork,
         int scheduleBookingId,
-        IGoogleMapsService googleMapsService)
+        IGoogleMapsService googleMapsService,
+        BookingDetail bookingDetailTruck)
     {
         var driverDistances = new List<(Assignment Driver, double rate)>();
 
@@ -469,6 +506,7 @@ Auto-Assign Driver Workflow:
                 IsResponsible = false,
                 ScheduleBookingId = scheduleBookingId,
                 TruckId = assignment.TruckId,
+                BookingDetailsId = bookingDetailTruck.Id
             });
         }
 

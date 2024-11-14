@@ -31,6 +31,15 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(b => b.ServiceId == serviceId && b.BookingId == bookingId)
                 .FirstOrDefaultAsync();
         }
+        
+        public async Task<BookingDetail?> GetAsyncByTypeAndBookingId(string type, int bookingId)
+        {
+            IQueryable<BookingDetail> query = _dbSet;
+            return await query
+                .Where(b => b.Type == type && b.BookingId == bookingId)
+                .OrderBy(b => b.ServiceId)
+                .FirstOrDefaultAsync();
+        }
 
     }
 }
