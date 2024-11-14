@@ -26,7 +26,7 @@ public class AssignPorterWorker
         _logger = logger;
     }
 
-    [Consumer("movemate.booking_assign_porter")]
+    [Consumer("movemate.booking_assign_porter_local")]
     public async Task HandleMessage(int message)
     {
         Console.WriteLine("movemate.booking_assign_porter_local");
@@ -45,6 +45,15 @@ public class AssignPorterWorker
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
                 }
+                
+                var bookingDetail =
+                    await unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
+                        TypeServiceEnums.PORTER.ToString(), message);
+
+                if (bookingDetail == null)
+                {
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
 
                 var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
 
@@ -58,9 +67,14 @@ public class AssignPorterWorker
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
                 var listAssignments = new List<Assignment>();
 
+                var keyAssigned = DateUtil.GetKeyPorterBooking(existingBooking.BookingAt, existingBooking.Id);
+                var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+
+                redisService.SetData(keyAssigned, existingBooking.Id, timeExpiryRedisQueue);
+                
                 if (checkExistQueue == false)
                 {
-                    var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+                    //var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
 
                     var porterIds =
                         await unitOfWork.UserRepository.FindAllUserByRoleIdAsync(5);
@@ -73,6 +87,8 @@ public class AssignPorterWorker
                     if (porterNumberBooking > porterIds.Count)
                     {
                         var user = await unitOfWork.UserRepository.GetManagerAsync();
+                        bookingDetail.Status = BookingDetailStatusEnums.WAITING.ToString();
+                        await unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
 
                         // danh tag failedm, noti to manager
                         var notification = new Notification
@@ -99,7 +115,8 @@ public class AssignPorterWorker
                         existingBooking.EstimatedDeliveryTime ?? 3,
                         listAssignments,
                         redisService,
-                        scheduleBooking!.Id
+                        scheduleBooking!.Id,
+                        bookingDetail
                     );
 
                     await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
@@ -125,7 +142,8 @@ public class AssignPorterWorker
                             existingBooking.EstimatedDeliveryTime ?? 3,
                             listAssignments,
                             redisService,
-                            scheduleBooking!.Id
+                            scheduleBooking!.Id,
+                            bookingDetail
                         );
                         await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                         unitOfWork.Save();
@@ -171,7 +189,8 @@ public class AssignPorterWorker
                                     existingBooking.EstimatedDeliveryTime ?? 3,
                                     listAssignments,
                                     redisService,
-                                    scheduleBooking!.Id
+                                    scheduleBooking!.Id,
+                                    bookingDetail
                                 );
                                 countporterNumberBooking -= (int)countporter;
                             }
@@ -188,7 +207,8 @@ public class AssignPorterWorker
                                 assignedPortersAvailable2Hours,
                                 assignedPortersAvailableOther,
                                 scheduleBooking!.Id,
-                                googleMapsService
+                                googleMapsService,
+                                bookingDetail
                             );
                             await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                             unitOfWork.Save();
@@ -198,6 +218,28 @@ public class AssignPorterWorker
                                 "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
 
                             await firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
+                        }
+                        else
+                        {
+                            var user = await unitOfWork.UserRepository.GetManagerAsync();
+                            bookingDetail.Status = BookingDetailStatusEnums.WAITING.ToString();
+                            await unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
+
+                            // danh tag failedm, noti to manager
+                            var notification = new Notification
+                            {
+                                UserId = user.Id,
+                                SentFrom = "System",
+                                Receive = user.Name,
+                                Name = "porter Shortage Notification",
+                                Description =
+                                    $"Only {countRemaining} porters available for {countporterNumberBooking} bookings.",
+                                Topic = "porterAssignment",
+                                IsRead = false
+                            };
+
+                            // Save the notification to Firestore
+                            await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
                         }
 
                         //đánh tag faild cần reviewer can thiệp
@@ -224,11 +266,12 @@ public class AssignPorterWorker
     /// <param name="listAssignments">The list of assignments where new porter assignments will be added.</param>
     /// <param name="redisService">Service used for interacting with Redis.</param>
     /// <param name="scheduleBookingId">The ID of the scheduleBooking to assign porters to.</param>
+    /// <param name="bookingDetail">The ID of the bookingDetail</param>
     /// <returns>A task that represents the asynchronous operation of assigning porters and saving schedule data.</returns>
     private async Task<List<Assignment>> AssignPortersToBooking(int bookingId, string redisKey, DateTime startTime,
         int porterCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
-        IRedisService redisService, int scheduleBookingId)
+        IRedisService redisService, int scheduleBookingId, BookingDetail bookingDetail)
     {
         for (int i = 0; i < porterCount; i++)
         {
@@ -244,6 +287,7 @@ public class AssignPorterWorker
                 EndDate = endTime,
                 IsResponsible = false,
                 ScheduleBookingId = scheduleBookingId,
+                BookingDetailsId = bookingDetail.Id
             };
 
             listAssignments.Add(newAssignmentporter);
@@ -267,6 +311,7 @@ public class AssignPorterWorker
     /// <param name="unitOfWork">The UnitOfWork instance used to save data to the database.</param>
     /// <param name="scheduleBookingId">The schedule booking ID for identifying porter details.</param>
     /// <param name="googleMapsService">The Google Maps service for calculating distance and travel time between locations.</param>
+    /// <param name="bookingDetail"></param>
     private async Task<List<Assignment>> AllocatePortersToBookingAsync(
         Booking booking,
         DateTime startTime,
@@ -277,7 +322,8 @@ public class AssignPorterWorker
         List<Assignment> listporterAvailable2Hours,
         List<Assignment> listporterAvailableOthers,
         int scheduleBookingId,
-        IGoogleMapsService googleMapsService)
+        IGoogleMapsService googleMapsService,
+        BookingDetail bookingDetail)
     {
         var staffDistances = new List<(Assignment Staff, double rate)>();
 
@@ -379,6 +425,7 @@ public class AssignPorterWorker
                 EndDate = endTime,
                 IsResponsible = false,
                 ScheduleBookingId = scheduleBookingId,
+                BookingDetailsId = bookingDetail.Id
             });
         }
 

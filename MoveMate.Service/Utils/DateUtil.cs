@@ -168,6 +168,14 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+        
+        public static String GetKeyReview(int groupId, int scheduleId)
+        {
+            string dateKey = GetShardNow();
+            string redisKey = $"reviewerQueue_{dateKey}_{groupId}_{scheduleId}";
+
+            return redisKey;
+        }
 
         public static String GetKeyDriver(DateTime? time, int truckCateId)
         {
@@ -184,6 +192,29 @@ namespace MoveMate.Service.Utils
             return redisKey;
         }
         
+        public static String GetKeyDriver(DateTime? time, int truckCateId, int groupId, int scheduleId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"driverQueue_{truckCateId}_{dateKey}_{groupId}_{scheduleId}";
+
+            return redisKey;
+        }
+        public static String GetKeyDriverV2(DateTime? time, int truckCateId, int groupId, int scheduleId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"driverQueueV2_{truckCateId}_{dateKey}_{groupId}_{scheduleId}";
+
+            return redisKey;
+        }
+        
+        public static String GetKeyDriverBooking(DateTime? time, int bookingId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"driver_{dateKey}_{bookingId}";
+
+            return redisKey;
+        }
+        
         // porter
         public static String GetKeyPorter(DateTime? time)
         {
@@ -196,6 +227,14 @@ namespace MoveMate.Service.Utils
         {
             string dateKey = GetShard(time);
             string redisKey = $"porterQueueV2_{dateKey}";
+
+            return redisKey;
+        }
+        
+        public static String GetKeyPorterBooking(DateTime? time, int bookingId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"porter_{dateKey}_{bookingId}";
 
             return redisKey;
         }

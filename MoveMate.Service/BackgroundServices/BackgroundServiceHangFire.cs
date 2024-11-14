@@ -1,4 +1,5 @@
-﻿using Hangfire;
+﻿using Catel.Linq;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.ThirdPartyService.Firebase;
@@ -66,10 +67,19 @@ public class BackgroundServiceHangFire : IBackgroundServiceHangFire
         {
             _logger.LogInformation("Starting AddStaffJob at {Time}", DateTime.Now);
 
-            List<int> listReviewer = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
+            var listSchedule =_unitOfWork.ScheduleWorkingRepository.Get(s => s.IsActived == true).ToList();
+
+            foreach (var schedule in listSchedule)
+            {
+                List<int> listReviewerSchedule = await _unitOfWork.UserRepository.FindAllUserByRoleIdAndGroupIdAsync(2, schedule.GroupId.Value);
+                string redisKeyGroup = DateUtil.GetKeyReview(schedule.GroupId.Value, schedule.Id);
+                await _redisService.EnqueueMultipleAsync(redisKeyGroup, listReviewerSchedule);
+                
+            }
+            /*List<int> listReviewer = await _unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
             string redisKey = DateUtil.GetKeyReview();
 
-            await _redisService.EnqueueMultipleAsync(redisKey, listReviewer);
+            await _redisService.EnqueueMultipleAsync(redisKey, listReviewer);*/
 
             _logger.LogInformation("AddStaffJob completed successfully at {Time}", DateTime.Now);
         }
