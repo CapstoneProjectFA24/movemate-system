@@ -168,6 +168,14 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+        
+        public static String GetKeyReview(int groupId, int scheduleId)
+        {
+            string dateKey = GetShardNow();
+            string redisKey = $"reviewerQueue_{dateKey}_{groupId}_{scheduleId}";
+
+            return redisKey;
+        }
 
         public static String GetKeyDriver(DateTime? time, int truckCateId)
         {
@@ -180,6 +188,21 @@ namespace MoveMate.Service.Utils
         {
             string dateKey = GetShard(time);
             string redisKey = $"driverQueueV2_{truckCateId}_{dateKey}";
+
+            return redisKey;
+        }
+        
+        public static String GetKeyDriver(DateTime? time, int truckCateId, int groupId, int scheduleId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"driverQueue_{truckCateId}_{dateKey}_{groupId}_{scheduleId}";
+
+            return redisKey;
+        }
+        public static String GetKeyDriverV2(DateTime? time, int truckCateId, int groupId, int scheduleId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"driverQueueV2_{truckCateId}_{dateKey}_{groupId}_{scheduleId}";
 
             return redisKey;
         }

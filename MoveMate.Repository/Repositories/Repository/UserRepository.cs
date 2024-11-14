@@ -102,6 +102,16 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
         }
         
+        public async Task<List<int>> FindAllUserByRoleIdAndGroupIdAsync(int roleId, int groupId)
+        {
+            IQueryable<User> query = _dbSet;
+            return await query
+                .Where(u => u.RoleId == roleId)
+                .Where(u => u.GroupId == groupId)
+                .Select(u => u.Id)
+                .ToListAsync();
+        }
+        
         public async Task<User> GetDriverAsync(int accountId)
         {
             try
@@ -124,6 +134,24 @@ namespace MoveMate.Repository.Repositories.Repository
                 return await query
                     .Include(u => u.Truck) 
                     .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
+                    .Select(u => u.Id)
+                    .ToListAsync(); 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        
+        public async Task<List<int>> GetUsersWithTruckCategoryIdAsync(int truckCategoryId, int groupId)
+        {
+            try
+            {
+                IQueryable<User> query = _dbSet;
+                return await query
+                    .Include(u => u.Truck) 
+                    .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
+                    .Where(u => u.GroupId == groupId)
                     .Select(u => u.Id)
                     .ToListAsync(); 
             }
