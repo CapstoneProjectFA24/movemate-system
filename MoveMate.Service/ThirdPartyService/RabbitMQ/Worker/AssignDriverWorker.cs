@@ -132,12 +132,14 @@ Auto-Assign Driver Workflow:
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
                 }
                 
+                var schedule = await unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(existingBooking.BookingAt.Value);
+                
                 var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
 
                 var date = DateUtil.GetShard(existingBooking.BookingAt);
                 
-                var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
-                var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
+                var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value, schedule.GroupId.Value, schedule.Id);
+                var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value, schedule.GroupId.Value, schedule.Id);
 
                 var checkExistQueue = await redisService.KeyExistsQueueAsync(redisKeyV2);
 
@@ -152,9 +154,9 @@ Auto-Assign Driver Workflow:
                 if (checkExistQueue == false)
                 {
 
-                    var driverIds =
+                    var driverIds = 
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
-                            .Value);
+                            .Value, schedule.GroupId.Value);
                     
                     await redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
                     await redisService.EnqueueMultipleAsync(redisKeyV2, driverIds, timeExpiryRedisQueue);
@@ -326,7 +328,6 @@ Auto-Assign Driver Workflow:
                             await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
 
                         }
-
                         
                     }
                 }

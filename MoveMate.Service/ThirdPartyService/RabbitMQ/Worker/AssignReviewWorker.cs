@@ -25,7 +25,7 @@ public class AssignReviewWorker
 
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task HandleMessage(int message)
     {
         await Task.Delay(TimeSpan.FromSeconds(1));
@@ -40,8 +40,10 @@ public class AssignReviewWorker
                 var producer = scope.ServiceProvider.GetRequiredService<IMessageProducer>();
 
                 var booking = await unitOfWork.BookingRepository.GetByIdAsync(message);
-
-                string redisKey = DateUtil.GetKeyReview();
+                
+                var schedule = await unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(booking.BookingAt.Value);
+                
+                string redisKey = DateUtil.GetKeyReview(schedule.GroupId.Value, schedule.Id);
                 var reviewerId = await redisService.DequeueAsync<int>(redisKey);
                 var date = DateUtil.GetShard(booking!.BookingAt);
                 if (reviewerId == 0)
@@ -53,7 +55,7 @@ public class AssignReviewWorker
                     }
                     else
                     {
-                        List<int> listReviewer = await unitOfWork.UserRepository.FindAllUserByRoleIdAsync(2);
+                        List<int> listReviewer = await unitOfWork.UserRepository.FindAllUserByRoleIdAndGroupIdAsync(2,  schedule.GroupId.Value);
                         await redisService.EnqueueMultipleAsync(redisKey, listReviewer);
 
                         throw new Exception($"Queue {redisKey} has been added");
