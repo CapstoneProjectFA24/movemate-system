@@ -184,6 +184,14 @@ namespace MoveMate.Service.Utils
             return redisKey;
         }
         
+        public static String GetKeyDriverBooking(DateTime? time, int bookingId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"driver_{dateKey}_{bookingId}";
+
+            return redisKey;
+        }
+        
         // porter
         public static String GetKeyPorter(DateTime? time)
         {
@@ -196,6 +204,14 @@ namespace MoveMate.Service.Utils
         {
             string dateKey = GetShard(time);
             string redisKey = $"porterQueueV2_{dateKey}";
+
+            return redisKey;
+        }
+        
+        public static String GetKeyPorterBooking(DateTime? time, int bookingId)
+        {
+            string dateKey = GetShard(time);
+            string redisKey = $"porter_{dateKey}_{bookingId}";
 
             return redisKey;
         }

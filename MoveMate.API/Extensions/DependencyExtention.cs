@@ -109,7 +109,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IAssignJobService, AssignJobService>();
 
             services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("14.225.204.144:6379"));
-            services.AddScoped<IRedisService, RedisService>();
+            services.AddSingleton<IRedisService, RedisService>();
 
             services.AddSingleton<IMessageProducer, MessageProducer>();
             services.AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>();
@@ -172,7 +172,7 @@ namespace MoveMate.API.Extensions
 
             // Register FirebaseServices as a singleton to ensure only one instance is created
             services.AddSingleton<IFirebaseServices>(sp =>
-                new FirebaseServices(configuration, sp.GetRequiredService<IMapper>(), sp.GetRequiredService<IMessageProducer>()));
+                new FirebaseServices(configuration, sp.GetRequiredService<IMapper>(), sp.GetRequiredService<IMessageProducer>(), sp.GetRequiredService<IRedisService>()));
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 

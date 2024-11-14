@@ -91,7 +91,7 @@ Auto-Assign Driver Workflow:
     /// </summary>
     /// <param name="message">An integer representing the booking ID to which drivers need to be assigned.</param>
     /// <exception cref="NotFoundException">Thrown when the booking ID does not exist or cannot be found in the system.</exception>
-    [Consumer("movemate.booking_assign_driver_local")]
+    [Consumer("movemate.booking_assign_driver")]
     public async Task HandleMessage(int message)
     {
         // Implementation of driver assignment logic will go here.
@@ -144,9 +144,13 @@ Auto-Assign Driver Workflow:
                 var scheduleBooking = await unitOfWork.ScheduleBookingRepository.GetByShard(date);
                 var listAssignments = new List<Assignment>();
 
+                var keyAssigned = DateUtil.GetKeyDriverBooking(existingBooking.BookingAt, existingBooking.Id);
+                var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+
+                redisService.SetData(keyAssigned, existingBooking.Id, timeExpiryRedisQueue);
+                
                 if (checkExistQueue == false)
                 {
-                    var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
 
                     var driverIds =
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
@@ -160,7 +164,9 @@ Auto-Assign Driver Workflow:
                     if (driverNumberBooking > driverIds.Count)
                     {
                         var user = await unitOfWork.UserRepository.GetManagerAsync();
-
+                        bookingDetailTruck.Status = BookingDetailStatusEnums.WAITING.ToString();
+                        await unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
+                        
                         var notification = new Notification
                         {
                            
@@ -302,6 +308,8 @@ Auto-Assign Driver Workflow:
                         {
                             //đánh tag faild cần reviewer can thiệp
                             var user = await unitOfWork.UserRepository.GetManagerAsync();
+                            bookingDetailTruck.Status = BookingDetailStatusEnums.WAITING.ToString();
+                            await unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
 
                             var notification = new Notification
                             {
