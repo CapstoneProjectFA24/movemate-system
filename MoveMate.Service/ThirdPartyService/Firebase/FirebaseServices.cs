@@ -19,6 +19,8 @@ using System.ComponentModel.DataAnnotations;
 using FirebaseAdmin.Messaging;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using Microsoft.Extensions.Configuration;
+using MoveMate.Service.ThirdPartyService.Redis;
+using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -29,12 +31,14 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly IMapper _mapper;
         private readonly IMessageProducer _producer;
         private readonly IConfiguration _config;
+        private readonly IRedisService _redisService;
 
 
-        public FirebaseServices(IConfiguration config, IMapper mapper, IMessageProducer producer)
+        public FirebaseServices(IConfiguration config, IMapper mapper, IMessageProducer producer, IRedisService redisService)
         {
             _mapper = mapper;
             _producer = producer;
+            _redisService = redisService;
             _config = config;
 
             // Check if the default FirebaseApp is already created
@@ -142,16 +146,21 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 {
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
-
-                    if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()))
+                    var keyDriverAssigned = DateUtil.GetKeyDriverBooking(saveObj.BookingAt, saveObj.Id);
+                    var isDriverAssigned = await _redisService.KeyExistsAsync(keyDriverAssigned);
+                    
+                    var keyPorterAssigned = DateUtil.GetKeyPorterBooking(saveObj.BookingAt, saveObj.Id);
+                    var isPorterAssigned = await _redisService.KeyExistsAsync(keyPorterAssigned);
+                    
+                    if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) && isDriverAssigned == false)
                     {
-                        _producer.SendingMessage("movemate.booking_assign_driver_local", saveObj.Id);
+                        _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
                     }
 
                     if (saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
-                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString()))
+                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString()) && isPorterAssigned == false)
                     {
-                        _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
+                        _producer.SendingMessage("movemate.booking_assign_porter_local", saveObj.Id);
                     }
                 }
 
