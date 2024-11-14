@@ -54,21 +54,26 @@ public class AssignmentService
 
         var scheduleBooking = await _unitOfWork.ScheduleBookingRepository.GetByShard(date);
         var listAssignments = new List<Assignment>();
+
+        if (checkExistQueue == false)
+        {
+            var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+
+            var driverIds =
+                await _unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
+                    .Value);
+            await _redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
+            await _redisService.EnqueueMultipleAsync(redisKeyV2, driverIds, timeExpiryRedisQueue);
+            var driverNumberBooking = existingBooking.DriverNumber!.Value;
+            if (driverNumberBooking > driverIds.Count)
+            {
+                // đánh tag faild
+            }
+            // đánh tag pass 
+        }
+        
     }
     
-    /// <summary>
-    /// Assigns drivers to a booking by dequeuing driver IDs from Redis, creating assignments,
-    /// and saving them in the schedule booking repository.
-    /// </summary>
-    /// <param name="bookingId">The ID of the booking to assign drivers to.</param>
-    /// <param name="redisKey">The Redis key used to dequeue available driver IDs.</param>
-    /// <param name="startTime">The start time for the assignment schedule.</param>
-    /// <param name="driverCount">The number of drivers to assign to the booking.</param>
-    /// <param name="estimatedDeliveryTime">The estimated time in hours for delivery.</param>
-    /// <param name="listAssignments">The list of assignments where new driver assignments will be added.</param>
-    /// <param name="redisService">Service used for interacting with Redis.</param>
-    /// <param name="scheduleBookingId">The ID of the scheduleBooking to assign drivers to.</param>
-    /// <returns>A task that represents the asynchronous operation of assigning drivers and saving schedule data.</returns>
     private async Task<List<Assignment>> AssignDriversToBooking(int bookingId, string redisKey, DateTime startTime, int driverCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
         IRedisService redisService, int scheduleBookingId)
@@ -96,20 +101,7 @@ public class AssignmentService
 
         return listAssignments;
     }
-    
-    /// <summary>
-    /// Assigns available drivers to a booking based on proximity and estimated travel time.
-    /// Calculates a rating for each driver based on travel duration, then selects the most suitable drivers.
-    /// </summary>
-    /// <param name="booking">The current booking that requires driver assignment.</param>
-    /// <param name="startTime">The start time for the booking's assigned drivers.</param>
-    /// <param name="driverCount">The number of drivers needed for this booking.</param>
-    /// <param name="estimatedDeliveryTime">The estimated time needed to complete the delivery for this booking.</param>
-    /// <param name="listAssignments">The list of Assignment records to be updated and saved to the database.</param>
-    /// <param name="listDriverAvailable1Hours">The list of drivers available within 1 hour.</param>
-    /// <param name="listDriverAvailable2Hours">The list of drivers available within 2 hours.</param>
-    /// <param name="listDriverAvailableOthers">The list of drivers available beyond 2 hours.</param>
-    /// <param name="scheduleBookingId">The schedule booking ID for identifying driver details.</param>
+        
     private async Task<List<Assignment>> AllocateDriversToBookingAsync(
         Booking booking,
         DateTime startTime,
@@ -144,7 +136,8 @@ public class AssignmentService
             
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
-            rate = rate / duration;
+            
+            rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
 
@@ -168,7 +161,8 @@ public class AssignmentService
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
-            rate = rate / duration;
+            
+            rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
 
@@ -192,7 +186,8 @@ public class AssignmentService
 
             var distance = googleMapDto.Distance.Value;
             var duration = googleMapDto.Duration.Value;
-            rate = rate / duration;
+            
+            rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
 
