@@ -91,7 +91,7 @@ Auto-Assign Driver Workflow:
     /// </summary>
     /// <param name="message">An integer representing the booking ID to which drivers need to be assigned.</param>
     /// <exception cref="NotFoundException">Thrown when the booking ID does not exist or cannot be found in the system.</exception>
-    [Consumer("movemate.booking_assign_driver")]
+    [Consumer("movemate.booking_assign_driver_local")]
     public async Task HandleMessage(int message)
     {
         // Implementation of driver assignment logic will go here.
@@ -153,7 +153,6 @@ Auto-Assign Driver Workflow:
                 
                 if (checkExistQueue == false)
                 {
-
                     var driverIds = 
                         await unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
                             .Value, schedule.GroupId.Value);
@@ -212,7 +211,7 @@ Auto-Assign Driver Workflow:
                 {
                     int countDriverNumberBooking = existingBooking.DriverNumber!.Value;
                     var countDriver = await redisService.CheckQueueCountAsync(redisKey);
-                    if (countDriver > countDriverNumberBooking)
+                    if (countDriver >= countDriverNumberBooking)
                     {
                         await AssignDriversToBooking(
                             message,
@@ -241,20 +240,20 @@ Auto-Assign Driver Workflow:
                         //  
                         // 1H
                         var assignedDriverAvailable1Hours =
-                            await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
+                            await unitOfWork.AssignmentsRepository.GetDriverByGroupAvailableWithExtendedAsync(
                                 existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                                existingBooking.TruckNumber!.Value);
+                                existingBooking.TruckNumber!.Value, schedule.GroupId);
 
                         // 2H
                         var assignedDriverAvailable2Hours =
-                            await unitOfWork.AssignmentsRepository.GetDriverAvailableWithExtendedAsync(
+                            await unitOfWork.AssignmentsRepository.GetDriverByGroupAvailableWithExtendedAsync(
                                 existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                                existingBooking.TruckNumber!.Value, 1, 1);
+                                existingBooking.TruckNumber!.Value, schedule.GroupId, 1, 1);
                         // OTHER
                         var assignedDriverAvailableOther =
-                            await unitOfWork.AssignmentsRepository.GetDriverAvailableWithOverlapAsync(
+                            await unitOfWork.AssignmentsRepository.GetDriverByGroupAvailableWithOverlapAsync(
                                 existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
-                                existingBooking.TruckNumber!.Value, 2);
+                                existingBooking.TruckNumber!.Value, schedule.GroupId, 2);
 
                         var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count() +
                                              assignedDriverAvailable2Hours.Count() +

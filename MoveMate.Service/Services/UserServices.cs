@@ -50,7 +50,7 @@ namespace MoveMate.Service.Services
                 pageIndex: request.page,
                 pageSize: request.per_page,
                 orderBy: request.GetOrder(),
-                includeProperties: "Role"
+                includeProperties: "Role,Truck"
             );
                 var listResponse = _mapper.Map<List<UserResponse>>(entities.Data);
 

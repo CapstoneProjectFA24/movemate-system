@@ -1,11 +1,6 @@
 ﻿using Google.Cloud.Firestore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MoveMate.Service.ViewModels.ModelResponses
+namespace MoveMate.Service.ViewModels.ModelResponses.Assignments
 {
     [FirestoreData]
     public class AssignmentResponse

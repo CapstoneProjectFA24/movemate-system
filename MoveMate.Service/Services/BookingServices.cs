@@ -31,6 +31,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.ThirdPartyService.GoongMap;
+using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 using Sprache;
 
 namespace MoveMate.Service.Services

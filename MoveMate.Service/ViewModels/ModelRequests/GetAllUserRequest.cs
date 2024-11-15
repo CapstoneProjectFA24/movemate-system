@@ -16,7 +16,9 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Search { get; set; }
         public string? Name { get; set; }
         public string? RoleName { get; set; }
-  
+        public int? GroupId { get; set; }
+        public int? TruckCategoryId { get; set; }
+
 
         public override Expression<Func<User, bool>> GetExpressions()
         {
@@ -40,8 +42,16 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             {
                 Expression = Expression.And(u => u.Role.Name.Contains(RoleName));
             }
+            
+            if (!string.IsNullOrWhiteSpace(GroupId.ToString()))
+            {
+                Expression = Expression.And(u => u.GroupId == GroupId);
+            }
 
-          
+            if (!string.IsNullOrWhiteSpace(TruckCategoryId.ToString()))
+            {
+                Expression = Expression.And(u => u.Truck.TruckCategoryId == TruckCategoryId);
+            }
 
             Expression = Expression.And(u => u.IsDeleted == false);
 

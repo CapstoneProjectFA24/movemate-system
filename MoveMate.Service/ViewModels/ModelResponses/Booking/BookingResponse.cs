@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Google.Cloud.Firestore;
+using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
