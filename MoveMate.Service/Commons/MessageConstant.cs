@@ -369,6 +369,8 @@ namespace MoveMate.Service.Commons
 
             //Assignment
             public const string UpdateAssignment = "Update assignment successful";
+            public const string AssignmentManual = "Manual assignment successful";
+
             //Promotion
             public const string GetListPromotionEmpty = "List promotion is empty!";
             public const string GetListPromotionSuccess = "Get list promotion done";

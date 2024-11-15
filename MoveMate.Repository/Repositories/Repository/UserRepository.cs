@@ -160,6 +160,24 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+        
+        public async Task<List<User>> GetWithTruckCategoryIdAsync(int truckCategoryId, int groupId)
+        {
+            try
+            {
+                IQueryable<User> query = _dbSet;
+                return await query
+                    .Where(u => u.GroupId == groupId)
+                    .Include(u => u.Truck) 
+                    .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
+                    .ToListAsync(); 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
 
         public async Task<User> GetUserByRoleIdAsync()
         {
