@@ -50,7 +50,7 @@ namespace MoveMate.Repository.Repositories.Repository
                             a.Id != assignmentId)
                 .ToListAsync();
         }
-        
+
         public async Task<Assignment> GetByUserIdAndStaffTypeAndIsResponsible(int userId, string staffType,
             int bookingId)
         {
@@ -121,7 +121,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return availableAssignments;
         }
-        
+
         public async Task<List<Assignment>> GetDriverByGroupAvailableWithOverlapAsync(
             DateTime newStartTime,
             DateTime newEndTime,
@@ -134,7 +134,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Include(a => a.Truck)
                 .Include(a => a.Booking)
                 .Include(a => a.User);
-                
+
 
             newStartTime = newStartTime.AddHours(-(0.5 + useExtendedTime!.Value));
             newEndTime = newEndTime.AddHours((0.5 + useExtendedTime!.Value));
@@ -153,6 +153,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                             a.ScheduleBookingId == scheduleBookingId &&
                             a.Truck.TruckCategoryId == truckCategoryId &&
+                            a.User.GroupId == groupId &&
                             a.UserId.HasValue &&
                             driversWithCorrectTruck.Select(d => d.UserId).Contains(a.UserId) &&
                             ((a.EndDate > newStartTime && a.StartDate < newEndTime)))
@@ -176,7 +177,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<Assignment> query = _dbSet
                 .Include(a => a.Booking);
-            
+
             newStartTime = newStartTime.AddHours(-(0.5 + useExtendedTime!.Value));
             newEndTime = newEndTime.AddHours((0.5 + useExtendedTime!.Value));
 
@@ -204,19 +205,19 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return availableAssignments;
         }
-        
+
         public async Task<List<Assignment>> GetPorterByGroupAvailableWithOverlapAsync(
             DateTime newStartTime,
             DateTime newEndTime,
             int scheduleBookingId,
             int? groupId,
             double? useExtendedTime = 0
-            )
+        )
         {
             IQueryable<Assignment> query = _dbSet
                 .Include(a => a.Booking)
                 .Include(a => a.User);
-            
+
             newStartTime = newStartTime.AddHours(-(0.5 + useExtendedTime!.Value));
             newEndTime = newEndTime.AddHours((0.5 + useExtendedTime!.Value));
 
@@ -282,7 +283,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return availableAssignments;
         }
-        
+
         public async Task<List<Assignment>> GetDriverByGroupAvailableWithExtendedAsync(DateTime newStartTime,
             DateTime newEndTime,
             int scheduleBookingId, int truckCategoryId,
@@ -302,7 +303,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             var conflictedDrivers = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
-                            a.Truck.TruckCategoryId == truckCategoryId && a.User.GroupId == groupId) 
+                            a.Truck.TruckCategoryId == truckCategoryId && a.User.GroupId == groupId)
                 .Where(a => a.StartDate < newEndTime && a.EndDate > newStartTime)
                 .Select(a => a.UserId)
                 .Distinct()
@@ -310,7 +311,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             var availableAssignments = await query
                 .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
-                            a.Truck.TruckCategoryId == truckCategoryId  && a.User.GroupId == groupId)
+                            a.Truck.TruckCategoryId == truckCategoryId && a.User.GroupId == groupId)
                 .Where(a => a.ScheduleBookingId == scheduleBookingId
                             && ((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
                                 (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime)))
@@ -355,7 +356,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return availableAssignments;
         }
-        
+
         public async Task<List<Assignment>> GetPortersByGroupAvailableWithExtendedAsync(DateTime newStartTime,
             DateTime newEndTime,
             int scheduleBookingId,
@@ -372,14 +373,14 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Include(a => a.Booking);
 
             var conflictedDrivers = await query
-                .Where(a => a.StaffType == RoleEnums.PORTER.ToString()  && a.User.GroupId == groupId)
+                .Where(a => a.StaffType == RoleEnums.PORTER.ToString() && a.User.GroupId == groupId)
                 .Where(a => a.StartDate < newEndTime && a.EndDate > newStartTime)
                 .Select(a => a.UserId)
                 .Distinct()
                 .ToListAsync();
 
             var availableAssignments = await query
-                .Where(a => a.StaffType == RoleEnums.PORTER.ToString()  && a.User.GroupId == groupId)
+                .Where(a => a.StaffType == RoleEnums.PORTER.ToString() && a.User.GroupId == groupId)
                 .Where(a => a.ScheduleBookingId == scheduleBookingId
                             && ((newStartTimeExtended <= a.EndDate && a.EndDate <= newStartTime) ||
                                 (a.StartDate <= newEndTimeExtended && a.StartDate >= newEndTime)))

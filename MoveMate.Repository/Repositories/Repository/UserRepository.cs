@@ -149,9 +149,9 @@ namespace MoveMate.Repository.Repositories.Repository
             {
                 IQueryable<User> query = _dbSet;
                 return await query
+                    .Where(u => u.GroupId == groupId)
                     .Include(u => u.Truck) 
                     .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
-                    .Where(u => u.GroupId == groupId)
                     .Select(u => u.Id)
                     .ToListAsync(); 
             }
