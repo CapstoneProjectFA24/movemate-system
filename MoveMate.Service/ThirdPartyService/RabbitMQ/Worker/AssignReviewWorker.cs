@@ -100,8 +100,12 @@ public class AssignReviewWorker
                 
                 unitOfWork.Save();
 
+                booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(message,
+                    includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                await firebaseServices.SaveBooking(booking, message, "bookings");
 
-                producer.SendingMessage("movemate.push_to_firebase_local", booking.Id);
+                //producer.SendingMessage("movemate.push_to_firebase_local", booking.Id);
                 
                 //booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(booking.Id,
                 //    includeProperties:
