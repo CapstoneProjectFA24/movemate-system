@@ -378,7 +378,7 @@ namespace MoveMate.API.Extensions
             app.UseHangfireDashboard("/hangfire", new DashboardOptions
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
-                Authorization = new[] { new MyAuthorizationFilter() }
+                //Authorization = new[] { new MyAuthorizationFilter() }
             });
             app.MapHangfireDashboard();
 

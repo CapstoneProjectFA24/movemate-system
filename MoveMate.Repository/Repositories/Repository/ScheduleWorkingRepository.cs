@@ -36,15 +36,18 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-        
+
         public async Task<ScheduleWorking?> GetScheduleByBookingAtAsync(DateTime bookingAt)
         {
             TimeOnly bookingTime = TimeOnly.FromDateTime(bookingAt);
 
             return await _dbSet
-                .Where(s => s.StartDate <= bookingTime && bookingTime <= s.EndDate)
+                .Where(s =>
+                    (s.StartDate <= s.EndDate && s.StartDate <= bookingTime && bookingTime <= s.EndDate)
+                    ||
+                    (s.StartDate > s.EndDate && (bookingTime >= s.StartDate || bookingTime <= s.EndDate))
+                )
                 .FirstOrDefaultAsync();
         }
-
     }
 }
