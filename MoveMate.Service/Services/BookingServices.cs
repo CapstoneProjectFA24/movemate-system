@@ -2082,9 +2082,6 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-
-
-
                 ReflectionUtils.UpdateProperties(request, existingBooking);
 
                 // Update the updated date
@@ -2100,8 +2097,7 @@ namespace MoveMate.Service.Services
                 {
                     voucherTotal = (double)existingBooking.Vouchers.Sum(v => v.Price);
                 }
-
-
+                
                 // Handle Service Details
                 if (request.BookingDetails != null && request.BookingDetails.Any())
                 {
@@ -2164,8 +2160,7 @@ namespace MoveMate.Service.Services
                 existingBooking.FeeDetails = feeCommonDetails;
 
                 total -= voucherTotal;
-
-
+                
                 total += (double)totalFee;
 
                 var deposit = total * 30 / 100;
@@ -2222,8 +2217,6 @@ namespace MoveMate.Service.Services
                         _unitOfWork.BookingDetailRepository.Remove(bookingRemove);
                     }
                 }
-
-
 
                 var saveResult = _unitOfWork.Save();
 

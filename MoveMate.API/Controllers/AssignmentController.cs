@@ -2,6 +2,7 @@
 using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelRequests;
 using System.Security.Claims;
+using MoveMate.Service.ViewModels.ModelRequests.Assignments;
 
 namespace MoveMate.API.Controllers
 {
@@ -33,12 +34,12 @@ namespace MoveMate.API.Controllers
         }
         
         /// <summary>
-        /// CHORE: Assigned manual driver by booking id
+        /// CHORE: Trigger Assigned auto by manual driver by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        [HttpPatch("assign-manual-driver/{bookingId}")]
-        public async Task<IActionResult> AssignedManualDriver(int bookingId)
+        [HttpPatch("assign-auto-by-manual-driver/{bookingId}")]
+        public async Task<IActionResult> AssignedAutoByManualDriver(int bookingId)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
@@ -48,17 +49,29 @@ namespace MoveMate.API.Controllers
         }
         
         /// <summary>
-        /// CHORE: Assigned manual porter by booking id
+        /// CHORE: Trigger Assigned manual porter by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        [HttpPatch("assign-manual-porter/{bookingId}")]
-        public async Task<IActionResult> AssignedManualPorter(int bookingId)
+        [HttpPatch("assign-auto-by-manual-porter/{bookingId}")]
+        public async Task<IActionResult> AssignedAutoByManualPorter(int bookingId)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
             var userId = int.Parse(accountId.Value);
             var response = await _assignmentService.HandleAssignManualPorter(bookingId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        
+        /// <summary>
+        /// CHORE: Assigned manual staff by booking id
+        /// </summary>
+        /// <param name="bookingId"></param>
+        /// <returns></returns>
+        [HttpPatch("assign-manual-staff/{bookingId}")]
+        public async Task<IActionResult> AssignedManualsTask(int bookingId, [FromBody] AssignedManualStaffRequest request)
+        {
+            var response = await _assignmentService.HandleAssignManualStaff(bookingId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
         
