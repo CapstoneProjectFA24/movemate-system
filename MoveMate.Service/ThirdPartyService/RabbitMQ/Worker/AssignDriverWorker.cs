@@ -175,7 +175,7 @@ Auto-Assign Driver Workflow:
                             SentFrom = "System",  
                             Receive = user.Name,    
                             Name = $"Driver Shortage Notification in bookingId: {existingBooking.Id}",
-                            Description = $"Only {driverIds.Count} drivers available for {driverNumberBooking} bookings.",
+                            Description = $"Only {driverIds.Count} drivers available for {driverNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                             Topic = "DriverAssignment",                         
                             IsRead = false
                         };
@@ -319,7 +319,7 @@ Auto-Assign Driver Workflow:
                                 SentFrom = "System",  
                                 Receive = user.Name,    
                                 Name = $"Driver Shortage Notification in bookingId: {existingBooking.Id}",
-                                Description = $"Only {countRemaining} drivers available for {countDriverNumberBooking} bookings.",
+                                Description = $"Only {countRemaining} drivers available for {countDriverNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                                 Topic = "DriverAssignment",                         
                                 IsRead = false
                             };

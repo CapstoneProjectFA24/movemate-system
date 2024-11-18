@@ -98,7 +98,7 @@ public class AssignPorterWorker
                             Receive = user.Name,
                             Name = $"porter Shortage Notification in bookingId: {existingBooking.Id}",
                             Description =
-                                $"Only {porterIds.Count} porters available for {porterNumberBooking} bookings.",
+                                $"Only {porterIds.Count} porters available for {porterNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                             Topic = "porterAssignment",
                             IsRead = false
                         };
@@ -235,7 +235,7 @@ public class AssignPorterWorker
                                 Receive = user.Name,
                                 Name = $"porter Shortage Notification in bookingId: {existingBooking.Id}",
                                 Description =
-                                    $"Only {countRemaining} porters available for {countporterNumberBooking} bookings.",
+                                    $"Only {countRemaining} porters available for {countporterNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                                 Topic = "porterAssignment",
                                 IsRead = false
                             };
