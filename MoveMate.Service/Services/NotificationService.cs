@@ -20,14 +20,16 @@ namespace MoveMate.Service.Services
     {
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
+        private IFirebaseServices _firebaseServices;
         private readonly ILogger<NotificationService> _logger;
 
 
-        public NotificationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<NotificationService> logger)
+        public NotificationService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<NotificationService> logger, IFirebaseServices firebaseServices)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
+            _firebaseServices = firebaseServices;
         }
 
         public async Task<OperationResult<bool>> ManagerReadMail(int userId, int notiId)
@@ -52,6 +54,9 @@ namespace MoveMate.Service.Services
                 noti.IsRead = true;
                 await _unitOfWork.NotificationRepository.SaveOrUpdateAsync(noti);
                 await _unitOfWork.SaveChangesAsync();
+                
+                await _firebaseServices.SaveMailManager(noti,noti.Id, "reports");
+
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ReadNoti,
                     true);
             }

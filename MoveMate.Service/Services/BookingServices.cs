@@ -2901,7 +2901,8 @@ namespace MoveMate.Service.Services
                         Topic = "StaffReportFail",
                         IsRead = false
                     };
-
+                    await _unitOfWork.NotificationRepository.AddAsync(notification);
+                    await _unitOfWork.SaveChangesAsync();
                     // Save the notification to Firestore
                     await _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
@@ -3033,9 +3034,7 @@ namespace MoveMate.Service.Services
                     Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss"),
                     TrackerSources = _mapper.Map<List<TrackerSource>>(request.ResourceList)
                 };
-
-
-
+                
                 await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
 
