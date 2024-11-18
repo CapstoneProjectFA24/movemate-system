@@ -137,6 +137,7 @@ namespace MoveMate.Service.Commons
             public const string AssignWrongReview = "Booking is not from this reviewer";
             public const string CanNotFix = "Booking detail is completely fine";
             public const string AssignmentManual = "Manual assignment Faild";
+            public const string AssignmentDuplicate = "The staff member is already assigned to this booking.";
 
             //House type
             public const string NotFoundHouseType = "House type not found";
@@ -230,6 +231,9 @@ namespace MoveMate.Service.Commons
 
             //Assignment
             public const string AssignmentUpdateFail = "Update assignment failed";
+            public const string AssignmentUpdateFailByDiffTruckCate = "Update assignment failed by driver is other truckCageID";
+            public const string AssignmentUpdateFailOtherStaffType = "Update assignment failed by other StaffType";
+
 
             //Promotion
             public const string NotFoundPromotion = "Promotion not found";

@@ -12,6 +12,7 @@ using MoveMate.Service.ThirdPartyService.GoongMap.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
+using MoveMate.Service.ViewModels.ModelRequests.Assignments;
 using MoveMate.Service.ViewModels.ModelResponses;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 
@@ -568,6 +569,7 @@ public class AssignmentService : IAssignmentService
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             response.OtherStaffs.AddRange(listUserResponse);
         }
+
         response.StaffType = RoleEnums.PORTER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
@@ -584,6 +586,7 @@ public class AssignmentService : IAssignmentService
 
         return result;
     }
+
 
     private async Task<List<Assignment>> AssignPortersToBooking(int bookingId, string redisKey, DateTime startTime,
         int porterCount,
@@ -733,6 +736,171 @@ public class AssignmentService : IAssignmentService
     }
 
     #endregion
-    
-    
+
+    public async Task<OperationResult<BookingResponse>> HandleAssignManualStaff(int bookingId,
+        AssignedManualStaffRequest request)
+    {
+        var result = new OperationResult<BookingResponse>();
+
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
+            includeProperties:
+            "Assignments");
+        if (existingBooking == null)
+        {
+            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        var bookingDetail =
+            await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
+                request.StaffType, bookingId);
+
+        if (bookingDetail == null)
+        {
+            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        if (request.FailedAssignmentId != null)
+        {
+            var failedAssignment =
+                await _unitOfWork.AssignmentsRepository.GetByIdAsync(request.FailedAssignmentId.Value);
+            failedAssignment.Status = AssignmentStatusEnums.FAILED.ToString();
+            await _unitOfWork.AssignmentsRepository.UpdateAsync(failedAssignment);
+        }
+        
+        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+
+        var date = DateUtil.GetShard(existingBooking.BookingAt);
+
+        var scheduleBooking = await _unitOfWork.ScheduleBookingRepository.GetByShard(date);
+
+        switch (request.StaffType)
+        {
+            case "DRIVER":
+
+                var driverAssignments = existingBooking.Assignments
+                    .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                                a.Status != AssignmentStatusEnums.FAILED.ToString())
+                    .ToList();
+
+                if (driverAssignments.Count >= existingBooking.DriverNumber)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                    return result;
+                }
+
+                if (driverAssignments.Any(a => a.UserId == request.AssignToUserId))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentDuplicate);
+                    return result;
+                }
+
+                Console.WriteLine($"Filtered {driverAssignments.Count} DRIVER assignments.");
+
+                var driver = await _unitOfWork.UserRepository.GetByIdAsyncV1(request.AssignToUserId.Value,
+                    includeProperties:
+                    "Truck");
+
+                var isDriver = driver.RoleId == 4 ? true : false;
+                if (isDriver)
+                {
+                 
+                    if (driver.Truck.TruckCategoryId != existingBooking.TruckNumber)
+                    {
+                        result.AddError(StatusCode.NotFound,
+                            MessageConstant.FailMessage.AssignmentUpdateFailByDiffTruckCate);
+                        return result;
+                    }
+
+                    var newStaff = new Assignment
+                    {
+                        BookingId = existingBooking.Id,
+                        StaffType = request.StaffType,
+                        Status = AssignmentStatusEnums.WAITING.ToString(),
+                        UserId = request.AssignToUserId,
+                        StartDate = existingBooking.BookingAt!.Value,
+                        EndDate = endTime,
+                        IsResponsible = false,
+                        ScheduleBookingId = scheduleBooking!.Id,
+                        BookingDetailsId = bookingDetail.Id
+                    };
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                }
+                else
+                {
+                    result.AddError(StatusCode.NotFound,
+                        MessageConstant.FailMessage.AssignmentUpdateFailOtherStaffType);
+                    return result;
+                }
+
+                break;
+
+            case "PORTER":
+
+                var porterAssignments = existingBooking.Assignments
+                    .Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
+                                a.Status != AssignmentStatusEnums.FAILED.ToString())
+                    .ToList();
+
+                if (porterAssignments.Count >= existingBooking.DriverNumber)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                    return result;
+                }
+
+                if (porterAssignments.Any(a => a.UserId == request.AssignToUserId))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentDuplicate);
+                    return result;
+                }
+
+                Console.WriteLine($"Filtered {porterAssignments.Count} PORTER assignments.");
+
+                var porter = await _unitOfWork.UserRepository.GetByIdAsync(request.AssignToUserId.Value);
+
+                var isPorter = porter.RoleId == 5 ? true : false;
+
+                if (isPorter)
+                {
+                    var newStaff = new Assignment
+                    {
+                        BookingId = existingBooking.Id,
+                        StaffType = request.StaffType,
+                        Status = AssignmentStatusEnums.WAITING.ToString(),
+                        UserId = request.AssignToUserId,
+                        StartDate = existingBooking.BookingAt!.Value,
+                        EndDate = endTime,
+                        IsResponsible = false,
+                        ScheduleBookingId = scheduleBooking!.Id,
+                        BookingDetailsId = bookingDetail.Id
+                    };
+
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                }
+                else
+                {
+                    result.AddError(StatusCode.NotFound,
+                        MessageConstant.FailMessage.AssignmentUpdateFailOtherStaffType);
+                    return result;
+                }
+
+                break;
+
+            default:
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                return result;
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+        
+        existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
+            includeProperties:
+            "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+        await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+
+        var response = _mapper.Map<BookingResponse>(existingBooking);
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
+            response);
+        
+        return result;
+    }
 }

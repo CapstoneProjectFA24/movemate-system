@@ -21,6 +21,20 @@ namespace MoveMate.Repository.Repositories.Repository
             _dbContext = context;
         }
 
+        public virtual async Task<User?> GetByIdAsyncV1(int id, string includeProperties = "")
+        {
+            IQueryable<User> query = _dbSet;
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+            query = query.Where(a => a.Id == id);
+
+            var result = await query.FirstOrDefaultAsync();
+            return result;
+        }
+        
         public async Task<User> GetUserAsync(int accountId)
         {
             try
