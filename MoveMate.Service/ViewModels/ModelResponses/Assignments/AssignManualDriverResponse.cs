@@ -2,10 +2,12 @@
 
 public class AssignManualDriverResponse
 {
-    public int? BookingNeedDrivers { get; set; }
-    public List<AssignmentResponse>? AssignmentManualDrivers { get; set; } = new List<AssignmentResponse>();
+    public int? BookingNeedStaffs { get; set; }
+    public List<AssignmentResponse>? AssignmentManualStaffs { get; set; } = new List<AssignmentResponse>();
     
-    public List<UserResponse>? OtherDrivers { get; set; } = new List<UserResponse>();
+    public List<UserResponse>? OtherStaffs { get; set; } = new List<UserResponse>();
+    
+    public String StaffType { get; set; }
 
     public bool? IsSussed { get; set; } = false;
 }

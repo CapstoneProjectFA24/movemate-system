@@ -228,8 +228,7 @@ namespace MoveMate.Service.Services
                     feeDetails.AddRange(updatedFeeDetails);
 
                 }
-
-
+                
                 // resource logic 
 
                 var tracker = new BookingTracker();
@@ -934,6 +933,9 @@ namespace MoveMate.Service.Services
             int porterNumber = 0;
             var feeDetails = new List<FeeDetail>();
 
+            var isServiceDepen = false;
+            var isServiceSupper = false;
+            
             foreach (var bookingDetailRequest in bookingDetailRequests)
             {
                 if (bookingDetailRequest.Quantity == 0)
@@ -958,6 +960,11 @@ namespace MoveMate.Service.Services
                 var quantity = bookingDetailRequest.Quantity;
                 var price = service.Amount * quantity - service.Amount * quantity * ((service.DiscountRate ?? 0) / 100);
 
+                if (service.FeeSettings.Count() == 0 && service.Type == RoleEnums.PORTER.ToString())
+                {
+                    isServiceDepen = true;
+                }
+                
                 if (service.FeeSettings.Count() > 0)
                 {
                     // Logic fee 
@@ -1002,6 +1009,7 @@ namespace MoveMate.Service.Services
                             amount += floorTotalFee;
                             porterNumber = quantity ?? 0;
                             //feeDetails.AddRange(floorUnitFeeDetails);
+                            isServiceSupper = true;
                             break;
                     }
 
@@ -1043,6 +1051,12 @@ namespace MoveMate.Service.Services
                     totalServices += price.Value;
                     bookingDetails.Add(bookingDetail);
                 }
+            }
+
+            if (isServiceDepen == true && isServiceSupper == false)
+            {
+                throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceDepen);
+
             }
 
             return (totalServices, bookingDetails, driverNumber, porterNumber, feeDetails);
