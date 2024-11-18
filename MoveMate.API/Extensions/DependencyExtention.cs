@@ -367,20 +367,20 @@ namespace MoveMate.API.Extensions
                 endpoints.MapControllers();
             });
             // hangfire
-            /*app.UseHangfireDashboard();
+            app.UseHangfireDashboard();
 
             app.MapHangfireDashboard("/hangfire", new DashboardOptions()
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
-                //Authorization = new[] { new MyAuthorizationFilter() }
-            });*/
+                Authorization = new[] { new MyAuthorizationFilter() }
+            });
 
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            /*app.UseHangfireDashboard("/hangfire", new DashboardOptions
             {
                 DashboardTitle = "MoveMateSysterm - Background Services",
                 //Authorization = new[] { new MyAuthorizationFilter() }
             });
-            app.MapHangfireDashboard();
+            app.MapHangfireDashboard();*/
 
             BackgroundJob.Enqueue<IBackgroundServiceHangFire>(cf => cf.StartAllBackgroundJob());
             return app;
