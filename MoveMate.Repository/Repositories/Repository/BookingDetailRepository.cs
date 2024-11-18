@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
+using MoveMate.Domain.Enums;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -37,6 +38,15 @@ namespace MoveMate.Repository.Repositories.Repository
             IQueryable<BookingDetail> query = _dbSet;
             return await query
                 .Where(b => b.Type == type && b.BookingId == bookingId)
+                .OrderBy(b => b.ServiceId)
+                .FirstOrDefaultAsync();
+        }
+        
+        public async Task<BookingDetail?> GetPorterAsyncByServiceIdAndBookingIdNotDriver(int bookingId)
+        {
+            IQueryable<BookingDetail> query = _dbSet;
+            return await query
+                .Where(b => b.ServiceId == 3 && b.BookingId == bookingId && b.Type == RoleEnums.PORTER.ToString())
                 .OrderBy(b => b.ServiceId)
                 .FirstOrDefaultAsync();
         }
