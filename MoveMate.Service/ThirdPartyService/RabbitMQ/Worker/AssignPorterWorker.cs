@@ -104,7 +104,8 @@ public class AssignPorterWorker
                         };
 
                         // Save the notification to Firestore
-                        await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
+                        await unitOfWork.NotificationRepository.AddAsync(notification);
+                        await unitOfWork.SaveChangesAsync();
 
                         await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
                     }
@@ -240,7 +241,8 @@ public class AssignPorterWorker
                                 IsRead = false
                             };
 
-                            await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
+                            await unitOfWork.NotificationRepository.AddAsync(notification);
+                            await unitOfWork.SaveChangesAsync();
                             // save to firebase
                             await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
                         }

@@ -180,7 +180,8 @@ Auto-Assign Driver Workflow:
                             IsRead = false
                         };
 
-                        await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
+                        await unitOfWork.NotificationRepository.AddAsync(notification);
+                        await unitOfWork.SaveChangesAsync();
                         // Save the notification to Firestore
                         await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
 
@@ -324,7 +325,9 @@ Auto-Assign Driver Workflow:
                                 IsRead = false
                             };
 
-                            await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
+                            await unitOfWork.NotificationRepository.AddAsync(notification);
+                            await unitOfWork.SaveChangesAsync();
+
                             // Save the notification to Firestore
                             await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
 
