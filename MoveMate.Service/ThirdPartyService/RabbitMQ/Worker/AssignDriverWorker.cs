@@ -174,12 +174,14 @@ Auto-Assign Driver Workflow:
                             UserId = user.Id,  
                             SentFrom = "System",  
                             Receive = user.Name,    
-                            Name = "Driver Shortage Notification",
-                            Description = $"Only {driverIds.Count} drivers available for {driverNumberBooking} bookings.",
+                            Name = $"Driver Shortage Notification in bookingId: {existingBooking.Id}",
+                            Description = $"Only {driverIds.Count} drivers available for {driverNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                             Topic = "DriverAssignment",                         
                             IsRead = false
                         };
 
+                        await unitOfWork.NotificationRepository.AddAsync(notification);
+                        await unitOfWork.SaveChangesAsync();
                         // Save the notification to Firestore
                         await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
 
@@ -317,11 +319,14 @@ Auto-Assign Driver Workflow:
                                 UserId = user.Id,  
                                 SentFrom = "System",  
                                 Receive = user.Name,    
-                                Name = "Driver Shortage Notification",
-                                Description = $"Only {countRemaining} drivers available for {countDriverNumberBooking} bookings.",
+                                Name = $"Driver Shortage Notification in bookingId: {existingBooking.Id}",
+                                Description = $"Only {countRemaining} drivers available for {countDriverNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                                 Topic = "DriverAssignment",                         
                                 IsRead = false
                             };
+
+                            await unitOfWork.NotificationRepository.AddAsync(notification);
+                            await unitOfWork.SaveChangesAsync();
 
                             // Save the notification to Firestore
                             await firebaseServices.SaveMailManager(notification, notification.Id, "reports");

@@ -96,15 +96,18 @@ public class AssignPorterWorker
                             UserId = user.Id,
                             SentFrom = "System",
                             Receive = user.Name,
-                            Name = "porter Shortage Notification",
+                            Name = $"porter Shortage Notification in bookingId: {existingBooking.Id}",
                             Description =
-                                $"Only {porterIds.Count} porters available for {porterNumberBooking} bookings.",
+                                $"Only {porterIds.Count} porters available for {porterNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                             Topic = "porterAssignment",
                             IsRead = false
                         };
 
                         // Save the notification to Firestore
-                        await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                        await unitOfWork.NotificationRepository.AddAsync(notification);
+                        await unitOfWork.SaveChangesAsync();
+
+                        await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
                     }
 
                     await AssignPortersToBooking(
@@ -231,15 +234,17 @@ public class AssignPorterWorker
                                 UserId = user.Id,
                                 SentFrom = "System",
                                 Receive = user.Name,
-                                Name = "porter Shortage Notification",
+                                Name = $"porter Shortage Notification in bookingId: {existingBooking.Id}",
                                 Description =
-                                    $"Only {countRemaining} porters available for {countporterNumberBooking} bookings.",
+                                    $"Only {countRemaining} porters available for {countporterNumberBooking} bookings in bookingId: {existingBooking.Id}.",
                                 Topic = "porterAssignment",
                                 IsRead = false
                             };
 
-                            // Save the notification to Firestore
-                            await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                            await unitOfWork.NotificationRepository.AddAsync(notification);
+                            await unitOfWork.SaveChangesAsync();
+                            // save to firebase
+                            await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
                         }
 
                         //đánh tag faild cần reviewer can thiệp
