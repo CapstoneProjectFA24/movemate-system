@@ -106,7 +106,7 @@ public class AssignPorterWorker
                         // Save the notification to Firestore
                         await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
 
-                        await firebaseServices.SaveMailManager(notification,existingBooking.Id, "reports");
+                        await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
                     }
 
                     await AssignPortersToBooking(
@@ -242,7 +242,7 @@ public class AssignPorterWorker
 
                             await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
                             // save to firebase
-                            await firebaseServices.SaveMailManager(notification,existingBooking.Id, "reports");
+                            await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
                         }
 
                         //đánh tag faild cần reviewer can thiệp

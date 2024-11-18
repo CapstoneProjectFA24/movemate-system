@@ -182,7 +182,7 @@ Auto-Assign Driver Workflow:
 
                         await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
                         // Save the notification to Firestore
-                        await firebaseServices.SaveMailManager(notification, existingBooking.Id, "reports");
+                        await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
 
                     }
 
@@ -326,7 +326,7 @@ Auto-Assign Driver Workflow:
 
                             await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
                             // Save the notification to Firestore
-                            await firebaseServices.SaveMailManager(notification, existingBooking.Id, "reports");
+                            await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
 
                         }
                         
