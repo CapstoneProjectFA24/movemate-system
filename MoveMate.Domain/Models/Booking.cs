@@ -61,7 +61,7 @@ public partial class Booking
 
     public string? CancelReason { get; set; }
 
-    public bool? IsPorter { get; set; }
+    public bool? IsPorter { get; set; } = false;
 
     public bool? IsRoundTrip { get; set; }
 
