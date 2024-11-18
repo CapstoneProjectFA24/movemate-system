@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿ using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
@@ -26,7 +26,7 @@ public class AssignPorterWorker
         _logger = logger;
     }
 
-    [Consumer("movemate.booking_assign_porter_local")]
+    [Consumer("movemate.booking_assign_porter")]
     public async Task HandleMessage(int message)
     {
         Console.WriteLine("movemate.booking_assign_porter_local");

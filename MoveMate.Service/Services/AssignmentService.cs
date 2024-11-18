@@ -40,6 +40,8 @@ public class AssignmentService : IAssignmentService
         _googleMapsService = googleMapsService;
     }
 
+    #region FEATURE: HandleAssignManualDriver.
+
     public async Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualDriver(int bookingId)
     {
         var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
@@ -159,6 +161,7 @@ public class AssignmentService : IAssignmentService
                 {
                     // đánh tag failed
                 }
+
                 if (countDriver > 0)
                 {
                     countRemaining -= (int)countDriver;
@@ -175,7 +178,7 @@ public class AssignmentService : IAssignmentService
                     );
                     countDriverNumberBooking -= (int)countDriver;
                 }
-                
+
                 await AllocateDriversToBookingAsync(
                     existingBooking,
                     existingBooking.BookingAt!.Value,
@@ -190,35 +193,42 @@ public class AssignmentService : IAssignmentService
                 );
             }
         }
+
         var result = new OperationResult<AssignManualDriverResponse>();
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
-        response.AssignmentManualDrivers.AddRange(listAssignmentResponse);
-        response.BookingNeedDrivers = existingBooking.DriverNumber.Value;
+        response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
+        response.BookingNeedStaffs = existingBooking.DriverNumber.Value;
         var isGroup1 = schedule.GroupId == 1 ? true : false;
 
         if (isGroup1)
         {
-            var listDriverNeed = await 
+            var listDriverNeed = await
                 _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2);
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
-            response.OtherDrivers.AddRange(listUserResponse);
+            response.OtherStaffs.AddRange(listUserResponse);
         }
         else
         {
             var listDriverNeed = await
                 _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1);
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
-            response.OtherDrivers.AddRange(listUserResponse);
-
+            response.OtherStaffs.AddRange(listUserResponse);
         }
 
-        if (listAssignmentResponse.Count() >= response.BookingNeedDrivers)
+        response.StaffType = RoleEnums.DRIVER.ToString();
+        if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
             response.IsSussed = true;
-        } 
-        
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AssignmentManual, response);
+            bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
+            await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
+
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AssignmentManual, response);
+        }
+        else
+        {
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.AssignmentManual, response);
+        }
 
         return result;
     }
@@ -346,11 +356,12 @@ public class AssignmentService : IAssignmentService
             rate = rate * distance / duration;
             driverDistances.Add((assignment, rate));
         }
+
         driverDistances = driverDistances
-            .GroupBy(d => d.Driver.UserId)        
-            .Select(g => g.First())               
+            .GroupBy(d => d.Driver.UserId)
+            .Select(g => g.First())
             .ToList();
-        
+
         var closestDrivers = driverDistances
             .OrderByDescending(x => x.rate)
             .Take(driverCount)
@@ -374,10 +385,354 @@ public class AssignmentService : IAssignmentService
                 ScheduleBookingId = scheduleBookingId,
                 TruckId = assignment.TruckId,
                 BookingDetailsId = bookingDetail.Id
-
             });
         }
 
         return listAssignments;
     }
+
+    #endregion
+
+    #region FEATURE: HandleAssignManualPorter.
+
+    public async Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualPorter(int bookingId)
+    {
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+        if (existingBooking == null)
+        {
+            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        var bookingDetail =
+            await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
+                TypeServiceEnums.PORTER.ToString(), bookingId);
+
+        if (bookingDetail == null)
+        {
+            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        var schedule =
+            await _unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(existingBooking.BookingAt.Value);
+
+        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+
+        var date = DateUtil.GetShard(existingBooking.BookingAt);
+
+        var redisKey = DateUtil.GetKeyPorter(existingBooking.BookingAt);
+        var redisKeyV2 = DateUtil.GetKeyPorterV2(existingBooking.BookingAt);
+
+        var checkExistQueue = await _redisService.KeyExistsQueueAsync(redisKeyV2);
+
+        var scheduleBooking = await _unitOfWork.ScheduleBookingRepository.GetByShard(date);
+        var listAssignments = new List<Assignment>();
+
+        if (checkExistQueue == false)
+        {
+            var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+
+            var porterIds =
+                await _unitOfWork.UserRepository.FindAllUserByRoleIdAndGroupIdAsync(5
+                    , schedule.GroupId.Value);
+            await _redisService.EnqueueMultipleAsync(redisKey, porterIds, timeExpiryRedisQueue);
+            await _redisService.EnqueueMultipleAsync(redisKeyV2, porterIds, timeExpiryRedisQueue);
+            var porterNumberBooking = existingBooking.PorterNumber!.Value;
+            if (porterNumberBooking > porterIds.Count)
+            {
+                // đánh tag faild
+            }
+
+            // đánh tag pass 
+            await AssignPortersToBooking(
+                bookingId,
+                redisKey,
+                existingBooking.BookingAt.Value,
+                existingBooking.PorterNumber!.Value,
+                existingBooking.EstimatedDeliveryTime ?? 3,
+                listAssignments,
+                scheduleBooking!.Id,
+                bookingDetail
+            );
+
+
+            await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
+            _unitOfWork.Save();
+
+            var bookingFirebase = await _unitOfWork.BookingRepository.GetByIdAsyncV1(existingBooking.Id,
+                includeProperties:
+                "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+
+            await _firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
+        }
+        else
+        {
+            int countporterNumberBooking = existingBooking.DriverNumber!.Value;
+            var countPorter = await _redisService.CheckQueueCountAsync(redisKey);
+            if (countPorter >= countporterNumberBooking)
+            {
+                await AssignPortersToBooking(
+                    bookingId,
+                    redisKey,
+                    existingBooking.BookingAt!.Value,
+                    existingBooking.PorterNumber.Value,
+                    existingBooking.EstimatedDeliveryTime ?? 3,
+                    listAssignments,
+                    scheduleBooking!.Id,
+                    bookingDetail
+                );
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
+                _unitOfWork.Save();
+
+                var bookingFirebase = await _unitOfWork.BookingRepository.GetByIdAsyncV1(existingBooking.Id,
+                    includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+
+                await _firebaseServices.SaveBooking(bookingFirebase, bookingFirebase.Id, "bookings");
+            }
+            else
+            {
+                var assignedPortersAvailable1Hours =
+                    await _unitOfWork.AssignmentsRepository.GetPortersByGroupAvailableWithExtendedAsync(
+                        existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                        schedule.GroupId);
+
+                // 2H
+                var assignedPortersAvailable2Hours =
+                    await _unitOfWork.AssignmentsRepository.GetPortersByGroupAvailableWithExtendedAsync(
+                        existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                        schedule.GroupId, 1, 1);
+                // OTHER
+                var assignedPortersAvailableOther =
+                    await _unitOfWork.AssignmentsRepository.GetPorterByGroupAvailableWithOverlapAsync(
+                        existingBooking.BookingAt.Value, endTime, scheduleBooking.Id,
+                        schedule.GroupId, 2);
+
+                var countRemaining = (int)countPorter + assignedPortersAvailable1Hours.Count() +
+                                     assignedPortersAvailable2Hours.Count() +
+                                     assignedPortersAvailableOther.Count();
+                if (countRemaining < countporterNumberBooking)
+                {
+                    // đánh tag failed
+                }
+
+                if (countPorter > 0)
+                {
+                    countRemaining -= (int)countPorter;
+
+                    await AssignPortersToBooking(
+                        bookingId,
+                        redisKey,
+                        existingBooking.BookingAt!.Value,
+                        countporterNumberBooking,
+                        existingBooking.EstimatedDeliveryTime ?? 3,
+                        listAssignments,
+                        scheduleBooking!.Id,
+                        bookingDetail
+                    );
+                    countporterNumberBooking -= (int)countPorter;
+                }
+
+                await AllocatePortersToBookingAsync(
+                    existingBooking,
+                    existingBooking.BookingAt!.Value,
+                    countporterNumberBooking,
+                    existingBooking.EstimatedDeliveryTime ?? 3,
+                    listAssignments,
+                    assignedPortersAvailable1Hours,
+                    assignedPortersAvailable2Hours,
+                    assignedPortersAvailableOther,
+                    scheduleBooking!.Id,
+                    bookingDetail
+                );
+            }
+        }
+
+        var result = new OperationResult<AssignManualDriverResponse>();
+        var response = new AssignManualDriverResponse();
+        var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
+        response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
+        response.BookingNeedStaffs = existingBooking.PorterNumber.Value;
+        var isGroup1 = schedule.GroupId == 1 ? true : false;
+
+        if (isGroup1)
+        {
+            var listDriverNeed = await
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2);
+            var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
+            response.OtherStaffs.AddRange(listUserResponse);
+        }
+        else
+        {
+            var listDriverNeed = await
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1);
+            var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
+            response.OtherStaffs.AddRange(listUserResponse);
+        }
+        response.StaffType = RoleEnums.PORTER.ToString();
+        if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
+        {
+            response.IsSussed = true;
+            bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
+            await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
+
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AssignmentManual, response);
+        }
+        else
+        {
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.AssignmentManual, response);
+        }
+
+        return result;
+    }
+
+    private async Task<List<Assignment>> AssignPortersToBooking(int bookingId, string redisKey, DateTime startTime,
+        int porterCount,
+        double estimatedDeliveryTime, List<Assignment> listAssignments,
+        int scheduleBookingId, BookingDetail bookingDetail)
+    {
+        for (int i = 0; i < porterCount; i++)
+        {
+            var staffId = await _redisService.DequeueAsync<int>(redisKey);
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
+            var newAssignmentporter = new Assignment()
+            {
+                BookingId = bookingId,
+                StaffType = RoleEnums.PORTER.ToString(),
+                Status = AssignmentStatusEnums.WAITING.ToString(),
+                UserId = staffId,
+                StartDate = startTime,
+                EndDate = endTime,
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId,
+                BookingDetailsId = bookingDetail.Id
+            };
+
+            listAssignments.Add(newAssignmentporter);
+        }
+
+        return listAssignments;
+    }
+
+    private async Task<List<Assignment>> AllocatePortersToBookingAsync(
+        Booking booking,
+        DateTime startTime,
+        int porterCount,
+        double estimatedDeliveryTime,
+        List<Assignment> listAssignments,
+        List<Assignment> listporterAvailable1Hours,
+        List<Assignment> listporterAvailable2Hours,
+        List<Assignment> listporterAvailableOthers,
+        int scheduleBookingId,
+        BookingDetail bookingDetail)
+    {
+        var staffDistances = new List<(Assignment Staff, double rate)>();
+
+        // 1 H
+        foreach (var assignment in listporterAvailable1Hours)
+        {
+            var rate = 2;
+            GoogleMapDTO? googleMapDto = null;
+            if (assignment.StartDate >= booking.BookingAt!.Value)
+            {
+                googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
+                        booking.DeliveryPoint!);
+            }
+            else
+            {
+                googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                        booking.PickupPoint!);
+            }
+
+            var distance = googleMapDto.Distance.Value;
+            var duration = googleMapDto.Duration.Value;
+            rate = rate * distance / duration;
+            staffDistances.Add((assignment, rate));
+        }
+
+        // 2 H
+        foreach (var assignment in listporterAvailable2Hours)
+        {
+            var rate = 1.5;
+            GoogleMapDTO? googleMapDto = null;
+            if (assignment.StartDate >= booking.BookingAt!.Value)
+            {
+                googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
+                        booking.DeliveryPoint!);
+            }
+            else
+            {
+                googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                        booking.PickupPoint!);
+            }
+
+            var distance = googleMapDto.Distance.Value;
+            var duration = googleMapDto.Duration.Value;
+            rate = rate * distance / duration;
+            staffDistances.Add((assignment, rate));
+        }
+
+        // Other
+        foreach (var assignment in listporterAvailableOthers)
+        {
+            var rate = 1;
+            GoogleMapDTO? googleMapDto = null;
+            if (assignment.StartDate >= booking.BookingAt!.Value)
+            {
+                googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(assignment.Booking!.PickupPoint!,
+                        booking.DeliveryPoint!);
+            }
+            else
+            {
+                googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(assignment.Booking!.DeliveryPoint!,
+                        booking.PickupPoint!);
+            }
+
+            var distance = googleMapDto.Distance.Value;
+            var duration = googleMapDto.Duration.Value;
+            rate = rate * distance / duration;
+            staffDistances.Add((assignment, rate));
+        }
+
+        staffDistances = staffDistances
+            .GroupBy(d => d.Staff.UserId)
+            .Select(g => g.First())
+            .ToList();
+
+        var closestporters = staffDistances
+            .OrderByDescending(x => x.rate)
+            .Take(porterCount)
+            .ToList();
+
+        foreach (var porter in closestporters)
+        {
+            var assignment = porter.Staff;
+            var staffId = assignment.UserId!.Value;
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
+
+            listAssignments.Add(new Assignment
+            {
+                BookingId = booking.Id,
+                StaffType = RoleEnums.PORTER.ToString(),
+                Status = AssignmentStatusEnums.WAITING.ToString(),
+                UserId = staffId,
+                StartDate = startTime,
+                EndDate = endTime,
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId,
+                BookingDetailsId = bookingDetail.Id
+            });
+        }
+
+        return listAssignments;
+    }
+
+    #endregion
+    
+    
 }

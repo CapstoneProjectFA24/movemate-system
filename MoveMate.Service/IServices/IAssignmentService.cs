@@ -6,5 +6,6 @@ namespace MoveMate.Service.IServices;
 public interface IAssignmentService
 {
     public Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualDriver(int bookingId);
+    public Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualPorter(int bookingId);
 
 }

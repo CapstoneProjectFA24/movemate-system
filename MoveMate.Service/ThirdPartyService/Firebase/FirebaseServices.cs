@@ -158,9 +158,10 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     }
 
                     if (saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
-                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString()) && isPorterAssigned == false)
+                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString()) 
+                        && isPorterAssigned == false && saveObj.IsPorter == true)
                     {
-                        _producer.SendingMessage("movemate.booking_assign_porter_local", saveObj.Id);
+                        _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
                     }
                 }
 

@@ -91,7 +91,7 @@ Auto-Assign Driver Workflow:
     /// </summary>
     /// <param name="message">An integer representing the booking ID to which drivers need to be assigned.</param>
     /// <exception cref="NotFoundException">Thrown when the booking ID does not exist or cannot be found in the system.</exception>
-    [Consumer("movemate.booking_assign_driver_local")]
+    [Consumer("movemate.booking_assign_driver")]
     public async Task HandleMessage(int message)
     {
         // Implementation of driver assignment logic will go here.
@@ -127,6 +127,15 @@ Auto-Assign Driver Workflow:
                     await unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                         TypeServiceEnums.TRUCK.ToString(), message);
 
+                var bookingDetailPorter =
+                    await unitOfWork.BookingDetailRepository.GetPorterAsyncByServiceIdAndBookingIdNotDriver(message);
+                if (bookingDetailPorter != null)
+                {
+                    existingBooking.IsPorter = true;
+                    existingBooking.PorterNumber = 0;
+                    await unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
+                }
+                
                 if (bookingDetailTruck == null)
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
