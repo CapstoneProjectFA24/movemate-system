@@ -25,7 +25,7 @@ public class AssignReviewWorker
 
     }
 
-    [Consumer("movemate.booking_assign_review_local")]
+    [Consumer("movemate.booking_assign_review")]
     public async Task HandleMessage(int message)
     {
         //await Task.Delay(TimeSpan.FromSeconds(1));
@@ -56,6 +56,10 @@ public class AssignReviewWorker
                     else
                     {
                         List<int> listReviewer = await unitOfWork.UserRepository.FindAllUserByRoleIdAndGroupIdAsync(2,  schedule.GroupId.Value);
+                        if (listReviewer.Count() <= 0)
+                        {
+                            listReviewer.Add(2);
+                        }
                         await redisService.EnqueueMultipleAsync(redisKey, listReviewer);
 
                         throw new Exception($"Queue {redisKey} has been added");
