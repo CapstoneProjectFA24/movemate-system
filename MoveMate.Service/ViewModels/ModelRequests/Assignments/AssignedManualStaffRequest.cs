@@ -9,6 +9,5 @@ public class AssignedManualStaffRequest
     
     public int? FailedAssignmentId { get; set; }
     
-    [Required]
     public int? AssignToUserId { get; set; }
 }
