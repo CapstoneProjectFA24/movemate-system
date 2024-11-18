@@ -136,6 +136,7 @@ namespace MoveMate.Service.Commons
             public const string AssignmentWaiting = "The assignment status must be WAITING";
             public const string AssignWrongReview = "Booking is not from this reviewer";
             public const string CanNotFix = "Booking detail is completely fine";
+            public const string AssignmentManual = "Manual assignment Faild";
 
             //House type
             public const string NotFoundHouseType = "House type not found";
@@ -156,6 +157,8 @@ namespace MoveMate.Service.Commons
             public const string ServiceExisted = "Service has been existed";
             public const string InverseParentServiceType = "Each inverseParentService item must have the same Type as the main service";
             public const string InvalidServiceTier = "Service Tier is invalid for Truck type services or Porter type services";
+            public const string InvalidServiceDepen = "Service Porter Depen is invalid for Porter type services or Porter type services, must have Porter supper serivce";
+
             public const string ServiceAlreadyDeleted = "Service already deleted";
             public const string ServiceUpdateFail = "Update service failed";
             public const string NotFoundParentService = "Parent service not found";
