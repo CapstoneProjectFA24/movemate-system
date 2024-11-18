@@ -96,7 +96,7 @@ public class AssignPorterWorker
                             UserId = user.Id,
                             SentFrom = "System",
                             Receive = user.Name,
-                            Name = "porter Shortage Notification",
+                            Name = $"porter Shortage Notification in {existingBooking.Id}",
                             Description =
                                 $"Only {porterIds.Count} porters available for {porterNumberBooking} bookings.",
                             Topic = "porterAssignment",
@@ -104,7 +104,9 @@ public class AssignPorterWorker
                         };
 
                         // Save the notification to Firestore
-                        await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                        await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
+
+                        await firebaseServices.SaveMailManager(notification,existingBooking.Id, "reports");
                     }
 
                     await AssignPortersToBooking(
@@ -231,15 +233,16 @@ public class AssignPorterWorker
                                 UserId = user.Id,
                                 SentFrom = "System",
                                 Receive = user.Name,
-                                Name = "porter Shortage Notification",
+                                Name = $"porter Shortage Notification in {existingBooking.Id}",
                                 Description =
                                     $"Only {countRemaining} porters available for {countporterNumberBooking} bookings.",
                                 Topic = "porterAssignment",
                                 IsRead = false
                             };
 
-                            // Save the notification to Firestore
-                            await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                            await unitOfWork.NotificationRepository.SaveOrUpdateAsync(notification);
+                            // save to firebase
+                            await firebaseServices.SaveMailManager(notification,existingBooking.Id, "reports");
                         }
 
                         //đánh tag faild cần reviewer can thiệp
