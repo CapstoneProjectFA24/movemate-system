@@ -827,7 +827,7 @@ public class AssignmentService : IAssignmentService
             await _unitOfWork.AssignmentsRepository.UpdateAsync(failedAssignment);
         }
         
-        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+        
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
 
@@ -836,6 +836,7 @@ public class AssignmentService : IAssignmentService
         switch (request.StaffType)
         {
             case "TRUCK": // type for Driver
+                var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
                 var bookingDetailDriver =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 request.StaffType, bookingId);
@@ -901,6 +902,7 @@ public class AssignmentService : IAssignmentService
                 break;
 
             case "PORTER": //type for Porter
+                var endTimePorter = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
                 var bookingDetailPorter =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 request.StaffType, bookingId);
@@ -940,7 +942,7 @@ public class AssignmentService : IAssignmentService
                         Status = AssignmentStatusEnums.WAITING.ToString(),
                         UserId = request.AssignToUserId,
                         StartDate = existingBooking.BookingAt!.Value,
-                        EndDate = endTime,
+                        EndDate = endTimePorter,
                         IsResponsible = false,
                         ScheduleBookingId = scheduleBooking!.Id,
                         BookingDetailsId = bookingDetailPorter.Id
@@ -960,15 +962,15 @@ public class AssignmentService : IAssignmentService
             case "REVIEWER": // type for Review
 
                 var reviewerAssignments = existingBooking.Assignments
-                    .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                    .Where(a => a.StaffType == RoleEnums.REVIEWER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
 
-                if (reviewerAssignments.Count >= existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.REVIEWER.ToString()))
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
-                    return result;
-                }
+                //if (reviewerAssignments.Count >= existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.REVIEWER.ToString()))
+                //{
+                //    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                //    return result;
+                //}
 
                 if (reviewerAssignments.Any(a => a.UserId == request.AssignToUserId))
                 {
@@ -990,7 +992,6 @@ public class AssignmentService : IAssignmentService
                         Status = AssignmentStatusEnums.ASSIGNED.ToString(),
                         UserId = request.AssignToUserId,
                         StartDate = existingBooking.BookingAt!.Value,
-                        EndDate = endTime,
                         IsResponsible = false,
                         ScheduleBookingId = scheduleBooking!.Id
                     };
