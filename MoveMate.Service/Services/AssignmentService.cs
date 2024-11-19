@@ -45,7 +45,9 @@ public class AssignmentService : IAssignmentService
 
     public async Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualDriver(int bookingId)
     {
-        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+        var result = new OperationResult<AssignManualDriverResponse>();
+
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
@@ -113,10 +115,16 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            int countDriverNumberBooking = existingBooking.DriverNumber!.Value;
+            int countDriverNumberBooking = existingBooking.DriverNumber!.Value; // count driver need in booking
+            int countDriverExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString()); //count driver have been assignment in booking 
             var countDriver = await _redisService.CheckQueueCountAsync(redisKey);
-            if (countDriver >= countDriverNumberBooking)
+            if (countDriverNumberBooking <= countDriverExistingBooking)
             {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                return result;
+            }
+                if (countDriver >= countDriverNumberBooking)
+                {
                 await AssignDriversToBooking(
                     bookingId,
                     redisKey,
@@ -158,8 +166,8 @@ public class AssignmentService : IAssignmentService
                                      assignedDriverAvailable2Hours.Count() +
                                      assignedDriverAvailableOther.Count();
                 if (countRemaining < countDriverNumberBooking)
-                {
-                    // đánh tag failed
+                {                   
+                                        
                 }
 
                 if (countDriver > 0)
@@ -194,7 +202,7 @@ public class AssignmentService : IAssignmentService
             }
         }
 
-        var result = new OperationResult<AssignManualDriverResponse>();
+        //var result = new OperationResult<AssignManualDriverResponse>();
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
         response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
@@ -396,7 +404,9 @@ public class AssignmentService : IAssignmentService
 
     public async Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualPorter(int bookingId)
     {
-        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+        var result = new OperationResult<AssignManualDriverResponse>();
+
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
@@ -466,7 +476,13 @@ public class AssignmentService : IAssignmentService
         else
         {
             int countporterNumberBooking = existingBooking.DriverNumber!.Value;
+            int countPorterExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString()); //count porter have been assignment in booking 
             var countPorter = await _redisService.CheckQueueCountAsync(redisKey);
+            if (countporterNumberBooking <= countPorterExistingBooking)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                return result;
+            }
             if (countPorter >= countporterNumberBooking)
             {
                 await AssignPortersToBooking(
@@ -546,7 +562,7 @@ public class AssignmentService : IAssignmentService
             }
         }
 
-        var result = new OperationResult<AssignManualDriverResponse>();
+        //var result = new OperationResult<AssignManualDriverResponse>();
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
         response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
@@ -774,7 +790,7 @@ public class AssignmentService : IAssignmentService
 
         switch (request.StaffType)
         {
-            case "TRUCK":
+            case "TRUCK": // type for Driver
 
                 var driverAssignments = existingBooking.Assignments
                     .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
@@ -833,7 +849,7 @@ public class AssignmentService : IAssignmentService
 
                 break;
 
-            case "PORTER":
+            case "PORTER": //type for Porter
 
                 var porterAssignments = existingBooking.Assignments
                     .Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
