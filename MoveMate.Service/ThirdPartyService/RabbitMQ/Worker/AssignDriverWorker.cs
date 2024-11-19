@@ -132,9 +132,13 @@ Auto-Assign Driver Workflow:
                 if (bookingDetailPorter != null)
                 {
                     existingBooking.IsPorter = true;
-                    existingBooking.PorterNumber = 0;
-                    await unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
                 }
+                else
+                {
+                    existingBooking.PorterNumber = 0;
+                }
+                
+                await unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
                 
                 if (bookingDetailTruck == null)
                 {
