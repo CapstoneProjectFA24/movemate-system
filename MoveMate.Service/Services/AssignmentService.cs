@@ -12,9 +12,11 @@ using MoveMate.Service.ThirdPartyService.GoongMap.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
+using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelRequests.Assignments;
 using MoveMate.Service.ViewModels.ModelResponses;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
+using System.IO;
 
 namespace MoveMate.Service.Services;
 
@@ -76,7 +78,7 @@ public class AssignmentService : IAssignmentService
 
         var scheduleBooking = await _unitOfWork.ScheduleBookingRepository.GetByShard(date);
         var listAssignments = new List<Assignment>();
-      
+
 
         if (checkExistQueue == false)
         {
@@ -105,7 +107,7 @@ public class AssignmentService : IAssignmentService
                 bookingDetailTruck,
                     existingBooking.Assignments.ToList()
             );
-            
+
             await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
             _unitOfWork.Save();
 
@@ -119,7 +121,7 @@ public class AssignmentService : IAssignmentService
         {
             int countDriverNumberBooking = existingBooking.DriverNumber!.Value; // count driver need in booking
             int countDriverExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString()); //count driver have been assignment in booking 
-            if(countDriverExistingBooking > 0)
+            if (countDriverExistingBooking > 0)
             {
                 countDriverNumberBooking -= countDriverExistingBooking;
                 countDriverExistingBooking = 0;
@@ -130,8 +132,8 @@ public class AssignmentService : IAssignmentService
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
                 return result;
             }
-                if (countDriver >= countDriverNumberBooking)
-                {
+            if (countDriver >= countDriverNumberBooking)
+            {
                 await AssignDriversToBooking(
                     bookingId,
                     redisKey,
@@ -174,8 +176,8 @@ public class AssignmentService : IAssignmentService
                                      assignedDriverAvailable2Hours.Count() +
                                      assignedDriverAvailableOther.Count();
                 if (countRemaining < countDriverNumberBooking)
-                {                   
-                                        
+                {
+
                 }
 
                 if (countDriver > 0)
@@ -267,7 +269,7 @@ public class AssignmentService : IAssignmentService
             .Select(a => a.UserId))
         .ToHashSet();
 
-        int driversNeeded = driverCount - existingUserIds.Count;    
+        int driversNeeded = driverCount - existingUserIds.Count;
         if (driversNeeded <= 0)
         {
             return listAssignments;
@@ -608,7 +610,7 @@ public class AssignmentService : IAssignmentService
         response.BookingNeedStaffs = existingBooking.PorterNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString());
         var isGroup1 = schedule.GroupId == 1 ? true : false;
 
-        
+
 
         response.StaffType = RoleEnums.PORTER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
@@ -826,8 +828,8 @@ public class AssignmentService : IAssignmentService
             failedAssignment.Status = AssignmentStatusEnums.FAILED.ToString();
             await _unitOfWork.AssignmentsRepository.UpdateAsync(failedAssignment);
         }
-        
-        
+
+
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
 
@@ -870,7 +872,7 @@ public class AssignmentService : IAssignmentService
                 var isDriver = driver.RoleId == 4 ? true : false;
                 if (isDriver)
                 {
-                 
+
                     if (driver.Truck.TruckCategoryId != existingBooking.TruckNumber)
                     {
                         result.AddError(StatusCode.NotFound,
@@ -1006,7 +1008,7 @@ public class AssignmentService : IAssignmentService
         }
 
         await _unitOfWork.SaveChangesAsync();
-        
+
         existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingId,
             includeProperties:
             "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
@@ -1015,7 +1017,160 @@ public class AssignmentService : IAssignmentService
         var response = _mapper.Map<BookingResponse>(existingBooking);
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
             response);
-        
+
         return result;
     }
+
+    public async Task<OperationResult<List<DriverInfoDTO>>> GetAvailableDriversForBooking(int bookingId)
+    {
+        var result = new OperationResult<List<DriverInfoDTO>>();
+
+        // Lấy thông tin booking từ repository
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
+        if (existingBooking == null)
+        {
+            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+            return result;
+        }
+
+        // Lấy thông tin xe truck trong booking
+        var bookingDetailTruck = await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(TypeServiceEnums.TRUCK.ToString(), bookingId);
+        if (bookingDetailTruck == null)
+        {
+            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruck);
+            return result;
+        }
+
+        // Kiểm tra lịch làm việc
+        var schedule = await _unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(existingBooking.BookingAt.Value);
+        if (schedule == null)
+        {
+            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundSchedule);
+            return result;
+        }
+        var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+
+        var date = DateUtil.GetShard(existingBooking.BookingAt);
+        var redisKey = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber.Value);
+
+        var driverIds = await _unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking.TruckNumber!.Value);
+        await _redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
+        // Lấy các tài xế đã có trong Redis queue
+        var availableDriversFromQueue = await _redisService.GetQueueItemsAsync<int>(redisKey);
+
+        // Lọc những tài xế không có trong existing assignments
+        var existingDriverIds = existingBooking.Assignments
+            .Where(a => a.StaffType == RoleEnums.DRIVER.ToString())
+            .Select(a => a.UserId)
+            .ToHashSet();
+
+        var availableDriverIds = availableDriversFromQueue
+            .Where(driverId => !existingDriverIds.Contains(driverId))
+            .ToList();
+
+        // Tạo danh sách assignments cho các driver có sẵn
+        var driverInfoList = new List<DriverInfoDTO>();
+
+        foreach (var driverId in availableDriverIds)
+        {
+            var truck = await _unitOfWork.TruckRepository.FindByUserIdAsync(driverId);
+            if (truck != null)
+            {
+                var driver = await _unitOfWork.UserRepository.GetByIdAsync(driverId);
+
+                // Lấy thông tin ScheduleId và Phone từ User và Schedule
+                var driverInfo = new DriverInfoDTO
+                {
+                    UserId = driverId,
+                    StaffType = RoleEnums.DRIVER.ToString(),
+                    ScheduleId = schedule.Id,
+                    Phone = driver?.Phone
+                };
+                driverInfoList.Add(driverInfo);
+            }
+        }
+
+        // Trả về danh sách các tài xế có thể thêm vào booking
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.FoundAvailableDrivers, driverInfoList);
+        return result;
+    }
+
+    public async Task<OperationResult<List<DriverInfoDTO>>> GetAvailablePortersForBooking(int bookingId)
+    {
+        var result = new OperationResult<List<DriverInfoDTO>>();
+
+        // Lấy thông tin booking từ repository
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
+        if (existingBooking == null)
+        {
+            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+            return result;
+        }
+
+        // Lấy thông tin xe truck trong booking
+        var bookingDetailTruck = await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(TypeServiceEnums.PORTER.ToString(), bookingId);
+        if (bookingDetailTruck == null)
+        {
+            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPorter);
+            return result;
+        }
+
+        // Kiểm tra lịch làm việc
+        var schedule = await _unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(existingBooking.BookingAt.Value);
+        if (schedule == null)
+        {
+            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundSchedule);
+            return result;
+        }
+
+        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+        var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
+        var date = DateUtil.GetShard(existingBooking.BookingAt);
+
+        var redisKey = DateUtil.GetKeyPorterV2(existingBooking.BookingAt);
+        
+        // Lấy các porter có thể phục vụ với loại xe truck và trong khung giờ làm việc
+        var porterIds =
+            await _unitOfWork.UserRepository.FindAllUserByRoleIdAndGroupIdAsync(5, schedule.GroupId.Value);
+        await _redisService.EnqueueMultipleAsync(redisKey, porterIds, timeExpiryRedisQueue);
+        // Lấy các porter đã có trong Redis queue
+        var availablePortersFromQueue = await _redisService.GetQueueItemsAsync<int>(redisKey);
+
+        // Lọc những porter không có trong existing assignments
+        var existingPorterIds = existingBooking.Assignments
+            .Where(a => a.StaffType == RoleEnums.PORTER.ToString())
+            .Select(a => a.UserId)
+            .ToHashSet();
+
+        var availablePorterIds = availablePortersFromQueue
+            .Where(porterId => !existingPorterIds.Contains(porterId))
+            .ToList();
+
+        // Tạo danh sách assignments cho các porter có sẵn
+        var porterInfoList = new List<DriverInfoDTO>();
+
+        foreach (var porterId in availablePorterIds)
+        {
+            var porter = await _unitOfWork.UserRepository.GetByIdAsync(porterId);
+            if (porter != null)
+            {
+                // Lấy thông tin ScheduleId và Phone từ User và Schedule
+                var porterInfo = new DriverInfoDTO
+                {
+                    UserId = porterId,
+                    StaffType = RoleEnums.PORTER.ToString(),
+                    ScheduleId = schedule.Id,
+                    Phone = porter?.Phone
+                };
+                porterInfoList.Add(porterInfo);
+            }
+        }
+
+        // Trả về danh sách các porter có thể thêm vào booking
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.FoundAvailablePorters, porterInfoList);
+        return result;
+    }
+
+
 }

@@ -38,4 +38,5 @@ public interface IRedisService
     Task<T?> DequeueWithExpiryAsync<T>(string queueKey);
 
     Task<long> CheckQueueCountAsync(string queueKey);
+    Task<List<T>> GetQueueItemsAsync<T>(string redisKey);
 }

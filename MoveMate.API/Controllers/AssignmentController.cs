@@ -74,6 +74,29 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.HandleAssignManualStaff(bookingId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
+        /// <summary>
+        /// CHORE: Get available drivers by booking id
+        /// </summary>
+        /// <param name="bookingId"></param>
+        /// <returns></returns>
+        [HttpGet("available-driver/{bookingId}")]
+        public async Task<IActionResult> GetAvailableDriver(int bookingId)
+        {
+            var response = await _assignmentService.GetAvailableDriversForBooking(bookingId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// CHORE: Get available porters by booking id
+        /// </summary>
+        /// <param name="bookingId"></param>
+        /// <returns></returns>
+        [HttpGet("available-porter/{bookingId}")]
+        public async Task<IActionResult> GetAvailablePorter(int bookingId)
+        {
+            var response = await _assignmentService.GetAvailablePortersForBooking(bookingId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

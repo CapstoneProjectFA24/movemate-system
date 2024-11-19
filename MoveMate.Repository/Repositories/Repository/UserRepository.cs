@@ -64,6 +64,12 @@ namespace MoveMate.Repository.Repositories.Repository
             }
         }
 
+        public async Task<List<User>> GetByIdAsync(List<int> userIds)
+        {
+            IQueryable<User> query = _dbSet;
+            return await query.Where(u => userIds.Contains(u.Id)) // Get users where ID is in the list
+                                 .ToListAsync();
+        }
 
         public async Task<User> GetUserAsync(string email)
         {
