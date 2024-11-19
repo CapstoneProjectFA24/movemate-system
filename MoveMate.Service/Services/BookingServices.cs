@@ -1053,11 +1053,11 @@ namespace MoveMate.Service.Services
                 }
             }
 
-            if (isServiceDepen == true && isServiceSupper == false)
+            /*if (isServiceDepen == true && isServiceSupper == false)
             {
                 throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceDepen);
 
-            }
+            }*/
 
             return (totalServices, bookingDetails, driverNumber, porterNumber, feeDetails);
         }
@@ -1980,7 +1980,6 @@ namespace MoveMate.Service.Services
 
             return result;
         }
-
 
         public async Task<OperationResult<BookingResponse>> UpdateBookingByBookingIdAsync(int id,
             BookingServiceDetailsUpdateRequest request)
