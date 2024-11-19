@@ -1332,7 +1332,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "BookingDetails");
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
@@ -1358,7 +1358,6 @@ namespace MoveMate.Service.Services
                         return result;
                     }
                 }
-
 
                 string nextStatus = assignment.Status;
 
