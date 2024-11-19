@@ -1053,11 +1053,11 @@ namespace MoveMate.Service.Services
                 }
             }
 
-            if (isServiceDepen == true && isServiceSupper == false)
+            /*if (isServiceDepen == true && isServiceSupper == false)
             {
                 throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceDepen);
 
-            }
+            }*/
 
             return (totalServices, bookingDetails, driverNumber, porterNumber, feeDetails);
         }
@@ -1332,7 +1332,7 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "BookingDetails");
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
@@ -1358,7 +1358,6 @@ namespace MoveMate.Service.Services
                         return result;
                     }
                 }
-
 
                 string nextStatus = assignment.Status;
 
@@ -1981,7 +1980,6 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-
         public async Task<OperationResult<BookingResponse>> UpdateBookingByBookingIdAsync(int id,
             BookingServiceDetailsUpdateRequest request)
         {
@@ -2082,9 +2080,6 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-
-
-
                 ReflectionUtils.UpdateProperties(request, existingBooking);
 
                 // Update the updated date
@@ -2100,8 +2095,7 @@ namespace MoveMate.Service.Services
                 {
                     voucherTotal = (double)existingBooking.Vouchers.Sum(v => v.Price);
                 }
-
-
+                
                 // Handle Service Details
                 if (request.BookingDetails != null && request.BookingDetails.Any())
                 {
@@ -2164,8 +2158,7 @@ namespace MoveMate.Service.Services
                 existingBooking.FeeDetails = feeCommonDetails;
 
                 total -= voucherTotal;
-
-
+                
                 total += (double)totalFee;
 
                 var deposit = total * 30 / 100;
@@ -2222,8 +2215,6 @@ namespace MoveMate.Service.Services
                         _unitOfWork.BookingDetailRepository.Remove(bookingRemove);
                     }
                 }
-
-
 
                 var saveResult = _unitOfWork.Save();
 
