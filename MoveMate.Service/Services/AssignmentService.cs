@@ -966,12 +966,6 @@ public class AssignmentService : IAssignmentService
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
 
-                //if (reviewerAssignments.Count >= existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.REVIEWER.ToString()))
-                //{
-                //    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
-                //    return result;
-                //}
-
                 if (reviewerAssignments.Any(a => a.UserId == request.AssignToUserId))
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentDuplicate);
