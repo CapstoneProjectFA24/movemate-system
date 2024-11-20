@@ -45,7 +45,9 @@ public class AssignmentService : IAssignmentService
 
     public async Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualDriver(int bookingId)
     {
-        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+        var result = new OperationResult<AssignManualDriverResponse>();
+
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
@@ -74,6 +76,7 @@ public class AssignmentService : IAssignmentService
 
         var scheduleBooking = await _unitOfWork.ScheduleBookingRepository.GetByShard(date);
         var listAssignments = new List<Assignment>();
+      
 
         if (checkExistQueue == false)
         {
@@ -99,7 +102,8 @@ public class AssignmentService : IAssignmentService
                 existingBooking.EstimatedDeliveryTime ?? 3,
                 listAssignments,
                 scheduleBooking!.Id,
-                bookingDetailTruck
+                bookingDetailTruck,
+                    existingBooking.Assignments.ToList()
             );
             
             await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
@@ -113,10 +117,21 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            int countDriverNumberBooking = existingBooking.DriverNumber!.Value;
-            var countDriver = await _redisService.CheckQueueCountAsync(redisKey);
-            if (countDriver >= countDriverNumberBooking)
+            int countDriverNumberBooking = existingBooking.DriverNumber!.Value; // count driver need in booking
+            int countDriverExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString()); //count driver have been assignment in booking 
+            if(countDriverExistingBooking > 0)
             {
+                countDriverNumberBooking -= countDriverExistingBooking;
+                countDriverExistingBooking = 0;
+            }
+            var countDriver = await _redisService.CheckQueueCountAsync(redisKey);
+            if (countDriverNumberBooking <= countDriverExistingBooking)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                return result;
+            }
+                if (countDriver >= countDriverNumberBooking)
+                {
                 await AssignDriversToBooking(
                     bookingId,
                     redisKey,
@@ -125,7 +140,8 @@ public class AssignmentService : IAssignmentService
                     existingBooking.EstimatedDeliveryTime ?? 3,
                     listAssignments,
                     scheduleBooking!.Id,
-                    bookingDetailTruck
+                    bookingDetailTruck,
+                    existingBooking.Assignments.ToList()
                 );
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                 _unitOfWork.Save();
@@ -158,8 +174,8 @@ public class AssignmentService : IAssignmentService
                                      assignedDriverAvailable2Hours.Count() +
                                      assignedDriverAvailableOther.Count();
                 if (countRemaining < countDriverNumberBooking)
-                {
-                    // đánh tag failed
+                {                   
+                                        
                 }
 
                 if (countDriver > 0)
@@ -174,7 +190,8 @@ public class AssignmentService : IAssignmentService
                         existingBooking.EstimatedDeliveryTime ?? 3,
                         listAssignments,
                         scheduleBooking!.Id,
-                        bookingDetailTruck
+                        bookingDetailTruck,
+                    existingBooking.Assignments.ToList()
                     );
                     countDriverNumberBooking -= (int)countDriver;
                 }
@@ -194,11 +211,11 @@ public class AssignmentService : IAssignmentService
             }
         }
 
-        var result = new OperationResult<AssignManualDriverResponse>();
+        //var result = new OperationResult<AssignManualDriverResponse>();
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
         response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
-        response.BookingNeedStaffs = existingBooking.DriverNumber.Value;
+        response.BookingNeedStaffs = existingBooking.DriverNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString());
         var isGroup1 = schedule.GroupId == 1 ? true : false;
 
         response.StaffType = RoleEnums.DRIVER.ToString();
@@ -233,18 +250,38 @@ public class AssignmentService : IAssignmentService
     }
 
     private async Task<List<Assignment>> AssignDriversToBooking(
-        int bookingId,
-        string redisKey,
-        DateTime startTime,
-        int driverCount,
-        double estimatedDeliveryTime,
-        List<Assignment> listAssignments,
-        int scheduleBookingId,
-        BookingDetail bookingDetail)
+    int bookingId,
+    string redisKey,
+    DateTime startTime,
+    int driverCount,
+    double estimatedDeliveryTime,
+    List<Assignment> listAssignments,
+    int scheduleBookingId,
+    BookingDetail bookingDetail,
+    List<Assignment> existingAssignments)
     {
-        for (int i = 0; i < driverCount; i++)
+        var existingUserIds = listAssignments
+        .Select(a => a.UserId)
+        .Concat(existingAssignments
+            .Where(a => a.StaffType == RoleEnums.DRIVER.ToString())
+            .Select(a => a.UserId))
+        .ToHashSet();
+
+        int driversNeeded = driverCount - existingUserIds.Count;    
+        if (driversNeeded <= 0)
+        {
+            return listAssignments;
+        }
+
+        for (int i = 0; i < driversNeeded; i++)
         {
             var driverId = await _redisService.DequeueAsync<int>(redisKey);
+
+            if (existingUserIds.Contains(driverId))
+            {
+                continue; // Pass if exist
+            }
+
             var endTime = startTime.AddHours(estimatedDeliveryTime);
             var truck = await _unitOfWork.TruckRepository.FindByUserIdAsync(driverId);
             var newAssignmentDriver = new Assignment()
@@ -260,11 +297,13 @@ public class AssignmentService : IAssignmentService
                 TruckId = truck.Id,
                 BookingDetailsId = bookingDetail.Id
             };
+
             listAssignments.Add(newAssignmentDriver);
         }
 
         return listAssignments;
     }
+
 
     private async Task<List<Assignment>> AllocateDriversToBookingAsync(
         Booking booking,
@@ -396,7 +435,9 @@ public class AssignmentService : IAssignmentService
 
     public async Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualPorter(int bookingId)
     {
-        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+        var result = new OperationResult<AssignManualDriverResponse>();
+
+        var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
@@ -450,7 +491,8 @@ public class AssignmentService : IAssignmentService
                 existingBooking.EstimatedDeliveryTime ?? 3,
                 listAssignments,
                 scheduleBooking!.Id,
-                bookingDetail
+                bookingDetail,
+                existingBooking.Assignments.ToList()
             );
 
 
@@ -466,7 +508,18 @@ public class AssignmentService : IAssignmentService
         else
         {
             int countporterNumberBooking = existingBooking.DriverNumber!.Value;
+            int countPorterExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString()); //count porter have been assignment in booking 
+            if (countPorterExistingBooking > 0)
+            {
+                countporterNumberBooking -= countPorterExistingBooking;
+                countPorterExistingBooking = 0;
+            }
             var countPorter = await _redisService.CheckQueueCountAsync(redisKey);
+            if (countporterNumberBooking <= countPorterExistingBooking)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
+                return result;
+            }
             if (countPorter >= countporterNumberBooking)
             {
                 await AssignPortersToBooking(
@@ -477,7 +530,8 @@ public class AssignmentService : IAssignmentService
                     existingBooking.EstimatedDeliveryTime ?? 3,
                     listAssignments,
                     scheduleBooking!.Id,
-                    bookingDetail
+                    bookingDetail,
+                    existingBooking.Assignments.ToList()
                 );
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(listAssignments);
                 _unitOfWork.Save();
@@ -526,7 +580,8 @@ public class AssignmentService : IAssignmentService
                         existingBooking.EstimatedDeliveryTime ?? 3,
                         listAssignments,
                         scheduleBooking!.Id,
-                        bookingDetail
+                        bookingDetail,
+                        existingBooking.Assignments.ToList()
                     );
                     countporterNumberBooking -= (int)countPorter;
                 }
@@ -546,11 +601,11 @@ public class AssignmentService : IAssignmentService
             }
         }
 
-        var result = new OperationResult<AssignManualDriverResponse>();
+        //var result = new OperationResult<AssignManualDriverResponse>();
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
         response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
-        response.BookingNeedStaffs = existingBooking.PorterNumber.Value;
+        response.BookingNeedStaffs = existingBooking.PorterNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString());
         var isGroup1 = schedule.GroupId == 1 ? true : false;
 
         
@@ -590,10 +645,25 @@ public class AssignmentService : IAssignmentService
     private async Task<List<Assignment>> AssignPortersToBooking(int bookingId, string redisKey, DateTime startTime,
         int porterCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
-        int scheduleBookingId, BookingDetail bookingDetail)
+        int scheduleBookingId, BookingDetail bookingDetail,
+    List<Assignment> existingAssignments)
     {
+
+        var existingUserIds = listAssignments
+                                .Select(a => a.UserId)
+                                .Concat(existingAssignments
+                                .Where(a => a.StaffType == RoleEnums.PORTER.ToString())
+                                .Select(a => a.UserId))
+                                .ToHashSet();
         for (int i = 0; i < porterCount; i++)
         {
+            var porterId = await _redisService.DequeueAsync<int>(redisKey);
+
+            if (existingUserIds.Contains(porterId))
+            {
+                continue; // Pass if exist
+            }
+
             var staffId = await _redisService.DequeueAsync<int>(redisKey);
             var endTime = startTime.AddHours(estimatedDeliveryTime);
             var newAssignmentporter = new Assignment()
@@ -748,15 +818,6 @@ public class AssignmentService : IAssignmentService
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
         }
-        
-        var bookingDetail =
-            await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
-                request.StaffType, bookingId);
-
-        if (bookingDetail == null)
-        {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
-        }
 
         if (request.FailedAssignmentId != null)
         {
@@ -766,7 +827,7 @@ public class AssignmentService : IAssignmentService
             await _unitOfWork.AssignmentsRepository.UpdateAsync(failedAssignment);
         }
         
-        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+        
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
 
@@ -774,8 +835,15 @@ public class AssignmentService : IAssignmentService
 
         switch (request.StaffType)
         {
-            case "TRUCK":
-
+            case "TRUCK": // type for Driver
+                var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+                var bookingDetailDriver =
+            await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
+                request.StaffType, bookingId);
+                if (bookingDetailDriver == null)
+                {
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
                 var driverAssignments = existingBooking.Assignments
                     .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
@@ -820,7 +888,7 @@ public class AssignmentService : IAssignmentService
                         EndDate = endTime,
                         IsResponsible = false,
                         ScheduleBookingId = scheduleBooking!.Id,
-                        BookingDetailsId = bookingDetail.Id
+                        BookingDetailsId = bookingDetailDriver.Id
                     };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
                 }
@@ -833,8 +901,15 @@ public class AssignmentService : IAssignmentService
 
                 break;
 
-            case "PORTER":
-
+            case "PORTER": //type for Porter
+                var endTimePorter = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+                var bookingDetailPorter =
+            await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
+                request.StaffType, bookingId);
+                if (bookingDetailPorter == null)
+                {
+                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
                 var porterAssignments = existingBooking.Assignments
                     .Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
@@ -867,12 +942,53 @@ public class AssignmentService : IAssignmentService
                         Status = AssignmentStatusEnums.WAITING.ToString(),
                         UserId = request.AssignToUserId,
                         StartDate = existingBooking.BookingAt!.Value,
-                        EndDate = endTime,
+                        EndDate = endTimePorter,
                         IsResponsible = false,
                         ScheduleBookingId = scheduleBooking!.Id,
-                        BookingDetailsId = bookingDetail.Id
+                        BookingDetailsId = bookingDetailPorter.Id
                     };
 
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                }
+                else
+                {
+                    result.AddError(StatusCode.NotFound,
+                        MessageConstant.FailMessage.AssignmentUpdateFailOtherStaffType);
+                    return result;
+                }
+
+                break;
+
+            case "REVIEWER": // type for Review
+
+                var reviewerAssignments = existingBooking.Assignments
+                    .Where(a => a.StaffType == RoleEnums.REVIEWER.ToString() &&
+                                a.Status != AssignmentStatusEnums.FAILED.ToString())
+                    .ToList();
+
+                if (reviewerAssignments.Any(a => a.UserId == request.AssignToUserId))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentDuplicate);
+                    return result;
+                }
+
+                Console.WriteLine($"Filtered {reviewerAssignments.Count} REVIEWER assignments.");
+
+                var review = await _unitOfWork.UserRepository.GetByIdAsyncV1(request.AssignToUserId.Value);
+
+                var isReview = review.RoleId == 2 ? true : false;
+                if (isReview)
+                {
+                    var newStaff = new Assignment
+                    {
+                        BookingId = existingBooking.Id,
+                        StaffType = request.StaffType,
+                        Status = AssignmentStatusEnums.ASSIGNED.ToString(),
+                        UserId = request.AssignToUserId,
+                        StartDate = existingBooking.BookingAt!.Value,
+                        IsResponsible = false,
+                        ScheduleBookingId = scheduleBooking!.Id
+                    };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
                 }
                 else
@@ -891,7 +1007,7 @@ public class AssignmentService : IAssignmentService
 
         await _unitOfWork.SaveChangesAsync();
         
-        existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId,
+        existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingId,
             includeProperties:
             "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
         await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
