@@ -23,6 +23,7 @@ public interface IRedisService
     Task EnqueueAsync<T>(string queueKey, T value, TimeSpan? expiry = null);
 
     Task<T?> DequeueAsync<T>(string queueKey);
+    Task<List<T>> PeekAsync<T>(string queueKey, long start = 0, long stop = -1);
 
     Task<long> GetQueueLengthAsync(string queueKey);
 

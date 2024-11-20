@@ -258,7 +258,17 @@ public class RedisService : IRedisService
 
         return JsonSerializer.Deserialize<T>(jsonData);
     }
-    
+    public async Task<List<T>> PeekAsync<T>(string queueKey, long start = 0, long stop = -1)
+    {    
+        var jsonDataList = await _database.ListRangeAsync(queueKey, start, stop);
+        var result = jsonDataList
+            .Where(item => !item.IsNull)
+            .Select(item => JsonSerializer.Deserialize<T>(item))
+            .ToList();
+
+        return result;
+    }
+
     public async Task<long> GetQueueLengthAsync(string queueKey)
     {
         return await _database.ListLengthAsync(queueKey);

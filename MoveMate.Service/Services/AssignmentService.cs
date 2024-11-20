@@ -71,8 +71,8 @@ public class AssignmentService : IAssignmentService
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
 
-        var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
-        var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
+        var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value, schedule.GroupId.Value, schedule.Id);
+        var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value, schedule.GroupId.Value, schedule.Id);
 
         var checkExistQueue = await _redisService.KeyExistsQueueAsync(redisKeyV2);
 
@@ -85,8 +85,8 @@ public class AssignmentService : IAssignmentService
             var timeExpiryRedisQueue = DateUtil.TimeUntilEndOfDay(existingBooking.BookingAt!.Value);
 
             var driverIds =
-                await _unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
-                    .Value);
+     await _unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
+         .Value, schedule.GroupId.Value);
             await _redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
             await _redisService.EnqueueMultipleAsync(redisKeyV2, driverIds, timeExpiryRedisQueue);
             var driverNumberBooking = existingBooking.DriverNumber!.Value;
@@ -1047,8 +1047,8 @@ public class AssignmentService : IAssignmentService
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
 
-        var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
-        var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value);
+        var redisKey = DateUtil.GetKeyDriver(existingBooking.BookingAt, existingBooking.TruckNumber!.Value, schedule.GroupId.Value, schedule.Id);
+        var redisKeyV2 = DateUtil.GetKeyDriverV2(existingBooking.BookingAt, existingBooking.TruckNumber!.Value, schedule.GroupId.Value, schedule.Id);
 
         var checkExistQueue = await _redisService.KeyExistsQueueAsync(redisKeyV2);
 
@@ -1062,7 +1062,7 @@ public class AssignmentService : IAssignmentService
 
             var driverIds =
                 await _unitOfWork.UserRepository.GetUsersWithTruckCategoryIdAsync(existingBooking!.TruckNumber!
-                    .Value);
+                    .Value, schedule.GroupId.Value);
             await _redisService.EnqueueMultipleAsync(redisKey, driverIds, timeExpiryRedisQueue);
             await _redisService.EnqueueMultipleAsync(redisKeyV2, driverIds, timeExpiryRedisQueue);
             var driverNumberBooking = existingBooking.DriverNumber!.Value;
@@ -1073,7 +1073,7 @@ public class AssignmentService : IAssignmentService
             }
 
             // đánh tag pass 
-            await AssignDriversToBooking(
+            await AssignDriversNotDequeueToBooking(
                 bookingId,
                 redisKey,
                 existingBooking.BookingAt.Value,
@@ -1094,7 +1094,7 @@ public class AssignmentService : IAssignmentService
             
             if (countDriver >= countDriverNumberBooking)
             {
-                await AssignDriversToBooking(
+                await AssignDriversNotDequeueToBooking(
                     bookingId,
                     redisKey,
                     existingBooking.BookingAt!.Value,
@@ -1138,7 +1138,7 @@ public class AssignmentService : IAssignmentService
                 {
                     countRemaining -= (int)countDriver;
 
-                    await AssignDriversToBooking(
+                    await AssignDriversNotDequeueToBooking(
                         bookingId,
                         redisKey,
                         existingBooking.BookingAt!.Value,
@@ -1269,7 +1269,7 @@ public class AssignmentService : IAssignmentService
             }
 
             // đánh tag pass 
-            await AssignPortersToBooking(
+            await AssignPortersDequeueToBooking(
                 bookingId,
                 redisKey,
                 existingBooking.BookingAt.Value,
@@ -1288,7 +1288,7 @@ public class AssignmentService : IAssignmentService
             var countPorter = await _redisService.CheckQueueCountAsync(redisKey);        
             if (countPorter >= countporterNumberBooking)
             {
-                await AssignPortersToBooking(
+                await AssignPortersDequeueToBooking(
                     bookingId,
                     redisKey,
                     existingBooking.BookingAt!.Value,
@@ -1332,7 +1332,7 @@ public class AssignmentService : IAssignmentService
                 {
                     countRemaining -= (int)countPorter;
 
-                    await AssignPortersToBooking(
+                    await AssignPortersDequeueToBooking(
                         bookingId,
                         redisKey,
                         existingBooking.BookingAt!.Value,
@@ -1413,7 +1413,84 @@ public class AssignmentService : IAssignmentService
         return result;
     }
 
+    private async Task<List<Assignment>> AssignDriversNotDequeueToBooking(int bookingId,string redisKey,DateTime startTime,int driverCount,double estimatedDeliveryTime,List<Assignment> listAssignments,
+                                    int scheduleBookingId,BookingDetail bookingDetail,List<Assignment> existingAssignments)
+    {
+        var existingUserIds = listAssignments
+        .Select(a => a.UserId)
+        .Concat(existingAssignments
+            .Where(a => a.StaffType == RoleEnums.DRIVER.ToString())
+            .Select(a => a.UserId))
+        .ToHashSet();   
+        var availableDrivers = await _redisService.PeekAsync<int>(redisKey);
+        foreach (var driverId in availableDrivers)
+        {
+            if (existingUserIds.Contains(driverId))
+            {
+                continue; // Bỏ qua nếu tài xế đã được gán
+            }
 
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
+            var truck = await _unitOfWork.TruckRepository.FindByUserIdAsync(driverId);
+            var newAssignmentDriver = new Assignment()
+            {
+                BookingId = bookingId,
+                StaffType = RoleEnums.DRIVER.ToString(),
+                Status = AssignmentStatusEnums.WAITING.ToString(),
+                UserId = driverId,
+                StartDate = startTime,
+                EndDate = endTime,
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId,
+                TruckId = truck.Id,
+                BookingDetailsId = bookingDetail.Id
+            };
 
+            listAssignments.Add(newAssignmentDriver);
+        }
+            return listAssignments;
+    }
 
+    private async Task<List<Assignment>> AssignPortersDequeueToBooking(int bookingId, string redisKey, DateTime startTime,
+        int porterCount,
+        double estimatedDeliveryTime, List<Assignment> listAssignments,
+        int scheduleBookingId, BookingDetail bookingDetail,
+    List<Assignment> existingAssignments)
+    {
+
+        var existingUserIds = listAssignments
+                                .Select(a => a.UserId)
+                                .Concat(existingAssignments
+                                .Where(a => a.StaffType == RoleEnums.PORTER.ToString())
+                                .Select(a => a.UserId))
+                                .ToHashSet();
+        var availablePorters = await _redisService.PeekAsync<int>(redisKey);
+
+        foreach (var porterId in availablePorters)
+        {
+            if (existingUserIds.Contains(porterId))
+            {
+                continue; // Bỏ qua nếu porter đã được gán
+            }
+
+            
+            var endTime = startTime.AddHours(estimatedDeliveryTime);
+            var newAssignmentporter = new Assignment()
+            {
+                BookingId = bookingId,
+                StaffType = RoleEnums.PORTER.ToString(),
+                Status = AssignmentStatusEnums.WAITING.ToString(),
+                UserId = porterId,
+                StartDate = startTime,
+                EndDate = endTime,
+                IsResponsible = false,
+                ScheduleBookingId = scheduleBookingId,
+                BookingDetailsId = bookingDetail.Id
+            };
+
+            listAssignments.Add(newAssignmentporter);
+        }
+
+        return listAssignments;
+    }
 }
