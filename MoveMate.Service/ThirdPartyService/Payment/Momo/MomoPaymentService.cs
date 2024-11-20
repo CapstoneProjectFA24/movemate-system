@@ -91,7 +91,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             int amount = 0;
             if (booking.Status == BookingEnums.DEPOSITING.ToString())
             {
-                amount = (int)booking.Deposit;
+                amount = (int)booking.Deposit;               
             }
             else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
             {

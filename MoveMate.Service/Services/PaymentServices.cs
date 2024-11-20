@@ -113,7 +113,7 @@ namespace MoveMate.Service.Services
                     Success = true,
                     Date = DateTime.Now
                 };
-
+                bool isDeposit = false;
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
                 await _unitOfWork.SaveChangesAsync();
                 string transType = "";
@@ -121,10 +121,12 @@ namespace MoveMate.Service.Services
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
                     booking.TotalReal = booking.Total - amount;
+                    isDeposit = true;
                 }
                 else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                    isDeposit = false;
                 }
 
               
@@ -205,7 +207,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
-                var url = $"{returnUrl}?isSuccess=true&amount={amount}&payDate={DateTime.Now}&bookingId={bookingId}&transactionCode={transaction.TransactionCode}&userId={userId}&paymentMethod={Resource.Wallet}";
+                var url = $"{returnUrl}?isSuccess=true&amount={amount}&payDate={DateTime.Now}&bookingId={bookingId}&transactionCode={transaction.TransactionCode}&userId={userId}&paymentMethod={Resource.Wallet}&isDeposit={isDeposit}";
                 result.AddResponseStatusCode(StatusCode.Ok, url, MessageConstant.SuccessMessage.PaymentSuccess);
             }
             catch (Exception ex)
