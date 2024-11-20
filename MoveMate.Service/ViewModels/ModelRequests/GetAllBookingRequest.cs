@@ -21,6 +21,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public bool? IsReviewOnl { get; set; }
         
         public bool? IsReview { get; set; }
+        public bool? IsFailed { get; set; }
 
         public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
         {
@@ -74,6 +75,10 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .ToArray();
 
                 Expression = Expression.And(tran => statuses.Contains(tran.Status));
+            }
+            if (IsFailed.HasValue && IsFailed.Value)
+            {
+                Expression = Expression.And(u => u.Assignments.Any(a => a.Status == AssignmentStatusEnums.FAILED.ToString()));
             }
 
             Expression = Expression.And(u => u.IsDeleted == false);

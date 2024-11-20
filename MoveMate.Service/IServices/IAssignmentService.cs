@@ -13,6 +13,6 @@ public interface IAssignmentService
     public Task<OperationResult<AssignManualDriverResponse>> HandleAssignManualPorter(int bookingId);
     public Task<OperationResult<BookingResponse>> HandleAssignManualStaff(int bookingId,
         AssignedManualStaffRequest request);
-    public Task<OperationResult<List<DriverInfoDTO>>> GetAvailableDriversForBooking(int bookingId);
-    public Task<OperationResult<List<DriverInfoDTO>>> GetAvailablePortersForBooking(int bookingId);
+    public Task<OperationResult<DriverInfoDTO>> GetAvailableDriversForBooking(int bookingId);
+    public Task<OperationResult<DriverInfoDTO>> GetAvailablePortersForBooking(int bookingId);
 }
