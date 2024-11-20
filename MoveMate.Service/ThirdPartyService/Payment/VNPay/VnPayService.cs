@@ -224,7 +224,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 }
 
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
-                    booking.Status != BookingEnums.COMPLETED.ToString())
+                    booking.Status != BookingEnums.IN_PROGRESS.ToString())
                 {
                     operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return operationResult;
@@ -237,7 +237,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     amount = (int)booking.Deposit;
                     type = PaymentMethod.DEPOSIT.ToString();
                 }
-                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
                 {
                     amount = (int)booking.TotalReal;
                     type = PaymentMethod.PAYMENT.ToString();
