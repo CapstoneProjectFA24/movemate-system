@@ -358,7 +358,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
                     booking.TotalReal = booking.Total - (float)amount;
                 }
-                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() || assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() || assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
                     booking.TotalReal -=  (float)amount;
@@ -435,7 +435,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 {
                     booking.Status = BookingEnums.COMING.ToString();
                 }
-                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() || assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() || assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
 
