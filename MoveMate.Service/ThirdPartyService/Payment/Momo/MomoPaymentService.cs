@@ -82,7 +82,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             }
 
             if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
-                booking.Status != BookingEnums.COMPLETED.ToString())
+                booking.Status != BookingEnums.IN_PROGRESS.ToString())
             {
                 operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                 return operationResult;
@@ -93,7 +93,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             {
                 amount = (int)booking.Deposit;
             }
-            else if (booking.Status == BookingEnums.COMPLETED.ToString())
+            else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
             {
                 amount = (int)booking.TotalReal;
             }
