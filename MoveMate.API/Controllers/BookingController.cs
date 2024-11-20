@@ -298,5 +298,25 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.UserChangeBooingAt(id,userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// CHORE: set Report booking by Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPut("report-booking/{id}")]
+        [Authorize]
+        public async Task<IActionResult> ReportBookingById(int id, BookingCancelRequest request)
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { Message = MessageConstant.FailMessage.UserIdInvalid });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.CancelBooking(id, userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
