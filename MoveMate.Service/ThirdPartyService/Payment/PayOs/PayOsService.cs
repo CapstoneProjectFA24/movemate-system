@@ -76,9 +76,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return operationResult;
             }
 
-            if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
                 if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
-                    booking.Status != BookingEnums.COMPLETED.ToString())
+                    booking.Status != BookingEnums.IN_PROGRESS.ToString())
                 {
                     operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return operationResult;
@@ -91,7 +90,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 amount = (int)booking.Deposit;
                 description = "order-deposit";
             }
-            else if (booking.Status == BookingEnums.COMPLETED.ToString())
+            else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
             {
                 amount = (int)booking.TotalReal;
                 description = "order-payment";
