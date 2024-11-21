@@ -26,19 +26,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
-                queryExpression = queryExpression.And(cus => cus.Status != null && cus.Status.ToLower().Contains(Search));
+                queryExpression = queryExpression.And(cus => cus.Name != null && cus.Name.ToLower().Contains(Search));
             }
 
             // Filter by Status
-            if (!string.IsNullOrWhiteSpace(Status))
-            {
-                var statuses = Status.Split('.')
-                    .Select(s => s.Trim())
-                    .Where(s => !string.IsNullOrEmpty(s))
-                    .ToArray();
-
-                queryExpression = queryExpression.And(tran => statuses.Contains(tran.Status));
-            }
+           
             if (!string.IsNullOrWhiteSpace(Type))
             {
                 Expression = Expression.And(u => u.Type == Type);

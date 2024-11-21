@@ -172,18 +172,16 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Staff report fail booking details
+        /// FEATURE: Staff report fail booking details
         /// </summary>
         /// <param name="id">Booking Details Id</param>
         /// <returns></returns>
         [HttpPut("report-booking-detail/{id}")]
-        public async Task<IActionResult> StaffReportBookingDetail(int id, FailReportRequest request )
+        public async Task<IActionResult> StaffReportBookingDetail(int id,[FromBody] FailReportRequest request )
         {
 
-            IEnumerable<Claim> claims = HttpContext.User.Claims;
-            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
-            var userId = int.Parse(accountId.Value);
-            var response = await _bookingServices.StaffReportFail(id, userId, request);
+
+            var response = await _bookingServices.StaffReportFail(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
