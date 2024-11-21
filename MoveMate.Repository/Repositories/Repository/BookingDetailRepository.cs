@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Domain.Enums;
+using System.Linq.Expressions;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -32,7 +33,17 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(b => b.ServiceId == serviceId && b.BookingId == bookingId)
                 .FirstOrDefaultAsync();
         }
-        
+
+        public async Task<List<BookingDetail>> GetAllAsync(Expression<Func<BookingDetail, bool>> predicate)
+        {
+            IQueryable<BookingDetail> query = _dbSet;
+
+            // Apply the predicate filter and execute the query
+            return await query
+                .Where(predicate) // Apply the filtering predicate
+                .ToListAsync(); // Execute the query and return the results as a list
+        }
+
         public async Task<BookingDetail?> GetAsyncByTypeAndBookingId(string type, int bookingId)
         {
             IQueryable<BookingDetail> query = _dbSet;

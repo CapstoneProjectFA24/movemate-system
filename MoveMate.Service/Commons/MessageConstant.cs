@@ -78,7 +78,7 @@ namespace MoveMate.Service.Commons
             public const string UserInfoExist = "User info with this type has existed";
             public const string AccountNotLogin = "This account has been banned";
             public const string RequestIdFail = "The input Id must match the request Id";
-
+            public const string NotPermission = "User have no permission";
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
             public const string GetListUserFail = "List user is empty!";
