@@ -1458,9 +1458,9 @@ namespace MoveMate.Service.Services
                         break;
                     case var status when status == AssignmentStatusEnums.DELIVERED.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
-                        var bookingTrackerUnloads =
+                        var bookingTrackerUnloadeds =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
-                        if (bookingTrackerUnloads == null)
+                        if (bookingTrackerUnloadeds == null)
                         {
                             result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
                             return result;
@@ -1474,15 +1474,15 @@ namespace MoveMate.Service.Services
 
                         var trackerUnloads = new BookingTracker();
                         trackerUnloads.BookingId = booking.Id;
-                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADED.ToString();
+                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADEDED.ToString();
                         trackerUnloads.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
                         List<TrackerSource> resourceListUnloads = _mapper.Map<List<TrackerSource>>(request.ResourceList);
                         trackerUnloads.TrackerSources = resourceListUnloads;
                         await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUnloads);
-                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
+                        nextStatus = AssignmentStatusEnums.UNLOADED.ToString();
                         break;
-                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString() &&
+                    case var status when status == AssignmentStatusEnums.UNLOADED.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         var bookingTrackerComs =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
@@ -1590,9 +1590,9 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.DELIVERED.ToString():
-                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
+                        nextStatus = AssignmentStatusEnums.UNLOADED.ToString();
                         break;
-                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString():
+                    case var status when status == AssignmentStatusEnums.UNLOADED.ToString():
                         nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
                     case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
@@ -3011,7 +3011,7 @@ namespace MoveMate.Service.Services
                     (checkLeader.Status != AssignmentStatusEnums.IN_PROGRESS.ToString()
                     || checkLeader.Status != AssignmentStatusEnums.ONGOING.ToString()
                     || checkLeader.Status != AssignmentStatusEnums.DELIVERED.ToString()
-                    || checkLeader.Status != AssignmentStatusEnums.UNLOAD.ToString()))
+                    || checkLeader.Status != AssignmentStatusEnums.UNLOADED.ToString()))
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
                     return result;
