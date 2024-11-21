@@ -207,7 +207,7 @@ namespace MoveMate.Service.Commons
 
 
             //Payment
-            public const string BookingStatus = "Booking status must be either DEPOSITING or COMPLETED";
+            public const string BookingStatus = "Booking status must be either DEPOSITING or INPROGRESS";
             public const string AmountGreaterThanZero = "Amount must be greater than zero";
             public const string InvalidSignature = "Invalid payment signature";
             public const string CreatePaymentFail = "Payment was not successful";

@@ -1514,8 +1514,8 @@ namespace MoveMate.Service.Services
                 }
 
                 assignment.Status = nextStatus;
-                _unitOfWork.AssignmentsRepository.Update(assignment);
-                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(assignment);

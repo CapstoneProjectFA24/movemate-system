@@ -16,6 +16,7 @@ using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Domain.Models;
 using MoveMate.Service.Library;
+using Parlot.Fluent;
 
 namespace MoveMate.Service.Services
 {
@@ -60,15 +61,23 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
-
-                if (booking.Status != BookingEnums.DEPOSITING.ToString() && booking.Status != BookingEnums.IN_PROGRESS.ToString())
+                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    //go to
+                }
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                {
+                    //go to
+                }
+                else
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return result;
                 }
-
-                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
-                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
                 int amount = 0;
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
@@ -113,7 +122,7 @@ namespace MoveMate.Service.Services
                     Success = true,
                     Date = DateTime.Now
                 };
-
+                string category = "";
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
                 await _unitOfWork.SaveChangesAsync();
                 string transType = "";
@@ -121,10 +130,12 @@ namespace MoveMate.Service.Services
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
                     booking.TotalReal = booking.Total - amount;
+                    category = CategoryEnums.DEPOSIT.ToString();
                 }
                 else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                    category = CategoryEnums.PAYMENT_TOTAL.ToString();
                 }
 
               
@@ -205,7 +216,7 @@ namespace MoveMate.Service.Services
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
-                var url = $"{returnUrl}?isSuccess=true&amount={amount}&payDate={DateTime.Now}&bookingId={bookingId}&transactionCode={transaction.TransactionCode}&userId={userId}&paymentMethod={Resource.Wallet}";
+                var url = $"{returnUrl}?isSuccess=true&amount={amount}&payDate={DateTime.Now}&bookingId={bookingId}&transactionCode={transaction.TransactionCode}&userId={userId}&paymentMethod={Resource.Wallet}&category={category}";
                 result.AddResponseStatusCode(StatusCode.Ok, url, MessageConstant.SuccessMessage.PaymentSuccess);
             }
             catch (Exception ex)
@@ -213,6 +224,48 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.ServerError, $"{returnUrl}?isSuccess=false&message={MessageConstant.FailMessage.BalanceNotEnough}");
                 return result;
             }
+            return result;
+        }
+
+        public async Task<OperationResult<bool>> UserPayByCash(int userId, int bookingId)
+        {
+            var result = new OperationResult<bool>();
+
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
+                if (booking == null)
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay, false);
+                    return result;
+                }
+                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
+
+                if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                {
+                    booking.Status = BookingEnums.COMPLETED.ToString();
+                    booking.TotalReal = 0;
+                }
+                else
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.BookingStatus, false);
+                    return result;
+                }
+      
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.SaveChangesAsync();               
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PaymentSuccess, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirm round trip");
+                throw;
+            }
+
             return result;
         }
     }
