@@ -2862,6 +2862,7 @@ namespace MoveMate.Service.Services
                 }
 
                 assignment.Status = AssignmentStatusEnums.FAILED.ToString();
+                assignment.FailedReason = request.FailReason;
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
 
                 var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)assignment.BookingDetailsId);

@@ -37,15 +37,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             //}
 
 
-            if (!string.IsNullOrWhiteSpace(Status))
-            {
-                var statuses = Status.Split('.')
-                    .Select(s => s.Trim())
-                    .Where(s => !string.IsNullOrEmpty(s))
-                    .ToArray();
-
-                Expression = Expression.And(tran => statuses.Contains(tran.Status));
-            }
+           
 
             Expression = Expression.And(u => u.IsActived == true);
 
