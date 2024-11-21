@@ -38,6 +38,7 @@ namespace MoveMate.Domain.Enums;
         CANCELLED,
         REFUNDED,
         REVIEWED,
+        PACKING,
         ONGOING,
         DELIVERED,
         UNLOAD
