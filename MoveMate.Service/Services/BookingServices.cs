@@ -2168,11 +2168,7 @@ namespace MoveMate.Service.Services
 
                 var deposit = total * 30 / 100;
 
-                if (existingBooking.IsReviewOnline == false)
-                {
-                    var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
-                    deposit = feeReviewerOffline!.Amount!.Value;
-                }
+               
                 existingBooking.TotalFee = totalFee;
                 
                 // Ensure total includes service and fee totals
@@ -2180,12 +2176,21 @@ namespace MoveMate.Service.Services
                 {
                     existingBooking.TotalReal = total - existingBooking.Deposit;
                     existingBooking.Status = BookingEnums.CONFIRMED.ToString();
-                    existingBooking.Deposit = existingBooking.Total * 0.30;
+                    existingBooking.Deposit = deposit;
                 }
                 else
                 {
+                    if (existingBooking.IsReviewOnline == false)
+                    {
+                        var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
+                        deposit = feeReviewerOffline!.Amount!.Value;
+                    }
+                    else
+                    {
+                        existingBooking.Deposit = deposit;
+                    }
                     existingBooking.Total = total;
-                    existingBooking.Deposit = existingBooking.Total * 0.30;
+                    
                     existingBooking.TotalReal = total;
                 }
                 existingBooking.Total = total;
@@ -2531,8 +2536,6 @@ namespace MoveMate.Service.Services
 
                         existingBooking.Total -= totalVoucherOnlinePrice;
                         existingBooking.TotalReal = existingBooking.Total;
-                        var deposit = existingBooking.Total * 30 / 100;
-                        existingBooking.Deposit = deposit;
                         foreach (var voucher in voucherOnlines)
                         {
                             voucher.BookingId = existingBooking.Id;
@@ -2611,8 +2614,6 @@ namespace MoveMate.Service.Services
 
                         existingBooking.Total -= totalVoucherPrice;
                         existingBooking.TotalReal = existingBooking.Total;
-                        var depositOff = existingBooking.Total * 30 / 100;
-                        existingBooking.Deposit = depositOff;
                         foreach (var voucher in vouchers)
                         {
                             voucher.BookingId = existingBooking.Id;
