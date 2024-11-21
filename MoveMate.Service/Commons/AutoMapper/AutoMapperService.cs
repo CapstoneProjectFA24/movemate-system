@@ -86,6 +86,12 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<StatusRequest, Booking>()
                 .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
 
+            CreateMap<BookingDetail, BookingDetailReport>()
+                .ForMember(dest => dest.BookingAt, opt => opt.MapFrom(src => src.Booking.BookingAt))
+                .ForMember(dest => dest.Number, opt => opt.MapFrom(src => src.Booking.TruckNumber))
+                .ForMember(dest => dest.Assignments, opt => opt.Ignore()) // Không ánh xạ trường Assignments
+            .ForMember(dest => dest.Booking, opt => opt.Ignore());
+
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
             //Schedule
@@ -93,7 +99,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             //    .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
 
             //CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
-           
+
             CreateMap<CreateScheduleWorkingRequest, ScheduleWorking>();
            // CreateMap<UpdateScheduleWorkingRequest, ScheduleWorking>();
             CreateMap<ScheduleWorking, ScheduleWorkingResponse>();

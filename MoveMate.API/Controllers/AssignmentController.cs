@@ -3,6 +3,8 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelRequests;
 using System.Security.Claims;
 using MoveMate.Service.ViewModels.ModelRequests.Assignments;
+using Microsoft.AspNetCore.Authorization;
+using MoveMate.Service.Commons;
 
 namespace MoveMate.API.Controllers
 {
@@ -16,6 +18,25 @@ namespace MoveMate.API.Controllers
         {
             _bookingServices = bookingServices;
             _assignmentService = assignmentService;
+        }
+
+        /// <summary>
+        /// 
+        /// FEATURE: Get all booking detail report
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("")]
+        [Authorize]
+
+        // get all
+        public async Task<IActionResult> GetAll([FromQuery] GetAllBookingDetailReport request)
+        {
+            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+            
+            var response = await _assignmentService.GetAll(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
         /// <summary>
