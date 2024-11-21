@@ -24,6 +24,7 @@ using static Grpc.Core.Metadata;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.Library;
 using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
+using MoveMate.Domain.Models;
 
 namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 {
@@ -81,8 +82,20 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 return operationResult;
             }
 
-            if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
-                booking.Status != BookingEnums.IN_PROGRESS.ToString())
+            var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+            var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
+
+            if (booking.Status == BookingEnums.DEPOSITING.ToString())
+            {
+                //go to
+            }
+            else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                     assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                     assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+            {
+                //go to
+            }
+            else
             {
                 operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                 return operationResult;
@@ -91,7 +104,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             int amount = 0;
             if (booking.Status == BookingEnums.DEPOSITING.ToString())
             {
-                amount = (int)booking.Deposit;               
+                amount = (int)booking.Deposit;
             }
             else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
             {
@@ -112,7 +125,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 };
 
                 // Generate Momo payment link
-                var paymentUrl = await CreatePaymentAsync(payment);
+                var paymentUrl = await CreatePaymentAsync(payment, bookingId);
 
                 operationResult =
                     OperationResult<string>.Success(paymentUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
@@ -125,8 +138,25 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             }
         }
 
-        public async Task<string> CreatePaymentAsync(MomoPayment payment)
+        public async Task<string> CreatePaymentAsync(MomoPayment payment, int bookingId)
         {
+            string category = "";
+            if (payment.Info == "wallet")
+            {
+                category = CategoryEnums.PAYMENT_WALLET.ToString();
+            }
+            if (payment.Info == "order")
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, int.Parse(payment.ExtraData));
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    category = CategoryEnums.DEPOSIT.ToString();
+                }
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
+                {
+                    category = CategoryEnums.PAYMENT_TOTAL.ToString();
+                }
+            }
             var serverUrl =
                 string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
                     _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
@@ -137,7 +167,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 OrderInfo = payment.Info,
                 PartnerCode = _momoSettings.PartnerCode,
                 IpnUrl = _momoSettings.IpnUrl,
-                RedirectUrl = $"{serverUrl}/{_momoSettings.RedirectUrl}?returnUrl={payment.returnUrl}",
+                RedirectUrl = $"{serverUrl}/{_momoSettings.RedirectUrl}?returnUrl={payment.returnUrl}&category={category}",
                 Amount = payment.Amount,
                 OrderId = payment.PaymentReferenceId,
                 ReferenceId = $"{payment.PaymentReferenceId}",
@@ -162,7 +192,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             if (momoResponse.IsSuccessStatusCode)
             {
                 var momoPaymentResponse = JsonSerializerUtils.Deserialize<MomoPaymentResponse>(responseContent);
-               
+
                 if (momoPaymentResponse != null)
                 {
                     return momoPaymentResponse.PayUrl;
@@ -224,7 +254,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 };
 
                 // Generate Momo payment link
-                var paymentUrl = await CreatePaymentAsync(payment);
+                var paymentUrl = await CreatePaymentAsync(payment, wallet.Id);
 
                 // Add logic to update user's wallet if payment is successful
                 operationResult =
@@ -429,7 +459,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
-                } 
+                }
                 else
                 {
                     operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
@@ -441,7 +471,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 operationResult =
                     OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
-                
+
             }
             catch (Exception ex)
             {
