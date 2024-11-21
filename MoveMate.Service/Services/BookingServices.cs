@@ -2176,7 +2176,7 @@ namespace MoveMate.Service.Services
                 {
                     existingBooking.TotalReal = total - existingBooking.Deposit;
                     existingBooking.Status = BookingEnums.CONFIRMED.ToString();
-                    existingBooking.Deposit = deposit;
+                    existingBooking.Deposit = existingBooking.Total * 0.30; ;
                 }
                 else
                 {
@@ -2185,11 +2185,10 @@ namespace MoveMate.Service.Services
                         var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
                         deposit = feeReviewerOffline!.Amount!.Value;
                     }
-                    else
-                    {
-                        existingBooking.Deposit = deposit;
-                    }
-                    existingBooking.Total = total;
+                   
+                    existingBooking.Deposit = deposit;
+                    
+                    
                     
                     existingBooking.TotalReal = total;
                 }
