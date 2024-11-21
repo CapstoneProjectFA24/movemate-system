@@ -49,7 +49,25 @@ namespace MoveMate.Repository.Repositories.Repository
             }
         }
 
+        public virtual async Task<User?> GetByIdAsync(int id, string includeProperties = "")
+        {
+            IQueryable<User> query = _dbSet;
 
+            // Apply includes
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter by ID
+            query = query.Where(a => a.Id == id);
+
+            // Execute the query and get the result
+            var result = await query.FirstOrDefaultAsync();
+
+            return result;
+        }
         public async Task<User> GetUserAsyncByEmail(string email)
         {
             try
