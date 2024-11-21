@@ -1516,7 +1516,8 @@ public class AssignmentService : IAssignmentService
                 filter: request.GetExpressions(),
                 pageIndex: request.page,
                 pageSize: request.per_page,
-                orderBy: request.GetOrder()
+                orderBy: request.GetOrder(),
+                includeProperties : "Booking.User"
             );
 
             // Map to BookingDetailReport

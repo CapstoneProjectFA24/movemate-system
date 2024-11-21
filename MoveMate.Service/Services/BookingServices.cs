@@ -2848,79 +2848,55 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> StaffReportFail(int bookingDetailId, int userId, FailReportRequest request)
+        public async Task<OperationResult<BookingDetailsResponse>> StaffReportFail(int assignmentId, FailReportRequest request)
         {
             var result = new OperationResult<BookingDetailsResponse>();
             try
             {
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync(bookingDetailId);
+
+                var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
+                if (assignment == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                    return result;
+                }
+
+                assignment.Status = AssignmentStatusEnums.FAILED.ToString();
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+
+                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)assignment.BookingDetailsId);
                 if (bookingDetail == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
                 }
 
-                var checkLeader = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.PORTER.ToString(), (int)bookingDetail.BookingId);
-                if (checkLeader == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignedLeader);
-                    return result;
-                }
-                var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-                if (staffLeader == null)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundUser);
-                    return result;
-                }
-
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId);
-                if (booking == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
-                    return result;
-                }
-
-
-
-                if (booking.Status != BookingEnums.IN_PROGRESS.ToString() && (checkLeader.Status != AssignmentStatusEnums.IN_PROGRESS.ToString()
-                    || checkLeader.Status != AssignmentStatusEnums.ONGOING.ToString()
-                    || checkLeader.Status != AssignmentStatusEnums.DELIVERED.ToString()
-                    || checkLeader.Status != AssignmentStatusEnums.UNLOAD.ToString()))
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
-                    return result;
-                }
-
-                bookingDetail.Status = request.Status;
-                bookingDetail.FailReason = request.FailReason;
-
+                bookingDetail.Status = BookingDetailStatusEnums.WAITING.ToString();
                 await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
-                var saveResult = _unitOfWork.Save();
 
-                // Check save result and return response
+                var user = await _unitOfWork.UserRepository.GetManagerAsync();
+                var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync((int)assignment.UserId);
+                var notification = new Notification
+                {
+                    UserId = user.Id,
+                    SentFrom = staffLeader?.Name,
+                    Receive = user.Name,
+                    Name = "Service Fail Notification",
+                    Description = $"Booking with id {bookingDetail.BookingId} has an issue: {request.FailReason}",
+                    Topic = "StaffReportFail",
+                    IsRead = false
+                };
+
+                await _unitOfWork.NotificationRepository.AddAsync(notification);
+                var saveResult = await _unitOfWork.SaveChangesAsync();
                 if (saveResult > 0)
                 {
                     bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
                     var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                    var user = await _unitOfWork.UserRepository.GetManagerAsync();
 
-                    var notification = new Notification
-                    {
-
-                        UserId = user.Id,
-                        SentFrom = staffLeader.Name,
-                        Receive = user.Name,
-                        Name = "Service Fail Notification",
-                        Description = $"Booking with id {booking.Id} have some problem {request.FailReason}",
-                        Topic = "StaffReportFail",
-                        IsRead = false
-                    };
-                    await _unitOfWork.NotificationRepository.AddAsync(notification);
-                    await _unitOfWork.SaveChangesAsync();
-                    // Save the notification to Firestore
                     await _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
-                        response);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess, response);
                 }
                 else
                 {
@@ -2930,11 +2906,11 @@ namespace MoveMate.Service.Services
             catch (Exception ex)
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
-                return result;
             }
 
             return result;
         }
+
 
         public async Task<OperationResult<BookingDetailsResponse>> ManagerFix(int bookingDetailId, int userId)
         {

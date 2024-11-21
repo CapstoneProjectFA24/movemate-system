@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class FailReportRequest
-    {
-        public string Status { get; set; }
+    { 
         public string FailReason { get; set; }
     }
 }
