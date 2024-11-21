@@ -1418,12 +1418,16 @@ namespace MoveMate.Service.Services
 
                         var trackers = new BookingTracker();
                         trackers.BookingId = booking.Id;
-                        trackers.Type = TrackerEnums.PORTER_ONGOING.ToString();
+                        trackers.Type = TrackerEnums.PORTER_PACKING.ToString();
                         trackers.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
                         List<TrackerSource> resourceLists = _mapper.Map<List<TrackerSource>>(request.ResourceList);
                         trackers.TrackerSources = resourceLists;
                         await _unitOfWork.BookingTrackerRepository.AddAsync(trackers);
+                        nextStatus = AssignmentStatusEnums.PACKING.ToString();
+                        break;
+                    case var status when status == AssignmentStatusEnums.PACKING.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         nextStatus = AssignmentStatusEnums.ONGOING.ToString();
                         break;
                     case var status when status == AssignmentStatusEnums.ONGOING.ToString() &&
