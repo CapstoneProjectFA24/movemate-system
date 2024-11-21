@@ -164,6 +164,26 @@ namespace MoveMate.API.Controllers
             return Ok(operationResult);
         }
 
+        /// <summary>
+        /// CHORE: User payment by cash  
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPatch("{bookingId}")]
+        [Authorize]
+        public async Task<IActionResult> UserPayByCash(int bookingId)
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _paymentServices.UserPayByCash(userId, bookingId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
 
         /// <summary>
         /// FEATURE : Recharge Payment
@@ -174,7 +194,7 @@ namespace MoveMate.API.Controllers
             CancellationToken cancellationToken)
         {
             await _vnPayService.ProcessRechargePayment(Request.Query);
-            var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.vnp_Amount/100}&payDate={DateTime.Now}&walletId={callback.vnp_OrderInfo}&transactionCode={callback.vnp_TransactionNo}&userId={callback.userId}&paymentMethod={Resource.VNPay}";
+            var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.vnp_Amount/100}&payDate={DateTime.Now}&walletId={callback.vnp_OrderInfo}&transactionCode={callback.vnp_TransactionNo}&userId={callback.userId}&paymentMethod={Resource.VNPay}&category={callback.category}";
             return Redirect(returnUrl);
         }
 
@@ -196,14 +216,15 @@ namespace MoveMate.API.Controllers
 
             if (callback.OrderInfo == "order")
             {
-                var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&bookingId={callback.OrderId}&transactionCode={callback.TransId}&userId={callback.ExtraData}&paymentMethod={Resource.Momo}";
+                
+                var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&bookingId={callback.OrderId}&transactionCode={callback.TransId}&userId={callback.ExtraData}&paymentMethod={Resource.Momo}&category={callback.category}";
 
                 await _momoPaymentService.HandleOrderPaymentAsync(HttpContext, callback);
                 return Redirect(returnUrl);
             }
             else if (callback.OrderInfo == "wallet")
             {
-                var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&walletId={callback.OrderId}&transactionCode={callback.TransId}&userId={callback.ExtraData}&paymentMethod={Resource.Momo}";
+                var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&walletId={callback.OrderId}&transactionCode={callback.TransId}&userId={callback.ExtraData}&paymentMethod={Resource.Momo}&category={callback.category}";
 
                 await _momoPaymentService.HandleWalletPaymentAsync(HttpContext, callback);
                 return Redirect(returnUrl);
@@ -228,7 +249,7 @@ namespace MoveMate.API.Controllers
             }
 
 
-            var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.vnp_Amount/100}&payDate={DateTime.Now}&bookingId={callback.vnp_OrderInfo}&transactionCode={callback.vnp_TransactionNo}&userId={callback.userId}&paymentMethod={Resource.VNPay}";
+            var returnUrl = $"{callback.returnUrl}?isSuccess={callback.IsSuccess.ToString().ToLower()}&amount={callback.vnp_Amount/100}&payDate={DateTime.Now}&bookingId={callback.vnp_OrderInfo}&transactionCode={callback.vnp_TransactionNo}&userId={callback.userId}&paymentMethod={Resource.VNPay}&category={callback.category}";
 
             await _vnPayService.HandleOrderPaymentAsync(Request.Query, callback);            
             return Redirect(returnUrl);
@@ -282,7 +303,7 @@ namespace MoveMate.API.Controllers
 
             if (callback.Type == "order")
             {
-                var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&bookingId={callback.BookingId}&transactionCode={callback.OrderCode}&userId={callback.userId}&paymentMethod={Resource.PayOS}";
+                var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&bookingId={callback.BookingId}&transactionCode={callback.OrderCode}&userId={callback.userId}&paymentMethod={Resource.PayOS}&category={callback.category}";
 
                 await _payOsService.HandleOrderPaymentAsync(HttpContext, callback);
                 return Redirect(returnUrl);
@@ -290,7 +311,7 @@ namespace MoveMate.API.Controllers
 
             if (callback.Type == "wallet")
             {
-                var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&walletId={callback.BookingId}&transactionCode={callback.OrderCode}&userId={callback.userId}&paymentMethod={Resource.PayOS}";
+                var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&walletId={callback.BookingId}&transactionCode={callback.OrderCode}&userId={callback.userId}&paymentMethod={Resource.PayOS}&category={callback.category}";
                 await _payOsService.HandleWalletPaymentAsync(HttpContext, callback);
                 return Redirect(returnUrl);
             }

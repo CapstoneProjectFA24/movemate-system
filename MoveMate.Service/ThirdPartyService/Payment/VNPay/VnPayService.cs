@@ -84,7 +84,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 vnpay.AddRequestData("vnp_OrderInfo", wallet.Id.ToString());
                 vnpay.AddRequestData("vnp_OrderType", PaymentMethod.RECHARGE.ToString());
                 vnpay.AddRequestData("vnp_ReturnUrl",
-                    $"{serverUrl}/{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}&userId={userId}");
+                    $"{serverUrl}/{_config["VnPay:RechargeBackReturnUrl"]}?returnUrl={returnUrl}&userId={userId}&category={CategoryEnums.PAYMENT_WALLET}");
                 vnpay.AddRequestData("vnp_TxnRef", time.Ticks.ToString());
 
                 // Create payment URL
@@ -222,25 +222,41 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay);
                     return operationResult;
                 }
+                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
-                if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
-                    booking.Status != BookingEnums.IN_PROGRESS.ToString())
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    //go to
+                }
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                {
+                    //go to
+                }
+                else
                 {
                     operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
                     return operationResult;
                 }
 
+
+
                 int amount = 0;
                 string type = "";
+                string category = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     amount = (int)booking.Deposit;
                     type = PaymentMethod.DEPOSIT.ToString();
+                    category = CategoryEnums.DEPOSIT.ToString();
                 }
                 else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
                 {
                     amount = (int)booking.TotalReal;
                     type = PaymentMethod.PAYMENT.ToString();
+                    category = CategoryEnums.PAYMENT_TOTAL.ToString();
                 }
 
                 var newGuid = Guid.NewGuid();
@@ -252,7 +268,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 var pay = new VnPayLibrary();
                 pay.AddRequestData("vnp_ReturnUrl",
-                    $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}");
+                    $"{serverUrl}/{_vnPaySettings.CallbackUrl}?returnUrl={returnUrl}&userId={userId}&category={category}");
                 pay.AddRequestData("vnp_Version", _vnPaySettings.Version);
                 pay.AddRequestData("vnp_Command", _vnPaySettings.Command);
                 pay.AddRequestData("vnp_TmnCode", _vnPaySettings.TmnCode);
