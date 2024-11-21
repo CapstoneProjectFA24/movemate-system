@@ -37,7 +37,8 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<UserInfo, UserInfoResponse>();
             CreateMap<CreateUserInfoRequest, UserInfo>();
             CreateMap<UpdateUserInfoRequest, UserInfo>();
-            CreateMap<User, GetUserResponse>();
+            CreateMap<User, GetUserResponse>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
 
 
             //Register

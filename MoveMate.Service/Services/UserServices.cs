@@ -394,18 +394,15 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.UserRepository.GetByIdAsync(id);
-
+                    await _unitOfWork.UserRepository.GetByIdAsync(id, includeProperties: "Role");
                 if (entity == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 }
-                else
-                {
-                    var productResponse = _mapper.Map<GetUserResponse>(entity);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess,
+                var productResponse = _mapper.Map<GetUserResponse>(entity);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess,
                         productResponse);
-                }
+                
 
                 return result;
             }
