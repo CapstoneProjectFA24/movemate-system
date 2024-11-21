@@ -1342,6 +1342,7 @@ namespace MoveMate.Service.Services
                 var assignment =
                     await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId,
                         RoleEnums.PORTER.ToString(), bookingId);
+                var porterAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
                 if (assignment == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
@@ -1512,14 +1513,18 @@ namespace MoveMate.Service.Services
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
-
+                foreach (var assignments in porterAssignments)
+                {
+                    assignments.Status = nextStatus;
+                }
                 assignment.Status = nextStatus;
-                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(porterAssignments);
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
                 var response = _mapper.Map<AssignmentResponse>(assignment);
-                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
+                await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
             }
