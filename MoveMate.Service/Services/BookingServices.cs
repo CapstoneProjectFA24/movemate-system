@@ -1458,9 +1458,9 @@ namespace MoveMate.Service.Services
                         break;
                     case var status when status == AssignmentStatusEnums.DELIVERED.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
-                        var bookingTrackerUnloads =
+                        var bookingTrackerUNLOADEDs =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
-                        if (bookingTrackerUnloads == null)
+                        if (bookingTrackerUNLOADEDs == null)
                         {
                             result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
                             return result;
@@ -1472,17 +1472,17 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        var trackerUnloads = new BookingTracker();
-                        trackerUnloads.BookingId = booking.Id;
-                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADED.ToString();
-                        trackerUnloads.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+                        var trackerUNLOADEDs = new BookingTracker();
+                        trackerUNLOADEDs.BookingId = booking.Id;
+                        trackerUNLOADEDs.Type = TrackerEnums.PORTER_UNLOADEDED.ToString();
+                        trackerUNLOADEDs.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
-                        List<TrackerSource> resourceListUnloads = _mapper.Map<List<TrackerSource>>(request.ResourceList);
-                        trackerUnloads.TrackerSources = resourceListUnloads;
-                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUnloads);
-                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
+                        List<TrackerSource> resourceListUNLOADEDs = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerUNLOADEDs.TrackerSources = resourceListUNLOADEDs;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUNLOADEDs);
+                        nextStatus = AssignmentStatusEnums.UNLOADED.ToString();
                         break;
-                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString() &&
+                    case var status when status == AssignmentStatusEnums.UNLOADED.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
                         var bookingTrackerComs =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
@@ -1590,9 +1590,9 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.DELIVERED.ToString():
-                        nextStatus = AssignmentStatusEnums.UNLOAD.ToString();
+                        nextStatus = AssignmentStatusEnums.UNLOADED.ToString();
                         break;
-                    case var status when status == AssignmentStatusEnums.UNLOAD.ToString():
+                    case var status when status == AssignmentStatusEnums.UNLOADED.ToString():
                         nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
                     case var status when status == AssignmentStatusEnums.COMPLETED.ToString():
@@ -3011,7 +3011,7 @@ namespace MoveMate.Service.Services
                     (checkLeader.Status != AssignmentStatusEnums.IN_PROGRESS.ToString()
                     || checkLeader.Status != AssignmentStatusEnums.ONGOING.ToString()
                     || checkLeader.Status != AssignmentStatusEnums.DELIVERED.ToString()
-                    || checkLeader.Status != AssignmentStatusEnums.UNLOAD.ToString()))
+                    || checkLeader.Status != AssignmentStatusEnums.UNLOADED.ToString()))
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
                     return result;
