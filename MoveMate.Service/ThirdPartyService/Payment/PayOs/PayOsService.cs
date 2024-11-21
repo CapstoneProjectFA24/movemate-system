@@ -75,26 +75,39 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay);
                 return operationResult;
             }
+            var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+            var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
-            if (booking.Status != "WAITING" && booking.Status != "COMPLETED")
-                if (booking.Status != BookingEnums.DEPOSITING.ToString() &&
-                    booking.Status != BookingEnums.COMPLETED.ToString())
-                {
-                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
-                    return operationResult;
-                }
+            if (booking.Status == BookingEnums.DEPOSITING.ToString())
+            {
+                //go to
+            }
+            else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                     assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                     assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+            {
+                //go to
+            }
+            else
+            {
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
+                return operationResult;
+            }
 
+            string category = "";
             string description = "";
             int amount = 0;
             if (booking.Status == BookingEnums.DEPOSITING.ToString())
             {
                 amount = (int)booking.Deposit;
                 description = "order-deposit";
+                category = CategoryEnums.DEPOSIT.ToString();
             }
-            else if (booking.Status == BookingEnums.COMPLETED.ToString())
+            else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
             {
                 amount = (int)booking.TotalReal;
                 description = "order-payment";
+                category = CategoryEnums.PAYMENT_TOTAL.ToString();
             }
 
 
@@ -107,7 +120,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             try
             {
                 var urlReturn =
-                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}&userId={userId}";
+                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}&userId={userId}&category={category}";
                 var urlCancel = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
@@ -176,7 +189,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             try
             {
                 var urlReturn =
-                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={wallet.Id}&Type=wallet&BuyerEmail={user.Email}&Amount={amount}&userId={userId}";
+                    $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={wallet.Id}&Type=wallet&BuyerEmail={user.Email}&Amount={amount}&userId={userId}&category={CategoryEnums.PAYMENT_WALLET}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: (int)amount,
@@ -333,15 +346,19 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
 
                 await _unitOfWork.PaymentRepository.AddAsync(payment);
                 await _unitOfWork.SaveChangesAsync();
+                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
+
                 string transType = "";
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
                     booking.TotalReal = booking.Total - (float)command.Amount;
                 }
-                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                    booking.TotalReal -= (float)command.Amount;
                 }
 
                 var transaction = new MoveMate.Domain.Models.Transaction
@@ -397,7 +414,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 {
                     booking.Status = BookingEnums.COMING.ToString();
                 }
-                else if (booking.Status == BookingEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
                 }

@@ -78,7 +78,7 @@ namespace MoveMate.Service.Commons
             public const string UserInfoExist = "User info with this type has existed";
             public const string AccountNotLogin = "This account has been banned";
             public const string RequestIdFail = "The input Id must match the request Id";
-
+            public const string NotPermission = "User have no permission";
             //User
             public const string UserIdInvalid = "Invalid user ID in token";
             public const string GetListUserFail = "List user is empty!";
@@ -209,7 +209,7 @@ namespace MoveMate.Service.Commons
 
 
             //Payment
-            public const string BookingStatus = "Booking status must be either DEPOSITING or COMPLETED";
+            public const string BookingStatus = "Booking status must be either DEPOSITING or INPROGRESS";
             public const string AmountGreaterThanZero = "Amount must be greater than zero";
             public const string InvalidSignature = "Invalid payment signature";
             public const string CreatePaymentFail = "Payment was not successful";

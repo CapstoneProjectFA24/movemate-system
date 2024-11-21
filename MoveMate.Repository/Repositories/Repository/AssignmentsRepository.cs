@@ -51,6 +51,14 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<Assignment>> GetAllByStaffType(string staffType, int bookingId)
+        {
+            IQueryable<Assignment> query = _dbSet;
+            return await query
+                .Where(p => p.BookingId == bookingId && p.StaffType == staffType)
+                .ToListAsync();
+        }
+
         public async Task<Assignment> GetByUserIdAndStaffTypeAndIsResponsible(int userId, string staffType,
             int bookingId)
         {
@@ -79,6 +87,14 @@ namespace MoveMate.Repository.Repositories.Repository
             return await query
                 .Where(a => a.UserId == userId && a.StaffType == staffType && a.BookingId == bookingId)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Assignment>> GetByUserId(int userId)
+        {
+            IQueryable<Assignment> query = _dbSet;
+            return await query
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
         }
 
         public async Task<List<Assignment>> GetDriverAvailableWithOverlapAsync(

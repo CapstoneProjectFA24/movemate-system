@@ -1499,4 +1499,82 @@ public class AssignmentService : IAssignmentService
 
         return listAssignments;
     }
+        
+     
+    public async Task<OperationResult<List<BookingDetailReport>>> GetAll(GetAllBookingDetailReport request)
+    {
+        var result = new OperationResult<List<BookingDetailReport>>();
+
+        var pagin = new Pagination();
+
+        var filter = request.GetExpressions();
+
+        try
+        {
+            // Fetch the entities with pagination and count
+            var entities = _unitOfWork.BookingDetailRepository.GetWithCount(
+                filter: request.GetExpressions(),
+                pageIndex: request.page,
+                pageSize: request.per_page,
+                orderBy: request.GetOrder()
+            );
+
+            // Map to BookingDetailReport
+            var listResponse = _mapper.Map<List<BookingDetailReport>>(entities.Data);
+
+            if (listResponse == null || !listResponse.Any())
+            {
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingEmpty, listResponse);
+                return result;
+            }
+
+            // Populate the number field based on the type
+            foreach (var report in listResponse)
+            {
+                // Get the associated booking
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(report.BookingId.Value);
+                if (booking != null)
+                {
+                    // If Type is DRIVER, calculate the TruckNumber
+                    if (report.Type == TypeServiceEnums.TRUCK.ToString())
+                    {
+                        var truckAssignmentsCount = booking.Assignments
+                            .Where(assignment => assignment.StaffType == TypeServiceEnums.TRUCK.ToString() && assignment.Status != AssignmentStatusEnums.WAITING.ToString())
+                            .Count();
+
+                        report.Number = booking.TruckNumber - truckAssignmentsCount;
+                        report.BookingAt = booking.BookingAt;
+                       
+                    }
+
+                    // If Type is PORTER, calculate the PorterNumber
+                    if (report.Type == TypeServiceEnums.PORTER.ToString())
+                    {
+                        var porterAssignmentsCount = booking.Assignments
+                            .Where(assignment => assignment.StaffType == TypeServiceEnums.PORTER.ToString() && assignment.Status != AssignmentStatusEnums.WAITING.ToString())
+                            .Count();
+
+                        report.Number = booking.PorterNumber - porterAssignmentsCount;
+                        report.BookingAt = booking.BookingAt;
+                        
+                    }
+                }
+            }
+
+            // Add pagination details
+            pagin.pageSize = request.per_page;
+            pagin.totalItemsCount = entities.Count;
+
+            // Return success response
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingSuccess, listResponse, pagin);
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            return result;
+        }
+    }
+
 }

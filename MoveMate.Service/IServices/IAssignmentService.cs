@@ -15,4 +15,6 @@ public interface IAssignmentService
         AssignedManualStaffRequest request);
     public Task<OperationResult<DriverInfoDTO>> GetAvailableDriversForBooking(int bookingId);
     public Task<OperationResult<DriverInfoDTO>> GetAvailablePortersForBooking(int bookingId);
+    public Task<OperationResult<List<BookingDetailReport>>> GetAll(GetAllBookingDetailReport request);
+
 }
