@@ -258,10 +258,37 @@ public class RedisService : IRedisService
 
         return JsonSerializer.Deserialize<T>(jsonData);
     }
-    
+    public async Task<List<T>> PeekAsync<T>(string queueKey, long start = 0, long stop = -1)
+    {    
+        var jsonDataList = await _database.ListRangeAsync(queueKey, start, stop);
+        var result = jsonDataList
+            .Where(item => !item.IsNull)
+            .Select(item => JsonSerializer.Deserialize<T>(item))
+            .ToList();
+
+        return result;
+    }
+
     public async Task<long> GetQueueLengthAsync(string queueKey)
     {
         return await _database.ListLengthAsync(queueKey);
+    }
+
+    public async Task<List<T>> GetQueueItemsAsync<T>(string redisKey)
+    {
+        var items = new List<T>();
+
+        // Assuming you're using StackExchange.Redis, you can get the items from the Redis list/queue
+        var db = _redisConnection.GetDatabase();
+        var length = await db.ListLengthAsync(redisKey);
+
+        for (long i = 0; i < length; i++)
+        {
+            var item = await db.ListGetByIndexAsync(redisKey, i);
+            items.Add(JsonConvert.DeserializeObject<T>(item));
+        }
+
+        return items;
     }
 
     public async Task<int> RemoveFromQueueLikeAsync(string queueKey, string searchValue)
