@@ -11,6 +11,8 @@ namespace MoveMate.Service.IServices
 {
     public interface IGroupServices
     {
-        public Task<OperationResult<List<GroupResponse>>> GetAll(GetAllStaffDailyRequest request);
+        public Task<OperationResult<List<GroupResponse>>> GetAll(GetAllGroupRequest request);
+        Task<OperationResult<GroupResponse>> GetGroupById(int id);
+        Task<OperationResult<bool>> DeleteGroup(int id);
     }
 }

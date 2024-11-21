@@ -22,9 +22,14 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public string? Type { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        public TimeOnly? StartDate { get; set; }
 
-        public DateTime? EndDate { get; set; }
-        public virtual ICollection<GroupResponse> BookingStaffDailies { get; set; } = new List<GroupResponse>();
+        public TimeOnly? EndDate { get; set; }
+
+        public int? GroupId { get; set; }
+
+        public TimeOnly? ExtentStartDate { get; set; }
+
+        public TimeOnly? ExtentEndDate { get; set; }
     }
 }
