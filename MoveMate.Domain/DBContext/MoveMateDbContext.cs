@@ -155,7 +155,6 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
-            entity.Property(e => e.FailReason).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
@@ -176,7 +175,7 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("Group");
 
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.Status).HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
 
@@ -321,7 +320,7 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("ScheduleWorking");
 
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.Property(e => e.Status).HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 

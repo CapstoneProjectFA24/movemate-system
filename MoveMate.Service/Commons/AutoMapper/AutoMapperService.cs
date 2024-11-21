@@ -89,8 +89,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<BookingDetail, BookingDetailReport>()
                 .ForMember(dest => dest.BookingAt, opt => opt.MapFrom(src => src.Booking.BookingAt))
                 .ForMember(dest => dest.Number, opt => opt.MapFrom(src => src.Booking.TruckNumber))
-                .ForMember(dest => dest.Assignments, opt => opt.Ignore()) // Không ánh xạ trường Assignments
-            .ForMember(dest => dest.Booking, opt => opt.Ignore());
+                .ForMember(dest => dest.Users, opt => opt.MapFrom(src => src.Booking.User)); ;
 
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
