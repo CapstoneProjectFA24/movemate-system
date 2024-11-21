@@ -1458,9 +1458,9 @@ namespace MoveMate.Service.Services
                         break;
                     case var status when status == AssignmentStatusEnums.DELIVERED.ToString() &&
                                          booking.Status == BookingEnums.IN_PROGRESS.ToString():
-                        var bookingTrackerUNLOADEDs =
+                        var bookingTrackerUnloadeds =
                             await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAsync(booking.Id);
-                        if (bookingTrackerUNLOADEDs == null)
+                        if (bookingTrackerUnloadeds == null)
                         {
                             result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
                             return result;
@@ -1472,14 +1472,14 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        var trackerUNLOADEDs = new BookingTracker();
-                        trackerUNLOADEDs.BookingId = booking.Id;
-                        trackerUNLOADEDs.Type = TrackerEnums.PORTER_UNLOADEDED.ToString();
-                        trackerUNLOADEDs.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+                        var trackerUnloads = new BookingTracker();
+                        trackerUnloads.BookingId = booking.Id;
+                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADEDED.ToString();
+                        trackerUnloads.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
-                        List<TrackerSource> resourceListUNLOADEDs = _mapper.Map<List<TrackerSource>>(request.ResourceList);
-                        trackerUNLOADEDs.TrackerSources = resourceListUNLOADEDs;
-                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUNLOADEDs);
+                        List<TrackerSource> resourceListUnloads = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        trackerUnloads.TrackerSources = resourceListUnloads;
+                        await _unitOfWork.BookingTrackerRepository.AddAsync(trackerUnloads);
                         nextStatus = AssignmentStatusEnums.UNLOADED.ToString();
                         break;
                     case var status when status == AssignmentStatusEnums.UNLOADED.ToString() &&
