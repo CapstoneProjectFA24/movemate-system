@@ -127,7 +127,8 @@ namespace MoveMate.Service.Commons
 
             public const string BookingNotEstimated = "Booking has not been updated Estimated Delivery Time yet";
             public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
-
+            public const string NoAvailableDrivers = "Currently there are no suitable drivers";
+            public const string NotFoundDriver = "Not found driver";
 
 
             //Assignment
@@ -191,6 +192,7 @@ namespace MoveMate.Service.Commons
             public const string TruckCategoryUpdateFail = "Update truck category failed";
             public const string TruckAlreadyDeleted = "Truck already deleted";
             public const string TruckImgRequire = "Truck images cannot be empty";
+            public const string NotFoundPorter = "Not found booking detail with type PORTER";
 
 
             //Schedule
@@ -289,6 +291,9 @@ namespace MoveMate.Service.Commons
             public const string UserConfirm = "Confirm round trip successfully";
             public const string BookingUpdateSuccess = "Update booking succesful";
             public const string BookingDetailUpdateSuccess = "Update booking detail succesful";
+            public const string FoundAvailableDrivers = "Get Driver successful";
+            public const string FoundAvailablePorters = "Get Porter successful";
+
 
             //FeeSetting
             public const string GetListFeeSettingEmpty = "List fee setting is empty!";
