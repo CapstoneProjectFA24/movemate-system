@@ -81,6 +81,14 @@ namespace MoveMate.Repository.Repositories.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<List<Assignment>> GetByUserId(int userId)
+        {
+            IQueryable<Assignment> query = _dbSet;
+            return await query
+                .Where(a => a.UserId == userId)
+                .ToListAsync();
+        }
+
         public async Task<List<Assignment>> GetDriverAvailableWithOverlapAsync(
             DateTime newStartTime,
             DateTime newEndTime,
