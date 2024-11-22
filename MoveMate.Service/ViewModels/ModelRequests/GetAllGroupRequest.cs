@@ -21,11 +21,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             var queryExpression = PredicateBuilder.New<Group>(true);
 
 
-            if (!string.IsNullOrWhiteSpace(Search))
-            {
-                Search = Search.Trim().ToLower();
-                queryExpression = queryExpression.And(group => group.Status.ToLower().Contains(Search));
-            }
+          
 
            
             queryExpression = queryExpression.And(group => group.IsActived == true);
