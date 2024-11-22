@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
+using MoveMate.Domain.Models;
 
 namespace MoveMate.Service.IServices
 {
@@ -42,5 +43,6 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingResponse>> TrackerReport(int userId, int bookingId, TrackerSourceRequest request);
         Task<OperationResult<BookingResponse>> DriverUpdateBooking(int userId,int bookingId, DriverUpdateBookingRequest request);
         Task<OperationResult<BookingResponse>> PorterUpdateBooking(int userId, int bookingId, PorterUpdateDriverRequest request);
+        Booking GetBookingByIdAsync(int bookingId);
     }
 }

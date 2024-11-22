@@ -21,9 +21,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
         /// FEATURE: Get all booking detail report
-        /// 
         /// </summary>
         /// <returns></returns>
         [HttpGet("booking-detail-waiting")]
@@ -55,11 +53,11 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Assigned staff by assignment id
+        /// FEATURE: Assigned staff by assignment id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<IActionResult> AssignedStaff(int id)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
@@ -68,9 +66,9 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.AssignedLeader(userId, id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
-        /// CHORE: Trigger Assigned auto by manual driver by booking id
+        /// FEATURE: Trigger Assigned auto by manual driver by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -83,9 +81,9 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.HandleAssignManualDriver(bookingId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
-        /// CHORE: Trigger Assigned manual porter by booking id
+        /// FEATURE: Trigger Assigned manual porter by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -98,9 +96,9 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.HandleAssignManualPorter(bookingId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
-        /// CHORE: Assigned manual staff by booking id
+        /// FEATURE: Assigned manual staff by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -112,7 +110,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Get available drivers by booking id
+        /// FEATURE: Get available drivers by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -124,7 +122,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Get available porters by booking id
+        /// FEATURE: Get available porters by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
