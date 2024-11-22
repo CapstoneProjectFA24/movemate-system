@@ -21,11 +21,20 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
         /// FEATURE: Get all booking detail report
-        /// 
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The filter, pagination, and sorting options for retrieving booking detail reports.</param>
+        /// <returns>
+        /// Returns an HTTP response containing a list of booking detail reports, including pagination details, 
+        /// or an error message if something goes wrong.
+        /// </returns>
+        /// <remarks>
+        /// Example usage:
+        /// GET /api/booking-detail-report?page=1&per_page=10&sortBy=BookingAt&order=desc
+        /// - Filters can include properties defined in <see cref="GetAllBookingDetailReport"/>.
+        /// - Pagination is determined by the `page` and `per_page` query parameters.
+        /// - Sorting can be applied using `sortBy` and `order`.
+        /// </remarks>
         [HttpGet("")]
         [Authorize]
 
@@ -40,11 +49,11 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Assigned staff by assignment id
+        /// FEATURE: Assigned staff by assignment id
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<IActionResult> AssignedStaff(int id)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
@@ -53,9 +62,9 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.AssignedLeader(userId, id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
-        /// CHORE: Trigger Assigned auto by manual driver by booking id
+        /// FEATURE: Trigger Assigned auto by manual driver by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -68,9 +77,9 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.HandleAssignManualDriver(bookingId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
-        /// CHORE: Trigger Assigned manual porter by booking id
+        /// FEATURE: Trigger Assigned manual porter by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -83,9 +92,9 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.HandleAssignManualPorter(bookingId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-        
+
         /// <summary>
-        /// CHORE: Assigned manual staff by booking id
+        /// FEATURE: Assigned manual staff by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -97,7 +106,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Get available drivers by booking id
+        /// FEATURE: Get available drivers by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
@@ -109,7 +118,7 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: Get available porters by booking id
+        /// FEATURE: Get available porters by booking id
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
