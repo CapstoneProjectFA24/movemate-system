@@ -43,11 +43,8 @@ namespace MoveMate.API.Controllers
         /// <remarks>
         /// Sample request:
         /// 
-        ///     GET /truckcategory/1
+        ///     GET /group/1
         /// </remarks>
-        /// <response code="200">Get House Type success</response>
-        /// <response code="404">House type not found</response>
-        /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetGroupById(int id)
         {
@@ -66,6 +63,60 @@ namespace MoveMate.API.Controllers
         {
             var response = await _groupService.DeleteGroup(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE : Creates a new group entry.
+        /// </summary>
+        /// <param name="request">The request payload containing group detail.</param>
+        /// <returns>A response indicating success or failure of the operation.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/group/
+        ///     {
+        ///         "Name": "Team Alpha",
+        ///         "DurationTimeActived": 30
+        ///     }
+        /// </remarks>
+        [HttpPost("")]
+        public async Task<IActionResult> CreateGroup([FromBody] CreateGroupRequest request)
+        {
+            var response = await _groupService.CreateGroup(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE : Update group by group id
+        /// </summary>
+        /// <param name="request">The group request model.</param>
+        /// <returns>A response containing the created truck category.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     Put /api/group
+        ///     {
+        ///         "Name": "Team Alpha",
+        ///         "DurationTimeActived": 30
+        ///     }
+        /// </remarks>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateGroup(int id, [FromBody] UpdateGroupRequest request)
+        {
+            var response = await _groupService.UpdateGroup(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+
+        [HttpPost("add-user")]
+        public async Task<IActionResult> AddUserIntoGroup([FromBody] AddUserIntoGroup request)
+        {
+            var response = await _groupService.AddUserIntoGroup(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
         }
     }
 }

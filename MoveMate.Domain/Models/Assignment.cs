@@ -35,6 +35,8 @@ public partial class Assignment
 
     public double? DurationTime { get; set; }
 
+    public bool? IsRoundTripCompleted { get; set; }
+
     public virtual Booking? Booking { get; set; }
 
     public virtual BookingDetail? BookingDetails { get; set; }

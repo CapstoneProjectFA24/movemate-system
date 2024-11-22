@@ -41,6 +41,20 @@ namespace MoveMate.Repository.Repositories.Repository
             var result = await query.FirstOrDefaultAsync();
             return result;
         }
+        public Booking GetByIdV1(int id, string includeProperties = "")
+        {
+            IQueryable<Booking> query = _dbSet;
+
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+
+            return query.FirstOrDefault(e => e.Id == id);
+        }
 
         public virtual async Task<Booking?> GetByIdAsync(int id, string includeProperties = "")
         {

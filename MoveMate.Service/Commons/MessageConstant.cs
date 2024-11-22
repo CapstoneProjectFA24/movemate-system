@@ -96,6 +96,7 @@ namespace MoveMate.Service.Commons
             public const string UserNotDriver = "User is not a driver";
             public const string UserHaveTruck = "The user has already registered a truck";
             public const string NotManager = "You do not have permission to perform this operation";
+            public const string UserCannotAdd = "This user cannot be added to the group";
 
             //Booking
             public const string NotFoundBooking = "Booking not found";
@@ -129,6 +130,7 @@ namespace MoveMate.Service.Commons
             public const string EstimatedNotEnough = "EstimatedDeliveryTime of Booking was not enough!";
             public const string NoAvailableDrivers = "Currently there are no suitable drivers";
             public const string NotFoundDriver = "Not found driver";
+            public const string CannotAssigned = "Drivers or porters cannot be added to the booking";
 
 
             //Assignment
@@ -209,6 +211,8 @@ namespace MoveMate.Service.Commons
 
             //Group
             public const string NotFoundGroup = "Not found group";
+            public const string CannotAddReviewer = "Group cannot have more than 3 REVIEWER";
+            public const string CannotAddStaff = "Group has reached the maximum number of these staffs";
             //Payment
             public const string BookingStatus = "Booking status must be either DEPOSITING or INPROGRESS";
             public const string AmountGreaterThanZero = "Amount must be greater than zero";
@@ -258,8 +262,10 @@ namespace MoveMate.Service.Commons
             //Validate
             public const string ValidateField = "Field is required";
 
-            //Group
-            
+            //ScheduleWorking
+            public const string TimeOnlyFormat = "Invalid format";
+
+
 
         }
 
@@ -352,6 +358,9 @@ namespace MoveMate.Service.Commons
             public const string GetListGroupEmpty = "List group is empty!";
             public const string GetListGroupSuccess = "Get list group done";
             public const string GetGroupSuccess = "Get group successfully";
+            public const string CreateGroup = "Create a new group successful";
+            public const string AddUserToGroup = "Add user into group successful";
+            public const string AddScheduleToGroup = "Add group into schedule successful";
 
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";

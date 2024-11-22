@@ -1171,10 +1171,15 @@ namespace MoveMate.Service.Services
                         await _unitOfWork.BookingTrackerRepository.AddAsync(trackers);
                         nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
+                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString() && booking.IsRoundTrip == true
+                                         && assignment.IsRoundTripCompleted == false:
+                        assignment.IsRoundTripCompleted = true;
+                        nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
+                        break;
 
                     default:
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
-                        return result;
+                        break;
                 }
 
                 assignment.Status = nextStatus;
@@ -1332,22 +1337,32 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments,BookingDetails");
                 if (booking == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
 
-                var assignment =
-                    await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId,
-                        RoleEnums.PORTER.ToString(), bookingId);
-                var porterAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
+
+                var bookingDetails = booking.BookingDetails.ToList();
+                bool hasSinglePorterBookingDetail = bookingDetails.Count(bd => bd.Type == "PORTER" && bd.ServiceId == 2) == 1;
+
+                var staffType = hasSinglePorterBookingDetail ? RoleEnums.DRIVER.ToString() : RoleEnums.PORTER.ToString();
+                var assignment = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(
+                    userId, staffType, bookingId);
+
                 if (assignment == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
                     return result;
                 }
+
+
+
+
+                var porterAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
+               
 
                 DateTime currentTime = DateTime.Now;
                 if (booking.BookingAt.HasValue)
@@ -1513,16 +1528,32 @@ namespace MoveMate.Service.Services
                         await _unitOfWork.BookingTrackerRepository.AddAsync(trackerComs);
                         nextStatus = AssignmentStatusEnums.COMPLETED.ToString();
                         break;
+                    case var status when status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                                         booking.Status == BookingEnums.IN_PROGRESS.ToString() && booking.IsRoundTrip == true
+                                         && assignment.IsRoundTripCompleted == false:
+                        assignment.IsRoundTripCompleted = true;
+                        nextStatus = AssignmentStatusEnums.IN_PROGRESS.ToString();
+                        break;
                     default:
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotUpdateStatus);
                         return result;
                 }
-                foreach (var assignments in porterAssignments)
+
+                if (assignment.StaffType == RoleEnums.PORTER.ToString())
                 {
-                    assignments.Status = nextStatus;
+                    foreach (var assignments in porterAssignments)
+                    {
+                        assignments.Status = nextStatus;
+                    }
+                    assignment.Status = nextStatus;
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(porterAssignments);
                 }
-                assignment.Status = nextStatus;
-                await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(porterAssignments);
+                else
+                {
+                    assignment.Status = nextStatus;
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+                }
+                
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -2848,69 +2879,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<BookingDetailsResponse>> StaffReportFail(int assignmentId, FailReportRequest request)
-        {
-            var result = new OperationResult<BookingDetailsResponse>();
-            try
-            {
-
-                var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
-                if (assignment == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
-                    return result;
-                }
-
-                assignment.Status = AssignmentStatusEnums.FAILED.ToString();
-                assignment.FailedReason = request.FailReason;
-                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
-
-                var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)assignment.BookingDetailsId);
-                if (bookingDetail == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
-                    return result;
-                }
-
-                bookingDetail.Status = BookingDetailStatusEnums.WAITING.ToString();
-                await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
-
-                var user = await _unitOfWork.UserRepository.GetManagerAsync();
-                var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync((int)assignment.UserId);
-                var notification = new Notification
-                {
-                    UserId = user.Id,
-                    SentFrom = staffLeader?.Name,
-                    Receive = user.Name,
-                    Name = "Service Fail Notification",
-                    Description = $"Booking with id {bookingDetail.BookingId} has an issue: {request.FailReason}",
-                    Topic = "StaffReportFail",
-                    IsRead = false
-                };
-
-                await _unitOfWork.NotificationRepository.AddAsync(notification);
-                var saveResult = await _unitOfWork.SaveChangesAsync();
-                if (saveResult > 0)
-                {
-                    bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
-                    var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-
-                    await _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
-
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess, response);
-                }
-                else
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
-                }
-            }
-            catch (Exception ex)
-            {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
-            }
-
-            return result;
-        }
+       
 
 
         public async Task<OperationResult<BookingDetailsResponse>> ManagerFix(int bookingDetailId, int userId)
@@ -3217,6 +3186,15 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
+        }
+
+       
+        public Booking GetBookingByIdAsync(int bookingId)
+        {
+            var booking = _unitOfWork.BookingRepository.GetByIdV1(bookingId,
+                        includeProperties:
+                        "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+            return booking;
         }
     }
 }

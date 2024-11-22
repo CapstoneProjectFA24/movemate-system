@@ -337,7 +337,21 @@ namespace MoveMate.API.Controllers
 
             return NoContent();
         }
-
+        /// <summary>
+        /// CHORE: Register a user's device with its FCM token for push notifications.
+        /// </summary>
+        /// <param name="userDeviceRequest">The request object containing the user's FCM token.</param>
+        /// <returns>
+        /// Returns an HTTP 200 response if the device is registered successfully, 
+        /// or an HTTP 500 response if an error occurs.
+        /// </returns>
+        /// <remarks>
+        /// Example request:
+        /// POST /api/fcmtoken
+        /// {
+        ///     "FCMToken": "example_fcm_token_12345"
+        /// }
+        /// </remarks>
         [HttpPost("fcmtoken")]
         public async Task<IActionResult> PostCreateUserDeviceAsync([FromBody] CreateUserDeviceRequest userDeviceRequest)
         {
@@ -365,6 +379,13 @@ namespace MoveMate.API.Controllers
             }
         }
 
+
+
+        /// <summary>
+        /// CHORE: Delete user's deviceId by user Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserDeviceAsync(int id)
         {
