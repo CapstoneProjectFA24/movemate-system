@@ -55,6 +55,11 @@ public class AssignmentService : IAssignmentService
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
         }
 
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
+        {
+            throw new BadRequestException(MessageConstant.FailMessage.CannotAssigned);
+        }
+
         var bookingDetailTruck =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 TypeServiceEnums.TRUCK.ToString(), bookingId);
@@ -443,6 +448,11 @@ public class AssignmentService : IAssignmentService
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
+        {
+            throw new BadRequestException(MessageConstant.FailMessage.CannotAssigned);
         }
 
         var bookingDetail =

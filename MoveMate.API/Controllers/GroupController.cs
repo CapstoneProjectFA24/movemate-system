@@ -67,5 +67,73 @@ namespace MoveMate.API.Controllers
             var response = await _groupService.DeleteGroup(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+        /// <summary>
+        /// CHORE : Creates a new truck image entry.
+        /// </summary>
+        /// <param name="request">The request payload containing truck image details.</param>
+        /// <returns>A response indicating success or failure of the operation.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/truck/manage/truck-img
+        ///     {
+        ///         "TruckId": 1,
+        ///         "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729831911/movemate/hkvbh89uo8qoh6uzajac.jpg",
+        ///         "ImageCode": "TRUCK123IMG"
+        ///     }
+        /// </remarks>
+        /// <response code="201">Truck image created successfully.</response>
+        /// <response code="400">Bad request, invalid data.</response>
+        /// <response code="500">Internal server error.</response>
+        [HttpPost("")]
+        public async Task<IActionResult> CreateGroup([FromBody] CreateGroupRequest request)
+        {
+            var response = await _groupService.CreateGroup(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// CHORE : Update truck category by truck category id
+        /// </summary>
+        /// <param name="request">The truck category request model.</param>
+        /// <returns>A response containing the created truck category.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/truck/manage/truck-img
+        ///     {
+        ///         "categoryName": "Heavy Duty Truck",
+        ///         "maxLoad": 12000,
+        ///         "description": "A truck suitable for heavy loads.",
+        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1728489912/movemate/vs174go4uz7uw1g9js2e.jpg",
+        ///         "estimatedLength": "7.5m",
+        ///         "estimatedWidth": "2.5m",
+        ///         "estimatedHeight": "3.0m",
+        ///         "summarize": "Designed for heavy-duty transport.",
+        ///         "price": 15000,
+        ///         "totalTrips": 100
+        ///     }
+        /// </remarks>
+        /// <response code="201">Returns the created truck category</response>
+        /// <response code="500">If there is a server error</response>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTruckCategory(int id, [FromBody] UpdateGroupRequest request)
+        {
+            var response = await _groupService.UpdateGroup(id, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+
+        [HttpPost("add-user")]
+        public async Task<IActionResult> AddUserIntoGroup([FromBody] AddUserIntoGroup request)
+        {
+            var response = await _groupService.AddUserIntoGroup(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
     }
 }
