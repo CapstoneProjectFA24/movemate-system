@@ -19,7 +19,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public int CountOtherStaff { get; set; }
         public String StaffType { get; set; }
 
-        public bool? IsSussed { get; set; } = false;
+        public bool? IsSuccessed { get; set; } = false;
     }
 
 }

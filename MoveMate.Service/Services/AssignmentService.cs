@@ -223,7 +223,7 @@ public class AssignmentService : IAssignmentService
         response.StaffType = RoleEnums.DRIVER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
 
@@ -615,7 +615,7 @@ public class AssignmentService : IAssignmentService
         response.StaffType = RoleEnums.PORTER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
 
@@ -1178,7 +1178,7 @@ public class AssignmentService : IAssignmentService
                     .ToList();
 
         // Step 2: Fetch User Details from Repository (assuming a method exists)
-        var users = await _unitOfWork.UserRepository.GetByIdAsync(userIds);
+        var users = await _unitOfWork.UserRepository.GetByListIdsAsync(userIds, includeProperties: "Role");
 
         // Step 3: Map User Details to UserResponse
         var userResponses = _mapper.Map<List<UserResponse>>(users);
@@ -1197,14 +1197,14 @@ public class AssignmentService : IAssignmentService
         if (isGroup1)
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             responses.OtherStaffs.AddRange(listUserResponse);
         }
         else
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             responses.OtherStaffs.AddRange(listUserResponse);
         }
@@ -1212,7 +1212,7 @@ public class AssignmentService : IAssignmentService
         responses.StaffType = RoleEnums.DRIVER.ToString();
         if (listAssignmentResponse.Count() >= responses.BookingNeedStaffs)
         {
-            responses.IsSussed = true;
+            responses.IsSuccessed = true;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
 
@@ -1220,7 +1220,7 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            responses.IsSussed = false;
+            responses.IsSuccessed = false;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.AssignmentManual, responses);
@@ -1383,7 +1383,7 @@ public class AssignmentService : IAssignmentService
             .ToList();
 
         // Step 2: Fetch User Details from Repository (assuming a method exists)
-        var users = await _unitOfWork.UserRepository.GetByIdAsync(userIds);
+        var users = await _unitOfWork.UserRepository.GetByListIdsAsync(userIds, includeProperties: "Role");
 
         // Step 3: Map User Details to UserResponse
         var userResponses = _mapper.Map<List<UserResponse>>(users);
@@ -1403,21 +1403,21 @@ public class AssignmentService : IAssignmentService
         if (isGroup1)
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             response.OtherStaffs.AddRange(listUserResponse);
         }
         else
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             response.OtherStaffs.AddRange(listUserResponse);
         }
         response.CountOtherStaff = response.OtherStaffs.Count();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
 
@@ -1425,7 +1425,7 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            response.IsSussed = false;
+            response.IsSuccessed = false;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.AssignmentManual, response);
