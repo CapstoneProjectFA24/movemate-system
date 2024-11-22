@@ -10,16 +10,16 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class UpdateScheduleWorkingRequest
     {
 
-        public string? Status { get; set; }
+        public string? Name { get; set; }
 
         [JsonIgnore]
-        public DateTime? UpdatedAt { get; set; } 
+        public DateTime? UpdatedAt { get; set; } = DateTime.Now;
 
 
         public string? Type { get; set; }
 
-        public TimeOnly? StartDate { get; set; }
+        public string? StartDate { get; set; }
 
-        public TimeOnly? EndDate { get; set; }
+        public string? EndDate { get; set; }
     }
 }

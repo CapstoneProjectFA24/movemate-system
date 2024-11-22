@@ -11,10 +11,11 @@ namespace MoveMate.Service.IServices
 {
     public interface IScheduleWorkingServices
     {
-        public Task<OperationResult<List<ScheduleWorkingResponse>>> GetAllScheduleWorking(GetAllScheduleWorking request);
+        public Task<OperationResult<List<ScheduleWorkingResponse>>> GetAll(GetAllScheduleWorking request);
         public Task<OperationResult<ScheduleWorkingResponse>> GetScheduleWorkingById(int id);
         Task<OperationResult<ScheduleWorkingResponse>> UpdateScheduleWorking(int id, UpdateScheduleWorkingRequest request);
         Task<OperationResult<ScheduleWorkingResponse>> CreateScheduleWorking(CreateScheduleWorkingRequest request);
         Task<OperationResult<bool>> DeleteScheduleWorking(int id);
+        public Task<OperationResult<ScheduleWorkingResponse>> AddGroupIntoSchedule(AddScheduleIntoGroup request);
     }
 }

@@ -100,9 +100,13 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
 
-            CreateMap<CreateScheduleWorkingRequest, ScheduleWorking>();
-           // CreateMap<UpdateScheduleWorkingRequest, ScheduleWorking>();
-            CreateMap<ScheduleWorking, ScheduleWorkingResponse>();
+            CreateMap<CreateScheduleWorkingRequest, ScheduleWorking>()
+     .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src =>
+         !string.IsNullOrWhiteSpace(src.StartDate) ? TimeOnly.Parse(src.StartDate) : (TimeOnly?)null))
+     .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src =>
+         !string.IsNullOrWhiteSpace(src.EndDate) ? TimeOnly.Parse(src.EndDate) : (TimeOnly?)null));
+            CreateMap<ScheduleWorking, ScheduleWorkingResponse>()
+               ;
             CreateMap<Group, GroupResponse>()
                 .ForMember(dest => dest.ScheduleWorkings, opt => opt.MapFrom(src => src.ScheduleWorkings))
                 .ForMember(dest => dest.Users, opt => opt.MapFrom(src => src.Users));

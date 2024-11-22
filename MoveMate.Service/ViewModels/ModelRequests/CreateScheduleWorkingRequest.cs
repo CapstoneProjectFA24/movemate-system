@@ -10,16 +10,17 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class CreateScheduleWorkingRequest
     {
-        public string? Status { get; set; }
+        public string? Name { get; set; }
         [JsonIgnore]
         public bool? IsActived { get; set; } = true;
         [JsonIgnore]
         public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
         public string? Type { get; set; }
-        [Required]
-        public DateTime? StartDate { get; set; }
-        [Required]
-        public DateTime? EndDate { get; set; }
+
+        public string StartDate { get; set; }
+
+        public string EndDate { get; set; }
+ 
     }
 }
