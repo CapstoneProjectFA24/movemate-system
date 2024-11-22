@@ -17,7 +17,7 @@ namespace MoveMate.Repository.Repositories.Repository
         public GroupRepository(MoveMateDbContext context) : base(context)
         {
         }
-        
+
         //public virtual async Task<List<Group>> GetStaffActiveNowBookingStaffDailies(int roleId)
         //{
         //    IQueryable<Group> query = _dbSet;
@@ -28,7 +28,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
         //    return activeBookingStaffDailies;
         //}
-        
+
         //public virtual async Task<List<Group>> GetBookingStaffDailiesNow(int roleId)
         //{
         //    IQueryable<Group> query = _dbSet;
@@ -39,5 +39,29 @@ namespace MoveMate.Repository.Repositories.Repository
 
         //    return activeBookingStaffDailies;
         //}
+
+
+        public virtual async Task<Group?> GetByIdAsyncV1(int id, string includeProperties = "")
+        {
+            IQueryable<Group> query = _dbSet;
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Include BookingTrackers and their related TrackerResources (fix typo here)
+            //query = query
+            //    .Include(b => b.BookingDetails)
+            //    .Include(b => b.Assignments)
+            //    .Include(b => b.FeeDetails)
+            //    .Include(b => b.BookingTrackers)              
+            //    .ThenInclude(bt => bt.TrackerSources); // Use 'TrackerResources' instead of 'TrackerSources'
+
+            query = query.Where(a => a.Id == id);
+
+            var result = await query.FirstOrDefaultAsync();
+            return result;
+        }
     }
 }
