@@ -157,10 +157,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     category = CategoryEnums.PAYMENT_TOTAL.ToString();
                 }
             }
-            var serverUrl =
-                string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
-                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
-                throw new Exception(MessageConstant.FailMessage.ServerUrl);
+            var serverUrl = UrlHelper.GetSecureServerUrl(_httpContextAccessor);
             var requestType = "payWithATM";
             var request = new MomoPaymentRequest
             {

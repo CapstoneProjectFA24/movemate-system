@@ -260,9 +260,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 var newGuid = Guid.NewGuid();
                 var time = DateTime.Now;
 
-                var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
-                                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent())
-                                ?? throw new Exception(MessageConstant.FailMessage.ServerUrl);
+                var serverUrl = UrlHelper.GetSecureServerUrl(_httpContextAccessor);
 
                 var pay = new VnPayLibrary();
                 pay.AddRequestData("vnp_ReturnUrl",

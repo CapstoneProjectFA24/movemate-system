@@ -56,10 +56,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             var operationResult = new OperationResult<string>();
 
 
-            var serverUrl =
-                string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
-                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
-                throw new Exception(MessageConstant.FailMessage.ServerUrl);
+            var serverUrl = UrlHelper.GetSecureServerUrl(_httpContextAccessor);
 
 
             var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
@@ -175,10 +172,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return operationResult;
             }
 
-            var serverUrl =
-                string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
-                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent()) ??
-                throw new Exception(MessageConstant.FailMessage.ServerUrl);
+            var serverUrl = UrlHelper.GetSecureServerUrl(_httpContextAccessor);
 
             long newGuid = Guid.NewGuid().GetHashCode();
             do
