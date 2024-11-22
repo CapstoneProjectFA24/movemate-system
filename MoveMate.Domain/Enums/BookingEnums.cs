@@ -41,7 +41,7 @@ namespace MoveMate.Domain.Enums;
         PACKING,
         ONGOING,
         DELIVERED,
-        UNLOAD
+        UNLOADED
     }
 
 public enum BookingDetailStatusEnums

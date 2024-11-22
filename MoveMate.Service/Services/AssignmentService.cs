@@ -223,7 +223,7 @@ public class AssignmentService : IAssignmentService
         response.StaffType = RoleEnums.DRIVER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
 
@@ -615,7 +615,7 @@ public class AssignmentService : IAssignmentService
         response.StaffType = RoleEnums.PORTER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
 
@@ -1155,7 +1155,7 @@ public class AssignmentService : IAssignmentService
                 await AllocateDriversToBookingAsync(
                     existingBooking,
                     existingBooking.BookingAt!.Value,
-                    (int)countDriver,
+                    (int)countRemaining,
                     existingBooking.EstimatedDeliveryTime ?? 3,
                     listAssignments,
                     assignedDriverAvailable1Hours,
@@ -1178,10 +1178,18 @@ public class AssignmentService : IAssignmentService
                     .ToList();
 
         // Step 2: Fetch User Details from Repository (assuming a method exists)
-        var users = await _unitOfWork.UserRepository.GetByIdAsync(userIds);
+        var users = await _unitOfWork.UserRepository.GetByListIdsAsync(userIds, includeProperties: "Role");
 
         // Step 3: Map User Details to UserResponse
         var userResponses = _mapper.Map<List<UserResponse>>(users);
+        var relatedAssignments = existingBooking.Assignments?
+                            .Where(a => a.StaffType == RoleEnums.DRIVER.ToString())
+                            .ToList();
+
+
+        // Map Assignments to AssignmentResponse
+        var assignmentInBooking = _mapper.Map<List<AssignmentResponse>>(relatedAssignments);
+        responses.AssignmentInBooking.AddRange(assignmentInBooking);
         responses.BookingNeedStaffs = existingBooking.DriverNumber.Value;
         var isGroup1 = schedule.GroupId == 1 ? true : false;
         responses.CountStaffInslots = listAssignmentResponse.Count();
@@ -1189,14 +1197,14 @@ public class AssignmentService : IAssignmentService
         if (isGroup1)
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             responses.OtherStaffs.AddRange(listUserResponse);
         }
         else
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             responses.OtherStaffs.AddRange(listUserResponse);
         }
@@ -1204,7 +1212,7 @@ public class AssignmentService : IAssignmentService
         responses.StaffType = RoleEnums.DRIVER.ToString();
         if (listAssignmentResponse.Count() >= responses.BookingNeedStaffs)
         {
-            responses.IsSussed = true;
+            responses.IsSuccessed = true;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
 
@@ -1212,7 +1220,7 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            responses.IsSussed = false;
+            responses.IsSuccessed = false;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.AssignmentManual, responses);
@@ -1272,7 +1280,7 @@ public class AssignmentService : IAssignmentService
             }
 
             // đánh tag pass 
-            await AssignPortersDequeueToBooking(
+            await AssignPortersNotDequeueToBooking(
                 bookingId,
                 redisKey,
                 existingBooking.BookingAt.Value,
@@ -1291,7 +1299,7 @@ public class AssignmentService : IAssignmentService
             var countPorter = await _redisService.CheckQueueCountAsync(redisKey);        
             if (countPorter >= countporterNumberBooking)
             {
-                await AssignPortersDequeueToBooking(
+                await AssignPortersNotDequeueToBooking(
                     bookingId,
                     redisKey,
                     existingBooking.BookingAt!.Value,
@@ -1335,7 +1343,7 @@ public class AssignmentService : IAssignmentService
                 {
                     countRemaining -= (int)countPorter;
 
-                    await AssignPortersDequeueToBooking(
+                    await AssignPortersNotDequeueToBooking(
                         bookingId,
                         redisKey,
                         existingBooking.BookingAt!.Value,
@@ -1352,7 +1360,7 @@ public class AssignmentService : IAssignmentService
                 await AllocatePortersToBookingAsync(
                     existingBooking,
                     existingBooking.BookingAt!.Value,
-                    (int)countPorter,
+                    (int)countRemaining,
                     existingBooking.EstimatedDeliveryTime ?? 3,
                     listAssignments,
                     assignedPortersAvailable1Hours,
@@ -1375,11 +1383,18 @@ public class AssignmentService : IAssignmentService
             .ToList();
 
         // Step 2: Fetch User Details from Repository (assuming a method exists)
-        var users = await _unitOfWork.UserRepository.GetByIdAsync(userIds);
+        var users = await _unitOfWork.UserRepository.GetByListIdsAsync(userIds, includeProperties: "Role");
 
         // Step 3: Map User Details to UserResponse
         var userResponses = _mapper.Map<List<UserResponse>>(users);
+        var relatedAssignments = existingBooking.Assignments?
+                            .Where(a => a.StaffType == RoleEnums.PORTER.ToString())
+                            .ToList();
 
+
+        // Map Assignments to AssignmentResponse
+        var assignmentInBooking = _mapper.Map<List<AssignmentResponse>>(relatedAssignments);
+        response.AssignmentInBooking.AddRange(assignmentInBooking);
         response.BookingNeedStaffs = existingBooking.PorterNumber.Value;
         var isGroup1 = schedule.GroupId == 1 ? true : false;
         response.CountStaffInslots = listAssignmentResponse.Count();
@@ -1388,21 +1403,21 @@ public class AssignmentService : IAssignmentService
         if (isGroup1)
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 2, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             response.OtherStaffs.AddRange(listUserResponse);
         }
         else
         {
             var listDriverNeed = await
-                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1);
+                _unitOfWork.UserRepository.GetWithTruckCategoryIdAsync(existingBooking.TruckNumber.Value, 1, includeProperties: "Role");
             var listUserResponse = _mapper.Map<List<UserResponse>>(listDriverNeed);
             response.OtherStaffs.AddRange(listUserResponse);
         }
         response.CountOtherStaff = response.OtherStaffs.Count();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
 
@@ -1410,7 +1425,7 @@ public class AssignmentService : IAssignmentService
         }
         else
         {
-            response.IsSussed = false;
+            response.IsSuccessed = false;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.AssignmentManual, response);
@@ -1457,7 +1472,7 @@ public class AssignmentService : IAssignmentService
             return listAssignments;
     }
 
-    private async Task<List<Assignment>> AssignPortersDequeueToBooking(int bookingId, string redisKey, DateTime startTime,
+    private async Task<List<Assignment>> AssignPortersNotDequeueToBooking(int bookingId, string redisKey, DateTime startTime,
         int porterCount,
         double estimatedDeliveryTime, List<Assignment> listAssignments,
         int scheduleBookingId, BookingDetail bookingDetail,
@@ -1516,7 +1531,8 @@ public class AssignmentService : IAssignmentService
                 filter: request.GetExpressions(),
                 pageIndex: request.page,
                 pageSize: request.per_page,
-                orderBy: request.GetOrder()
+                orderBy: request.GetOrder(),
+                includeProperties : "Booking.User"
             );
 
             // Map to BookingDetailReport

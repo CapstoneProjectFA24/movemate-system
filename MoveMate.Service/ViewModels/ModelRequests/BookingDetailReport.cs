@@ -1,5 +1,7 @@
 ﻿using AutoMapper.Configuration.Annotations;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ViewModels.ModelResponses;
+using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,10 +28,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? FailReason { get; set; }
 
         public DateTime? BookingAt { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
-        [JsonIgnore]
-        public virtual MoveMate.Domain.Models.Booking? Booking { get; set; }
+        public UserResponse Users { get; set; }
 
 
     }

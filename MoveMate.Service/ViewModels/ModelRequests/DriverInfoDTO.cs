@@ -11,13 +11,15 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     public class DriverInfoDTO
     {
         public int? BookingNeedStaffs { get; set; }
+        
+        public List<AssignmentResponse> AssignmentInBooking { get; set; } = new List<AssignmentResponse>();
         public List<UserResponse>? StaffInSlot { get; set; } = new List<UserResponse>();
         public List<UserResponse>? OtherStaffs { get; set; } = new List<UserResponse>();
         public int CountStaffInslots { get; set; }
         public int CountOtherStaff { get; set; }
         public String StaffType { get; set; }
 
-        public bool? IsSussed { get; set; } = false;
+        public bool? IsSuccessed { get; set; } = false;
     }
 
 }
