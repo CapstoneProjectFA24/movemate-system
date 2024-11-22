@@ -171,19 +171,7 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        /// <summary>
-        /// FEATURE: Staff report fail booking details
-        /// </summary>
-        /// <param name="id">Booking Details Id</param>
-        /// <returns></returns>
-        [HttpPut("report-booking-detail/{id}")]
-        public async Task<IActionResult> StaffReportBookingDetail(int id,[FromBody] FailReportRequest request )
-        {
-
-
-            var response = await _bookingServices.StaffReportFail(id, request);
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
+        
 
         /// <summary>
         /// CHORE: Manager fix booking details

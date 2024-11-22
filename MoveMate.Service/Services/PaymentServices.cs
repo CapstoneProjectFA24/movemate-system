@@ -135,6 +135,7 @@ namespace MoveMate.Service.Services
                 else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
+                    booking.TotalReal -= amount;
                     category = CategoryEnums.PAYMENT_TOTAL.ToString();
                 }
 

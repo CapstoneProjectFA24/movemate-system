@@ -55,6 +55,11 @@ public class AssignmentService : IAssignmentService
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
         }
 
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
+        {
+            throw new BadRequestException(MessageConstant.FailMessage.CannotAssigned);
+        }
+
         var bookingDetailTruck =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 TypeServiceEnums.TRUCK.ToString(), bookingId);
@@ -443,6 +448,11 @@ public class AssignmentService : IAssignmentService
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
+        {
+            throw new BadRequestException(MessageConstant.FailMessage.CannotAssigned);
         }
 
         var bookingDetail =
@@ -1128,11 +1138,7 @@ public class AssignmentService : IAssignmentService
                 var countRemaining = (int)countDriver + assignedDriverAvailable1Hours.Count() +
                                      assignedDriverAvailable2Hours.Count() +
                                      assignedDriverAvailableOther.Count();
-                if (countRemaining < countDriverNumberBooking)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
-                    return result;
-                }
+               
 
                 if (countDriver > 0)
                 {
@@ -1333,11 +1339,7 @@ public class AssignmentService : IAssignmentService
                 var countRemaining = (int)countPorter + assignedPortersAvailable1Hours.Count() +
                                      assignedPortersAvailable2Hours.Count() +
                                      assignedPortersAvailableOther.Count();
-                if (countRemaining < countporterNumberBooking)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentUpdateFail);
-                    return result;
-                }
+              
 
                 if (countPorter > 0)
                 {
@@ -1592,5 +1594,77 @@ public class AssignmentService : IAssignmentService
             return result;
         }
     }
+
+    public async Task<OperationResult<BookingDetailWaitingResponse>> StaffReportFail(int assignmentId, FailReportRequest request)
+    {
+        var result = new OperationResult<BookingDetailWaitingResponse>();
+        try
+        {
+            var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
+            if (assignment == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                return result;
+            }
+
+            assignment.Status = AssignmentStatusEnums.FAILED.ToString();
+            assignment.FailedReason = request.FailReason;
+            _unitOfWork.AssignmentsRepository.Update(assignment);
+
+            var bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)assignment.BookingDetailsId);
+            if (bookingDetail == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
+                return result;
+            }
+
+            bookingDetail.Status = BookingDetailStatusEnums.WAITING.ToString();
+
+            
+           
+
+            await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
+
+            // Create notification
+            var user = await _unitOfWork.UserRepository.GetManagerAsync();
+            var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync((int)assignment.UserId);
+            var notification = new Notification
+            {
+                UserId = user.Id,
+                SentFrom = staffLeader?.Name,
+                Receive = user.Name,
+                Name = "Service Fail Notification",
+                Description = $"Booking with id {bookingDetail.BookingId} has an issue: {request.FailReason}",
+                Topic = "StaffReportFail",
+                IsRead = false
+            };
+
+            await _unitOfWork.NotificationRepository.AddAsync(notification);
+            var saveResult = await _unitOfWork.SaveChangesAsync();
+
+            if (saveResult > 0)
+            {
+                var assignments = await _unitOfWork.AssignmentsRepository.GetAssignmentByBookingDetailIdAndStatusAsync(bookingDetail.Id, AssignmentStatusEnums.FAILED.ToString());
+                var responseAssignment = _mapper.Map<List<AssignmentResponse>>(assignments);
+                bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
+                var response = _mapper.Map<BookingDetailWaitingResponse>(bookingDetail);
+                response.Assignments = responseAssignment;  // Populate assignments in the response
+                await _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess, response);
+            }
+            else
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingUpdateFail);
+            }
+        }
+        catch (Exception ex)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+        }
+
+        return result;
+    }
+
 
 }

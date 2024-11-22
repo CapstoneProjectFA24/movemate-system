@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -8,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class CreateScheduleWorkingRequest
+    public class CreateGroupRequest
     {
         public string? Name { get; set; }
         [JsonIgnore]
@@ -16,11 +15,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [JsonIgnore]
         public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
-        public string? Type { get; set; }
-
-        public string StartDate { get; set; }
-
-        public string EndDate { get; set; }
- 
+        public int? DurationTimeActived { get; set; }
     }
 }

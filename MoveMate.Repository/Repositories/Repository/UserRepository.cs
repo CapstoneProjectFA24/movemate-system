@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -47,6 +48,19 @@ namespace MoveMate.Repository.Repositories.Repository
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<List<User>> GetUsersByTruckCategoryIdAsync(int truckCategoryId, int groupId)
+        {
+
+            IQueryable<User> query = _dbSet;
+
+            var users = await query
+            .Include(u => u.Truck) 
+                .Where(u => u.Truck != null && u.Truck.TruckCategoryId == truckCategoryId && u.GroupId == groupId)
+                .ToListAsync();
+
+            return users;
         }
 
         public virtual async Task<User?> GetByIdAsync(int id, string includeProperties = "")
@@ -160,7 +174,16 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Select(u => u.Id)
                 .ToListAsync();
         }
-        
+
+        public async Task<List<int>> FindAllUserByRoleIdAsync(int roleId, int groupId)
+        {
+            IQueryable<User> query = _dbSet;
+            return await query
+            .Where(u => u.RoleId == roleId && u.GroupId == groupId)
+                .Select(u => u.Id)
+                .ToListAsync();
+        }
+
         public async Task<List<int>> FindAllUserByRoleIdAndGroupIdAsync(int roleId, int groupId)
         {
             IQueryable<User> query = _dbSet;

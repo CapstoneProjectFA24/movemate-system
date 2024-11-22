@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.IRepository;
 using MoveMate.Repository.Repositories.UnitOfWork;
@@ -30,7 +31,7 @@ namespace MoveMate.Service.Services
             this._logger = logger;
         }
 
-        public async Task<OperationResult<List<ScheduleWorkingResponse>>> GetAllScheduleWorking(GetAllScheduleWorking request)
+        public async Task<OperationResult<List<ScheduleWorkingResponse>>> GetAll(GetAllScheduleWorking request)
         {
             var result = new OperationResult<List<ScheduleWorkingResponse>>();
 
@@ -44,15 +45,14 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder(),
-                    includeProperties: "BookingStaffDailies"
+                    orderBy: request.GetOrder()
                 );
                 var listResponse = _mapper.Map<List<ScheduleWorkingResponse>>(entities.Data);
 
                 if (listResponse == null || !listResponse.Any())
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListScheduleWorkingEmpty,
-                        listResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok,
+                        MessageConstant.SuccessMessage.GetListScheduleWorkingEmpty, listResponse);
                     return result;
                 }
 
@@ -77,7 +77,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.ScheduleWorkingRepository.GetByIdAsync(id, includeProperties: "BookingStaffDailies");
+                    await _unitOfWork.ScheduleWorkingRepository.GetByIdAsync(id);
 
                 if (entity == null)
                 {
@@ -105,46 +105,57 @@ namespace MoveMate.Service.Services
 
             try
             {
+
                 var schedule = await _unitOfWork.ScheduleWorkingRepository.GetByIdAsync(id);
                 if (schedule == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundTruckCategory);
                     return result;
                 }
-                if(request.StartDate.HasValue && request.EndDate.HasValue)
+
+                if (!string.IsNullOrEmpty(request.StartDate) && !string.IsNullOrEmpty(request.EndDate))
                 {
-                    if (request.StartDate >= request.EndDate)
+                    if (!TimeOnly.TryParse(request.StartDate, out var startDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TimeOnlyFormat);
+                        return result;
+                    }
+
+                    if (!TimeOnly.TryParse(request.EndDate, out var endDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TimeOnlyFormat);
+                        return result;
+                    }
+
+                    // Validate StartDate < EndDate
+                    if (startDate >= endDate)
                     {
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
                         return result;
                     }
-
-                    // Validate that StartDate is in the future
-                    //if (request.StartDate <= DateTime.Now)
-                    //{
-                    //    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
-                    //    return result;
-                    //}
                 }
 
-                if (!request.EndDate.HasValue && request.StartDate.HasValue)
+                if (!string.IsNullOrEmpty(request.StartDate) && string.IsNullOrEmpty(request.EndDate))
                 {
-                    //if (request.StartDate <= DateTime.Now)
-                    //{
-                    //    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
-                    //    return result;
-                    //}
-
-                    if (request.StartDate >= schedule.EndDate)
+                    if (!TimeOnly.TryParse(request.EndDate, out var endDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TimeOnlyFormat);
+                        return result;
+                    }
+                    if (schedule.StartDate >= endDate)
                     {
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
                         return result;
                     }
-
                 }
-                if (request.EndDate.HasValue && !request.StartDate.HasValue)
+                if (string.IsNullOrEmpty(request.StartDate) && !string.IsNullOrEmpty(request.EndDate))
                 {
-                    if (schedule.StartDate >= request.EndDate)
+                    if (!TimeOnly.TryParse(request.StartDate, out var startDate))
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TimeOnlyFormat);
+                        return result;
+                    }
+                    if (startDate >= schedule.EndDate)
                     {
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
                         return result;
@@ -185,36 +196,35 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<ScheduleWorkingResponse>> CreateScheduleWorking(CreateScheduleWorkingRequest request)
         {
             var result = new OperationResult<ScheduleWorkingResponse>();
-            var validationContext = new ValidationContext(request);
-            var validationResults = new List<ValidationResult>();
-            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
-
-            if (!isValid)
-            {
-                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
-                return result;
-            }
+         
             try
-            {            
+            {
                 // Validate that StartDate is less than EndDate
-                if (request.StartDate >= request.EndDate)
+                if (!TimeOnly.TryParse(request.StartDate, out var startDate))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TimeOnlyFormat);
+                    return result;
+                }
+
+                if (!TimeOnly.TryParse(request.EndDate, out var endDate))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TimeOnlyFormat);
+                    return result;
+                }
+
+                // Validate StartDate < EndDate
+                if (startDate >= endDate)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);
                     return result;
                 }
 
-                // Validate that StartDate is in the future
-                if (request.StartDate <= DateTime.Now)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.IsValidTimeGreaterNow);
-                    return result;
-                }
 
                 // Map request to ScheduleWorking entity
                 var schedule = _mapper.Map<ScheduleWorking>(request);
 
                 // Calculate DurationTimeActived in minutes, hours, or days as appropriate
-                schedule.DurationTimeActived = (int)(request.EndDate.Value - request.StartDate.Value).TotalHours;
+                schedule.DurationTimeActived = (int)(endDate - startDate).TotalHours;
 
                 // Save to the database
                 await _unitOfWork.ScheduleWorkingRepository.AddAsync(schedule);
@@ -255,12 +265,50 @@ namespace MoveMate.Service.Services
 
                 schedule.IsActived = false;
 
-                _unitOfWork.ScheduleWorkingRepository.Update(schedule);
-                _unitOfWork.Save();
+                await _unitOfWork.ScheduleWorkingRepository.SaveOrUpdateAsync(schedule);
+                await _unitOfWork.SaveChangesAsync();
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeleteScheduleWorking, true);
             }
             catch (Exception ex)
             {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<ScheduleWorkingResponse>> AddGroupIntoSchedule(AddScheduleIntoGroup request)
+        {
+            var result = new OperationResult<ScheduleWorkingResponse>();
+            try
+            {
+                var schedule = await _unitOfWork.ScheduleWorkingRepository.GetByIdAsync(request.ScheduleId);
+                if (schedule == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundScheduleWorking);
+                    return result;
+                }
+                var group = await _unitOfWork.GroupRepository.GetByIdAsync(request.GroupId);
+                if (group == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundGroup);
+                    return result;
+                }
+
+                schedule.GroupId = request.GroupId;
+                await _unitOfWork.ScheduleWorkingRepository.SaveOrUpdateAsync(schedule);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Fetch the updated group and map response
+                schedule = await _unitOfWork.ScheduleWorkingRepository.GetByIdAsync(request.ScheduleId);
+                var scheduleResponse = _mapper.Map<ScheduleWorkingResponse>(schedule);
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AddScheduleToGroup, scheduleResponse);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred in AddUserIntoGroup method");
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             }
 

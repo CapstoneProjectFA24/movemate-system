@@ -7,19 +7,13 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class UpdateScheduleWorkingRequest
+    public class UpdateGroupRequest
     {
-
         public string? Name { get; set; }
-
+        
         [JsonIgnore]
         public DateTime? UpdatedAt { get; set; } = DateTime.Now;
 
-
-        public string? Type { get; set; }
-
-        public string? StartDate { get; set; }
-
-        public string? EndDate { get; set; }
+        public int? DurationTimeActived { get; set; }
     }
 }

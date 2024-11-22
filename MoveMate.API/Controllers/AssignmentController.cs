@@ -23,19 +23,8 @@ namespace MoveMate.API.Controllers
         /// <summary>
         /// FEATURE: Get all booking detail report
         /// </summary>
-        /// <param name="request">The filter, pagination, and sorting options for retrieving booking detail reports.</param>
-        /// <returns>
-        /// Returns an HTTP response containing a list of booking detail reports, including pagination details, 
-        /// or an error message if something goes wrong.
-        /// </returns>
-        /// <remarks>
-        /// Example usage:
-        /// GET /api/booking-detail-report?page=1&per_page=10&sortBy=BookingAt&order=desc
-        /// - Filters can include properties defined in <see cref="GetAllBookingDetailReport"/>.
-        /// - Pagination is determined by the `page` and `per_page` query parameters.
-        /// - Sorting can be applied using `sortBy` and `order`.
-        /// </remarks>
-        [HttpGet("")]
+        /// <returns></returns>
+        [HttpGet("booking-detail-waiting")]
         [Authorize]
 
         // get all
@@ -45,6 +34,21 @@ namespace MoveMate.API.Controllers
             
             var response = await _assignmentService.GetAll(request);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// FEATURE: Staff report fail booking details
+        /// </summary>
+        /// <param name="id">Booking Details Id</param>
+        /// <returns></returns>
+        [HttpPut("report-booking-detail/{id}")]
+        public async Task<IActionResult> StaffReportBookingDetail(int id, [FromBody] FailReportRequest request)
+        {
+
+
+            var response = await _assignmentService.StaffReportFail(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
