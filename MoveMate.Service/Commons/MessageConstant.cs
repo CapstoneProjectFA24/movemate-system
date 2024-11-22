@@ -262,8 +262,10 @@ namespace MoveMate.Service.Commons
             //Validate
             public const string ValidateField = "Field is required";
 
-            //Group
-            
+            //ScheduleWorking
+            public const string TimeOnlyFormat = "Invalid format";
+
+
 
         }
 
@@ -357,7 +359,8 @@ namespace MoveMate.Service.Commons
             public const string GetListGroupSuccess = "Get list group done";
             public const string GetGroupSuccess = "Get group successfully";
             public const string CreateGroup = "Create a new group successful";
-            public const string AddUserToGroup = "Add user successful";
+            public const string AddUserToGroup = "Add user into group successful";
+            public const string AddScheduleToGroup = "Add group into schedule successful";
 
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";

@@ -26,7 +26,7 @@ namespace MoveMate.API.Controllers
         /// 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("")]
+        [HttpGet("booking-detail-waiting")]
         [Authorize]
 
         // get all
@@ -36,6 +36,21 @@ namespace MoveMate.API.Controllers
             
             var response = await _assignmentService.GetAll(request);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// FEATURE: Staff report fail booking details
+        /// </summary>
+        /// <param name="id">Booking Details Id</param>
+        /// <returns></returns>
+        [HttpPut("report-booking-detail/{id}")]
+        public async Task<IActionResult> StaffReportBookingDetail(int id, [FromBody] FailReportRequest request)
+        {
+
+
+            var response = await _assignmentService.StaffReportFail(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 

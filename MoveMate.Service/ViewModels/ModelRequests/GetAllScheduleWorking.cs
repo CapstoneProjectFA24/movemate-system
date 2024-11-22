@@ -15,8 +15,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
         public string? Search { get; set; }
         public string? Type { get; set; }
-        public string? Status { get; set; }
-        public int? UserId { get; set; }
 
         public override Expression<Func<ScheduleWorking, bool>> GetExpressions()
         {
@@ -35,8 +33,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             {
                 Expression = Expression.And(u => u.Type == Type);
             }
+           
 
-          
 
             // Filter by IsActived
             queryExpression = queryExpression.And(u => u.IsActived == true);
