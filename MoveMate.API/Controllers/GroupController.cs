@@ -43,11 +43,8 @@ namespace MoveMate.API.Controllers
         /// <remarks>
         /// Sample request:
         /// 
-        ///     GET /truckcategory/1
+        ///     GET /group/1
         /// </remarks>
-        /// <response code="200">Get House Type success</response>
-        /// <response code="404">House type not found</response>
-        /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetGroupById(int id)
         {
@@ -70,23 +67,19 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// CHORE : Creates a new truck image entry.
+        /// CHORE : Creates a new group entry.
         /// </summary>
-        /// <param name="request">The request payload containing truck image details.</param>
+        /// <param name="request">The request payload containing group detail.</param>
         /// <returns>A response indicating success or failure of the operation.</returns>
         /// <remarks>
         /// Sample request:
         /// 
-        ///     POST /api/truck/manage/truck-img
+        ///     POST /api/group/
         ///     {
-        ///         "TruckId": 1,
-        ///         "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729831911/movemate/hkvbh89uo8qoh6uzajac.jpg",
-        ///         "ImageCode": "TRUCK123IMG"
+        ///         "Name": "Team Alpha",
+        ///         "DurationTimeActived": 30
         ///     }
         /// </remarks>
-        /// <response code="201">Truck image created successfully.</response>
-        /// <response code="400">Bad request, invalid data.</response>
-        /// <response code="500">Internal server error.</response>
         [HttpPost("")]
         public async Task<IActionResult> CreateGroup([FromBody] CreateGroupRequest request)
         {
@@ -97,31 +90,21 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
-        /// CHORE : Update truck category by truck category id
+        /// CHORE : Update group by group id
         /// </summary>
-        /// <param name="request">The truck category request model.</param>
+        /// <param name="request">The group request model.</param>
         /// <returns>A response containing the created truck category.</returns>
         /// <remarks>
         /// Sample request:
         /// 
-        ///     POST /api/truck/manage/truck-img
+        ///     Put /api/group
         ///     {
-        ///         "categoryName": "Heavy Duty Truck",
-        ///         "maxLoad": 12000,
-        ///         "description": "A truck suitable for heavy loads.",
-        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1728489912/movemate/vs174go4uz7uw1g9js2e.jpg",
-        ///         "estimatedLength": "7.5m",
-        ///         "estimatedWidth": "2.5m",
-        ///         "estimatedHeight": "3.0m",
-        ///         "summarize": "Designed for heavy-duty transport.",
-        ///         "price": 15000,
-        ///         "totalTrips": 100
+        ///         "Name": "Team Alpha",
+        ///         "DurationTimeActived": 30
         ///     }
         /// </remarks>
-        /// <response code="201">Returns the created truck category</response>
-        /// <response code="500">If there is a server error</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTruckCategory(int id, [FromBody] UpdateGroupRequest request)
+        public async Task<IActionResult> UpdateGroup(int id, [FromBody] UpdateGroupRequest request)
         {
             var response = await _groupService.UpdateGroup(id, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
