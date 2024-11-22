@@ -69,9 +69,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
-                var serverUrl = string.Concat(_httpContextAccessor?.HttpContext?.Request.Scheme, "://",
-                    _httpContextAccessor?.HttpContext?.Request.Host.ToUriComponent())
-                ?? throw new Exception(MessageConstant.FailMessage.ServerUrl);
+                var serverUrl = UrlHelper.GetSecureServerUrl(_httpContextAccessor);
                 // Add VnPay request data
                 vnpay.AddRequestData("vnp_Version", _config["VnPay:Version"]);
                 vnpay.AddRequestData("vnp_Command", _config["VnPay:Command"]);

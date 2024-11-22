@@ -207,7 +207,8 @@ namespace MoveMate.Service.Commons
             public const string NotFoundWallet = "Wallet not found";
             public const string UpdateWalletBalance = "Failed to update wallet balance";
 
-
+            //Group
+            public const string NotFoundGroup = "Not found group";
             //Payment
             public const string BookingStatus = "Booking status must be either DEPOSITING or INPROGRESS";
             public const string AmountGreaterThanZero = "Amount must be greater than zero";
@@ -256,6 +257,9 @@ namespace MoveMate.Service.Commons
 
             //Validate
             public const string ValidateField = "Field is required";
+
+            //Group
+            
 
         }
 
@@ -343,6 +347,11 @@ namespace MoveMate.Service.Commons
             public const string DeleteTruck = "Truck has been deleted";
             public const string TruckUpdateSuccess = "Update truck succesful";
 
+            //Group
+            public const string DeleteGroup = "Group has been deleted";
+            public const string GetListGroupEmpty = "List group is empty!";
+            public const string GetListGroupSuccess = "Get list group done";
+            public const string GetGroupSuccess = "Get group successfully";
 
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";
