@@ -24,9 +24,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Type { get; set; }
 
         public string? Status { get; set; }
-
-        public string? FailReason { get; set; }
-
+     
         public DateTime? BookingAt { get; set; }
         public UserResponse Users { get; set; }
 

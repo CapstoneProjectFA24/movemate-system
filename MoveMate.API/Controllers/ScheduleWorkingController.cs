@@ -40,11 +40,8 @@ namespace MoveMate.API.Controllers
         /// <remarks>
         /// Sample request:
         /// 
-        ///     GET /truckcategory/truck
+        ///     GET /scheduleworking/1
         /// </remarks>
-        /// <response code="200">Get House Type success</response>
-        /// <response code="404">House type not found</response>
-        /// <response code="500">Internal server error occurred</response>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetScheduleWorkingById(int id)
         {
@@ -53,13 +50,10 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Delete schedule working by setting the schedule working's IsActived status to false.
+        /// CHORE : Set shedule's IsActive become false by schedule Id
         /// </summary>
-        /// <param name="id">The ID of the schedule working to be deleeted.</param>
-        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
-        /// <response code="200">Returns if the user was successfully banned.</response>
-        /// <response code="404">Returns if the user is not found.</response>
-        /// <response code="500">Returns if a system error occurs.</response>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteScheduleWorking(int id)
         {
@@ -78,15 +72,10 @@ namespace MoveMate.API.Controllers
         /// 
         ///     POST /api/truckcategory/truck
         ///     {
-        ///         "truckCategoryId": 1,
-        ///         "model": "Ford F-150",
-        ///         "numberPlate": "ABC123",
-        ///         "capacity": 5.5,
-        ///         "isAvailable": true,
-        ///         "brand": "Ford",
-        ///         "color": "Blue",
-        ///         "isInsurrance": true,
-        ///         "userId": 3
+        ///         "Name": "Morning Shift",
+        ///         "Type": "Full-Time",
+        ///         "StartDate": "2024-12-01",
+        ///         "EndDate": "2024-12-31"
         ///     }
         /// 
         /// </remarks>

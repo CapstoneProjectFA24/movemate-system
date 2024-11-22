@@ -25,6 +25,17 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(a => a.StaffType == staffType && a.BookingId == bookingId)
                 .FirstOrDefault();
         }
+        public async Task<List<Assignment>> GetAssignmentByBookingDetailIdAndStatusAsync(int bookingDetailId, string status)
+        {
+            IQueryable<Assignment> query = _dbSet;
+
+            var assignments = await query
+                .Where(a => a.BookingDetailsId == bookingDetailId && a.Status == status)
+                .ToListAsync(); // Execute and return the list of assignments
+
+            return assignments;
+        }
+
 
         public async Task<List<Assignment>> GetByBookingId(int bookingId)
         {

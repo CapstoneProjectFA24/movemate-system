@@ -16,5 +16,6 @@ public interface IAssignmentService
     public Task<OperationResult<DriverInfoDTO>> GetAvailableDriversForBooking(int bookingId);
     public Task<OperationResult<DriverInfoDTO>> GetAvailablePortersForBooking(int bookingId);
     public Task<OperationResult<List<BookingDetailReport>>> GetAll(GetAllBookingDetailReport request);
+    Task<OperationResult<BookingDetailWaitingResponse>> StaffReportFail(int assignmentId, FailReportRequest request);
 
 }
