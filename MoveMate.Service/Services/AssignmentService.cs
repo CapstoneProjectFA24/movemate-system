@@ -223,7 +223,7 @@ public class AssignmentService : IAssignmentService
         response.StaffType = RoleEnums.DRIVER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
 
@@ -615,7 +615,7 @@ public class AssignmentService : IAssignmentService
         response.StaffType = RoleEnums.PORTER.ToString();
         if (listAssignmentResponse.Count() >= response.BookingNeedStaffs)
         {
-            response.IsSussed = true;
+            response.IsSuccessed = true;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
 
