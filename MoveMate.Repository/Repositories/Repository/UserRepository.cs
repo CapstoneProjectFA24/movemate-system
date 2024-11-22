@@ -68,6 +68,27 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
+
+        public virtual async Task<List<User>> GetByListIdsAsync(IEnumerable<int> ids, string includeProperties = "")
+        {
+            IQueryable<User> query = _dbSet;
+
+            // Apply includes
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter by IDs
+            query = query.Where(a => ids.Contains(a.Id));
+
+            // Execute the query and get the result
+            var result = await query.ToListAsync();
+
+            return result;
+        }
+
         public async Task<User> GetUserAsyncByEmail(string email)
         {
             try
@@ -198,17 +219,23 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
-        
-        public async Task<List<User>> GetWithTruckCategoryIdAsync(int truckCategoryId, int groupId)
+
+        public async Task<List<User>> GetWithTruckCategoryIdAsync(int truckCategoryId, int groupId, string includeProperties = "")
         {
             try
             {
                 IQueryable<User> query = _dbSet;
+
+                // Apply includes dynamically
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty.Trim());
+                }
+
+                // Apply filters
                 return await query
-                    .Where(u => u.GroupId == groupId)
-                    .Include(u => u.Truck) 
-                    .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
-                    .ToListAsync(); 
+                    .Where(u => u.GroupId == groupId && u.Truck!.TruckCategoryId == truckCategoryId)
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
