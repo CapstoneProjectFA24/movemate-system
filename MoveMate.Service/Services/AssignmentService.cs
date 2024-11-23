@@ -847,11 +847,11 @@ public class AssignmentService : IAssignmentService
 
         switch (request.StaffType)
         {
-            case "TRUCK": // type for Driver
+            case var role when role == RoleEnums.DRIVER.ToString(): // type for Driver
                 var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
                 var bookingDetailDriver =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
-                request.StaffType, bookingId);
+                TypeServiceEnums.TRUCK.ToString(), bookingId);
                 if (bookingDetailDriver == null)
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
@@ -913,7 +913,7 @@ public class AssignmentService : IAssignmentService
 
                 break;
 
-            case "PORTER": //type for Porter
+            case var role when role == RoleEnums.PORTER.ToString(): //type for Porter
                 var endTimePorter = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
                 var bookingDetailPorter =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
