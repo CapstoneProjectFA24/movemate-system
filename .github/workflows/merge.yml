@@ -4,13 +4,14 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - development
+      - development  # Trigger khi có PR được merge vào development
 
 jobs:
   create_merge_request:
+    # Chỉ chạy khi PR được merge (không phải bị đóng)
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-
+    
     steps:
       - uses: actions/checkout@v2
         with:
@@ -19,7 +20,7 @@ jobs:
       
       - name: Create Merge Request to Main
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Sử dụng PAT thay vì GITHUB_TOKEN mặc định
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Sử dụng PAT thay vì GITHUB_TOKEN
         run: |
           # Lấy thông tin từ PR vừa được merge
           SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
