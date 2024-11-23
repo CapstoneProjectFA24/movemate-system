@@ -1698,6 +1698,4 @@ public class AssignmentService : IAssignmentService
 
         return result;
     }
-
-
 }
