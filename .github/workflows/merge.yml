@@ -1,33 +1,48 @@
-# Tạo file .github/workflows/auto-merge-request.yml
-name: Auto Create Merge Request
+name: Auto Create Main Merge Request
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - development  # Trigger khi có push vào branch development
+      - development  # Trigger khi có PR được merge vào development
 
 jobs:
   create_merge_request:
+    # Chỉ chạy khi PR được merge (không phải bị đóng)
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Lấy toàn bộ history
-
-      - name: Create Merge Request
+          fetch-depth: 0
+          ref: development  # Checkout development branch
+      
+      - name: Create Merge Request to Main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Kiểm tra xem đã có PR nào từ development vào main chưa
+          # Lấy thông tin từ PR vừa được merge
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          
+          # Kiểm tra PR hiện có
           existing_pr=$(gh pr list --base main --head development --json number -q '.[0].number')
           
           if [ -z "$existing_pr" ]; then
-            # Tạo PR mới nếu chưa có
+            # Tạo PR mới với thông tin reference
             gh pr create \
               --base main \
               --head development \
-              --title "Merge development into main" \
-              --body "Automatically created merge request from development to main branch."
+              --title "[Auto] Merge development into main" \
+              --body "## Automatic merge request to main
+              
+              This PR was automatically created after merging '$SOURCE_BRANCH' into development.
+              
+              Original PR title: $PR_TITLE
+              Original PR: #${{ github.event.pull_request.number }}
+              
+              Please review the changes before merging into main."
           else
             echo "A pull request from development to main already exists (#$existing_pr)"
           fi
