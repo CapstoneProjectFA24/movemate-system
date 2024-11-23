@@ -22,11 +22,32 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// 
-        /// FEATURE: Get all bookings
-        /// 
+        /// FEATURE: Retrieves a list of bookings based on the provided filter criteria, including the ability to filter by status, user ID, and review statuses.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="request">The request containing filter parameters for booking statuses (such as HOLD, VALIDATION, etc.), user ID, and other query criteria.</param>
+        /// <returns>
+        /// A list of bookings that match the filter criteria. If an error occurs, an error response will be returned.
+        /// </returns>
+        /// <response code="200">Returns a list of bookings matching the filter criteria.</response>
+        /// <response code="400">Returns an error response if the input parameters are invalid.</response>
+        /// <response code="500">Returns an internal server error if an unexpected error occurs.</response>
+        /// <remarks>
+        /// The `Status` parameter can accept multiple status values separated by a period (e.g., "HOLD", "ASSIGNED", "PENDING"). The following transformations are applied:
+        /// - If "Status" contains `HOLD`, the list will include bookings with statuses `ASSIGNED` and `PENDING` instead.
+        /// - If "Status" contains `VALIDATION`, the list will include `WAITING`, `DEPOSITING`, and `REVIEWED`.
+        /// - If "Status" contains `EVALUATING`, the list will include `REVIEWING`.
+        /// - If "Status" contains `PROGRESSING`, the list will include `IN_PROGRESS`, `COMING`, and `CONFIRMED`.
+        /// - If "Status" contains `DONE`, the list will include `COMPLETED`.
+        /// - If "Status" contains `PAID`, the list will include `COMPLETED`.
+        /// - If "Status" contains `NEW`, the list will include various statuses based on the review flag and whether the booking is online or not:
+        ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `"PENDING"`, `"ASSIGNED"`, `"REVIEWING"`, `"REVIEWED"`, and `"DEPOSITING"`.
+        ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `"PENDING"`, `"ASSIGNED"`, `"WAITING"`, and `"DEPOSITING"`.
+        /// - If "Status" contains `ADVANCE`, the list will include different statuses based on whether the review flag is set:
+        ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `"IN_PROGRESS"`, `"COMING"`, and `"CONFIRMED"`.
+        ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `"IN_PROGRESS"`, `"COMING"`, `"CONFIRMED"`, `"REVIEWING"`, and `"REVIEWED"`.
+        /// - If "Status" contains `COMPENSATION`, the list will include `REFUNDED`.
+        /// - If "Status" contains `CANCELED`, the list will include `CANCEL`.
+        /// </remarks>
         [HttpGet("")]
         [Authorize]
 

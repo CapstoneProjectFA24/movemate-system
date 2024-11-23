@@ -1489,7 +1489,7 @@ namespace MoveMate.Service.Services
 
                         var trackerUnloads = new BookingTracker();
                         trackerUnloads.BookingId = booking.Id;
-                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADEDED.ToString();
+                        trackerUnloads.Type = TrackerEnums.PORTER_UNLOADED.ToString();
                         trackerUnloads.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
                         List<TrackerSource> resourceListUnloads = _mapper.Map<List<TrackerSource>>(request.ResourceList);
