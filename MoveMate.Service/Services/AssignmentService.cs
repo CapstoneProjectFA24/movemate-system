@@ -1274,7 +1274,23 @@ public class AssignmentService : IAssignmentService
         var schedule =
             await _unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(existingBooking.BookingAt.Value);
 
-        var endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime!.Value);
+        DateTime endTime;
+
+        if (!existingBooking.EstimatedDeliveryTime.HasValue)
+        {
+            GoogleMapDTO? googleMapDto = null;
+            googleMapDto =
+                    await _googleMapsService.GetDistanceAndDuration(existingBooking.PickupPoint!,
+                    existingBooking.DeliveryPoint!);
+            var duration = googleMapDto.Duration.Value;
+            var durationEndtime = duration / 3600.0 + 1.5;
+            endTime = existingBooking.BookingAt!.Value.AddHours(durationEndtime);
+        }
+
+        else
+        {
+            endTime = existingBooking.BookingAt!.Value.AddHours(existingBooking.EstimatedDeliveryTime.HasValue ? existingBooking.EstimatedDeliveryTime.Value : 2);
+        }
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
 
