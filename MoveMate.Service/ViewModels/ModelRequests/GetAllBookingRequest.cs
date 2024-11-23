@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.Enums;
 using MoveMate.Service.Commons.Page;
+using Catel.Collections;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
@@ -38,16 +39,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
                 Expression = Expression.And(queryExpression);
             }
-
-            /*if (!string.IsNullOrWhiteSpace(UserId.ToString()))
-            {
-                Expression = Expression.And(u => u.UserId == UserId);
-            }
-
-            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
-            {
-                Expression = Expression.And(u => u.Assignments.Any(a => a.UserId == UserId));
-            }*/
+         
             
             if (!string.IsNullOrWhiteSpace(UserId.ToString()))
             {
@@ -70,13 +62,82 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
             if (!string.IsNullOrWhiteSpace(Status))
             {
+               
                 var statuses = Status.Split('.')
                     .Select(s => s.Trim())
                     .Where(s => !string.IsNullOrEmpty(s))
-                    .ToArray();
+                    .ToList();  
 
-                Expression = Expression.And(tran => statuses.Contains(tran.Status));
+                if (statuses.Contains("HOLD"))
+                {
+                    statuses.AddRange(new[] { "ASSIGNED", "PENDING" });
+                    statuses.Remove("HOLD");
+                }
+                if (statuses.Contains("VALIDATTION"))
+                {
+                    statuses.AddRange(new[] { "WAITING", "DEPOSITING", "REVIEWED" });
+                    statuses.Remove("VALIDATTION");
+                }
+                if (statuses.Contains("EVALUATING"))
+                {
+                    statuses.AddRange(new[] { "REVIEWING" });
+                    statuses.Remove("EVALUATING");
+                }
+                if (statuses.Contains("PROGRESSING"))
+                {
+                    statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "CONFIRMED" });
+                    statuses.Remove("PROGRESSING");
+                }
+                if (statuses.Contains("DONE"))
+                {
+                    statuses.AddRange(new[] { "COMPLETED" });
+                    statuses.Remove("DONE");
+                }
+                if (statuses.Contains("PAID"))
+                {
+                    statuses.AddRange(new[] { "COMPLETED" });
+                    statuses.Remove("PAID");
+                }
+                if (statuses.Contains("ADVANCE"))
+                {
+                    if (IsReviewOnl.HasValue && IsReviewOnl.Value)
+                    {
+                        statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "CONFIRMED" });
+                    }
+                    else
+                    {
+                        statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "CONFIRMED", "REVIEWING", "REVIEWED" });
+                    }
+                    statuses.Remove("ADVANCE");
+                }
+                if (statuses.Contains("COMPENSATION"))
+                {
+                    statuses.AddRange(new[] { "REFUNDED" });
+                    statuses.Remove("COMPENSATION");
+                }
+                if (statuses.Contains("CANCELED"))
+                {
+                    statuses.AddRange(new[] { "CANCEL" });
+                    statuses.Remove("CANCELED");
+                }
+                if (statuses.Contains("NEW"))
+                {
+                    if (IsReviewOnl.HasValue && IsReviewOnl.Value)
+                    {
+                        statuses.AddRange(new[] { "PENDING", "ASSIGNED", "REVIEWING", "REVIEWED", "DEPOSITING" });
+                    }
+                    else
+                    {
+                        statuses.AddRange(new[] { "PENDING", "ASSIGNED", "WAITING", "DEPOSITING" });
+                    }
+                    statuses.Remove("NEW");
+                }
+
+                statuses = statuses.Distinct().ToList();
+
+                Expression = Expression.And(tran => statuses.Contains(tran.Status));     
             }
+
             if (IsFailed.HasValue && IsFailed.Value)
             {
                 Expression = Expression.And(u => u.Assignments.Any(a => a.Status == AssignmentStatusEnums.FAILED.ToString()));
