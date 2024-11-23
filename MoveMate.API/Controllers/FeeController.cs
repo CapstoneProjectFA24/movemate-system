@@ -70,31 +70,54 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new fee setting entry.
+        /// FEATRUE: Creates a new fee setting entry.
         /// </summary>
         /// <param name="request">The request payload containing fee setting details.</param>
         /// <returns>A response indicating the success or failure of the operation.</returns>
         /// <remarks>
-        /// Sample request:
+        /// ### Sample request:
         /// 
-        ///     POST /api/fee/manage/fee-setting
-        ///     {
-        ///         "ServiceId": 1,
-        ///         "HouseTypeId": null,
-        ///         "Name": "Basic Moving Fee",
-        ///         "Description": "Fee for basic moving services",
-        ///         "Amount": 150.0,
-        ///         "Type": "TRUCK",
-        ///         "Unit": "KM",
-        ///         "RangeMin": 0,
-        ///         "RangeMax": 100,
-        ///         "DiscountRate": "5%",
-        ///         "FloorPercentage": 10.0
-        ///     }
+        /// **POST** `/api/fee/manage/fee-setting`
+        /// 
+        /// ```json
+        /// {
+        ///     "ServiceId": 13,
+        ///     "Name": "Basic Moving Fee",
+        ///     "Description": "Fee for basic moving services",
+        ///     "Amount": 150.0,
+        ///     "Type": "TRUCK",
+        ///     "Unit": "KM",
+        ///     "RangeMin": 0,
+        ///     "RangeMax": 100,
+        ///     "DiscountRate": "5",
+        ///     "FloorPercentage": 10.0
+        /// }
+        /// ```
+        /// 
+        /// ### Validation Rules:
+        /// - **ServiceId**: Must exist in the `Service` table. If provided, the `Service` must have `Tier = 1` and its `Type` must match the `Type` field in the request.
+        /// - **HouseTypeId**: If provided, must exist in the `HouseType` table.
+        /// - **Name**: Cannot be null or empty.
+        /// - **Type**:
+        ///   - `"TRUCK"`: 
+        ///     - Requires `Unit` to be `"KM"`.
+        ///     - `HouseTypeId` should be null.
+        ///     - The related `Service` must have a valid `TruckCategoryId`.
+        ///   - `"PORTER"` or `"DRIVER"`:
+        ///     - Cannot have `Unit` set to `"KM"`.
+        ///   - `"SYSTEM"`:
+        ///     - Requires `Unit` to be `"PERCENT"`.
+        /// - **Unit**:
+        ///   - `"FLOOR"`: Requires `FloorPercentage` to have a value.
+        /// - **RangeMin** and **RangeMax**: Must be logical and represent valid ranges.
+        /// - **DiscountRate**: Should be formatted correctly (e.g., `"5%"`).
+        /// - **IsActived**: Automatically set to `true` by default, ignored in requests.
+        /// 
+        /// ### Response Codes:
+        /// - **201**: Fee setting created successfully.
+        /// - **400**: Bad request due to validation errors or missing/invalid data.
+        /// - **500**: Internal server error.
         /// </remarks>
-        /// <response code="201">Fee setting created successfully.</response>
-        /// <response code="400">Bad request, invalid data.</response>
-        /// <response code="500">Internal server error.</response>
         [HttpPost("")]
         public async Task<IActionResult> CreateFeeSetting([FromBody] CreateFeeSettingRequest request)
         {
