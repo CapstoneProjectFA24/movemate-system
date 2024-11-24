@@ -3,23 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Cloud.Firestore;
 
 namespace MoveMate.Service.ViewModels.ModelResponses
 {
+    [FirestoreData]
     public class VoucherResponse
     {
-        public int Id { get; set; }
+        [FirestoreProperty] public int Id { get; set; }
 
-        public int? UserId { get; set; }
+        [FirestoreProperty] public int? UserId { get; set; }
 
-        public int? PromotionCategoryId { get; set; }
+        [FirestoreProperty] public int? PromotionCategoryId { get; set; }
 
-        public int? BookingId { get; set; }
+        [FirestoreProperty] public int? BookingId { get; set; }
 
-        public double? Price { get; set; }
+        [FirestoreProperty] public double? Price { get; set; }
 
-        public string? Code { get; set; }
+        [FirestoreProperty] public string? Code { get; set; }
 
-        public bool? IsActived { get; set; }
+        [FirestoreProperty] public bool? IsActived { get; set; }
     }
 }

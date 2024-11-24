@@ -339,5 +339,18 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.CancelBooking(id, userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+        
+        /// <summary>
+        /// FEATURE: get old booking by bookingId
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("old-booking/{id}")]
+        [Authorize]
+        public async Task<IActionResult> OldBookingById(int id)
+        {
+            var response = await _bookingServices.GetOldBookingById(id);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
