@@ -72,7 +72,7 @@ namespace MoveMate.Service.Services
                 }
                 else if (checkRequest == 2)
                 {
-                    var service = _unitOfWork.ServiceRepository.Get(filter: request.GetExpressions(), includeProperties: "FeeSettings,InverseParentService.TruckCategory").ToList();
+                    var service = _unitOfWork.ServiceRepository.Get(filter: request.GetExpressions(), includeProperties: "FeeSettings,InverseParentService.TruckCategory,InverseParentService.FeeSettings").ToList();
 
 
                     var services = await _bookingServices.CalculateServiceFeesByServiceList(service, requestBody.HouseTypeId, requestBody.FloorsNumber, requestBody.EstimatedDistance);

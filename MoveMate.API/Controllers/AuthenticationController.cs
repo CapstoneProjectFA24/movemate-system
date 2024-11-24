@@ -163,7 +163,7 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> RegisterAsync([FromBody] CustomerToRegister customerToRegister)
         {
             // Register user
-            var response = await _authenticationService.Register(customerToRegister);
+            var response = await _authenticationService.Register(customerToRegister, _jwtAuthOptions.Value);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
