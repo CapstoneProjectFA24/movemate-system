@@ -137,13 +137,18 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             }
         }
 
-        public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
+        public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName, bool isRecursiveCall = false)
         {
             try
             {
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
+                    if (!isRecursiveCall)
+                    {
+                        await SaveBooking(saveObj, id, "old_bookings", true);
+                        Console.WriteLine("Pushed to old_bookings successfully");
+                    }
                     
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
@@ -155,7 +160,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     
                     if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) && isDriverAssigned == false)
                     {
-                        await SaveBooking(saveObj, id, "old_bookings");
                         _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
                     }
 
