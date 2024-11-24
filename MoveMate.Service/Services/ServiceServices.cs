@@ -5,6 +5,7 @@ using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
+using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelRequests;
@@ -432,5 +433,6 @@ namespace MoveMate.Service.Services
             }
             return result;
         }
+
     }
 }

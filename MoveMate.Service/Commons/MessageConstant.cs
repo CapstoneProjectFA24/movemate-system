@@ -352,6 +352,8 @@ namespace MoveMate.Service.Commons
             public const string GetTruckCategorySuccess = "Get truck category successfully";
             public const string DeleteTruck = "Truck has been deleted";
             public const string TruckUpdateSuccess = "Update truck succesful";
+            public const string BookingHasNoPorter = "Booking do not need porter";
+            public const string BookingHasNoDriver = "Booking do not need driver";
 
             //Group
             public const string DeleteGroup = "Group has been deleted";
