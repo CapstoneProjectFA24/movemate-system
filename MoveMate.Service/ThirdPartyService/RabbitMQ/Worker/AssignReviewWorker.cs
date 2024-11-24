@@ -108,6 +108,7 @@ public class AssignReviewWorker
                     includeProperties:
                     "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                 await firebaseServices.SaveBooking(booking, message, "bookings");
+                await firebaseServices.SaveBooking(booking, message, "old_bookings");
 
                 producer.SendingMessage("movemate.push_to_firebase_local", booking.Id);
                 

@@ -144,6 +144,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
+                    await SaveBooking(saveObj, id, "old_bookings");
+                    
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
                     var keyDriverAssigned = DateUtil.GetKeyDriverBooking(saveObj.BookingAt, saveObj.Id);
