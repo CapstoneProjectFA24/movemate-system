@@ -31,7 +31,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<AssignmentResponse>> PorterUpdateStatusBooking(int userId, int bookingId, TrackerSourceRequest request);
         Task<OperationResult<AssignmentResponse>> PorterRoundTripBooking(int bookingId, ResourceRequest request);
         Task<OperationResult<BookingResponse>> UserConfirmRoundTrip(int bookingId);
-
+        Task<List<Domain.Models.Service>> CalculateServiceFeesByServiceList(List<Domain.Models.Service> services, int houseTypeId, string floorsNumber, string estimatedDistance);
         Task<OperationResult<BookingResponse>> UserConfirm(int bookingId,int userId, StatusRequest request);
         Task<OperationResult<BookingResponse>> ReviewChangeReviewAt(int bookingId, ReviewAtRequest request);
         Task<OperationResult<BookingResponse>> UpdateBookingAsync(int assignmentId, BookingServiceDetailsUpdateRequest request, bool isDriverUpdate = false);

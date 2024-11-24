@@ -168,6 +168,7 @@ namespace MoveMate.Service.Commons
             public const string NotFoundParentService = "Parent service not found";
             public const string CannotUpdateParentForTierZero = "Can not update parentServiceId for service tier 0)";
             public const string AssignedLeader = "Leader have been assigned";
+            public const string InvalidRequest = "Invalid request";
 
 
             //FeeSetting

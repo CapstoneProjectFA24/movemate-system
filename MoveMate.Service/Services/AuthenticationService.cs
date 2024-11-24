@@ -254,9 +254,9 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<RegisterResponse>> Register(CustomerToRegister customerToRegister)
+        public async Task<OperationResult<AccountResponse>> Register(CustomerToRegister customerToRegister)
         {
-            var result = new OperationResult<RegisterResponse>();
+            var result = new OperationResult<AccountResponse>();
 
             try
             {
@@ -320,7 +320,7 @@ namespace MoveMate.Service.Services
                     await _unitOfWork.UserRepository.AddAsync(newUser);
                     await _unitOfWork.SaveChangesAsync();
 
-                    var userResponse = _mapper.Map<RegisterResponse>(newUser);
+                    var userResponse = _mapper.Map<AccountResponse>(newUser);
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, userResponse);
                 }
                 catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
