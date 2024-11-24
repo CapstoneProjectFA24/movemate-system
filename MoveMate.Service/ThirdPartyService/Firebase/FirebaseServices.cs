@@ -34,7 +34,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         private readonly IRedisService _redisService;
 
 
-        public FirebaseServices(IConfiguration config, IMapper mapper, IMessageProducer producer, IRedisService redisService)
+        public FirebaseServices(IConfiguration config, IMapper mapper, IMessageProducer producer,
+            IRedisService redisService)
         {
             _mapper = mapper;
             _producer = producer;
@@ -137,30 +138,36 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             }
         }
 
-        public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName)
+        public async Task<string?> SaveBooking(Booking saveObj, long id, string collectionName,
+            bool isRecursiveCall = false)
         {
             try
             {
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
-                    await SaveBooking(saveObj, id, "old_bookings");
-                    
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
                     var keyDriverAssigned = DateUtil.GetKeyDriverBooking(saveObj.BookingAt, saveObj.Id);
                     var isDriverAssigned = await _redisService.KeyExistsAsync(keyDriverAssigned);
-                    
+
                     var keyPorterAssigned = DateUtil.GetKeyPorterBooking(saveObj.BookingAt, saveObj.Id);
                     var isPorterAssigned = await _redisService.KeyExistsAsync(keyPorterAssigned);
-                    
-                    if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) && isDriverAssigned == false)
+
+                    if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
+                        isDriverAssigned == false)
                     {
+                        if (!isRecursiveCall)
+                        {
+                            await SaveBooking(saveObj, id, "old_bookings", true);
+                            Console.WriteLine("Pushed to old_bookings successfully");
+                        }
+
                         _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
                     }
 
                     if (saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
-                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString()) 
+                        !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString())
                         && isPorterAssigned == false && saveObj.IsPorter == true)
                     {
                         _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
@@ -360,7 +367,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
-        
+
         public async Task<List<BookingResponse>> GetAllBookings(string collectionName)
         {
             try
@@ -383,7 +390,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
-        
+
         public async Task<BookingResponse?> GetBookingById(long id, string collectionName)
         {
             try
@@ -411,7 +418,5 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
-
-
     }
 }
