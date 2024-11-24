@@ -2195,10 +2195,7 @@ namespace MoveMate.Service.Services
                 }
 
                 // Fetch existing booking from the database
-                var existingBooking = await _unitOfWork.BookingRepository
-                    .GetAsync(b => b.Id == (int)bookingDetail.BookingId,
-                        include: b =>
-                            b.Include(b => b.BookingDetails).Include(b => b.FeeDetails).Include(b => b.Vouchers));
+                var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1((int)bookingDetail.BookingId, includeProperties: "BookingDetails.Service.FeeSettings");
 
                 if (existingBooking == null)
                 {
