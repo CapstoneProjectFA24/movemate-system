@@ -85,7 +85,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 }
                 if (statuses.Contains("PROGRESSING"))
                 {
-                    statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "CONFIRMED" });
+                    statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "PAUSED" });
                     statuses.Remove("PROGRESSING");
                 }
                 if (statuses.Contains("DONE"))
@@ -102,11 +102,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 {
                     if (IsReviewOnl.HasValue && IsReviewOnl.Value)
                     {
-                        statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "CONFIRMED" });
+                        statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "PAUSED" });
                     }
                     else
                     {
-                        statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "CONFIRMED", "REVIEWING", "REVIEWED" });
+                        statuses.AddRange(new[] { "IN_PROGRESS", "COMING", "PAUSED", "REVIEWING", "REVIEWED" });
                     }
                     statuses.Remove("ADVANCE");
                 }
