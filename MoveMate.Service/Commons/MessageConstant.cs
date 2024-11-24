@@ -223,7 +223,7 @@ namespace MoveMate.Service.Commons
             public const string InvalidBookingId = "Invalid booking ID";
             public const string IsAtLeast24HoursApart = "Promotion at least 24 hours";
             public const string PaymentFail = "Payment was failed";
-
+            public const string PayByCash = "You have chosen the cash payment method";
             public const string BalanceNotEnough = "The balance in the wallet is not enough";
             public const string UnspPayment = "Unsupported payment method selected";
 

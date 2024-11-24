@@ -165,13 +165,13 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE: User payment by cash  
+        /// CHORE: User pay by cash
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="bookingId"></param>
         /// <returns></returns>
         [HttpPatch("{bookingId}")]
         [Authorize]
-        public async Task<IActionResult> UserPayByCash(int bookingId)
+        public async Task<IActionResult> StaffConfirmPayByStaff(int bookingId)
         {
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
