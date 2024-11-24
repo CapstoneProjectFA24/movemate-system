@@ -246,7 +246,26 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                booking.IsCredit = true;
+        
+                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
+                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
+
+                if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString() && booking.IsCredit == false)
+                {
+                    booking.IsCredit = true;
+                }
+                else
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.PayByCash, false);
+                    return result;
+                }
+
+
+                
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.SaveChangesAsync();
 
                 var notificationUser =
         await _unitOfWork.NotificationRepository.GetByUserIdAsync(userId);
@@ -254,14 +273,15 @@ namespace MoveMate.Service.Services
                 var body = $"Thông báo: Người dùng đã chọn thanh toán bằng tiền mặt cho đơn hàng {booking.Id}.";
                 var fcmToken = notificationUser.FcmToken;
                 var data = new Dictionary<string, string>
-{
-    { "bookingId", booking.Id.ToString() },
-    { "status", booking.Status.ToString() },
-    { "message", "Người dùng đã chọn thanh toán bằng tiền mặt." }
-};
-
-                // Gửi thông báo đến Firebase
+                {
+                    { "bookingId", booking.Id.ToString() },
+                    { "status", booking.Status.ToString() },
+                    { "message", "Người dùng đã chọn thanh toán bằng tiền mặt." }
+                };
                 await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PaymentSuccess, true);
                 return result;

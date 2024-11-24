@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.Service.ThirdPartyService.Firebase
 {
@@ -39,5 +40,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             string subKey);
 
         public Task<List<Booking>> GetCanceledBookingsOlderThanAsync(DateTime cutoffDate);
+
+        public Task<List<BookingResponse>> GetAllBookings(string collectionName);
+        public Task<BookingResponse?> GetBookingById(long id, string collectionName);
     }
 }

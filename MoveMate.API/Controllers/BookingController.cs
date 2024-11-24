@@ -102,7 +102,7 @@ namespace MoveMate.API.Controllers
         ///           "resourceList": [
         ///             {
         ///               "type": "IMG",
-        ///               "resourceUrl": "https://hoanghamobile.com/tin-tuc/wp-content/webp-express/webp-images/uploads/2024/03/anh-meme-hai.jpg.webp",
+        ///               "resourceUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1732454517/movemate/images/xfsx9kwggqjik4dsklvx.jpg",
         ///               "resourceCode": "string"
         ///             }
         ///           ]
@@ -357,6 +357,19 @@ namespace MoveMate.API.Controllers
 
             var userId = int.Parse(accountIdClaim.Value);
             var response = await _bookingServices.StaffConfirmPayByCash(userId, bookingId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        
+        /// <summary>
+        /// FEATURE: get old booking by bookingId
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("old-booking/{id}")]
+        [Authorize]
+        public async Task<IActionResult> OldBookingById(int id)
+        {
+            var response = await _bookingServices.GetOldBookingById(id);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }

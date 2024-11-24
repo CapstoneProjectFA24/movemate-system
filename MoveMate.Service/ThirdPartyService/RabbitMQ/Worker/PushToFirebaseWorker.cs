@@ -42,6 +42,8 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
                     await firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                    await firebaseServices.SaveBooking(booking, booking.Id, "old_bookings");
+
                 }
             }
             catch (Exception e)
