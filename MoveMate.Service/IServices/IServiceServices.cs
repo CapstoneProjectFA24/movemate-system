@@ -1,4 +1,5 @@
-﻿using MoveMate.Service.Commons;
+﻿using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
@@ -11,7 +12,7 @@ namespace MoveMate.Service.IServices
 {
     public interface IServiceServices
     {
-        public Task<OperationResult<List<ServicesResponse>>> GetAll(GetAllServiceRequest request);
+        public Task<OperationResult<List<ServicesResponse>>> GetAll(GetAllServiceRequest request, CalServiceRequest requestBody);
 
         public Task<OperationResult<List<ServicesResponse>>> GetAllNotTruck(GetAllServiceNotTruckRequest request);
 
@@ -22,5 +23,6 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<bool>> DeleteService(int id);
 
         Task<OperationResult<ServicesResponse>> UpdateService (int id, UpdateServiceRequest request);
+        Task<OperationResult<List<ServicesResponse>>> CalService(CalServiceRequest request);
     }
 }

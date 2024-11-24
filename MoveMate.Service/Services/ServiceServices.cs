@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FirebaseAdmin.Auth;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
@@ -23,42 +24,77 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<ServiceServices> _logger;
+        private readonly IBookingServices _bookingServices;
 
-        public ServiceServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ServiceServices> logger)
+        public ServiceServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ServiceServices> logger, IBookingServices bookingServices)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
+            _bookingServices = bookingServices;
         }
 
-        public async Task<OperationResult<List<ServicesResponse>>> GetAll(GetAllServiceRequest request)
+        public async Task<OperationResult<List<ServicesResponse>>> GetAll(GetAllServiceRequest request, CalServiceRequest requestBody)
         {
             var result = new OperationResult<List<ServicesResponse>>();
 
+            int checkRequest = CheckRequestFields(requestBody);
+            if (checkRequest == 3)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidRequest);
+                return result;
+            }
             var pagin = new Pagination();
 
             var filter = request.GetExpressions();
 
             try
             {
-                var entities = _unitOfWork.ServiceRepository.GetAllWithCount(
+                if (checkRequest == 1)
+                {
+                    var entities = _unitOfWork.ServiceRepository.GetAllWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder()
                 );
-                var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
+                    var listResponse = _mapper.Map<List<ServicesResponse>>(entities.Data);
 
-                if (listResponse == null || !listResponse.Any())
+                    if (listResponse == null || !listResponse.Any())
+                    {
+                        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceEmpty, listResponse);
+                        return result;
+                    }
+                    pagin.totalItemsCount = entities.Count;
+                    pagin.pageSize = request.per_page;
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
+
+                }
+                else if (checkRequest == 2)
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceEmpty, listResponse);
-                    return result;
+                    var service = _unitOfWork.ServiceRepository.Get(filter: request.GetExpressions(), includeProperties: "FeeSettings,InverseParentService.TruckCategory").ToList();
+
+
+                    var services = await _bookingServices.CalculateServiceFeesByServiceList(service, requestBody.HouseTypeId, requestBody.FloorsNumber, requestBody.EstimatedDistance);
+                    var listResponse = _mapper.Map<List<ServicesResponse>>(services);
+
+                    if (listResponse == null || !listResponse.Any())
+                    {
+                        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceEmpty, listResponse);
+                        return result;
+                    }
+
+                    var paginatedServices = services
+                        .Skip((request.page - 1) * request.per_page)
+                        .Take(request.per_page)
+                        .ToList();
+                    pagin.totalItemsCount = services.Count;
+                    pagin.pageSize = request.per_page;
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
+
                 }
 
-                pagin.pageSize = request.per_page;
-                pagin.totalItemsCount = entities.Count;
 
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse, pagin);
 
                 return result;
             }
@@ -68,6 +104,26 @@ namespace MoveMate.Service.Services
                 throw;
             }
         }
+
+        private int CheckRequestFields(CalServiceRequest request)
+        {
+            // Kiểm tra từng thuộc tính
+            bool isHouseTypeIdValid = request.HouseTypeId != 0;
+            bool isFloorsNumberValid = !string.IsNullOrEmpty(request.FloorsNumber);
+            bool isEstimatedDistanceValid = !string.IsNullOrEmpty(request.EstimatedDistance);
+
+            if (!isHouseTypeIdValid && !isFloorsNumberValid && !isEstimatedDistanceValid)
+            {
+                return 1;
+            }
+            if (isHouseTypeIdValid && isFloorsNumberValid && isEstimatedDistanceValid)
+            {
+                return 2;
+            }
+
+            return 3;
+        }
+
 
         public async Task<OperationResult<List<ServicesResponse>>> GetAllNotTruck(GetAllServiceNotTruckRequest request)
         {
@@ -434,5 +490,43 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        public async Task<OperationResult<List<ServicesResponse>>> CalService(CalServiceRequest request)
+        {
+            var result = new OperationResult<List<ServicesResponse>>();
+            try
+            {
+                var existingHouseType =
+                    await _unitOfWork.HouseTypeRepository.GetByIdAsyncV1(request.HouseTypeId);
+
+                // check houseType
+                if (existingHouseType == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
+                    return result;
+                }
+
+                var service = _unitOfWork.ServiceRepository.Get(includeProperties: "FeeSettings").ToList();
+
+
+                var response = await _bookingServices.CalculateServiceFeesByServiceList(service, request.HouseTypeId, request.FloorsNumber, request.EstimatedDistance);
+                var listResponse = _mapper.Map<List<ServicesResponse>>(response);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceEmpty, listResponse);
+                    return result;
+                }
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListServiceSuccess, listResponse);
+
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
     }
 }

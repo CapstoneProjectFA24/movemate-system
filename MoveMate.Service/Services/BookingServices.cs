@@ -754,7 +754,7 @@ namespace MoveMate.Service.Services
         #region PRIVATE: SeparateFeeSettingsByUnit for a new booking in the system.
 
         private (List<FeeSetting>? nullUnitFees, List<FeeSetting>? kmUnitFees, List<FeeSetting>? floorUnitFees)
-            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings, int HouseTypeId, int CateTruckId)
+            SeparateFeeSettingsByUnit(List<FeeSetting> feeSettings, int HouseTypeId)
         {
             var nullUnitFees = new List<FeeSetting>();
             var kmUnitFees = new List<FeeSetting>();
@@ -831,7 +831,7 @@ namespace MoveMate.Service.Services
 
         #region PRIVATE: CalculateFloorFeeV2 for a new booking in the system.
 
-        private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFeeV2(int truckCategoryId,
+        private (double totalFee, List<FeeDetail> feeDetails) CalculateFloorFeeV2(
             int numberOfFloors,
             List<FeeSetting>? feeSettings, int quantity)
         {
@@ -971,7 +971,7 @@ namespace MoveMate.Service.Services
 
                     var amount = 0d;
                     var (nullUnitFees, kmUnitFees, floorUnitFees) =
-                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId, truckCategoryId);
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId);
 
                     switch (service.Type)
                     {
@@ -1004,7 +1004,7 @@ namespace MoveMate.Service.Services
                                 throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceTier);
                             }
 
-                            var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(truckCategoryId,
+                            var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(
                                 int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity ?? 1);
                             amount += floorTotalFee;
                             porterNumber = quantity ?? 0;
@@ -1060,6 +1060,89 @@ namespace MoveMate.Service.Services
             }*/
 
             return (totalServices, bookingDetails, driverNumber, porterNumber, feeDetails);
+        }
+
+        public async
+            Task<List<Domain.Models.Service>> CalculateServiceFeesByServiceList(
+                List<Domain.Models.Service> services,
+                int houseTypeId,
+                string floorsNumber,
+                string estimatedDistance)
+        {
+            var serviceDetails = new List<Domain.Models.Service>();
+
+
+            foreach (var service in services)
+            {
+
+                // Set var
+                var quantity = 1;
+                var price = service.Amount * quantity - service.Amount * quantity * ((service.DiscountRate ?? 0) / 100);
+
+                if (service.FeeSettings.Count() > 0)
+                {
+                    // Logic fee 
+
+                    var amount = 0d;
+                    var (nullUnitFees, kmUnitFees, floorUnitFees) =
+                        SeparateFeeSettingsByUnit(service.FeeSettings.ToList(), houseTypeId);
+
+                    switch (service.Type)
+                    {
+                        case null:
+
+                            break;
+                        case "TRUCK":
+                            // FEE DISTANCE
+                           
+
+                            if (service.Tier == 0)
+                            {
+                                throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceTier);
+                            }
+
+                            var (totalTruckFee, feeTruckDetails) = CalculateDistanceFee(service.TruckCategoryId.Value,
+                                double.Parse(estimatedDistance.ToString()), kmUnitFees, quantity);
+                            amount += totalTruckFee;
+
+                            break;
+                        case "PORTER":
+                            if (service.Tier == 0)
+                            {
+                                throw new BadRequestException(MessageConstant.FailMessage.InvalidServiceTier);
+                            }
+
+                            var (floorTotalFee, floorUnitFeeDetails) = CalculateFloorFeeV2(
+                                int.Parse(floorsNumber ?? "1"), floorUnitFees, quantity);
+                            amount += floorTotalFee;
+                            break;
+                    }
+
+                    // FEE BASE
+                    var (nullTotalFee, nullUnitFeeDetails) = CalculateBaseFee(nullUnitFees, quantity);
+                    amount += nullTotalFee;
+
+
+                    amount = (double)(amount -
+                                      amount * (service.DiscountRate ?? 0) / 100)!;
+
+                    service.Amount = amount;
+                    serviceDetails.Add(service);
+                }
+                else
+                {
+                    service.Amount = price.Value;
+                    serviceDetails.Add(service);
+                }
+
+                if (service.InverseParentService.Count() > 0)
+                {
+                    var listService = service.InverseParentService.ToList();
+                    service.InverseParentService = await CalculateServiceFeesByServiceList(listService, houseTypeId,floorsNumber,estimatedDistance);
+                }
+            }
+
+            return serviceDetails;
         }
 
         #endregion
