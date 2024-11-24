@@ -89,6 +89,8 @@ public partial class Booking
 
     public bool? IsUpdated { get; set; }
 
+    public bool? IsCredit { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();

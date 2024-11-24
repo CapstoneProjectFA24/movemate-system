@@ -231,7 +231,6 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<bool>> UserPayByCash(int userId, int bookingId)
         {
             var result = new OperationResult<bool>();
-
             try
             {
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
@@ -240,34 +239,39 @@ namespace MoveMate.Service.Services
                     result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.BookingCannotPay, false);
                     return result;
                 }
-                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
-                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
-                if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
-         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
-         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                if (booking.IsCredit == true)
                 {
-                    booking.Status = BookingEnums.COMPLETED.ToString();
-                    booking.TotalReal = 0;
-                }
-                else
-                {
-                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.BookingStatus, false);
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.PayByCash, false);
                     return result;
                 }
-      
-                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
-                await _unitOfWork.SaveChangesAsync();               
-                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+
+                booking.IsCredit = true;
+
+                var notificationUser =
+        await _unitOfWork.NotificationRepository.GetByUserIdAsync(userId);
+                var title = "Thông báo: Thanh toán bằng tiền mặt";
+                var body = $"Thông báo: Người dùng đã chọn thanh toán bằng tiền mặt cho đơn hàng {booking.Id}.";
+                var fcmToken = notificationUser.FcmToken;
+                var data = new Dictionary<string, string>
+{
+    { "bookingId", booking.Id.ToString() },
+    { "status", booking.Status.ToString() },
+    { "message", "Người dùng đã chọn thanh toán bằng tiền mặt." }
+};
+
+                // Gửi thông báo đến Firebase
+                await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PaymentSuccess, true);
+                return result;
+
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error confirm round trip");
-                throw;
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
+                return result;
             }
-
-            return result;
         }
     }
 }

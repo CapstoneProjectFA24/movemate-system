@@ -339,5 +339,25 @@ namespace MoveMate.API.Controllers
             var response = await _bookingServices.CancelBooking(id, userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// CHORE: Staff confirm pay by cash
+        /// </summary>
+        /// <param name="bookingId"></param>
+        /// <returns></returns>
+        [HttpPatch("{bookingId}")]
+        [Authorize]
+        public async Task<IActionResult> StaffConfirmPayByCash(int bookingId)
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.StaffConfirmPayByCash(userId, bookingId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
