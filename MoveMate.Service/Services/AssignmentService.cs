@@ -1041,6 +1041,15 @@ public class AssignmentService : IAssignmentService
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
         }
 
+        if (existingBooking.PorterNumber == 0)
+        {
+            responses.BookingNeedStaffs = 0;
+            responses.IsSuccessed = true;
+            responses.StaffType = RoleEnums.DRIVER.ToString();
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingHasNoDriver, responses);
+            return result;
+        }
+
         var bookingDetailTruck =
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 TypeServiceEnums.TRUCK.ToString(), bookingId);
@@ -1260,6 +1269,15 @@ public class AssignmentService : IAssignmentService
         if (existingBooking == null)
         {
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+        }
+
+        if (existingBooking.PorterNumber == 0)
+        {
+            response.BookingNeedStaffs = 0;
+            response.IsSuccessed = true;
+            response.StaffType = RoleEnums.PORTER.ToString();
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingHasNoPorter, response);
+            return result;
         }
 
         var bookingDetail =
