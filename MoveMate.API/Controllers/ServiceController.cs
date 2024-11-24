@@ -138,7 +138,7 @@ namespace MoveMate.API.Controllers
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
         [Authorize]
-        public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] GetAllServiceRequest request, [FromQuery] CalServiceRequest requestBody)
         {
 
             _producer.SendingMessage<String>("hello");
@@ -159,7 +159,7 @@ namespace MoveMate.API.Controllers
                     await _redisService.SetDataAsync(keyService, response, TimeSpan.FromMinutes(30));
                 }
             }*/
-            var response = await _services.GetAll(request);
+            var response = await _services.GetAll(request, requestBody);
             await _redisService.EnqueueAsync(queueKey, response.Payload);
             //var key = DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + "mykey";
             //await _redisService.SetDataAsync(key, "Hello, World! my key");
@@ -173,6 +173,18 @@ namespace MoveMate.API.Controllers
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+
+        [HttpPost("service-dynamic")]
+        [Authorize]
+        public async Task<IActionResult> GetAllServiceDynamic([FromBody] CalServiceRequest request)
+        {
+            var response = await _services.CalService(request); 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
 
 
         /// <summary>
