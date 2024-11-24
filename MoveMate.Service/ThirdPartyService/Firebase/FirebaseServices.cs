@@ -144,7 +144,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
-                    await SaveBooking(saveObj, id, "old_bookings");
                     
                     Console.WriteLine("push to movemate.booking_assign_driver");
 
@@ -156,6 +155,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     
                     if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) && isDriverAssigned == false)
                     {
+                        await SaveBooking(saveObj, id, "old_bookings");
                         _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
                     }
 
