@@ -100,16 +100,16 @@ namespace MoveMate.API.Controllers
         ///
         /// If the conditions for a transition are not met, an error message is returned.
         /// </remarks>
-        /// <param name="id"></param>
+        /// <param name="bookingId"></param>
         /// <returns></returns>
-        [HttpPut("reviewer/update-status/{id}")]
-        public async Task<IActionResult> ReviewerUpdateStatus(int id , [FromBody] TrackerByReviewOfflineRequest request)
+        [HttpPut("reviewer/update-status/{bookingId}")]
+        public async Task<IActionResult> ReviewerUpdateStatus(int bookingId, [FromBody] TrackerByReviewOfflineRequest request)
         {
             IEnumerable<Claim> claims = HttpContext.User.Claims;
             Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
             var userId = int.Parse(accountId.Value);
 
-            var response = await _bookingServices.ReviewerUpdateStatusBooking(userId, id, request);
+            var response = await _bookingServices.ReviewerUpdateStatusBooking(userId, bookingId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
