@@ -254,7 +254,7 @@ namespace MoveMate.Service.Services
         }
 
 
-        public async Task<OperationResult<AccountResponse>> Register(CustomerToRegister customerToRegister)
+        public async Task<OperationResult<AccountResponse>> Register(CustomerToRegister customerToRegister,JWTAuth jwtAuth)
         {
             var result = new OperationResult<AccountResponse>();
 
@@ -306,6 +306,8 @@ namespace MoveMate.Service.Services
                         Password = customerToRegister.Password, // Có thể mã hóa mật khẩu trước khi lưu
                         Name = customerToRegister.Name,
                         Phone = customerToRegister.Phone,
+                        AvatarUrl = "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+                        Gender = "Male",
                         RoleId = 3,
                         Wallet = new Wallet
                         {
@@ -317,11 +319,12 @@ namespace MoveMate.Service.Services
                         }
                     };
 
+                    var accountResponse = _mapper.Map<AccountResponse>(newUser);
+                    accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
+
                     await _unitOfWork.UserRepository.AddAsync(newUser);
                     await _unitOfWork.SaveChangesAsync();
-
-                    var userResponse = _mapper.Map<AccountResponse>(newUser);
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, userResponse);
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, accountResponse);
                 }
                 catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
                 {
