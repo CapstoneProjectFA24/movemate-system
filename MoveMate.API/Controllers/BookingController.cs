@@ -36,15 +36,15 @@ namespace MoveMate.API.Controllers
         /// - If "Status" contains `HOLD`, the list will include bookings with statuses `ASSIGNED` and `PENDING` instead.
         /// - If "Status" contains `VALIDATION`, the list will include `WAITING`, `DEPOSITING`, and `REVIEWED`.
         /// - If "Status" contains `EVALUATING`, the list will include `REVIEWING`.
-        /// - If "Status" contains `PROGRESSING`, the list will include `IN_PROGRESS`, `COMING`, and `CONFIRMED`.
+        /// - If "Status" contains `PROGRESSING`, the list will include `IN_PROGRESS`, `COMING`, and `PAUSED`.
         /// - If "Status" contains `DONE`, the list will include `COMPLETED`.
         /// - If "Status" contains `PAID`, the list will include `COMPLETED`.
         /// - If "Status" contains `NEW`, the list will include various statuses based on the review flag and whether the booking is online or not:
-        ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `"PENDING"`, `"ASSIGNED"`, `"REVIEWING"`, `"REVIEWED"`, and `"DEPOSITING"`.
-        ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `"PENDING"`, `"ASSIGNED"`, `"WAITING"`, and `"DEPOSITING"`.
+        ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `PENDING`, `ASSIGNED`, `REVIEWING`, `REVIEWED`, and `DEPOSITING`.
+        ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `PENDING`, `ASSIGNED`, `WAITING`, and `DEPOSITING`.
         /// - If "Status" contains `ADVANCE`, the list will include different statuses based on whether the review flag is set:
-        ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `"IN_PROGRESS"`, `"COMING"`, and `"CONFIRMED"`.
-        ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `"IN_PROGRESS"`, `"COMING"`, `"CONFIRMED"`, `"REVIEWING"`, and `"REVIEWED"`.
+        ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `IN_PROGRESS`, `COMING`, and `PAUSED`.
+        ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `IN_PROGRESS`, `COMING`, `PAUSED`, `REVIEWING`, and `REVIEWED`.
         /// - If "Status" contains `COMPENSATION`, the list will include `REFUNDED`.
         /// - If "Status" contains `CANCELED`, the list will include `CANCEL`.
         /// </remarks>
@@ -102,7 +102,7 @@ namespace MoveMate.API.Controllers
         ///           "resourceList": [
         ///             {
         ///               "type": "IMG",
-        ///               "resourceUrl": "https://hoanghamobile.com/tin-tuc/wp-content/webp-express/webp-images/uploads/2024/03/anh-meme-hai.jpg.webp",
+        ///               "resourceUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1732454517/movemate/images/xfsx9kwggqjik4dsklvx.jpg",
         ///               "resourceCode": "string"
         ///             }
         ///           ]
@@ -337,6 +337,26 @@ namespace MoveMate.API.Controllers
 
             var userId = int.Parse(accountIdClaim.Value);
             var response = await _bookingServices.CancelBooking(id, userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// CHORE: Staff confirm pay by cash
+        /// </summary>
+        /// <param name="bookingId"></param>
+        /// <returns></returns>
+        [HttpPatch("{bookingId}")]
+        [Authorize]
+        public async Task<IActionResult> StaffConfirmPayByCash(int bookingId)
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.StaffConfirmPayByCash(userId, bookingId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
         

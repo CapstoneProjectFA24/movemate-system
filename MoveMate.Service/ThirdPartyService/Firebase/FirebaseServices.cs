@@ -45,13 +45,15 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             // Check if the default FirebaseApp is already created
             if (_firebaseApp == null)
             {
-            }
-            //var appOptions = new AppOptions()
-            //{
-            //    Credential = GoogleCredential.FromFile(authJsonFile)
-            //};
+                string authJsonFile = _config["FirebaseSettings:ConfigFile"];
+                var appOptions = new AppOptions()
+                {
+                    Credential = GoogleCredential.FromFile(authJsonFile)
+                };
 
-            //_firebaseApp = FirebaseApp.Create(appOptions);
+                _firebaseApp = FirebaseApp.Create(appOptions);
+            }
+           
 
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
@@ -67,11 +69,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
             try
             {
-                string authJsonFile = _config["FirebaseSettings:ConfigFile"];
-                var app = FirebaseApp.DefaultInstance ?? FirebaseApp.Create(new AppOptions
-                {
-                    Credential = GoogleCredential.FromFile(authJsonFile)
-                });
+               
                 FirebaseAuth auth = FirebaseAuth.DefaultInstance;
                 FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
                 result.AddResponseStatusCode(StatusCode.Ok, "Token verified successfully", decodedToken);
@@ -341,6 +339,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         {
             try
             {
+               
                 var message = new Message()
                 {
                     Notification = new FirebaseAdmin.Messaging.Notification

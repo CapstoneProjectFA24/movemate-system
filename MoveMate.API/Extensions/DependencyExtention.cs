@@ -295,7 +295,14 @@ namespace MoveMate.API.Extensions
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter token : eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lQGV4YW1wbGUuY29tIiwiZW1haWwiOiJqb2huZG9lQGV4YW1wbGUuY29tIiwic2lkIjoiMSIsInJvbGUiOiIxIiwianRpIjoiZmUzOTQwZDgtN2VjZi00NzM4LTlmOGUtNTU5MDI1YTcxYTAyIiwibmJmIjoxNzI5MzU3NDI4LCJleHAiOjIzMjkzNTc0MjgsImlhdCI6MTcyOTM1NzQyOH0.Dkz6gbzzix-EeqzM6WsqtjW2JOC4QxMhAFcy6WTK6ONHz5JR5Mm5k9Ewfce6H9_z0W-5IqhY2S5pyH4tmZEt1A",
+                    Description =
+                "Please enter your token in the format below:\n\n" +
+                "**Admin Token:**\n" +
+                "`eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lQGV4YW1wbGUuY29tIiwiZW1haWwiOiJqb2huZG9lQGV4YW1wbGUuY29tIiwic2lkIjoiMSIsInJvbGUiOiIxIiwianRpIjoiZmUzOTQwZDgtN2VjZi00NzM4LTlmOGUtNTU5MDI1YTcxYTAyIiwibmJmIjoxNzI5MzU3NDI4LCJleHAiOjIzMjkzNTc0MjgsImlhdCI6MTcyOTM1NzQyOH0.Dkz6gbzzix-EeqzM6WsqtjW2JOC4QxMhAFcy6WTK6ONHz5JR5Mm5k9Ewfce6H9_z0W-5IqhY2S5pyH4tmZEt1A`\n\n" +
+                "**Review Token 02:**\n" +
+                "`eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhQGdtYWlsLmNvbSIsImVtYWlsIjoiYUBnbWFpbC5jb20iLCJzaWQiOiIyIiwicm9sZSI6IjIiLCJqdGkiOiI0MWEyYmQxMS1mODFlLTQyZjYtYjFhNS02MWU4MGRhODdhNjIiLCJuYmYiOjE3MzI0NTUwNjUsImV4cCI6MjMzMjQ1NTA2NSwiaWF0IjoxNzMyNDU1MDY1fQ.B0hJlfNQ0bSDJPDPp5JN8puoevfHNJbm4iQYb4rty4kuYbiwyI6UqSrttaj8UAdsYpQC6V5yYCPfd_Yu4rewDg`\n\n" +
+                "**Review Token 08:**\n" +
+                "`eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJoYW5AZ21haWwuY29tIiwiZW1haWwiOiJoYW5AZ21haWwuY29tIiwic2lkIjoiOCIsInJvbGUiOiIyIiwianRpIjoiZjNkOWNkODMtZjhhYy00MGUzLTk1ZmItYjkwNjYxMzcwNWZiIiwibmJmIjoxNzMyNDU1MTUzLCJleHAiOjIzMzI0NTUxNTMsImlhdCI6MTczMjQ1NTE1M30.D24otRY-ckyXSB4iM0QIwH4-2NOzqygxJ7lSVy2YmkEco2Q8kfP95wHPSifwk8grAFu08rCvSRW6xHeMQUkgMw`\n\n",
                     Name = "Authorization",
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",

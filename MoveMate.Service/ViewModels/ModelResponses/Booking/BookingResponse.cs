@@ -34,7 +34,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string? BookingAt { get; set; }
         public string CreatedBy { get; set; }
         [FirestoreProperty] public string? UpdatedAt { get; set; }
-
+        [FirestoreProperty] public bool? IsCredit { get; set; }
         public string UpdatedBy { get; set; }
         public string Review { get; set; }
         [FirestoreProperty] public string TypeBooking { get; set; }
