@@ -319,11 +319,13 @@ namespace MoveMate.Service.Services
                         }
                     };
 
-                    var accountResponse = _mapper.Map<AccountResponse>(newUser);
-                    accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
+                   
 
                     await _unitOfWork.UserRepository.AddAsync(newUser);
                     await _unitOfWork.SaveChangesAsync();
+                    var user = await _unitOfWork.UserRepository.GetByIdAsync(newUser.Id, includeProperties: "Role");
+                    var accountResponse = _mapper.Map<AccountResponse>(user);
+                    accountResponse = await GenerateTokenAsync(accountResponse, jwtAuth);
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess, accountResponse);
                 }
                 catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
