@@ -358,5 +358,58 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 throw;
             }
         }
+        
+        public async Task<List<BookingResponse>> GetAllBookings(string collectionName)
+        {
+            try
+            {
+                // Lấy toàn bộ document trong collection
+                CollectionReference collectionRef = _dbFirestore.Collection(collectionName);
+                QuerySnapshot snapshot = await collectionRef.GetSnapshotAsync();
+
+                // Map dữ liệu thành danh sách BookingResponse
+                var bookings = snapshot.Documents
+                    .Select(doc => doc.ConvertTo<BookingResponse>())
+                    .ToList();
+
+                Console.WriteLine($"Fetched {bookings.Count} bookings from {collectionName}.");
+                return bookings;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error fetching all bookings: {e.Message}");
+                throw;
+            }
+        }
+        
+        public async Task<BookingResponse?> GetBookingById(long id, string collectionName)
+        {
+            try
+            {
+                // Tham chiếu tới document với ID cụ thể
+                DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
+                DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+
+                if (snapshot.Exists)
+                {
+                    // Map dữ liệu thành BookingResponse
+                    var booking = snapshot.ConvertTo<BookingResponse>();
+                    Console.WriteLine($"Fetched booking with ID {id} from {collectionName}.");
+                    return booking;
+                }
+                else
+                {
+                    Console.WriteLine($"No booking found with ID {id} in {collectionName}.");
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error fetching booking by ID: {e.Message}");
+                throw;
+            }
+        }
+
+
     }
 }
