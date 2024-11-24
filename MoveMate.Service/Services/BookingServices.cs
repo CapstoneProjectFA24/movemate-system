@@ -2293,7 +2293,7 @@ namespace MoveMate.Service.Services
                 if (isDriverUpdate)
                 {
                     existingBooking.TotalReal = total - existingBooking.Deposit;
-                    existingBooking.Status = BookingEnums.CONFIRMED.ToString();
+                    existingBooking.Status = BookingEnums.PAUSED.ToString();
                     existingBooking.Deposit = existingBooking.Total * 0.30; ;
                 }
                 else
@@ -2739,7 +2739,7 @@ namespace MoveMate.Service.Services
                         _unitOfWork.VoucherRepository.UpdateRange(vouchers);
                         break;
                     case "IN_PROGRESS":
-                        if (existingBooking.Status != BookingEnums.CONFIRMED.ToString())
+                        if (existingBooking.Status != BookingEnums.PAUSED.ToString())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingConfirmed);
                             return result;

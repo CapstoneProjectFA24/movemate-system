@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.Commons.Page;
+using Catel.Collections;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
@@ -33,13 +34,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
                 Expression = Expression.And(queryExpression);
             }
-
-            if (!string.IsNullOrWhiteSpace(Type))
-            {
-                Type = Type.Trim().ToLower();
-
-                Expression = Expression.And(u => u.Type.ToLower().Contains(Type));
-            }
+   
 
             if (!string.IsNullOrWhiteSpace(Name))
             {
@@ -48,10 +43,20 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
             if (!string.IsNullOrWhiteSpace(Type))
             {
+
                 var statuses = Type.Split('.')
                     .Select(s => s.Trim())
                     .Where(s => !string.IsNullOrEmpty(s))
-                    .ToArray();
+                    .ToList();
+
+                if (statuses.Contains("NOTTRUCK"))
+                {
+                    statuses.AddRange(new[] { "PORTER", "DISASSEMBLE", "SYSTEM" });
+                    statuses.Remove("NOTTRUCK");
+                }
+
+
+                statuses = statuses.Distinct().ToList();
 
                 Expression = Expression.And(tran => statuses.Contains(tran.Type));
             }
