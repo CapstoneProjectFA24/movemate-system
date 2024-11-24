@@ -44,5 +44,6 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingResponse>> DriverUpdateBooking(int userId,int bookingId, DriverUpdateBookingRequest request);
         Task<OperationResult<BookingResponse>> PorterUpdateBooking(int userId, int bookingId, PorterUpdateDriverRequest request);
         Booking GetBookingByIdAsync(int bookingId);
+        public Task<OperationResult<BookingResponse>> GetOldBookingById(int id);
     }
 }

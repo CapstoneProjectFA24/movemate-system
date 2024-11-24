@@ -292,6 +292,8 @@ namespace MoveMate.Service.Services
 
                     _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
                     await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    await _firebaseServices.SaveBooking(entity, entity.Id, "old_bookings");
+
                     int userid = int.Parse(userId);
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
                     // Sending a booking confirmation email
@@ -2746,6 +2748,8 @@ namespace MoveMate.Service.Services
                         }
 
                         existingBooking.Status = BookingEnums.IN_PROGRESS.ToString();
+                        await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "old_bookings");
+
                         break;
 
                     default:
@@ -3278,6 +3282,29 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
             return booking;
+        }
+
+        public async Task<OperationResult<BookingResponse>> GetOldBookingById(int id)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var bookingResponse = await _firebaseServices.GetBookingById(id, "old_bookings");
+                if (bookingResponse == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetBookingIdSuccess,
+                    bookingResponse);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            return result;
+
         }
     }
 }

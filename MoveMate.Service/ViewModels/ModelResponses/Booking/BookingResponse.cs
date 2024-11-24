@@ -18,18 +18,18 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public int HouseTypeId { get; set; }
         [FirestoreProperty] public double Deposit { get; set; }
         [FirestoreProperty] public string Status { get; set; }
-        public string PickupAddress { get; set; }
-        public string PickupPoint { get; set; }
-        public string DeliveryAddress { get; set; }
-        public string DeliveryPoint { get; set; }
-        public string EstimatedDistance { get; set; }
+        [FirestoreProperty] public string PickupAddress { get; set; }
+        [FirestoreProperty] public string PickupPoint { get; set; }
+        [FirestoreProperty] public string DeliveryAddress { get; set; }
+        [FirestoreProperty] public string DeliveryPoint { get; set; }
+        [FirestoreProperty] public string EstimatedDistance { get; set; }
         [FirestoreProperty] public double Total { get; set; }
         [FirestoreProperty] public double TotalReal { get; set; }
-        public string EstimatedDeliveryTime { get; set; }
+        [FirestoreProperty] public string EstimatedDeliveryTime { get; set; }
         [FirestoreProperty] public bool IsDeposited { get; set; }   
-        public bool IsReported { get; set; }
-        public string ReportedReason { get; set; }
-        public bool IsDeleted { get; set; }
+        [FirestoreProperty] public bool IsReported { get; set; }
+        [FirestoreProperty] public string ReportedReason { get; set; }
+        [FirestoreProperty] public bool IsDeleted { get; set; }
         [FirestoreProperty] public string? CreatedAt { get; set; }
         [FirestoreProperty] public string? BookingAt { get; set; }
         public string CreatedBy { get; set; }
@@ -37,37 +37,37 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public string UpdatedBy { get; set; }
         public string Review { get; set; }
-        public string TypeBooking { get; set; }
-        public string RoomNumber { get; set; }
-        public string FloorsNumber { get; set; }
+        [FirestoreProperty] public string TypeBooking { get; set; }
+        [FirestoreProperty] public string RoomNumber { get; set; }
+        [FirestoreProperty] public string FloorsNumber { get; set; }
         public bool IsManyItems { get; set; }
 
-        public bool IsCancel { get; set; }
+        [FirestoreProperty] public bool IsCancel { get; set; }
 
-        public string CancelReason { get; set; }
+        [FirestoreProperty] public string CancelReason { get; set; }
 
         public bool IsPorter { get; set; }
         [FirestoreProperty] public bool IsRoundTrip { get; set; }
         public string Note { get; set; }
         [FirestoreProperty] public double TotalFee { get; set; }
-        public bool? IsReviewOnline { get; set; }
+        [FirestoreProperty] public bool? IsReviewOnline { get; set; }
 
         [FirestoreProperty] public string? OrderStatus { get; set; }
         [FirestoreProperty] public string? ProcessStatus { get; set; }
         [FirestoreProperty] public bool? IsUserConfirm { get; set; }
         [FirestoreProperty] public string? ReviewAt { get; set; }
         [FirestoreProperty] public DateTime? EstimatedEndTime { get; set; }
-        public int? TruckNumber { get; set; }
+        [FirestoreProperty] public int? TruckNumber { get; set; }
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<AssignmentResponse> Assignments { get; set; }
-        public List<BookingTrackerResponse> BookingTrackers { get; set; }
+        [FirestoreProperty] public List<BookingTrackerResponse> BookingTrackers { get; set; }
 
-        public List<BookingDetailsResponse> BookingDetails { get; set; }
+        [FirestoreProperty] public List<BookingDetailsResponse> BookingDetails { get; set; }
 
-        public List<VoucherResponse> Vouchers { get; set; }
+        [FirestoreProperty] public List<VoucherResponse> Vouchers { get; set; }
         //public virtual List<ServiceDetailsResponse> ServiceDetails { get; set; } = new List<ServiceDetailsResponse>();
 
-        public virtual ICollection<FeeDetailResponse> FeeDetails { get; set; } = new List<FeeDetailResponse>();
+        [FirestoreProperty] public virtual ICollection<FeeDetailResponse> FeeDetails { get; set; } = new List<FeeDetailResponse>();
 
         //public List<HouseTypeResponse> HouseTypes { get; set; }
     }
