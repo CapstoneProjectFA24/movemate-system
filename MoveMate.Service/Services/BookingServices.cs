@@ -1957,10 +1957,12 @@ namespace MoveMate.Service.Services
 
                 assigment.Status = nextStatus;
                 booking.UpdatedAt = DateTime.Now;
-                _unitOfWork.AssignmentsRepository.Update(assigment);
-                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assigment);
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
                 var response = _mapper.Map<AssignmentResponse>(assigment);
+                booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
@@ -3362,6 +3364,52 @@ namespace MoveMate.Service.Services
             }
             return result;
 
+        }
+
+        public async Task<OperationResult<BookingResponse>> StaffBackToReview(int userId, int bookingId)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+                var reviewer = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.REVIEWER.ToString(), bookingId);
+                if (reviewer == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
+                    return result;
+                }
+                if (booking.Status != BookingEnums.REVIEWED.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingReviewed);
+                    return result;
+                }
+                booking.Status = BookingEnums.REVIEWING.ToString();
+                reviewer.Status = AssignmentStatusEnums.SUGGESTED.ToString();
+
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(reviewer);
+                await _unitOfWork.SaveChangesAsync();
+
+                var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                var response = _mapper.Map<BookingResponse>(entity);
+                
+                await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateAssignment,
+                    response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
         }
     }
 }
