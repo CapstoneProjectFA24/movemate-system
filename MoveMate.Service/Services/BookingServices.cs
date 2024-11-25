@@ -2526,7 +2526,7 @@ namespace MoveMate.Service.Services
                 }
 
                 var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
-                    includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                    includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
 
                 if (existingBooking == null)
                 {

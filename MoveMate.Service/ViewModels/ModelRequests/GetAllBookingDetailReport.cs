@@ -22,31 +22,32 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         {
             var queryExpression = PredicateBuilder.New<BookingDetail>(true);
 
-            // Tìm theo từ khóa tìm kiếm (nếu có)
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
                 queryExpression = queryExpression.And(cus => cus.Name.ToLower().Contains(Search));
             }
 
-            // Tìm theo UserId trong Assignment
             if (UserId.HasValue)
             {
                 queryExpression = queryExpression.And(detail =>
-                    detail.BookingId.HasValue && // Đảm bảo BookingId không null
+                    detail.BookingId.HasValue && 
                     detail.Booking.Assignments
                         .Any(assignment => assignment.UserId == UserId)
                 );
             }
 
-            // Lọc theo trạng thái là WAITING
             queryExpression = queryExpression.And(detail => detail.Status == BookingDetailStatusEnums.WAITING.ToString());
 
-            // Tìm theo Type (nếu có)
             if (!string.IsNullOrWhiteSpace(Type))
             {
                 queryExpression = queryExpression.And(u => u.Type == Type);
             }
+
+            queryExpression = queryExpression.And(detail =>
+       detail.Booking != null &&
+       (detail.Booking.Status == BookingEnums.COMING.ToString() || detail.Booking.Status == BookingEnums.COMPLETED.ToString()
+       || detail.Booking.Status == BookingEnums.IN_PROGRESS.ToString() || detail.Booking.Status == BookingEnums.PAUSED.ToString()));
 
             return queryExpression;
         }
