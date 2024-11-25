@@ -57,7 +57,8 @@ public class AssignmentService : IAssignmentService
 
         if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
         {
-            throw new BadRequestException(MessageConstant.FailMessage.CannotAssigned);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotAssigned);
+            return result;
         }
 
         var bookingDetailTruck =
@@ -66,7 +67,8 @@ public class AssignmentService : IAssignmentService
 
         if (bookingDetailTruck == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
+            return result;
         }
 
         var schedule =
@@ -452,7 +454,8 @@ public class AssignmentService : IAssignmentService
 
         if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
         {
-            throw new BadRequestException(MessageConstant.FailMessage.CannotAssigned);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotAssigned);
+            return result;
         }
 
         var bookingDetail =
@@ -461,7 +464,8 @@ public class AssignmentService : IAssignmentService
 
         if (bookingDetail == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage. NotFoundBookingDetail);
+            return result;
         }
 
         var schedule =
@@ -828,7 +832,8 @@ public class AssignmentService : IAssignmentService
             "Assignments");
         if (existingBooking == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBooking);
+            return result;
         }
 
         if (request.FailedAssignmentId != null)
@@ -854,7 +859,8 @@ public class AssignmentService : IAssignmentService
                 TypeServiceEnums.TRUCK.ToString(), bookingId);
                 if (bookingDetailDriver == null)
                 {
-                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    return result;
                 }
                 var driverAssignments = existingBooking.Assignments
                     .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
@@ -920,7 +926,8 @@ public class AssignmentService : IAssignmentService
                 request.StaffType, bookingId);
                 if (bookingDetailPorter == null)
                 {
-                    throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
+                    return result;
                 }
                 var porterAssignments = existingBooking.Assignments
                     .Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
@@ -1038,7 +1045,8 @@ public class AssignmentService : IAssignmentService
         var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
         if (existingBooking == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBooking);
+            return result;
         }
 
         if (existingBooking.PorterNumber == 0)
@@ -1056,7 +1064,8 @@ public class AssignmentService : IAssignmentService
 
         if (bookingDetailTruck == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
+            return result;
         }
 
         var schedule =
@@ -1268,7 +1277,8 @@ public class AssignmentService : IAssignmentService
         var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties: "Assignments");
         if (existingBooking == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBooking);
+            return result;
         }
 
         if (existingBooking.PorterNumber == 0)
@@ -1286,7 +1296,8 @@ public class AssignmentService : IAssignmentService
 
         if (bookingDetail == null)
         {
-            throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
+            return result;
         }
 
         var schedule =
