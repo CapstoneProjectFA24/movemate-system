@@ -48,7 +48,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<Notification> query = _dbSet;
             return await query
-                               .FirstOrDefaultAsync(x => x.UserId == userId);          
+                               .FirstOrDefaultAsync(x => x.UserId == userId && x.FcmToken != null);          
         }
 
     }

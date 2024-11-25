@@ -184,8 +184,19 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                         _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
                     }
                 }
+                if (!isRecursiveCall)
+                {
+                    var redisKey = saveObj.Id + '-' + saveObj.Status;
 
-                //_producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
+                    var checkExistQueue = await _redisService.KeyExistsAsync(redisKey);
+                    if (checkExistQueue == false)
+                    {
+                        _redisService.SetData(redisKey, saveObj.Id);
+                        _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
+                    }
+                        
+                }
+                
 
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);
