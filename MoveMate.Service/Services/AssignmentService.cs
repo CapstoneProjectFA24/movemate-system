@@ -125,7 +125,7 @@ public class AssignmentService : IAssignmentService
         else
         {
             int countDriverNumberBooking = existingBooking.DriverNumber!.Value; // count driver need in booking
-            int countDriverExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString()); //count driver have been assignment in booking 
+            int countDriverExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString() && assignment.Status != AssignmentStatusEnums.FAILED.ToString()); //count driver have been assignment in booking 
             if (countDriverExistingBooking > 0)
             {
                 countDriverNumberBooking -= countDriverExistingBooking;
@@ -231,7 +231,7 @@ public class AssignmentService : IAssignmentService
             response.IsSuccessed = true;
             bookingDetailTruck.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailTruck);
-
+            await _unitOfWork.SaveChangesAsync();
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AssignmentManual, response);
         }
         else
@@ -270,7 +270,7 @@ public class AssignmentService : IAssignmentService
         var existingUserIds = listAssignments
         .Select(a => a.UserId)
         .Concat(existingAssignments
-            .Where(a => a.StaffType == RoleEnums.DRIVER.ToString())
+            .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() && a.Status != AssignmentStatusEnums.FAILED.ToString())
             .Select(a => a.UserId))
         .ToHashSet();
 
@@ -520,7 +520,7 @@ public class AssignmentService : IAssignmentService
         else
         {
             int countporterNumberBooking = existingBooking.DriverNumber!.Value;
-            int countPorterExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString()); //count porter have been assignment in booking 
+            int countPorterExistingBooking = existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString() && assignment.Status != AssignmentStatusEnums.FAILED.ToString()); //count porter have been assignment in booking 
             if (countPorterExistingBooking > 0)
             {
                 countporterNumberBooking -= countPorterExistingBooking;
@@ -628,7 +628,7 @@ public class AssignmentService : IAssignmentService
             response.IsSuccessed = true;
             bookingDetail.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
             await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetail);
-
+            await _unitOfWork.SaveChangesAsync();
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AssignmentManual, response);
         }
         else
@@ -664,7 +664,7 @@ public class AssignmentService : IAssignmentService
         var existingUserIds = listAssignments
                                 .Select(a => a.UserId)
                                 .Concat(existingAssignments
-                                .Where(a => a.StaffType == RoleEnums.PORTER.ToString())
+                                .Where(a => a.StaffType == RoleEnums.PORTER.ToString() && a.Status != AssignmentStatusEnums.FAILED.ToString())
                                 .Select(a => a.UserId))
                                 .ToHashSet();
         for (int i = 0; i < porterCount; i++)
