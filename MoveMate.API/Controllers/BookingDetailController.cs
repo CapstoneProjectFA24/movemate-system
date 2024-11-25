@@ -178,7 +178,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id">Booking Details Id</param>
         /// <returns></returns>
-        [HttpPut("report/{id}")]
+        [HttpPatch("available/{id}")]
         public async Task<IActionResult> ManagerFixing(int id)
         {
 
@@ -195,7 +195,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="id">Booking Id</param>
         /// <returns></returns>
-        [HttpPut("report-damage/{id}")]
+        [HttpPatch("report-damage/{id}")]
         public async Task<IActionResult> ReportDamage(int id, [FromBody] TrackerSourceRequest request)
         {
 
