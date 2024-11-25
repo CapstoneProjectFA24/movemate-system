@@ -2995,11 +2995,23 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
-                if (user.RoleId != 6 && user.RoleId != 1)
+
+                
+                if (user.RoleId == 2)
+                {
+                    var reviewer = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.REVIEWER.ToString(), (int)bookingDetail.BookingId);
+                    if (reviewer == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
+                        return result;
+                    }
+                }
+                else if (user.RoleId != 6)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotManager);
                     return result;
                 }
+
                 if (bookingDetail.Status != BookingDetailStatusEnums.WAITING.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotFix);
@@ -3379,7 +3391,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-                var reviewer = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.REVIEWER.ToString(), bookingId);
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                var reviewer = user.RoleId == 6
+         ? _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.REVIEWER.ToString(), bookingId)
+         : await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.REVIEWER.ToString(), bookingId);
+
                 if (reviewer == null)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
