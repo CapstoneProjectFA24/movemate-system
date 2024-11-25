@@ -174,9 +174,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                             _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
                         }
                     }
-
-                        
-
+                    
                     if (saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
                         !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString())
                         && isPorterAssigned == false && saveObj.IsPorter == true)
@@ -184,20 +182,16 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                         _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
                     }
                 }
-                if (!isRecursiveCall)
-                {
-                    var redisKey = saveObj.Id + '-' + saveObj.Status;
+                
+                var redisKey = saveObj.Id + '-' + saveObj.Status;
 
-                    var checkExistQueue = await _redisService.KeyExistsAsync(redisKey);
-                    if (checkExistQueue == false)
-                    {
-                        _redisService.SetData(redisKey, saveObj.Id);
-                        _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
-                    }
-                        
+                var checkExistQueue = await _redisService.KeyExistsAsync(redisKey);
+                if (checkExistQueue == false)
+                {
+                    _redisService.SetData(redisKey, saveObj.Id);
+                    _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
                 }
                 
-
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);
                 var saved = (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
