@@ -2526,7 +2526,7 @@ namespace MoveMate.Service.Services
                 }
 
                 var existingBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId,
-                    includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
+                    includeProperties: "BookingTrackers.TrackerSources,BookingDetails,FeeDetails,Assignments");
 
                 if (existingBooking == null)
                 {
@@ -2984,7 +2984,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
-                if (user.RoleId != 6 || user.RoleId != 1)
+                if (user.RoleId != 6 && user.RoleId != 1)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotManager);
                     return result;
@@ -3004,7 +3004,8 @@ namespace MoveMate.Service.Services
                 {
                     bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
                     var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-
+                    var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId, includeProperties: "BookingDetails");
+                    await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
                         response);
                 }
