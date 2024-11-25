@@ -25,7 +25,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        [Consumer("movemate.push_to_firebase_local")]
+        [Consumer("movemate.push_to_firebase")]
         public async Task HandleMessage(int message)
         {
             try
@@ -41,8 +41,8 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     var booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(message,
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
-                    await firebaseServices.SaveBooking(booking, booking.Id, "bookings");
-                    await firebaseServices.SaveBooking(booking, booking.Id, "old_bookings");
+                    await firebaseServices.SaveBooking(booking, booking.Id, "bookings", true);
+                    await firebaseServices.SaveBooking(booking, booking.Id, "old_bookings", true);
 
                 }
             }
