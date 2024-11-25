@@ -2905,7 +2905,10 @@ namespace MoveMate.Service.Services
                     if (existingBooking.Status == BookingEnums.PENDING.ToString() ||
                         existingBooking.Status == BookingEnums.ASSIGNED.ToString()
                         || existingBooking.Status == BookingEnums.REVIEWING.ToString() ||
-                        existingBooking.Status == BookingEnums.REVIEWED.ToString())
+                        existingBooking.Status == BookingEnums.REVIEWED.ToString() ||
+                        existingBooking.Status == BookingEnums.DEPOSITING.ToString()
+                        || existingBooking.Status == BookingEnums.REVIEWED.ToString()
+                        || existingBooking.Status == BookingEnums.COMING.ToString())
                     {
                         existingBooking.BookingAt = request.BookingAt;
                         existingBooking.IsUpdated = true;
@@ -2923,7 +2926,10 @@ namespace MoveMate.Service.Services
                     if (existingBooking.Status == BookingEnums.PENDING.ToString() ||
                         existingBooking.Status == BookingEnums.ASSIGNED.ToString()
                         || existingBooking.Status == BookingEnums.WAITING.ToString() ||
-                        existingBooking.Status == BookingEnums.DEPOSITING.ToString())
+                        existingBooking.Status == BookingEnums.DEPOSITING.ToString()
+                        || existingBooking.Status == BookingEnums.REVIEWING.ToString()
+                        || existingBooking.Status == BookingEnums.REVIEWED.ToString()
+                        || existingBooking.Status == BookingEnums.COMING.ToString())
                     {
                         existingBooking.BookingAt = request.BookingAt;
                         existingBooking.IsUpdated = true;
