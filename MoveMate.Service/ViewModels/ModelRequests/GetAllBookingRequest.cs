@@ -27,6 +27,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
         {
+            return GetExpressionsWithRole(null);
+        }
+
+        public Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressionsWithRole(int? userRoleId)
+        {
             bool isStaff = false;
             
             if (!string.IsNullOrWhiteSpace(Search))
@@ -39,11 +44,13 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
                 Expression = Expression.And(queryExpression);
             }
-         
-            
-            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
+
+            if (userRoleId != 1 && userRoleId != 6)
             {
-                Expression = Expression.And(u => u.UserId == UserId || u.Assignments.Any(a => a.UserId == UserId));
+                if (!string.IsNullOrWhiteSpace(UserId.ToString()))
+                {
+                    Expression = Expression.And(u => u.UserId == UserId || u.Assignments.Any(a => a.UserId == UserId));
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(IsReviewOnl.ToString()))
