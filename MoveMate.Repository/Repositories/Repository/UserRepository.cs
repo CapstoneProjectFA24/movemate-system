@@ -265,6 +265,29 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
+        
+        public async Task<List<User>> GetUserWithRoleIdAndGroupIdAsync(int roleId, int groupId, string includeProperties = "")
+        {
+            try
+            {
+                IQueryable<User> query = _dbSet;
+
+                // Apply includes dynamically
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty.Trim());
+                }
+
+                // Apply filters
+                return await query
+                    .Where(u => u.GroupId == groupId && u.RoleId == roleId)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
 
 
         public async Task<User> GetUserByRoleIdAsync()
