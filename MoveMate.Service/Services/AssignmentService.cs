@@ -55,7 +55,9 @@ public class AssignmentService : IAssignmentService
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
         }
 
-        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString()
+            || existingBooking.Status == BookingEnums.PENDING.ToString() || existingBooking.Status == BookingEnums.DEPOSITING.ToString()
+            || existingBooking.Status == BookingEnums.REVIEWED.ToString() || existingBooking.Status == BookingEnums.REVIEWED.ToString())
         {
             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotAssigned);
             return result;
@@ -452,7 +454,9 @@ public class AssignmentService : IAssignmentService
             throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
         }
 
-        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString())
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString()
+           || existingBooking.Status == BookingEnums.PENDING.ToString() || existingBooking.Status == BookingEnums.DEPOSITING.ToString()
+           || existingBooking.Status == BookingEnums.REVIEWED.ToString() || existingBooking.Status == BookingEnums.REVIEWED.ToString())
         {
             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotAssigned);
             return result;
@@ -843,7 +847,13 @@ public class AssignmentService : IAssignmentService
             failedAssignment.Status = AssignmentStatusEnums.FAILED.ToString();
             await _unitOfWork.AssignmentsRepository.UpdateAsync(failedAssignment);
         }
-
+        if (existingBooking.Status == BookingEnums.ASSIGNED.ToString() || existingBooking.Status == BookingEnums.WAITING.ToString()
+           || existingBooking.Status == BookingEnums.PENDING.ToString() || existingBooking.Status == BookingEnums.DEPOSITING.ToString()
+           || existingBooking.Status == BookingEnums.REVIEWED.ToString() || existingBooking.Status == BookingEnums.REVIEWED.ToString())
+        {
+            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotAssigned);
+            return result;
+        }
 
 
         var date = DateUtil.GetShard(existingBooking.BookingAt);
