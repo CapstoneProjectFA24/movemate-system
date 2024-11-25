@@ -1611,7 +1611,7 @@ public class AssignmentService : IAssignmentService
                             .Where(assignment => assignment.StaffType == TypeServiceEnums.TRUCK.ToString() && assignment.Status != AssignmentStatusEnums.WAITING.ToString())
                             .Count();
 
-                        report.Number = booking.TruckNumber - truckAssignmentsCount;
+                        report.Number = booking.DriverNumber - truckAssignmentsCount;
                         report.BookingAt = booking.BookingAt;
                        
                     }
