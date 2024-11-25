@@ -222,7 +222,7 @@ public class AssignmentService : IAssignmentService
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
         response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
-        response.BookingNeedStaffs = existingBooking.DriverNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString());
+        response.BookingNeedStaffs = existingBooking.DriverNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.DRIVER.ToString() && assignment.Status != AssignmentStatusEnums.FAILED.ToString());
         var isGroup1 = schedule.GroupId == 1 ? true : false;
 
         response.StaffType = RoleEnums.DRIVER.ToString();
@@ -617,7 +617,7 @@ public class AssignmentService : IAssignmentService
         var response = new AssignManualDriverResponse();
         var listAssignmentResponse = _mapper.Map<List<AssignmentResponse>>(listAssignments);
         response.AssignmentManualStaffs.AddRange(listAssignmentResponse);
-        response.BookingNeedStaffs = existingBooking.PorterNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString());
+        response.BookingNeedStaffs = existingBooking.PorterNumber.Value - existingBooking.Assignments.Count(assignment => assignment.StaffType == RoleEnums.PORTER.ToString() && assignment.Status != AssignmentStatusEnums.FAILED.ToString());
         var isGroup1 = schedule.GroupId == 1 ? true : false;
 
 
