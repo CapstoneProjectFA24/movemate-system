@@ -1681,6 +1681,7 @@ public class AssignmentService : IAssignmentService
             var staffLeader = await _unitOfWork.UserRepository.GetByIdAsync((int)assignment.UserId);
             var notification = new Notification
             {
+                BookingId = bookingDetail.BookingId,
                 UserId = user.Id,
                 SentFrom = staffLeader?.Name,
                 Receive = user.Name,
@@ -1689,7 +1690,7 @@ public class AssignmentService : IAssignmentService
                 Topic = "StaffReportFail",
                 IsRead = false
             };
-
+            string Id = assignment.Id + "-" + bookingDetail.BookingId;
             await _unitOfWork.NotificationRepository.AddAsync(notification);
             var saveResult = await _unitOfWork.SaveChangesAsync();
 
@@ -1700,7 +1701,7 @@ public class AssignmentService : IAssignmentService
                 bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
                 var response = _mapper.Map<BookingDetailWaitingResponse>(bookingDetail);
                 response.Assignments = responseAssignment;  // Populate assignments in the response
-                await _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                await _firebaseServices.SaveMailManager(notification, Id, "reports");
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess, response);
             }

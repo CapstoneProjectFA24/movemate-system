@@ -52,10 +52,11 @@ namespace MoveMate.Service.Services
                 }
 
                 noti.IsRead = true;
+
                 await _unitOfWork.NotificationRepository.SaveOrUpdateAsync(noti);
                 await _unitOfWork.SaveChangesAsync();
-                
-                await _firebaseServices.SaveMailManager(noti,noti.Id, "reports");
+                string Id = noti.Id + " - " + noti.BookingId;
+                await _firebaseServices.SaveMailManager(noti,Id, "reports");
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ReadNoti,
                     true);
