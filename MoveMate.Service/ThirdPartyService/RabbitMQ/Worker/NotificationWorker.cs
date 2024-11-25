@@ -51,29 +51,30 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         await unitOfWork.NotificationRepository.GetByUserIdAsync((int)booking.UserId);
                     if (notificationUser == null)
                     {
-                        throw new Exception($"Can't send notification to user with Id {booking.UserId}");
+                        throw new Exception($"Can't send notification to user with Id {booking.UserId} - {booking.Status}");
                     }
 
                     var assignments = await unitOfWork.AssignmentsRepository.GetByBookingId(booking.Id);
                     if (assignments == null)
                     {
-                        throw new Exception($"Not found assignment with booking Id {booking.UserId}");
+                        throw new Exception($"Not found assignment with booking Id {booking.UserId} - {booking.Status}");
                     }
-
-                    // Define title, body, and data for the notification
-                    var title = "Change Status Booking";
-                    var body = $"Your booking with ID {notificationUser.Id} has been changed.";
-                    var fcmToken = notificationUser.FcmToken;
-                    var data = new Dictionary<string, string>
+                    if (!string.IsNullOrEmpty(notificationUser.FcmToken))
+                    {
+                        // Define title, body, and data for the notification
+                        var title = "Change Status Booking";
+                        var body = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
+                        var fcmToken = notificationUser.FcmToken;
+                        var data = new Dictionary<string, string>
                     {
                         { "bookingId", booking.Id.ToString() },
                         { "status", booking.Status.ToString() },
                         { "message", "The booking has been change status successfully." }
                     };
 
-                    // Send notification to Firebase
-                    await firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
-
+                        // Send notification to Firebase
+                        await firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+                    }
                     foreach (var assignment in assignments)
                     {
                         // Retrieve the staff's notification token
@@ -82,7 +83,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
                         {
                             var titleAssignment = "Change Status Booking";
-                            var bodyAssignment = $"Your assignment with ID {assignment.Id} has been changed.";
+                            var bodyAssignment = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
                             var fcmTokenAssignment = notificationStaff.FcmToken;
                             var dataAssignment = new Dictionary<string, string>
                             {
