@@ -15,7 +15,7 @@ namespace MoveMate.Service.IServices
 {
     public interface IBookingServices
     {
-        public Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request);
+        public Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request, int userId);
         public Task<OperationResult<BookingResponse>> GetById(int id);
         Task<OperationResult<BookingResponse>> RegisterBooking(BookingRegisterRequest request, string userId);     
 

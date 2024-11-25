@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Mvc;
 using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 using Sprache;
+using StackExchange.Redis;
 
 namespace MoveMate.Service.Services
 {
@@ -63,18 +64,19 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: GetAll booking in the system.
 
-        public async Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request)
+        public async Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request,int userId)
         {
             var result = new OperationResult<List<BookingResponse>>();
 
             var pagin = new Pagination();
 
-            var filter = request.GetExpressions();
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, includeProperties: "Role");
+            var filter = request.GetExpressionsWithRole(user.RoleId);
 
             try
             {
                 var entities = _unitOfWork.BookingRepository.GetWithCount(
-                    filter: request.GetExpressions(),
+                    filter: filter,
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),

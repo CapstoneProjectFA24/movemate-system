@@ -56,7 +56,14 @@ namespace MoveMate.API.Controllers
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
-            var response = await _bookingServices.GetAll(request);
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _bookingServices.GetAll(request, userId);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
