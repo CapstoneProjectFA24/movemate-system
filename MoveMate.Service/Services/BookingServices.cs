@@ -3086,7 +3086,7 @@ namespace MoveMate.Service.Services
                 var user = await _unitOfWork.UserRepository.GetManagerAsync();
                 var notification = new MoveMate.Domain.Models.Notification
                 {
-
+                    BookingId = booking.Id,
                     UserId = user.Id,
                     SentFrom = staffLeader.Name,
                     Receive = user.Name,
@@ -3106,9 +3106,9 @@ namespace MoveMate.Service.Services
                         includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
 
                     var response = _mapper.Map<BookingResponse>(booking);
-
+                    string Id = notification.Id + " - " + booking.Id;
                     // Save the notification to Firestore
-                    _firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                    _firebaseServices.SaveMailManager(notification, Id, "reports");
 
                     var title = "Báo cáo hư hại: Đã phân công trách nhiệm";
                     var body = $"Thông báo: Đã phân công trách nhiệm cho việc hư hại đồ vật trong quá trình vận chuyển hoặc đóng gói cho đơn hàng {booking.Id}.";

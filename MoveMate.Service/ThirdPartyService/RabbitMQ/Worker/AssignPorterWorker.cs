@@ -93,6 +93,7 @@ public class AssignPorterWorker
                         // danh tag failedm, noti to manager
                         var notification = new Notification
                         {
+                            BookingId = existingBooking.Id,
                             UserId = user.Id,
                             SentFrom = "System",
                             Receive = user.Name,
@@ -106,8 +107,8 @@ public class AssignPorterWorker
                         // Save the notification to Firestore
                         await unitOfWork.NotificationRepository.AddAsync(notification);
                         await unitOfWork.SaveChangesAsync();
-
-                        await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
+                        string Id = notification.Id + " - " + existingBooking.Id;
+                        await firebaseServices.SaveMailManager(notification,Id, "reports");
                     }
 
                     await AssignPortersToBooking(
@@ -231,6 +232,7 @@ public class AssignPorterWorker
                             // danh tag failedm, noti to manager
                             var notification = new Notification
                             {
+                                BookingId = existingBooking.Id,
                                 UserId = user.Id,
                                 SentFrom = "System",
                                 Receive = user.Name,
@@ -244,7 +246,8 @@ public class AssignPorterWorker
                             await unitOfWork.NotificationRepository.AddAsync(notification);
                             await unitOfWork.SaveChangesAsync();
                             // save to firebase
-                            await firebaseServices.SaveMailManager(notification,notification.Id, "reports");
+                            string Id = notification.Id + " - " + existingBooking.Id;
+                            await firebaseServices.SaveMailManager(notification,Id, "reports");
                         }
 
                         //đánh tag faild cần reviewer can thiệp

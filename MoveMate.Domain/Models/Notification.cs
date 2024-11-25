@@ -23,6 +23,7 @@ public partial class Notification
     public string? FcmToken { get; set; }
 
     public bool? IsRead { get; set; }
+    public int? BookingId { get; set; }
 
     public virtual User? User { get; set; }
 }
