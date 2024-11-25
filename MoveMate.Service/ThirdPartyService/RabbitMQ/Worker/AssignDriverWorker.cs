@@ -183,7 +183,7 @@ Auto-Assign Driver Workflow:
                         
                         var notification = new Notification
                         {
-                       
+                            BookingId = existingBooking.Id,
                             UserId = user.Id,  
                             SentFrom = "System",  
                             Receive = user.Name,    
@@ -196,7 +196,8 @@ Auto-Assign Driver Workflow:
                         await unitOfWork.NotificationRepository.AddAsync(notification);
                         await unitOfWork.SaveChangesAsync();
                         // Save the notification to Firestore
-                        await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                        string Id = notification.Id + " - " + existingBooking.Id;
+                        await firebaseServices.SaveMailManager(notification, Id, "reports");
 
                     }
 
@@ -329,6 +330,7 @@ Auto-Assign Driver Workflow:
 
                             var notification = new Notification
                             {
+                                BookingId = existingBooking.Id,
                                 UserId = user.Id,  
                                 SentFrom = "System",  
                                 Receive = user.Name,    
@@ -337,12 +339,13 @@ Auto-Assign Driver Workflow:
                                 Topic = "DriverAssignment",                         
                                 IsRead = false
                             };
-
+                            
                             await unitOfWork.NotificationRepository.AddAsync(notification);
                             await unitOfWork.SaveChangesAsync();
 
                             // Save the notification to Firestore
-                            await firebaseServices.SaveMailManager(notification, notification.Id, "reports");
+                            string Id = notification.Id + " - " + existingBooking.Id;
+                            await firebaseServices.SaveMailManager(notification, Id, "reports");
 
                         }
                         

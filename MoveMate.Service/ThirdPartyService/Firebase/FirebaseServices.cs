@@ -323,7 +323,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             return canceledBookings;
         }
 
-        public async Task<string?> SaveMailManager(MoveMate.Domain.Models.Notification saveObj, long id,
+        public async Task<string?> SaveMailManager(MoveMate.Domain.Models.Notification saveObj, string id,
             string collectionName)
         {
             try
