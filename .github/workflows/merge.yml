@@ -24,6 +24,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Set Remote URL with PAT
+        run: |
+          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
+
       - name: Create a new commit
         run: |
           # Tạo commit mới sau khi merge
