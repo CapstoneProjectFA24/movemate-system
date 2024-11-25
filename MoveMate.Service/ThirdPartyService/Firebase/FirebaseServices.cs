@@ -146,7 +146,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 {
                     if (!isRecursiveCall)
                     {
-                        await SaveBooking(saveObj, id, "old_bookings", true);
+                        _producer.SendingMessage("movemate.push_to_firebase_local", saveObj.Id);
                         Console.WriteLine("Pushed to old_bookings successfully");
                     }
                 }
@@ -167,7 +167,9 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     {
                         if (!isRecursiveCall)
                         {
-                            await SaveBooking(saveObj, id, "old_bookings", true);
+                            //await SaveBooking(saveObj, id, "old_bookings", true);
+                            _producer.SendingMessage("movemate.push_to_firebase", saveObj.Id);
+
                             Console.WriteLine("Pushed to old_bookings successfully");
                         }
 
