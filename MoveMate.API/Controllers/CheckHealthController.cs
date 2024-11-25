@@ -15,17 +15,32 @@ namespace MoveMate.API.Controllers
             _firebaseServices = firebaseServices;
             _bookingServices = bookingServices;
         }
+        
+        /// <summary>
+        /// TEST: CheckHealth system
+        /// </summary>
+        /// <returns>Hello, i am healthy!.</returns>
+        [HttpGet("")]
+        public async Task<IActionResult> CheckHealth()
+        {
+            return Ok("Hello, i am healthy!.");
+        }
 
         /// <summary>
         /// TEST: Push Booking to Firebase
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        [HttpPost("{bookingId}")]
-        public async Task<IActionResult> TriggerUpBookingFirebase(int bookingId)
+        [HttpPost("save-to-firebase/{bookingId}")]
+        public async Task<IActionResult> TriggerUpBookingFirebase(int bookingId, bool saveOldBooking = false)
         {
             var booking = _bookingServices.GetBookingByIdAsync(bookingId);
             _firebaseServices.SaveBooking(booking, bookingId, "bookings");
+            if (saveOldBooking)
+            {
+                _firebaseServices.SaveBooking(booking, bookingId, "old_bookings");
+            }
+            
             return Ok();
         }
 
