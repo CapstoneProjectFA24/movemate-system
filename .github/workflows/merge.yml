@@ -1,9 +1,11 @@
 name: Auto Create Main Merge Request
+
 on:
   pull_request:
     types: [closed]
     branches:
       - development  # Trigger khi có PR được merge vào development
+
 jobs:
   create_merge_request:
     # Chỉ chạy khi PR được merge (không phải bị đóng)
@@ -16,33 +18,10 @@ jobs:
           fetch-depth: 0
           ref: development  # Checkout development branch
       
-      - name: Configure Git User
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-      
-      - name: Create Commit
-        run: |
-          # Tạo một commit mới với thông tin từ PR gốc
-          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          
-          git checkout development
-          git pull origin development
-          
-          # Tạo một commit với thông tin chi tiết
-          git commit --allow-empty -m "Merge '$SOURCE_BRANCH' into development
-
-          Original PR: #${{ github.event.pull_request.number }}
-          Original PR Title: $PR_TITLE"
-      
       - name: Create Merge Request to Main
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Sử dụng PAT thay vì GITHUB_TOKEN
         run: |
-          # Đẩy commit mới lên development
-          git push origin development
-          
           # Lấy thông tin từ PR vừa được merge
           SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
           PR_TITLE="${{ github.event.pull_request.title }}"
