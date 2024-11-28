@@ -352,7 +352,7 @@ namespace MoveMate.API.Controllers
         /// </summary>
         /// <param name="bookingId"></param>
         /// <returns></returns>
-        [HttpPatch("{bookingId}")]
+        [HttpPatch("confirm-pay-by-cash/{bookingId}")]
         [Authorize]
         public async Task<IActionResult> StaffConfirmPayByCash(int bookingId)
         {
