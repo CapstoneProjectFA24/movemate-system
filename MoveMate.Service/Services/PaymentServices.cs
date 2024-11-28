@@ -269,21 +269,23 @@ namespace MoveMate.Service.Services
 
                 var notificationUser =
         await _unitOfWork.NotificationRepository.GetByUserIdAsync(userId);
-
-
-                var title = "Thông báo: Thanh toán bằng tiền mặt";
-                var body = $"Thông báo: Người dùng đã chọn thanh toán bằng tiền mặt cho đơn hàng {booking.Id}.";
-                var fcmToken = notificationUser.FcmToken;
-                var data = new Dictionary<string, string>
+                if (notificationUser == null) { 
+                }
+                else if(!string.IsNullOrEmpty(notificationUser.FcmToken))
+                {
+                    var title = "Thông báo: Thanh toán bằng tiền mặt";
+                    var body = $"Thông báo: Người dùng đã chọn thanh toán bằng tiền mặt cho đơn hàng {booking.Id}.";
+                    var fcmToken = notificationUser.FcmToken;
+                    var data = new Dictionary<string, string>
                     {
                         { "bookingId", booking.Id.ToString() },
                         { "status", booking.Status.ToString() },
                         { "message", "Người dùng đã chọn thanh toán bằng tiền mặt." }
                     };
 
-                // Send notification to Firebase
-                await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
-
+                    // Send notification to Firebase
+                    await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+                }
 
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
 
