@@ -240,19 +240,22 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                if (booking.IsCredit == true)
-                {
-                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.PayByCash, false);
-                    return result;
-                }
+                //if (booking.IsCredit == true)
+                //{
+                //    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.PayByCash, false);
+                //    return result;
+                //}
 
         
                 var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
                 var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
+                //       if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                //assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                //assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString() && booking.IsCredit == false)
                 if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
-         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
-         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString() && booking.IsCredit == false)
+assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 {
                     booking.IsCredit = true;
                 }
