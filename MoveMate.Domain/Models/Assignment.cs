@@ -37,6 +37,11 @@ public partial class Assignment
 
     public bool? IsRoundTripCompleted { get; set; }
 
+    public double? Bonus { get; set; }
+
+    public double? StarReview { get; set; }
+    public string? Review { get; set; }
+
     public virtual Booking? Booking { get; set; }
 
     public virtual BookingDetail? BookingDetails { get; set; }

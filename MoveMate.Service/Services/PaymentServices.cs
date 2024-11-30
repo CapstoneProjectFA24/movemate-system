@@ -17,6 +17,8 @@ using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Domain.Models;
 using MoveMate.Service.Library;
 using Parlot.Fluent;
+using MoveMate.Service.ViewModels.ModelRequests;
+using MoveMate.Service.Utils;
 
 namespace MoveMate.Service.Services
 {
@@ -59,6 +61,11 @@ namespace MoveMate.Service.Services
                 if (wallet == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+                if (wallet.IsLocked == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.WalletLocked);
                     return result;
                 }
                 var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
@@ -199,12 +206,14 @@ namespace MoveMate.Service.Services
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.REVIEWING.ToString();
+                    booking.IsDeposited = true;
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.COMING.ToString();
+                    booking.IsDeposited = true;
                 }
-                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && booking.IsDeposited == true)
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
                 }

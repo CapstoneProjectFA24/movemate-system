@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Google.Api;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
@@ -1815,5 +1816,125 @@ public class AssignmentService : IAssignmentService
         }
 
         return result;
+    }
+
+    public async Task<OperationResult<bool>> ReviewStaff(int userId, int assignmentId, ReviewStaffRequest request)
+    {
+        var result = new OperationResult<bool>();
+        try
+        {
+            var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
+            if(assignment == null)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment, false);
+                return result;
+            }
+
+            var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId);
+            if(booking == null)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking, false);
+                return result;
+            }
+
+            if (booking.Status != BookingEnums.COMPLETED.ToString())
+            {
+                result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCompleted, false);
+                return result;
+            }
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId); 
+            if (user == null)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);
+                return result;
+            }
+            if (booking.UserId != user.Id)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay, false);
+                return result;
+            }
+
+            if (request.StarReview <= 3 && string.IsNullOrWhiteSpace(request.Review))
+            {
+                result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.ReviewIsRequired, false);
+                return result;
+            }
+
+            ReflectionUtils.UpdateProperties(request, assignment);
+            await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+            await _unitOfWork.SaveChangesAsync();
+           result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ReviewSuccess,
+                    true);
+            return result;
+            
+        }
+        catch(Exception ex)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            return result;
+        }
+    }
+
+    public async Task<OperationResult<BookingResponse>> BonusStaff(int userId, int assignmentId, BonusStaffRequest request)
+    {
+        var result = new OperationResult<BookingResponse>();
+        try
+        {
+            var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
+            if (assignment == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment);
+                return result;
+            }
+
+            var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId);
+            if (booking == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                return result;
+            }
+
+            if (booking.Status != BookingEnums.COMPLETED.ToString())
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCompleted);
+                return result;
+            }
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                return result;
+            }
+            if (booking.UserId != user.Id)
+            {
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
+                return result;
+            }
+
+         
+
+            ReflectionUtils.UpdateProperties(request, assignment);
+            booking.Total += request.Bonus;
+            await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
+            await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+            await _unitOfWork.SaveChangesAsync();
+
+            booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId, includeProperties:
+                    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+           
+            var response = _mapper.Map<BookingResponse>(booking);
+            await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
+                    response);
+            return result;
+
+        }
+        catch (Exception ex)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            return result;
+        }
     }
 }

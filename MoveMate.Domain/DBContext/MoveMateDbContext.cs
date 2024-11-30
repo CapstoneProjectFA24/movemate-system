@@ -93,6 +93,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.StaffType).HasMaxLength(255);
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Status).HasMaxLength(255);
+            entity.Property(e => e.Review).HasMaxLength(255);
 
             entity.HasOne(d => d.BookingDetails).WithMany(p => p.Assignments)
                 .HasForeignKey(d => d.BookingDetailsId)
@@ -500,6 +501,8 @@ public partial class MoveMateDbContext : DbContext
 
             entity.HasIndex(e => e.UserId, "UQ_Wallet_UserId").IsUnique();
 
+            entity.Property(e => e.BankName).HasMaxLength(255);
+            entity.Property(e => e.BankNumber).HasMaxLength(255);
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.LockReason).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);

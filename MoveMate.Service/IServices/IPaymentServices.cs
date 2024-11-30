@@ -1,4 +1,5 @@
 ﻿using MoveMate.Service.Commons;
+using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 
 namespace MoveMate.Service.IServices

@@ -448,12 +448,14 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 if (booking.IsReviewOnline == false && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.REVIEWING.ToString();
+                    booking.IsDeposited = true;
                 }
                 else if (booking.IsReviewOnline == true && booking.Status == BookingEnums.DEPOSITING.ToString())
                 {
                     booking.Status = BookingEnums.COMING.ToString();
+                    booking.IsDeposited = true;
                 }
-                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && booking.IsDeposited == true)
                 {
                     booking.Status = BookingEnums.COMPLETED.ToString();
                 }
