@@ -85,20 +85,40 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
             var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
             var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
-            if (booking.Status == BookingEnums.DEPOSITING.ToString())
+            if (assignmentPorter == null)
             {
-                //go to
-            }
-            else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
-                     assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
-                     assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
-            {
-                //go to
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    //go to
+                }
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                {
+                    //go to
+                }
+                else
+                {
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
+                    return operationResult;
+                }
             }
             else
             {
-                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
-                return operationResult;
+                if (booking.Status == BookingEnums.DEPOSITING.ToString())
+                {
+                    //go to
+                }
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
+                         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                {
+                    //go to
+                }
+                else
+                {
+                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingStatus);
+                    return operationResult;
+                }
             }
 
             int amount = 0;
@@ -384,8 +404,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     transType = Domain.Enums.PaymentMethod.DEPOSIT.ToString();
                     booking.TotalReal = booking.Total - (float)callback.Amount;
                 }
-                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString() && assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() && assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
-                {
+                else if (booking.Status == BookingEnums.IN_PROGRESS.ToString()) { 
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
                     booking.TotalReal -= (float)callback.Amount;
                 }
