@@ -11,6 +11,12 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public int Id { get; set; }
         public int UserId { get; set; }
         public float Balance { get; set; }
+
+        public string? BankNumber { get; set; }
+
+        public string? BankName { get; set; }
+        public bool? IsLocked { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

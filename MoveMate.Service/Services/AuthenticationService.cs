@@ -314,7 +314,7 @@ namespace MoveMate.Service.Services
                             Balance = 0,
                             CreatedAt = DateTime.UtcNow,
                             UpdatedAt = DateTime.UtcNow,
-                            IsLocked = false,
+                            IsLocked = true,
                             Tier = 1
                         }
                     };
