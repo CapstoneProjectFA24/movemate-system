@@ -6,5 +6,6 @@ public enum TypeServiceEnums
     DRIVER,
     PORTER,
     TRUCK,
-    SYSTEM
+    SYSTEM,
+    INSURANCE
 }

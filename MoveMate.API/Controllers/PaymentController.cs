@@ -321,6 +321,28 @@ namespace MoveMate.API.Controllers
 
 
         /// <summary>
+        /// 
+        /// CHORE : Get all promotion has user, no user
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpPatch("tranfer")]
+        [Authorize]
+        public async Task<IActionResult> TranferMoney(int userReceiveId, double amount)
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _paymentServices.TranferMoneyThroughWallet(userId, userReceiveId, amount);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
         /// TEST : Payment Fail
         /// </summary>
         /// <returns></returns>

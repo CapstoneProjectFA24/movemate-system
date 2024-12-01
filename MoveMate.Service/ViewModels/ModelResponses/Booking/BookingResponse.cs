@@ -40,7 +40,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string TypeBooking { get; set; }
         [FirestoreProperty] public string RoomNumber { get; set; }
         [FirestoreProperty] public string FloorsNumber { get; set; }
-        public bool IsManyItems { get; set; }
+        [FirestoreProperty] public bool IsManyItems { get; set; }
 
         [FirestoreProperty] public bool IsCancel { get; set; }
 
@@ -51,8 +51,10 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string Note { get; set; }
         [FirestoreProperty] public double TotalFee { get; set; }
         [FirestoreProperty] public bool? IsReviewOnline { get; set; }
-
+        [FirestoreProperty] public bool? IsRefunded { get; set; }
+        [FirestoreProperty] public DateTime? RefundDate { get; set; }
         [FirestoreProperty] public string? OrderStatus { get; set; }
+        [FirestoreProperty] public string? ReasonRefundFailed { get; set; }
         [FirestoreProperty] public string? ProcessStatus { get; set; }
         [FirestoreProperty] public bool? IsUserConfirm { get; set; }
         [FirestoreProperty] public string? ReviewAt { get; set; }

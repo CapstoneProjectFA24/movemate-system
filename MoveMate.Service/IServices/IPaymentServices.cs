@@ -8,6 +8,8 @@ namespace MoveMate.Service.IServices
     {
         Task<OperationResult<string>> PaymentByWallet(int userId, int bookingId, string returnUrl);
         Task<OperationResult<bool>> UserPayByCash(int userId, int bookingId);
+
+        Task<OperationResult<TranferMoneyThroughWallet>> TranferMoneyThroughWallet(int userTranferId, int userReceiveId, double amount);
     }
     
 }

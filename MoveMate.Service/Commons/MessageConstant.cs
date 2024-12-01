@@ -117,6 +117,7 @@ namespace MoveMate.Service.Commons
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
             public const string BookingCompleted = "The booking status must be COMPLETED";
+            public const string BookingRefund = "The booking status must be REFUNDED";
             public const string BookingCancel = "Booking have been canceled";
             public const string ChangeBookingAtFail = "BookingAt cannot be changed";
             public const string RequiredId = "The input id does not match the request id";
@@ -132,6 +133,8 @@ namespace MoveMate.Service.Commons
             public const string NoAvailableDrivers = "Currently there are no suitable drivers";
             public const string NotFoundDriver = "Not found driver";
             public const string CannotAssigned = "Drivers or porters cannot be added to the booking";
+            public const string RefundFail = "Refund failure reasons cannot be added when you agree to a refund";
+            public const string RefundTrueNoReasonFail = "Please provide a reason for not accepting a refund";
 
 
             //Assignment
@@ -386,6 +389,7 @@ namespace MoveMate.Service.Commons
             public const string AlreadyProcess = "Already processed";
             public const string GetListTransactionEmpty = "List transaction is empty!";
             public const string GetListTransactionSuccess = "Get list transaction done";
+            public const string TranferSuccess = "You have successfully transferred money";
 
             //Service
             public const string CreateService = "Create a new service successful";

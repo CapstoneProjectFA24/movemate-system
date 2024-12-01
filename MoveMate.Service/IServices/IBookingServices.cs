@@ -47,5 +47,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<BookingResponse>> StaffConfirmPayByCash(int userId, int bookingId);
         public Task<OperationResult<BookingResponse>> GetOldBookingById(int id);
         Task<OperationResult<BookingResponse>> StaffBackToReview(int userId, int bookingId);
+        Task<OperationResult<BookingResponse>> RefundBookingRequest(int userId, int bookingId);
+        Task<OperationResult<BookingResponse>> StaffConfirmRefundBooking(int userId, int bookingId, RefundRequest request);
     }
 }

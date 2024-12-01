@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
+using System.Security.Claims;
 
 namespace MoveMate.API.Controllers
 {
@@ -27,6 +29,28 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> GetAll([FromQuery] GetAllPromotionRequest request)
         {
             var response = await _promotionServices.GetAllPromotion(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+
+        /// <summary>
+        /// 
+        /// CHORE : Get all promotion has user, no user
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("promotions")]
+        [Authorize]
+        public async Task<IActionResult> GetAllPromotion()
+        {
+            var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
+            if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
+            {
+                return Unauthorized(new { statusCode = 401, message = MessageConstant.FailMessage.UserIdInvalid, isError = true });
+            }
+
+            var userId = int.Parse(accountIdClaim.Value);
+            var response = await _promotionServices.GetListPromotion(userId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 

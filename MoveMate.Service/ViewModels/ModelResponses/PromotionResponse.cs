@@ -40,6 +40,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public int? ServiceId { get; set; }
 
+        public bool? IsGot { get; set; } = false;
+
         public virtual ICollection<VoucherResponse> Vouchers { get; set; } = new List<VoucherResponse>();
     }
 }

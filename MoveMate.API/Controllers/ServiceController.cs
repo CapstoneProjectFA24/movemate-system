@@ -132,7 +132,7 @@ namespace MoveMate.API.Controllers
         /// <param name="request">The request containing pagination and filter parameters.</param>
         /// <returns>An IActionResult containing the operation result.</returns>
         /// <remarks>
-        /// - If "Status" contains `NOTTRUCK`, the list will include bookings with statuses `SYSTEM` and `DISASSEMBLE` and `PORTER` instead.
+        /// - If "Status" contains `NOTTRUCK`, the list will include bookings with statuses different type `TRUCK` instead.
         /// </remarks>
         /// <response code="200">Get List Services Done</response>
         /// <response code="200-1">List Service is Empty!</response>

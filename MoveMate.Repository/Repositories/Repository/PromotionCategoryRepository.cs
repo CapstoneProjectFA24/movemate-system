@@ -60,6 +60,35 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<PromotionCategory>> GetPromotionsWithNoUserVoucherAsync(int userId, string includeProperties = "")
+        {
+            IQueryable<PromotionCategory> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter promotions where vouchers are either null or do not have the specified userId
+            query = query.Where(pc => !pc.Vouchers.Any(v => v.UserId == userId));
+
+            return await query.ToListAsync();
+        }
+        public async Task<List<PromotionCategory>> GetPromotionsWithUserVoucherAsync(int userId, string includeProperties = "")
+        {
+            IQueryable<PromotionCategory> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter promotions with at least one voucher linked to userId
+            query = query.Where(pc => pc.Vouchers.Any(v => v.UserId == userId));
+
+            return await query.ToListAsync();
+        }
+
 
     }
 }
