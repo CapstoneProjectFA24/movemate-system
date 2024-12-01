@@ -48,10 +48,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .Select(s => s.Trim())
                     .Where(s => !string.IsNullOrEmpty(s))
                     .ToList();
+                
 
                 if (statuses.Contains("NOTTRUCK"))
                 {
-                    statuses.AddRange(new[] { "PORTER", "DISASSEMBLE", "SYSTEM" });
+                    Expression = Expression.And(tran => !tran.Type.Contains("TRUCK"));
                     statuses.Remove("NOTTRUCK");
                 }
 

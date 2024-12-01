@@ -16,5 +16,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<PromotionResponse>> UpdatePromotion(int id, UpdatePromotionRequest request);
         Task<OperationResult<PromotionResponse>> CreatePromotion(CreatePromotionRequest request);
         Task<OperationResult<bool>> DeletePromotion(int id);
+
+        Task<OperationResult<GetAllPromotionResponse>> GetListPromotion(int userId);
     }
 }
