@@ -336,5 +336,115 @@ assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 return result;
             }
         }
+
+        public async Task<OperationResult<TranferMoneyThroughWallet>> TranferMoneyThroughWallet(int userTranferId, int userReceiveId, double amount)
+        {
+            var result = new OperationResult<TranferMoneyThroughWallet>();
+            var response = new TranferMoneyThroughWallet
+            {
+                UserTranfer = new WalletTranferResponse(),
+                UserReceive = new WalletTranferResponse()
+            };
+
+            try
+            {
+                // Retrieve transfer user's wallet
+                var userTranferWallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userTranferId);
+                if (userTranferWallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+
+                response.UserTranfer.BalanceBefore = userTranferWallet.Balance;
+                response.UserTranfer.UserId = userTranferId;
+                response.UserTranfer.WalletId = userTranferWallet.Id;
+
+                // Retrieve recipient user's wallet
+                var userReceiveWallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userReceiveId);
+                if (userReceiveWallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+
+                response.UserReceive.BalanceBefore = userReceiveWallet.Balance;
+                response.UserReceive.UserId = userReceiveId;
+                response.UserReceive.WalletId = userReceiveWallet.Id;
+
+                // Create and save transfer transaction
+                var userTranferTransaction = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = userTranferWallet.Id,
+                    Amount = amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.TRANFER.ToString(),
+                    TransactionCode = "R" + Utilss.RandomString(7),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Wallet.ToString(),
+                    PaymentMethod = Resource.Wallet.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = false
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(userTranferTransaction);
+                response.UserTranfer.TransactionResponse = _mapper.Map<TransactionResponse>(userTranferTransaction);
+
+                // Update transfer user's wallet balance
+                userTranferWallet.Balance -= amount;
+                var updateResult = await _walletService.UpdateWalletBalance(userTranferWallet.Id, (float)userTranferWallet.Balance);
+                if (updateResult.IsError)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                    return result;
+                }
+
+                // Create and save recipient transaction
+                var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = userReceiveWallet.Id,
+                    Amount = amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                    TransactionCode = "R" + Utilss.RandomString(7),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Wallet.ToString(),
+                    PaymentMethod = Resource.Wallet.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = true
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(userReceiveTransaction);
+                response.UserReceive.TransactionResponse = _mapper.Map<TransactionResponse>(userReceiveTransaction);
+
+                // Update recipient user's wallet balance
+                userReceiveWallet.Balance += amount;
+                var receiveResult = await _walletService.UpdateWalletBalance(userReceiveWallet.Id, (float)userReceiveWallet.Balance);
+                if (receiveResult.IsError)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                    return result;
+                }
+
+                // Refresh wallet balances for response
+                var userReceiveWalletResult = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userReceiveId);
+                var userTranferWalletResult = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userTranferId);
+
+                response.UserReceive.BalanceAfter = userReceiveWalletResult.Balance;
+                response.UserTranfer.BalanceAfter = userTranferWalletResult.Balance;
+
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.TranferSuccess, response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
     }
 }

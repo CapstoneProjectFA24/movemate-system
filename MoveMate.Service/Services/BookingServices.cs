@@ -34,6 +34,8 @@ using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 using Sprache;
 using StackExchange.Redis;
+using MoveMate.Service.Library;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 
 namespace MoveMate.Service.Services
 {
@@ -46,9 +48,10 @@ namespace MoveMate.Service.Services
         private readonly IFirebaseServices _firebaseServices;
         private readonly IGoogleMapsService _googleMapsService;
         private readonly IEmailService _emailService;
+        private readonly IWalletServices _walletService;
 
         public BookingServices(IUnitOfWork unitOfWork, IMapper mapper, ILogger<BookingServices> logger,
-            IMessageProducer producer, IFirebaseServices firebaseServices, IGoogleMapsService googleMapsService, IEmailService emailService)
+            IMessageProducer producer, IFirebaseServices firebaseServices, IGoogleMapsService googleMapsService, IEmailService emailService, IWalletServices walletServices)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -57,6 +60,7 @@ namespace MoveMate.Service.Services
             _firebaseServices = firebaseServices;
             _googleMapsService = googleMapsService;
             _emailService = emailService;
+            _walletService = walletServices;
         }
 
         // FEATURE    
@@ -64,7 +68,7 @@ namespace MoveMate.Service.Services
 
         #region FEATURE: GetAll booking in the system.
 
-        public async Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request,int userId)
+        public async Task<OperationResult<List<BookingResponse>>> GetAll(GetAllBookingRequest request, int userId)
         {
             var result = new OperationResult<List<BookingResponse>>();
 
@@ -273,6 +277,11 @@ namespace MoveMate.Service.Services
                 else
                 {
                     entity.TypeBooking = TypeBookingEnums.DELAY.ToString();
+                }
+
+                if (entity.BookingDetails.Any(b => b.Type == TypeServiceEnums.INSURANCE.ToString()))
+                {
+                    entity.IsInsurance = true;
                 }
 
                 await _unitOfWork.BookingRepository.AddAsync(entity);
@@ -2996,7 +3005,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                
+
                 if (user.RoleId == 2)
                 {
                     var reviewer = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(userId, RoleEnums.REVIEWER.ToString(), (int)bookingDetail.BookingId);
@@ -3416,10 +3425,189 @@ namespace MoveMate.Service.Services
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
                     "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                 var response = _mapper.Map<BookingResponse>(entity);
-                
+
                 await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
 
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateAssignment,
+                    response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<BookingResponse>> RefundBookingRequest(int userId, int bookingId)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
+                    return result;
+                }
+                if (booking.Status != BookingEnums.CANCEL.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+
+                booking.Status = BookingEnums.REFUNDED.ToString();
+                booking.RefundAt = DateTime.Now;
+
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.SaveChangesAsync();
+                var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
+                  "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                var response = _mapper.Map<BookingResponse>(entity);
+
+                await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
+                    response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<BookingResponse>> StaffConfirmRefundBooking(int userId, int bookingId, RefundRequest request)
+        {
+            var result = new OperationResult<BookingResponse>();
+            try
+            {
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId);
+                if (booking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+                if (booking.Status != BookingEnums.REFUNDED.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingRefund);
+                    return result;
+                }
+                var manager = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (manager == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+                if (request.IsRefunded == true && !string.IsNullOrEmpty(request.ReasonRefundFailed))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RefundFail);
+                    return result;
+                }
+
+                if (request.IsRefunded == false && string.IsNullOrEmpty(request.ReasonRefundFailed))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RefundTrueNoReasonFail);
+                    return result;
+                }
+
+                if (request.IsRefunded == false && !string.IsNullOrEmpty(request.ReasonRefundFailed))
+                {
+                    booking.ReasonRefundFailed = request.ReasonRefundFailed;
+                }
+                else if (request.IsRefunded == true && string.IsNullOrEmpty(request.ReasonRefundFailed) && booking.IsDeposited == true)
+                {
+                    var timeDifference = (booking.BookingAt.Value - booking.RefundAt.Value).TotalHours;
+
+                    // Determine refund percentage
+                    double refundPercentage;
+                    if (timeDifference >= 48)
+                    {
+                        refundPercentage = 1.0; // 100% refund
+                    }
+                    else if (timeDifference >= 24 && timeDifference < 48)
+                    {
+                        refundPercentage = 0.7; // 70% refund
+                    }
+                    else if (timeDifference >= 1 && timeDifference < 24)
+                    {
+                        refundPercentage = 0.5; // 50% refund
+                    }
+                    else
+                    {
+                        refundPercentage = 0.0; // No refund
+                    }
+                    booking.IsRefunded = true;
+                    // Calculate and return the refund amount
+                    double amount = (double)(booking.Deposit * refundPercentage);
+
+                    var user = await _unitOfWork.UserRepository.GetManagerAsync();
+                    var walletManager = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(user.Id);
+
+                    var userTranferTransaction = new MoveMate.Domain.Models.Transaction
+                    {
+                        WalletId = walletManager.Id,
+                        Amount = amount,
+                        Status = PaymentEnum.SUCCESS.ToString(),
+                        TransactionType = Domain.Enums.PaymentMethod.TRANFER.ToString(),
+                        TransactionCode = "R" + Utilss.RandomString(7),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.Wallet.ToString(),
+                        PaymentMethod = Resource.Wallet.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = false
+                    };
+
+                    await _unitOfWork.TransactionRepository.AddAsync(userTranferTransaction);
+                    // Update transfer user's wallet balance
+                    walletManager.Balance -= amount;
+                    var updateResult = await _walletService.UpdateWalletBalance(walletManager.Id, (float)walletManager.Balance);
+                    if (updateResult.IsError)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                        return result;
+                    }
+
+                    var customer = await _unitOfWork.UserRepository.GetByIdAsync((int)booking.UserId);
+                    var walletCustomer = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(customer.Id);
+                    // Create and save recipient transaction
+                    var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
+                    {
+                        WalletId = walletCustomer.Id,
+                        Amount = amount,
+                        Status = PaymentEnum.SUCCESS.ToString(),
+                        TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                        TransactionCode = "R" + Utilss.RandomString(7),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.Wallet.ToString(),
+                        PaymentMethod = Resource.Wallet.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = true
+                    };
+
+                    await _unitOfWork.TransactionRepository.AddAsync(userReceiveTransaction);
+                    walletCustomer.Balance += amount;
+                    var receiveResult = await _walletService.UpdateWalletBalance(walletCustomer.Id, (float)walletCustomer.Balance);
+                    if (receiveResult.IsError)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                        return result;
+                    }
+                }
+
+                booking.Status = BookingEnums.COMPLETED.ToString();
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.SaveChangesAsync();
+                var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
+                  "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                var response = _mapper.Map<BookingResponse>(entity);
+
+                await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateStatusSuccess,
                     response);
                 return result;
             }

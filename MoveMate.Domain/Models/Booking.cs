@@ -91,6 +91,14 @@ public partial class Booking
 
     public bool? IsCredit { get; set; }
 
+    public bool? IsInsurance { get; set; }
+
+    public bool? IsRefunded { get; set; }
+
+    public string? ReasonRefundFailed { get; set; }
+
+    public DateTime? RefundAt { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();

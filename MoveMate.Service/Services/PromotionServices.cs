@@ -328,5 +328,47 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<GetAllPromotionResponse>> GetListPromotion(int userId)
+        {
+            var result = new OperationResult<GetAllPromotionResponse>();
+            var response = new GetAllPromotionResponse();
+
+            try
+            {
+                // Promotions with vouchers linked to the given userId
+                var promotionUser = await _unitOfWork.PromotionCategoryRepository
+                    .GetPromotionsWithUserVoucherAsync(userId, includeProperties: "Vouchers");
+                var promotionUserResponses = _mapper.Map<List<PromotionResponse>>(promotionUser);
+
+                // Set IsGot to true for promotions with user vouchers
+                foreach (var promotion in promotionUserResponses)
+                {
+                    promotion.IsGot = true;
+                }
+                response.PromotionUser.AddRange(promotionUserResponses);
+
+                // Promotions without vouchers linked to the given userId
+                var promotionNoUser = await _unitOfWork.PromotionCategoryRepository
+                    .GetPromotionsWithNoUserVoucherAsync(userId, includeProperties: "Vouchers");
+                var promotionNoUserResponses = _mapper.Map<List<PromotionResponse>>(promotionNoUser);
+
+                response.PromotionNoUser.AddRange(promotionNoUserResponses);
+
+                result.AddResponseStatusCode(
+                    StatusCode.Ok,
+                    MessageConstant.SuccessMessage.GetListPromotionSuccess,
+                    response);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions and add error response
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
     }
 }
