@@ -416,6 +416,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                         var additionalTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             PaymentId = payment.Id,
+                            WalletId = wallet.Id,
                             Amount = (double?)callback.Amount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),

@@ -175,6 +175,7 @@ namespace MoveMate.Service.Services
                         var additionalTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             PaymentId = payment.Id,
+                            WalletId = wallet.Id,
                             Amount = amount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
