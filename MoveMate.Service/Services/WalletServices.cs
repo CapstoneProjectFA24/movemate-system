@@ -5,6 +5,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
 using MoveMate.Service.Utils;
+using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
@@ -79,6 +80,45 @@ namespace MoveMate.Service.Services
             catch (Exception ex)
             {
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<WalletResponse>> UpdateWallet(int userId, UpdateWalletRequest request)
+        {
+            var result = new OperationResult<WalletResponse>();
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+
+                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+                if (wallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+
+                ReflectionUtils.UpdateProperties(request, wallet);
+                wallet.IsLocked = false;
+                await _unitOfWork.WalletRepository.SaveOrUpdateAsync(wallet);
+                await _unitOfWork.SaveChangesAsync();
+
+                wallet = await _unitOfWork.WalletRepository.GetByIdAsync(wallet.Id);
+
+                var response = _mapper.Map<WalletResponse>(wallet);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateWalletSuccess,
+                        response);
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
         }

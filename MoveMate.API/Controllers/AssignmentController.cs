@@ -132,5 +132,35 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.GetAvailablePortersForBooking(bookingId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE: Get available porters by booking id
+        /// </summary>
+        /// <param name="assignmentId"></param>
+        /// <returns></returns>
+        [HttpPut("review-staff/{assignmentId}")]
+        public async Task<IActionResult> ReviewStaff(int assignmentId, ReviewStaffRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _assignmentService.ReviewStaff(userId, assignmentId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// FEATURE: Get available porters by booking id
+        /// </summary>
+        /// <param name="assignmentId"></param>
+        /// <returns></returns>
+        [HttpPut("bonus-staff/{assignmentId}")]
+        public async Task<IActionResult> BonusStaff(int assignmentId, BonusStaffRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _assignmentService.BonusStaff(userId, assignmentId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

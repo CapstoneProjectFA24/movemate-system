@@ -391,7 +391,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                if (request.Type == TypeServiceEnums.TRUCK.ToString() && !request.TruckCategoryId.HasValue)
+                if (request.Type == TypeServiceEnums.TRUCK.ToString() && !request.TruckCategoryId.HasValue && service.Tier != 0)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.TruckCategoryRequire);
                     return result;

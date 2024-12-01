@@ -9,6 +9,7 @@ using MoveMate.Service.ThirdPartyService.Payment.PayOs;
 using MoveMate.Service.ThirdPartyService.Payment.VNPay;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using System.Security.Claims;
+using MoveMate.Service.ViewModels.ModelRequests;
 
 namespace MoveMate.API.Controllers
 {
@@ -150,6 +151,21 @@ namespace MoveMate.API.Controllers
             }
 
             return Ok(result);
+        }
+
+        /// <summary>
+        /// FEATURE: Update wallet information
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        [HttpPut("")]
+        public async Task<IActionResult> UpdateWallet(UpdateWalletRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _walletServices.UpdateWallet(userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
     }
 }

@@ -237,6 +237,11 @@ namespace MoveMate.Service.Services
 
             try
             {
+                if (request.HouseTypeId == 0)
+                {
+                    request.HouseTypeId = null;
+                }
+
                 if (request.HouseTypeId.HasValue)
                 {
                     var houseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync((int)request.HouseTypeId);
@@ -245,6 +250,11 @@ namespace MoveMate.Service.Services
                         result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundHouseType);
                         return result;
                     }
+                }
+
+                if (request.ServiceId == 0)
+                {
+                    request.ServiceId = null;
                 }
                 if (request.ServiceId.HasValue)
                 {

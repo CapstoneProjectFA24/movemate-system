@@ -1,5 +1,6 @@
 ﻿using MoveMate.Domain.Models;
 using MoveMate.Service.Commons;
+using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,6 @@ namespace MoveMate.Service.IServices
     {
         Task<OperationResult<WalletResponse>> GetWalletByUserIdAsync(string userId);
         Task<OperationResult<WalletResponse>> UpdateWalletBalance(int walletId, float balance);
+        Task<OperationResult<WalletResponse>> UpdateWallet(int userId, UpdateWalletRequest request);
     }
 }

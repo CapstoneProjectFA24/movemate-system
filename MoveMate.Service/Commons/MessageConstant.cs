@@ -116,6 +116,7 @@ namespace MoveMate.Service.Commons
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
+            public const string BookingCompleted = "The booking status must be COMPLETED";
             public const string BookingCancel = "Booking have been canceled";
             public const string ChangeBookingAtFail = "BookingAt cannot be changed";
             public const string RequiredId = "The input id does not match the request id";
@@ -141,6 +142,7 @@ namespace MoveMate.Service.Commons
             public const string CanNotFix = "Booking detail is completely fine";
             public const string AssignmentManual = "Manual assignment Faild";
             public const string AssignmentDuplicate = "The staff member is already assigned to this booking.";
+            public const string ReviewIsRequired = "What makes you unhappy about this staff?";
 
             //House type
             public const string NotFoundHouseType = "House type not found";
@@ -226,6 +228,7 @@ namespace MoveMate.Service.Commons
             public const string PayByCash = "You have chosen the cash payment method";
             public const string BalanceNotEnough = "The balance in the wallet is not enough";
             public const string UnspPayment = "Unsupported payment method selected";
+            public const string WalletLocked = "Wallet has been locked, please update wallet information to unlock";
 
             //Transaction
             public const string TransactionExist = "Transaction has already been processed";
@@ -403,6 +406,7 @@ namespace MoveMate.Service.Commons
             //Assignment
             public const string UpdateAssignment = "Update assignment successful";
             public const string AssignmentManual = "Manual assignment successful";
+            public const string ReviewSuccess = "Review staff successful";
 
             //Promotion
             public const string GetListPromotionEmpty = "List promotion is empty!";
