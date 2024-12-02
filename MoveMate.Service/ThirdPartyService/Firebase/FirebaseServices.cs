@@ -151,6 +151,14 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     }
                 }
 
+                if (saveObj.Status == BookingEnums.CANCEL.ToString())
+                {
+                    if (!isRecursiveCall)
+                    {
+                        _producer.SendingMessage("movemate.refund_booking", saveObj.Id);
+                    }
+                }
+
                 var save = _mapper.Map<BookingResponse>(saveObj);
                 if (saveObj.Status == BookingEnums.COMING.ToString())
                 {
@@ -182,6 +190,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                         _producer.SendingMessage("movemate.booking_assign_porter", saveObj.Id);
                     }
                 }
+
                 
                 var redisKey = saveObj.Id + '-' + saveObj.Status;
 

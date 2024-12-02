@@ -36,6 +36,7 @@ using Sprache;
 using StackExchange.Redis;
 using MoveMate.Service.Library;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
+using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 
 namespace MoveMate.Service.Services
 {
@@ -2015,7 +2016,7 @@ namespace MoveMate.Service.Services
                         break;
 
                     case var status when status == AssignmentStatusEnums.CANCELLED.ToString():
-                        nextStatus = AssignmentStatusEnums.REFUNDED.ToString();
+                        nextStatus = AssignmentStatusEnums.REFUNDING.ToString();
                         break;
                     default:
                         result.AddError(StatusCode.BadRequest,
@@ -3456,7 +3457,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                booking.Status = BookingEnums.REFUNDED.ToString();
+                booking.Status = BookingEnums.REFUNDING.ToString();
                 booking.RefundAt = DateTime.Now;
 
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
@@ -3489,7 +3490,7 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-                if (booking.Status != BookingEnums.REFUNDED.ToString())
+                if (booking.Status != BookingEnums.REFUNDING.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingRefund);
                     return result;
@@ -3541,6 +3542,7 @@ namespace MoveMate.Service.Services
                     booking.IsRefunded = true;
                     // Calculate and return the refund amount
                     double amount = (double)(booking.Deposit * refundPercentage);
+                    booking.TotalRefund = amount;
 
                     var user = await _unitOfWork.UserRepository.GetManagerAsync();
                     var walletManager = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(user.Id);
@@ -3604,6 +3606,7 @@ namespace MoveMate.Service.Services
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
                   "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                 var response = _mapper.Map<BookingResponse>(entity);
+                
 
                 await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
 

@@ -119,7 +119,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 }
                 if (statuses.Contains("COMPENSATION"))
                 {
-                    statuses.AddRange(new[] { "REFUNDED" });
+                    statuses.AddRange(new[] { "REFUNDING" });
                     statuses.Remove("COMPENSATION");
                 }
                 if (statuses.Contains("CANCELED"))

@@ -117,7 +117,7 @@ namespace MoveMate.Service.Commons
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
             public const string BookingCompleted = "The booking status must be COMPLETED";
-            public const string BookingRefund = "The booking status must be REFUNDED";
+            public const string BookingRefund = "The booking status must be REFUNDING";
             public const string BookingCancel = "Booking have been canceled";
             public const string ChangeBookingAtFail = "BookingAt cannot be changed";
             public const string RequiredId = "The input id does not match the request id";

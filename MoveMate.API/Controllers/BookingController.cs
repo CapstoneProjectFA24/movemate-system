@@ -45,7 +45,7 @@ namespace MoveMate.API.Controllers
         /// - If "Status" contains `ADVANCE`, the list will include different statuses based on whether the review flag is set:
         ///     - If "IsReviewOnl" is `true`, the system will return bookings with statuses like `IN_PROGRESS`, `COMING`, and `PAUSED`.
         ///     - If "IsReviewOnl" is `false`, the system will return bookings with statuses like `IN_PROGRESS`, `COMING`, `PAUSED`, `REVIEWING`, and `REVIEWED`.
-        /// - If "Status" contains `COMPENSATION`, the list will include `REFUNDED`.
+        /// - If "Status" contains `COMPENSATION`, the list will include `REFUNDING`.
         /// - If "Status" contains `CANCELED`, the list will include `CANCEL`.
         /// </remarks>
         [HttpGet("")]

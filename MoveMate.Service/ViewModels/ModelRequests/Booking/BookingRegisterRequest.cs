@@ -62,7 +62,7 @@ public class BookingRegisterRequest
     [JsonIgnore] public bool? IsDeleted { get; set; } = false;
     [JsonIgnore] public bool? IsReported { get; set; } = false;
     [JsonIgnore] public bool? IsBonus { get; set; } = false;
-    [JsonIgnore] public bool? IsRefunded { get; set; } = false;
+    [JsonIgnore] public bool? IsREFUNDING { get; set; } = false;
     [JsonIgnore] public bool? IsCredit { get; set; } = false;
     [JsonIgnore] public bool? IsDeposited { get; set; } = false;
 
