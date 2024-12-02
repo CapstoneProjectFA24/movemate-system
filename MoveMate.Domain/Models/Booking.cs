@@ -99,6 +99,9 @@ public partial class Booking
 
     public DateTime? RefundAt { get; set; }
 
+    public double? TotalRefund { get; set; }
+
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();

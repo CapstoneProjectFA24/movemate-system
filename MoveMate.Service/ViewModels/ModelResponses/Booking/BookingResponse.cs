@@ -25,6 +25,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string EstimatedDistance { get; set; }
         [FirestoreProperty] public double Total { get; set; }
         [FirestoreProperty] public double TotalReal { get; set; }
+        [FirestoreProperty] public double TotalRefund { get; set; }
         [FirestoreProperty] public string EstimatedDeliveryTime { get; set; }
         [FirestoreProperty] public bool IsDeposited { get; set; }   
         [FirestoreProperty] public bool IsReported { get; set; }
@@ -52,13 +53,13 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public double TotalFee { get; set; }
         [FirestoreProperty] public bool? IsReviewOnline { get; set; }
         [FirestoreProperty] public bool? IsRefunded { get; set; }
-        [FirestoreProperty] public DateTime? RefundDate { get; set; }
+        [FirestoreProperty] public string? RefundAt { get; set; }
         [FirestoreProperty] public string? OrderStatus { get; set; }
         [FirestoreProperty] public string? ReasonRefundFailed { get; set; }
         [FirestoreProperty] public string? ProcessStatus { get; set; }
         [FirestoreProperty] public bool? IsUserConfirm { get; set; }
         [FirestoreProperty] public string? ReviewAt { get; set; }
-        [FirestoreProperty] public DateTime? EstimatedEndTime { get; set; }
+        [FirestoreProperty] public string? EstimatedEndTime { get; set; }
         [FirestoreProperty] public int? TruckNumber { get; set; }
         //public List<ServiceDetailsResponse> ServiceDetails { get; set; }
         [FirestoreProperty] public List<AssignmentResponse> Assignments { get; set; }
