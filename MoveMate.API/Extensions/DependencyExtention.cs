@@ -123,6 +123,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<NotificationWorker>();
             services.AddScoped<PushToFirebaseWorker>();
             services.AddScoped<AssignPorterWorker>();
+            services.AddScoped<RefundBookingWorker>();
 
             services.AddScoped<Index>();
 

@@ -20,7 +20,7 @@ namespace MoveMate.Domain.Enums;
         PAUSED,
         COMPLETED,
         CANCEL,
-        REFUNDED
+        REFUNDING
     }
 
     public enum AssignmentStatusEnums
@@ -36,7 +36,7 @@ namespace MoveMate.Domain.Enums;
         CONFIRM,
         SUGGESTED,
         CANCELLED,
-        REFUNDED,
+        REFUNDING,
         REVIEWED,
         PACKING,
         ONGOING,
