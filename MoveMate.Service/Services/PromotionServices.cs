@@ -114,15 +114,6 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundPromotion);
                     return result;
                 }
-
-                
-                var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)request.ServiceId);
-                if (service == null)
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
-                    return result;
-                }
-
                 if (request.StartDate.HasValue && !request.EndDate.HasValue)
                 {
                     if (request.StartDate >= promotion.EndDate)
@@ -249,12 +240,19 @@ namespace MoveMate.Service.Services
             try
             {
                 
-                var service = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync((int)request.ServiceId);
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)request.ServiceId);
                 if (service == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
                 }
+
+                if (service.Tier == 0)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceTiers1);
+                    return result;
+                }
+
                 if (request.StartDate >= request.EndDate)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidDates);

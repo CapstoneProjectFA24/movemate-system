@@ -36,6 +36,5 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
         public bool IsInfinite { get; set; }
 
-        public int? ServiceId { get; set; }
     }
 }
