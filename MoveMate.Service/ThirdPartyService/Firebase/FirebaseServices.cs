@@ -53,7 +53,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
                 _firebaseApp = FirebaseApp.Create(appOptions);
             }
-           
+
 
             string path = AppDomain.CurrentDomain.BaseDirectory + @"firebase_app_settings.json";
             Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path);
@@ -69,7 +69,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
 
             try
             {
-               
+
                 FirebaseAuth auth = FirebaseAuth.DefaultInstance;
                 FirebaseToken decodedToken = await auth.VerifyIdTokenAsync(idToken);
                 result.AddResponseStatusCode(StatusCode.Ok, "Token verified successfully", decodedToken);
@@ -142,7 +142,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             try
             {
 
-                if (saveObj.IsReviewOnline ==false && saveObj.Status == BookingEnums.REVIEWING.ToString() && saveObj.Assignments.Any(a => a.StaffType == RoleEnums.REVIEWER.ToString() && a.Status == AssignmentStatusEnums.ASSIGNED.ToString()))
+                if (saveObj.IsReviewOnline == false && saveObj.Status == BookingEnums.REVIEWING.ToString() && saveObj.Assignments.Any(a => a.StaffType == RoleEnums.REVIEWER.ToString() && a.Status == AssignmentStatusEnums.ASSIGNED.ToString()))
                 {
                     if (!isRecursiveCall)
                     {
@@ -182,7 +182,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                             _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
                         }
                     }
-                    
+
                     if (saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()) &&
                         !saveObj.Assignments.Any(a => a.StaffType == RoleEnums.PORTER.ToString())
                         && isPorterAssigned == false && saveObj.IsPorter == true)
@@ -191,7 +191,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     }
                 }
 
-                
+
                 var redisKey = saveObj.Id + '-' + saveObj.Status;
 
                 var checkExistQueue = await _redisService.KeyExistsAsync(redisKey);
@@ -200,7 +200,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     _redisService.SetData(redisKey, saveObj.Id);
                     _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
                 }
-                
+
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
                 await docRef.SetAsync(save);
                 var saved = (await docRef.GetSnapshotAsync()).UpdateTime.ToString();
@@ -366,8 +366,8 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         {
             try
             {
-               
-                var message = new Message()
+
+                /*var message = new Message()
                 {
                     Notification = new FirebaseAdmin.Messaging.Notification
                     {
@@ -376,7 +376,18 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     },
                     Token = fcmToken,
                     Data = data ?? new Dictionary<string, string>()
+                };*/
+
+                var message = new Message()
+                {
+                    Data = data ?? new Dictionary<string, string>
+                    {
+                        { "title", title },
+                        { "body", body }
+                    },
+                    Token = fcmToken
                 };
+
 
                 // Gửi thông báo
                 string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
