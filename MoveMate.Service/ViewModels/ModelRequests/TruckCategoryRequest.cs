@@ -19,7 +19,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [Required]
         public string? ImageUrl { get; set; }
         [Required]
-        public string? EstimatedLength { get; set; }
+        public string? EstimatedLenght { get; set; }
         [Required]
         public string? EstimatedWidth { get; set; }
         [Required]
