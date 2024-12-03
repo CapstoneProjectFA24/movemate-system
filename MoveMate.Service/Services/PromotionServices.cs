@@ -329,7 +329,7 @@ namespace MoveMate.Service.Services
             return result;
         }
 
-        public async Task<OperationResult<GetAllPromotionResponse>> GetListPromotion(int userId)
+        public async Task<OperationResult<GetAllPromotionResponse>> GetListPromotion(int userId, DateTime currentTime)
         {
             var result = new OperationResult<GetAllPromotionResponse>();
             var response = new GetAllPromotionResponse();
@@ -338,7 +338,11 @@ namespace MoveMate.Service.Services
             {
                 // Promotions with vouchers linked to the given userId
                 var promotionUser = await _unitOfWork.PromotionCategoryRepository
-                    .GetPromotionsWithUserVoucherAsync(userId, includeProperties: "Vouchers");
+                    .GetPromotionsWithUserVoucherAsync(userId,currentTime, includeProperties: "Vouchers");
+
+                // Sort promotions by StartDate (ascending order)
+                promotionUser = promotionUser.OrderBy(pc => pc.StartDate).ToList();
+
                 var promotionUserResponses = _mapper.Map<List<PromotionResponse>>(promotionUser);
 
                 // Set IsGot to true for promotions with user vouchers
@@ -350,7 +354,11 @@ namespace MoveMate.Service.Services
 
                 // Promotions without vouchers linked to the given userId
                 var promotionNoUser = await _unitOfWork.PromotionCategoryRepository
-                    .GetPromotionsWithNoUserVoucherAsync(userId, includeProperties: "Vouchers");
+                    .GetPromotionsWithNoUserVoucherAsync(userId, currentTime, includeProperties: "Vouchers");
+
+                // Sort promotions by StartDate (ascending order)
+                promotionNoUser = promotionNoUser.OrderBy(pc => pc.StartDate).ToList();
+
                 var promotionNoUserResponses = _mapper.Map<List<PromotionResponse>>(promotionNoUser);
 
                 response.PromotionNoUser.AddRange(promotionNoUserResponses);
@@ -369,6 +377,7 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
+
 
     }
 }
