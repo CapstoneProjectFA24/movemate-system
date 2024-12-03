@@ -60,7 +60,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
         }
 
-        public async Task<List<PromotionCategory>> GetPromotionsWithNoUserVoucherAsync(int userId, string includeProperties = "")
+        public async Task<List<PromotionCategory>> GetPromotionsWithNoUserVoucherAsync(int userId, DateTime currentDate, string includeProperties = "")
         {
             IQueryable<PromotionCategory> query = _dbSet;
 
@@ -70,11 +70,11 @@ namespace MoveMate.Repository.Repositories.Repository
             }
 
             // Filter promotions where vouchers are either null or do not have the specified userId
-            query = query.Where(pc => !pc.Vouchers.Any(v => v.UserId == userId));
+            query = query.Where(pc => !pc.Vouchers.Any(v => v.UserId == userId) && pc.IsDeleted == false && pc.EndDate >= currentDate);
 
             return await query.ToListAsync();
         }
-        public async Task<List<PromotionCategory>> GetPromotionsWithUserVoucherAsync(int userId, string includeProperties = "")
+        public async Task<List<PromotionCategory>> GetPromotionsWithUserVoucherAsync(int userId,DateTime currentDate, string includeProperties = "")
         {
             IQueryable<PromotionCategory> query = _dbSet;
 
@@ -84,7 +84,7 @@ namespace MoveMate.Repository.Repositories.Repository
             }
 
             // Filter promotions with at least one voucher linked to userId
-            query = query.Where(pc => pc.Vouchers.Any(v => v.UserId == userId));
+            query = query.Where(pc => pc.Vouchers.Any(v => v.UserId == userId) && pc.IsDeleted == false && pc.EndDate >= currentDate);
 
             return await query.ToListAsync();
         }
