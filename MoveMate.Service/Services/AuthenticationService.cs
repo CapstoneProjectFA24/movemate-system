@@ -589,7 +589,7 @@ namespace MoveMate.Service.Services
         {
             try
             {
-                Notification existedUserDevice = await this._unitOfWork.NotificationRepository.GetByIdAsync(userDeviceId);
+                Notification existedUserDevice = await this._unitOfWork.NotificationRepository.GetByAccountAsync(userDeviceId);
                 if (existedUserDevice is null)
                 {
                     throw new NotFoundException(MessageConstant.CommonMessage.UserDeviceIdNotExist);

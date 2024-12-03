@@ -18,7 +18,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? RoleName { get; set; }
         public int? GroupId { get; set; }
         public int? TruckCategoryId { get; set; }
-
+        public bool IsBanned { get; set; } = false;
+        public bool IsDeleted { get; set; } = false;
 
         public override Expression<Func<User, bool>> GetExpressions()
         {
@@ -53,7 +54,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.Truck.TruckCategoryId == TruckCategoryId);
             }
 
-            Expression = Expression.And(u => u.IsDeleted == false);
+            
+            Expression = Expression.And(u => u.IsBanned == IsBanned);
+            
+
+            Expression = Expression.And(u => u.IsDeleted == IsDeleted);
 
             return Expression;
         }

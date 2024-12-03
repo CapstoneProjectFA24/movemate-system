@@ -234,10 +234,11 @@ namespace MoveMate.Service.Services
                 if (user == null)
                 {
                     result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);
+                    return result;
                 }
 
                 user.IsBanned = true;
-
+                await _unitOfWork.UserRepository.SaveOrUpdateAsync(user);
                 await _unitOfWork.SaveChangesAsync();
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BanUserSuccess, true);
             }
