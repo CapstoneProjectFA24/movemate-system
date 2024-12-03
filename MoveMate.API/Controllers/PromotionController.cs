@@ -41,7 +41,7 @@ namespace MoveMate.API.Controllers
         /// <returns></returns>
         [HttpGet("promotions")]
         [Authorize]
-        public async Task<IActionResult> GetAllPromotion()
+        public async Task<IActionResult> GetAllPromotion([FromQuery] DateTime currentTime)
         {
             var accountIdClaim = HttpContext.User.Claims.FirstOrDefault(x => x.Type.ToLower().Equals("sid"));
             if (accountIdClaim == null || string.IsNullOrEmpty(accountIdClaim.Value))
@@ -50,7 +50,7 @@ namespace MoveMate.API.Controllers
             }
 
             var userId = int.Parse(accountIdClaim.Value);
-            var response = await _promotionServices.GetListPromotion(userId);
+            var response = await _promotionServices.GetListPromotion(userId, currentTime);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
