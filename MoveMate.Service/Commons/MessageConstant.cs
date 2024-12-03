@@ -171,10 +171,10 @@ namespace MoveMate.Service.Commons
             public const string ServiceAlreadyDeleted = "Service already deleted";
             public const string ServiceUpdateFail = "Update service failed";
             public const string NotFoundParentService = "Parent service not found";
-            public const string CannotUpdateParentForTierZero = "Can not update parentServiceId for service tier 0)";
+            public const string CannotUpdateParentForTierZero = "Can not update parentServiceId for service tier 0";
             public const string AssignedLeader = "Leader have been assigned";
             public const string InvalidRequest = "Invalid request";
-
+            public const string SuperService = "Other services depend on it";
 
             //FeeSetting
             public const string NotFoundFeeSetting = "Fee setting not found";
