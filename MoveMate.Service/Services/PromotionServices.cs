@@ -240,16 +240,16 @@ namespace MoveMate.Service.Services
             try
             {
                 
-                var service = await _unitOfWork.ServiceRepository.GetByIdAsync((int)request.ServiceId);
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsyncV1((int)request.ServiceId, includeProperties: "InverseParentService");
                 if (service == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService);
                     return result;
                 }
 
-                if (service.Tier == 0)
+                if (service.InverseParentService.Count == 0)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceTiers1);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SuperService);
                     return result;
                 }
 
