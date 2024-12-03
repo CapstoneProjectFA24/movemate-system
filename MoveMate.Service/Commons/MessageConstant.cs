@@ -167,7 +167,7 @@ namespace MoveMate.Service.Commons
             public const string InverseParentServiceType = "Each inverseParentService item must have the same Type as the main service";
             public const string InvalidServiceTier = "Service Tier is invalid for Truck type services or Porter type services";
             public const string InvalidServiceDepen = "Service Porter Depen is invalid for Porter type services or Porter type services, must have Porter supper serivce";
-
+            public const string CanNotDeletedSuperService = "This service cannot be removed because other services depend on it";
             public const string ServiceAlreadyDeleted = "Service already deleted";
             public const string ServiceUpdateFail = "Update service failed";
             public const string NotFoundParentService = "Parent service not found";
@@ -335,7 +335,7 @@ namespace MoveMate.Service.Commons
             public const string GetScheduleWorkingSuccess = "Get schedule working successfully";
             public const string DeleteScheduleWorking = "Schedule working has been deleted";
             public const string CreateScheduleWorking = "Create a new schedule working successful";
-            public const string ScheduleWorkingUpdateSuccess = "Update truck category succesful";
+            public const string ScheduleWorkingUpdateSuccess = "Update schedule working succesful";
 
 
             public const string GetListScheduleBookingEmpty = "List schedule booking is empty!";

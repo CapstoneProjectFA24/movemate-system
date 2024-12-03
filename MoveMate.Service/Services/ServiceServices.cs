@@ -338,7 +338,7 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<bool>();
             try
             {
-                var service = await _unitOfWork.ServiceRepository.GetByIdAsync(id);
+                var service = await _unitOfWork.ServiceRepository.GetByIdAsyncV1(id, includeProperties: "InverseParentService");
                 if (service == null)
                 {
                     result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundService, false);
@@ -347,6 +347,11 @@ namespace MoveMate.Service.Services
                 if (service.IsActived == false)
                 {
                     result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.ServiceAlreadyDeleted, false);
+                    return result;
+                }
+                if (service.InverseParentService.Count > 0)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CanNotDeletedSuperService);
                     return result;
                 }
 
