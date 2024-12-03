@@ -14,7 +14,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
         public string? Search { get; set; }
         public int? PromotionId { get; set; }
-        public List<int>? ServiceIds { get; set; }
+        public int? ServiceIds { get; set; }
         public int? UserId { get; set; }
         public DateTime? DateFilter { get; set; }
         public DateTime? HuntingDate { get; set; }
@@ -59,11 +59,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     v.PromotionCategory.StartDate <= huntingDatePlusOneDay);
             }
 
-            if (ServiceIds != null && ServiceIds.Any())
+            if (ServiceIds.HasValue)
             {
                 Expression = Expression.And(v =>
                     v.PromotionCategory != null &&
-                    ServiceIds.Contains(v.PromotionCategory.ServiceId.Value));
+                    v.PromotionCategory.ServiceId == ServiceIds.Value);
             }
 
             // Exclude deleted vouchers
