@@ -24,12 +24,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? EstimatedWidth { get; set; }
         [Required]
         public string? EstimatedHeight { get; set; }
-        [Required]
+
         public string? Summarize { get; set; }
-        [Required]
+
         public double? Price { get; set; }
-        [Required]
-        public int? TotalTrips { get; set; }
+
         [JsonIgnore]
         public bool? IsDeleted { get; set; } = false;
     }
