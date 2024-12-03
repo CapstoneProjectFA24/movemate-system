@@ -255,6 +255,7 @@ namespace MoveMate.Service.Commons
             public const string PromotionRunOut = "Vouchers are out of stock";
             public const string LessAssigned ="Quantity cannot be less than the number of assigned vouchers";
             public const string InvalidDates = "The start date must be less than the end date";
+            public const string ServiceTiers1 = "Service must be tier 1";
 
             //Voucher
             public const string NotFoundVoucher = "Voucher not found";
