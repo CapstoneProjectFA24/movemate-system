@@ -40,11 +40,22 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
             if (UserId.HasValue)
             {
-                queryExpression = queryExpression.And(tran =>
-                    (tran.Wallet != null && tran.Wallet.UserId == UserId) || 
-                    (tran.Payment != null && tran.Payment.BookingId.HasValue && tran.Payment.Booking != null && tran.Payment.Booking.UserId == UserId) 
-                );
+                Expression<Func<Transaction, bool>> walletPredicate = tran => tran.WalletId.HasValue && tran.Wallet != null && tran.Wallet.UserId == UserId;
+                Expression<Func<Transaction, bool>> paymentPredicate = tran =>
+                    tran.PaymentId.HasValue &&
+                    tran.Payment != null &&
+                    tran.Payment.BookingId.HasValue &&
+                    tran.Payment.Booking != null &&
+                    tran.Payment.Booking.UserId == UserId;
+
+                Expression<Func<Transaction, bool>> combinedPredicate = tran =>
+                    (tran.WalletId.HasValue && !tran.PaymentId.HasValue && tran.Wallet != null && tran.Wallet.UserId == UserId) ||
+                    (!tran.WalletId.HasValue && tran.PaymentId.HasValue && tran.Payment != null && tran.Payment.BookingId.HasValue && tran.Payment.Booking.UserId == UserId) ||
+                    (tran.WalletId.HasValue && tran.PaymentId.HasValue && tran.Wallet != null && tran.Wallet.UserId == UserId);
+
+                queryExpression = queryExpression.And(combinedPredicate);
             }
+
             if (IsWallet.HasValue)
             {
                 if (IsWallet.Value)
