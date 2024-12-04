@@ -67,10 +67,10 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         existingBooking.RefundAt = null;
                     }
                     existingBooking.TotalRefund = (double)(existingBooking.Deposit * refundPercentage);
+                    existingBooking.Status = BookingEnums.REFUNDING.ToString();
                 }
-                existingBooking.Status = BookingEnums.REFUNDING.ToString();
 
-                if (existingBooking.TotalRefund == 0)
+                if (existingBooking.TotalRefund == 0 || !existingBooking.TotalRefund.HasValue)
                 {
                     existingBooking.Status = BookingEnums.COMPLETED.ToString();
                 }
