@@ -63,5 +63,7 @@ namespace MoveMate.Repository.Repositories.Repository
             var result = await query.FirstOrDefaultAsync();
             return result;
         }
+
+
     }
 }

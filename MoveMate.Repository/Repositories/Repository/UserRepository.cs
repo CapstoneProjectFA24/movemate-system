@@ -62,6 +62,17 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return users;
         }
+        public async Task<List<User>> GetUsersByGroupIdAsync(int groupId, int roleId)
+        {
+
+            IQueryable<User> query = _dbSet;
+
+            var users = await query
+                .Where(u => u.GroupId == groupId && u.RoleId == roleId)
+                .ToListAsync();
+
+            return users;
+        }
 
         public virtual async Task<User?> GetByIdAsync(int id, string includeProperties = "")
         {
