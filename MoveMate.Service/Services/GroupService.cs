@@ -55,6 +55,10 @@ public class GroupService : IGroupServices
                     MessageConstant.SuccessMessage.GetListTruckCategoryEmpty, listResponse);
                 return result;
             }
+            foreach (var group in listResponse)
+            {
+                group.CountUser = group.Users?.Count ?? 0;
+            }
 
             pagin.pageSize = request.per_page;
             pagin.totalItemsCount = entities.Count;
@@ -112,6 +116,7 @@ public class GroupService : IGroupServices
             else
             {
                 var productResponse = _mapper.Map<GroupResponse>(entity);
+                productResponse.CountUser = productResponse.Users.Count();
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetGroupSuccess,
                     productResponse);
             }
@@ -147,7 +152,7 @@ public class GroupService : IGroupServices
             {
                 group = await _unitOfWork.GroupRepository.GetByIdAsyncV1(group.Id, includeProperties: "ScheduleWorkings,Users");
                 var response = _mapper.Map<GroupResponse>(group);
-
+                response.CountUser = response.Users.Count();
                 result.AddResponseStatusCode(StatusCode.Ok,
                     MessageConstant.SuccessMessage.TruckCategoryUpdateSuccess,
                     response);
@@ -178,6 +183,7 @@ public class GroupService : IGroupServices
             await _unitOfWork.SaveChangesAsync();
 
             var response = _mapper.Map<GroupResponse>(group);
+            response.CountUser = response.Users.Count();
             result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateGroup,
                 response);
 
@@ -321,5 +327,69 @@ public class GroupService : IGroupServices
         }
 
         return result;
+    }
+
+    public async Task<OperationResult<GroupUserResponse>> GetUserIntoGroup(int groupId)
+    {
+        var result = new OperationResult<GroupUserResponse>();
+        var response = new GroupUserResponse();
+        try
+        {
+            var group = await _unitOfWork.GroupRepository.GetByIdAsyncV1(groupId, includeProperties: "Users");
+            if (group == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundGroup);
+                return result;
+            }
+
+            var reviewers = await _unitOfWork.UserRepository.GetUsersByGroupIdAsync(groupId, 2);
+            response.Reviewers = reviewers.Count();
+            response.ReviewersNeed = 3- reviewers.Count(); 
+
+            for (int truckCategoryId = 1; truckCategoryId <= 6; truckCategoryId++)
+            {
+                var drivers = await _unitOfWork.UserRepository.GetUsersByTruckCategoryIdAsync(truckCategoryId, groupId);
+                switch (truckCategoryId)
+                {
+                    case 1:
+                        response.DriversTruck1 = drivers.Count();
+                        response.DriversTruck1Need = 4 - drivers.Count() ; 
+                        break;
+                    case 2:
+                        response.DriversTruck2 = drivers.Count();
+                        response.DriversTruck2Need = 4 - drivers.Count();
+                        break;
+                    case 3:
+                        response.DriversTruck3 = drivers.Count();
+                        response.DriversTruck3Need = 4 - drivers.Count();
+                        break;
+                    case 4:
+                        response.DriversTruck4 = drivers.Count();
+                        response.DriversTruck4Need = 4 - drivers.Count();
+                        break;
+                    case 5:
+                        response.DriversTruck5 = drivers.Count();
+                        response.DriversTruck5Need = 8 - drivers.Count();
+                        break;
+                    case 6:
+                        response.DriversTruck6 = drivers.Count();
+                        response.DriversTruck6Need = 2 - drivers.Count();
+                        break;
+                }
+            }
+
+            var porters = await _unitOfWork.UserRepository.GetUsersByGroupIdAsync(groupId, 5);
+            response.Porters = porters.Count();
+            response.PortersNeed = 40 - porters.Count(); 
+
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetGroupSuccess, response);
+            return result;
+
+        }
+        catch(Exception ex)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            return result;
+        }
     }
 }

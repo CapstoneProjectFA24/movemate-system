@@ -118,5 +118,13 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }
+
+        [HttpGet("user-in-group/{groupId}")]
+        public async Task<IActionResult> UserInGroupp(int groupId)
+        {
+            var response = await _groupService.GetUserIntoGroup(groupId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
     }
 }

@@ -17,5 +17,6 @@ namespace MoveMate.Service.IServices
         public Task<OperationResult<GroupResponse>> UpdateGroup(int id, UpdateGroupRequest request);
         public Task<OperationResult<GroupResponse>> CreateGroup(CreateGroupRequest request);
         public Task<OperationResult<GroupResponse>> AddUserIntoGroup(AddUserIntoGroup request);
+        public Task<OperationResult<GroupUserResponse>> GetUserIntoGroup(int groupId);
     }
 }
