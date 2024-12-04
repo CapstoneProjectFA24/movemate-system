@@ -16,7 +16,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Search { get; set; }
         public string? Name { get; set; }
         public string? RoleName { get; set; }
-        public int? GroupId { get; set; }
+        public bool? IsGroup { get; set; }
         public int? TruckCategoryId { get; set; }
         public bool IsBanned { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
@@ -43,10 +43,17 @@ namespace MoveMate.Service.ViewModels.ModelRequests
             {
                 Expression = Expression.And(u => u.Role.Name.Contains(RoleName));
             }
-            
-            if (!string.IsNullOrWhiteSpace(GroupId.ToString()))
+
+            if (IsGroup.HasValue)
             {
-                Expression = Expression.And(u => u.GroupId == GroupId);
+                if (IsGroup.Value)
+                {
+                    Expression = Expression.And(u => u.GroupId.HasValue);
+                }
+                else
+                {
+                    Expression = Expression.And(u => !u.GroupId.HasValue);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(TruckCategoryId.ToString()))
@@ -54,6 +61,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                 Expression = Expression.And(u => u.Truck.TruckCategoryId == TruckCategoryId);
             }
 
+          
             
             Expression = Expression.And(u => u.IsBanned == IsBanned);
             
