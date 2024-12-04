@@ -28,9 +28,15 @@ namespace MoveMate.Repository.Repositories.Repository
                 .OrderByDescending(v => v.Price) 
                 .ToListAsync();
         }
-       
+        public async Task<Voucher> GetVoucherWithHighestPriceByPromotionIdAsync(int promotionId)
+        {
+            IQueryable<Voucher> query = _dbSet.AsNoTracking();
 
-
+            return await query
+                .Where(v => v.PromotionCategoryId == promotionId)
+                .OrderByDescending(v => v.Price)
+                .FirstOrDefaultAsync();
+        }
 
         public async Task<List<Voucher>> GetUserVouchersAsync(int userId)
         {
