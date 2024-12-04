@@ -29,5 +29,9 @@ public partial class ScheduleWorking
 
     public TimeOnly? ExtentEndDate { get; set; }
 
+    public int? ScheduleId { get; set; }
+
     public virtual Group? Group { get; set; }
+
+    public virtual Schedule? Schedule { get; set; }
 }
