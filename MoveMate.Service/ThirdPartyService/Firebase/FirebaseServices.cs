@@ -367,7 +367,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
             try
             {
 
-                /*var message = new Message()
+                var message = new Message()
                 {
                     Notification = new FirebaseAdmin.Messaging.Notification
                     {
@@ -376,9 +376,9 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                     },
                     Token = fcmToken,
                     Data = data ?? new Dictionary<string, string>()
-                };*/
+                };
 
-                var message = new Message()
+                /*var message = new Message()
                 {
                     Data = data ?? new Dictionary<string, string>
                     {
@@ -386,7 +386,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                         { "body", body }
                     },
                     Token = fcmToken
-                };
+                };*/
 
 
                 // Gửi thông báo
