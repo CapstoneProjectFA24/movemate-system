@@ -37,6 +37,8 @@ public partial class Transaction
 
     public bool? IsCredit { get; set; }
 
+    public string? Shard { get; set; }
+
     public virtual Payment? Payment { get; set; }
 
     public virtual Wallet? Wallet { get; set; }
