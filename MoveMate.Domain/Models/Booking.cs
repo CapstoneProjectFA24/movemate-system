@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MoveMate.Domain.Utils;
 
 namespace MoveMate.Domain.Models;
 
@@ -31,13 +32,13 @@ public partial class Booking
 
     public double? EstimatedDeliveryTime { get; set; }
 
-    public bool? IsDeposited { get; set; }
+    public bool? IsDeposited { get; set; } = false;
 
-    public bool? IsReported { get; set; }
+    public bool? IsReported { get; set; } =  false;
 
     public string? ReportedReason { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; } = false;
 
     public DateTime? CreatedAt { get; set; }
 
@@ -57,13 +58,13 @@ public partial class Booking
 
     public string? IsManyItems { get; set; }
 
-    public bool? IsCancel { get; set; }
+    public bool? IsCancel { get; set; } =  false;
 
     public string? CancelReason { get; set; }
 
     public bool? IsPorter { get; set; } = false;
 
-    public bool? IsRoundTrip { get; set; }
+    public bool? IsRoundTrip { get; set; } = false;
 
     public string? Note { get; set; }
 
@@ -71,9 +72,9 @@ public partial class Booking
 
     public DateTime? BookingAt { get; set; }
 
-    public bool? IsReviewOnline { get; set; }
+    public bool? IsReviewOnline { get; set; } = false;
 
-    public bool? IsUserConfirm { get; set; }
+    public bool? IsUserConfirm { get; set; } = false;
 
     public int? DriverNumber { get; set; }
 
@@ -89,11 +90,11 @@ public partial class Booking
 
     public bool? IsUpdated { get; set; }
 
-    public bool? IsCredit { get; set; }
+    public bool? IsCredit { get; set; } = false;
 
-    public bool? IsInsurance { get; set; }
+    public bool? IsInsurance { get; set; } = false;
 
-    public bool? IsRefunded { get; set; }
+    public bool? IsRefunded { get; set; } = false;
 
     public string? ReasonRefundFailed { get; set; }
 
