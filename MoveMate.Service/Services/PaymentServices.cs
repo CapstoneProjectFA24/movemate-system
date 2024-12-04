@@ -198,14 +198,14 @@ namespace MoveMate.Service.Services
                         var additionalTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             PaymentId = payment.Id,
-                            WalletId = wallet.Id,
+                            WalletId = walletManager.Id,
                             Amount = amount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
                             TransactionCode = "R" + Utilss.RandomString(7),
                             CreatedAt = DateTime.Now,
-                            Resource = Resource.VNPay.ToString(),
-                            PaymentMethod = Resource.VNPay.ToString(),
+                            Resource = Resource.Wallet.ToString(),
+                            PaymentMethod = Resource.Wallet.ToString(),
                             IsDeleted = false,
                             UpdatedAt = DateTime.Now,
                             IsCredit = true
