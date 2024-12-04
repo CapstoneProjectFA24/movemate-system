@@ -428,6 +428,7 @@ namespace MoveMate.Service.Commons
             public const string DeleteVoucher = "Voucher has been deleted";
             public const string GetVoucherSuccess = "Get voucher successfully";
             public const string AssignVoucherToUserSuccess = "Get voucher successful";
+            public const string VoucherUpdateSuccess = "Update voucher succesful";
 
             //Notification
             public const string CreatedUserDeviceSuccessfully = "Created User Device Successfully.";

@@ -129,7 +129,7 @@ namespace MoveMate.Service.Services
 
                 // Map updated truck to response model
                 var response = _mapper.Map<VoucherResponse>(voucher);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.PromotionUpdateSuccess, response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.VoucherUpdateSuccess, response);
             }
             catch (Exception ex)
             {

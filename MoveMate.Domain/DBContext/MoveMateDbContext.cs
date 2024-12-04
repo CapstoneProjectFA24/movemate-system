@@ -383,6 +383,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.TransactionType).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
+            entity.Property(e => e.Shard).HasMaxLength(255);
 
             entity.HasOne(d => d.Payment).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.PaymentId)
