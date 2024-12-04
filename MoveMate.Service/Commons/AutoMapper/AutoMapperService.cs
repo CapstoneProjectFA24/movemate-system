@@ -193,8 +193,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<FeeSetting, GetFeeSettingResponse>();
 
             //Promotion
-            CreateMap<CreatePromotionRequest, PromotionCategory>()
-                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
+            CreateMap<CreatePromotionRequest, PromotionCategory>();
             CreateMap<UpdatePromotionRequest, PromotionCategory>();
             CreateMap<PromotionCategory, PromotionResponse>()
                 .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
