@@ -34,6 +34,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private UserRepository _userRepository;
         private RoleRepository _roleRepository;
         private ScheduleBookingRepository _scheduleBookingRepository;
+        private ScheduleRepository _scheduleRepository;
        // private ScheduleBookingDetailRepository _scheduleBookingDetailRepository;
         private ServiceRepository _serviceRepository;
         private AssignmentsRepository _assignmentsRepository;
@@ -130,6 +131,18 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
             }
         }
 
+        public ScheduleRepository ScheduleRepository
+        {
+            get
+            {
+                if (_scheduleRepository == null)
+                {
+                    _scheduleRepository = new ScheduleRepository(_dbContext);
+                }
+
+                return _scheduleRepository;
+            }
+        }
 
         public ScheduleWorkingRepository ScheduleWorkingRepository
         {
