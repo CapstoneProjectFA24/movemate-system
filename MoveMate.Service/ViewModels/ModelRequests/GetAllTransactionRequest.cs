@@ -18,6 +18,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public int? UserId { get; set; }
         public DateTime? CreatedAt { get; set; }
         public string? PaymentMethod { get; set; }
+        public bool? IsWallet { get; set; }
         public string? Status { get; set; }
         public bool? IsCredit { get; set; }
 
@@ -44,7 +45,17 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     (tran.Payment != null && tran.Payment.BookingId.HasValue && tran.Payment.Booking != null && tran.Payment.Booking.UserId == UserId) 
                 );
             }
-
+            if (IsWallet.HasValue)
+            {
+                if (IsWallet.Value)
+                {
+                    queryExpression = queryExpression.And(u => u.WalletId.HasValue);
+                }
+                else
+                {
+                    queryExpression = queryExpression.And(u => !u.WalletId.HasValue);
+                }
+            }
             if (CreatedAt.HasValue)
             {
                 queryExpression = queryExpression.And(tran => tran.CreatedAt.HasValue && tran.CreatedAt.Value.Date == CreatedAt.Value.Date);
