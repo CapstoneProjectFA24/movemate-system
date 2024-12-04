@@ -20,7 +20,9 @@ public partial class BookingTracker
     public string? Description { get; set; }
 
     public string? Status { get; set; }
-
+    public string? Tittle { get; set; }
+    public double? EstimatedAmount { get; set; }
+    public double? RealAmount { get; set; }
     public virtual Booking? Booking { get; set; }
 
     public virtual ICollection<TrackerSource> TrackerSources { get; set; } = new List<TrackerSource>();

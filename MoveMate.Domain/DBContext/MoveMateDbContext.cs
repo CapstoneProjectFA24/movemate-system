@@ -190,6 +190,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Location).HasMaxLength(255);
             entity.Property(e => e.Point).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
+            entity.Property(e => e.Tittle).HasMaxLength(255);
             entity.Property(e => e.Time).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
 
