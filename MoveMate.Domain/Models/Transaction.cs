@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MoveMate.Domain.Utils;
 
 namespace MoveMate.Domain.Models;
 
@@ -37,7 +38,7 @@ public partial class Transaction
 
     public bool? IsCredit { get; set; }
 
-    public string? Shard { get; set; }
+    public string? Shard { get; set; } = DateUtil.GetShardNow();
 
     public virtual Payment? Payment { get; set; }
 
