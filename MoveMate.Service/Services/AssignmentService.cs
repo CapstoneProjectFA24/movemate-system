@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure;
 using Google.Api;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
@@ -7,9 +8,11 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
+using MoveMate.Service.Library;
 using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.ThirdPartyService.GoongMap;
 using MoveMate.Service.ThirdPartyService.GoongMap.Models;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.ThirdPartyService.RabbitMQ;
 using MoveMate.Service.ThirdPartyService.Redis;
 using MoveMate.Service.Utils;
@@ -17,7 +20,9 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelRequests.Assignments;
 using MoveMate.Service.ViewModels.ModelResponses;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
+using System.Diagnostics;
 using System.IO;
+using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 
 namespace MoveMate.Service.Services;
 
@@ -30,10 +35,11 @@ public class AssignmentService : IAssignmentService
     private readonly IFirebaseServices _firebaseServices;
     private readonly IRedisService _redisService;
     private readonly IGoogleMapsService _googleMapsService;
+    private readonly IWalletServices _walletServices;
 
     public AssignmentService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<AssignmentService> logger,
         IMessageProducer producer, IFirebaseServices firebaseServices, IRedisService redisService,
-        IGoogleMapsService googleMapsService)
+        IGoogleMapsService googleMapsService, IWalletServices walletServices)
     {
         _unitOfWork = (UnitOfWork)unitOfWork;
         _mapper = mapper;
@@ -42,6 +48,7 @@ public class AssignmentService : IAssignmentService
         _firebaseServices = firebaseServices;
         _redisService = redisService;
         _googleMapsService = googleMapsService;
+        _walletServices = walletServices;
     }
 
     #region FEATURE: HandleAssignManualDriver.
@@ -2003,6 +2010,141 @@ public class AssignmentService : IAssignmentService
             return result;
         }
         catch (Exception ex)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            return result;
+        }
+    }
+
+    public async Task<OperationResult<BookingTrackerResponse>> ManagerResolveException(int bookingTrackerId, ManagerResolveRequest request)
+    {
+        var result = new OperationResult<BookingTrackerResponse>();
+        try
+        {
+            var bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsync(bookingTrackerId);
+            if (bookingTracker == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker);
+                return result;
+            }
+            if (bookingTracker.Status != StatusTrackerEnums.WAITING.ToString())
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotSuitableBookingTracker);
+                return result;
+            }
+            var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingTracker.BookingId);
+            if (booking == null)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                return result;
+            }
+            if (request.IsCompensation == false)
+            {
+                if (string.IsNullOrEmpty(request.FailedReason))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFailedReason);
+                    return result;
+                }
+                bookingTracker.FailedReason = request.FailedReason;
+                bookingTracker.IsCompensation = request.IsCompensation;
+                bookingTracker.RealAmount = 0;
+                bookingTracker.Status = StatusTrackerEnums.NOTAVAILABLE.ToString();
+            }
+            else
+            {
+                bookingTracker.IsCompensation = request.IsCompensation;
+                bookingTracker.RealAmount = request.RealAmount;
+                bookingTracker.Status = StatusTrackerEnums.AVAILABLE.ToString();
+                if (!string.IsNullOrEmpty(request.FailedReason))
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFail);
+                    return result;
+                }
+                
+                if (request.PaymentMethod == Resource.Wallet.ToString())
+                {
+                    var manager = await _unitOfWork.UserRepository.GetManagerAsync();
+                    var walletManager = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(manager.Id);
+                    if (walletManager.Balance < request.RealAmount)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotEnoughMoney);
+                        return result;
+                    }
+                    else
+                    {
+                        var userTranferTransaction = new MoveMate.Domain.Models.Transaction
+                        {
+                            WalletId = walletManager.Id,
+                            Amount = request.RealAmount,
+                            Status = PaymentEnum.SUCCESS.ToString(),
+                            TransactionType = Domain.Enums.PaymentMethod.TRANFER.ToString(),
+                            TransactionCode = "R" + Utilss.RandomString(7),
+                            CreatedAt = DateTime.Now,
+                            Resource = Resource.Wallet.ToString(),
+                            PaymentMethod = Resource.Wallet.ToString(),
+                            IsDeleted = false,
+                            UpdatedAt = DateTime.Now,
+                            IsCredit = false
+                        };
+
+                        await _unitOfWork.TransactionRepository.AddAsync(userTranferTransaction);
+                        // Update transfer user's wallet balance
+                        walletManager.Balance -= request.RealAmount;
+                        var updateResult = await _walletServices.UpdateWalletBalance(walletManager.Id, (float)walletManager.Balance);
+                        if (updateResult.IsError)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                            return result;
+                        }
+
+                        var customer = await _unitOfWork.UserRepository.GetByIdAsync((int)booking.UserId);
+                        var walletCustomer = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(customer.Id);
+                        // Create and save recipient transaction
+                        var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
+                        {
+                            WalletId = walletCustomer.Id,
+                            Amount = request.RealAmount,
+                            Status = PaymentEnum.SUCCESS.ToString(),
+                            TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                            TransactionCode = "R" + Utilss.RandomString(7),
+                            CreatedAt = DateTime.Now,
+                            Resource = Resource.Wallet.ToString(),
+                            PaymentMethod = Resource.Wallet.ToString(),
+                            IsDeleted = false,
+                            UpdatedAt = DateTime.Now,
+                            IsCredit = true
+                        };
+
+                        await _unitOfWork.TransactionRepository.AddAsync(userReceiveTransaction);
+                        walletCustomer.Balance += request.RealAmount;
+                        var receiveResult = await _walletServices.UpdateWalletBalance(walletCustomer.Id, (float)walletCustomer.Balance);
+                        if (receiveResult.IsError)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                            return result;
+                        }
+                    }
+                }
+                else
+                {
+                    if(request.PaymentMethod == Resource.Other.ToString())
+                    {
+                        List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                        bookingTracker.TrackerSources = resourceList;
+                    }
+                }
+            }
+
+            await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(bookingTracker);
+            await _unitOfWork.SaveChangesAsync();
+
+            bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsync(bookingTrackerId);
+            var response = _mapper.Map<BookingTrackerResponse>(bookingTracker);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ResolveException, response);
+            return result;
+
+        }
+        catch(Exception ex)
         {
             result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             return result;

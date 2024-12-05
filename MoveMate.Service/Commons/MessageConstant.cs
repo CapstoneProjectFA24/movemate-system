@@ -316,6 +316,7 @@ namespace MoveMate.Service.Commons
             public const string BookingDetailUpdateSuccess = "Update booking detail succesful";
             public const string FoundAvailableDrivers = "Get Driver successful";
             public const string FoundAvailablePorters = "Get Porter successful";
+            public const string ResolveException = "Successful compensation";
 
 
             //FeeSetting

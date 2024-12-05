@@ -202,6 +202,8 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //Tracker
             CreateMap<BookingTracker, BookingTrackerResponse>()
+                .ForMember(dest => dest.IsInsurance, opt => opt.MapFrom(src => src.IsInsurance))
+                .ForMember(dest => dest.IsCompensation, opt => opt.MapFrom(src => src.IsCompensation))
                 .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources));
             CreateMap<BookingTracker, ExceptionResponse>()
                 .ForMember(dest => dest.Deposit, opt => opt.MapFrom(src => src.Booking.Deposit)) 
@@ -213,7 +215,7 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.Note, opt => opt.MapFrom(src => src.Booking.Note))
                 .ForMember(dest => dest.BookingAt, opt => opt.MapFrom(src => src.Booking.BookingAt))
                 .ForMember(dest => dest.IsReviewOnline, opt => opt.MapFrom(src => src.Booking.IsReviewOnline))
-                .ForMember(dest => dest.IsInsurance, opt => opt.MapFrom(src => src.Booking.IsInsurance))
+                .ForMember(dest => dest.BookingIsInsurance, opt => opt.MapFrom(src => src.Booking.IsInsurance))
                 .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Booking.Assignments))
                 .ForMember(dest => dest.Owner, opt => opt.MapFrom(src => src.Booking.User));
 
