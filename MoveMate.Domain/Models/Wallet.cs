@@ -30,6 +30,9 @@ public partial class Wallet
     public string? BankNumber { get; set; }
 
     public string? BankName { get; set; }
+    public string? ExpirdAt { get; set; }
+    public string? CardHolderName { get; set; }
+
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 

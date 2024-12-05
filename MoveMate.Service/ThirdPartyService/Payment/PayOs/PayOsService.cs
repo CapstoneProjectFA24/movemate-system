@@ -191,6 +191,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return operationResult;
             }
+            if(wallet.IsLocked == true)
+            {
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.WalletLocked);
+                return operationResult;
+            }
 
             var serverUrl = UrlHelper.GetSecureServerUrl(_httpContextAccessor);
 

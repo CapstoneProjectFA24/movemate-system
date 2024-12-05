@@ -83,7 +83,6 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IUserServices, UserService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<ITruckServices, TruckServices>();
-            services.AddScoped<IScheduleServices, ScheduleServices>();
             services.AddScoped<IBookingServices, BookingServices>();
             services.AddScoped<IGoogleMapsService, GoogleMapsService>();
             services.AddScoped<IHouseTypeServices, HouseTypeServices>();
@@ -99,6 +98,7 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IScheduleWorkingServices, ScheduleWorkingServices>();
+            services.AddScoped<IScheduleService, ScheduleService>();
             services.AddScoped<IGroupServices, GroupService>();
             services.AddScoped<IWalletServices, WalletServices>();
             services.AddScoped<IPaymentServices, PaymentService>();

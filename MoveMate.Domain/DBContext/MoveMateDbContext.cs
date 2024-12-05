@@ -520,6 +520,8 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
             entity.Property(e => e.LockReason).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
+            entity.Property(e => e.CardHolderName).HasMaxLength(255);
+            entity.Property(e => e.ExpirdAt).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.User).WithOne(p => p.Wallet)

@@ -9,9 +9,9 @@ namespace MoveMate.API.Controllers
     [ApiController]
     public class ScheduleController : BaseController
     {
-        private readonly IScheduleServices _scheduleServices;
+        private readonly IScheduleService _scheduleServices;
 
-        public ScheduleController(IScheduleServices scheduleServices)
+        public ScheduleController(IScheduleService scheduleServices)
         {
             _scheduleServices = scheduleServices;
         }
@@ -30,7 +30,7 @@ namespace MoveMate.API.Controllers
         [Authorize]
 
         // get all
-        public async Task<IActionResult> GetAll([FromQuery] GetAllSchedule request)
+        public async Task<IActionResult> GetAll([FromQuery] GetAllScheduleDailyRequest request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
 
@@ -39,25 +39,6 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        /// <summary>
-        /// CHORE : Retrieves a schedule by its ID.
-        /// </summary>
-        /// <param name="id">The ID of the schedule to retrieve.</param>
-        /// <returns>An IActionResult containing the operation result.</returns>
-        /// <remarks>
-        /// Sample request:
-        /// 
-        ///     GET /shcedule/1
-        /// </remarks>
-        /// <response code="200">Get Schedule by Id Success!</response>
-        /// <response code="404">Schedule not found</response>
-        /// <response code="500">Internal server error occurred</response>
-        [HttpGet("{id}")]
-        [Authorize]
-        public async Task<IActionResult> GetScheduleById(int id)
-        {
-            var response = await _scheduleServices.GetById(id);
-            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
-        }
+        
     }
 }
