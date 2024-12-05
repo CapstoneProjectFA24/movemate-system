@@ -1963,28 +1963,37 @@ public class AssignmentService : IAssignmentService
                 result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment, false);
                 return result;
             }
-            if (request.Status != StatusTrackerEnums.WAITING.ToString() && request.Status != StatusTrackerEnums.AVAILABLE.ToString())
+
+            if (bookingTracker.Status != StatusTrackerEnums.PENDING.ToString())
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotSuitableBookingTracker, false);
+                return result;
+            }
+
+            if (request.Status != StatusTrackerEnums.WAITING.ToString() && request.Status != StatusTrackerEnums.NOTAVAILABLE.ToString())
             {
                 result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotSuitableBookingTracker, false);
                 return result;
             }
             if (request.Status == StatusTrackerEnums.WAITING.ToString())
             {
-                if (string.IsNullOrEmpty(request.FailedReason))
+                if (!string.IsNullOrEmpty(request.FailedReason))
                 {
                     result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFail, false);
                     return result;
                 }
+                
             }
             else
             {
-                if (request.Status == StatusTrackerEnums.AVAILABLE.ToString())
+                if (request.Status == StatusTrackerEnums.NOTAVAILABLE.ToString())
                 {
-                    if (!string.IsNullOrEmpty(request.FailedReason))
+                    if (string.IsNullOrEmpty(request.FailedReason))
                     {
                         result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFailedReason, false);
                         return result;
                     }
+                    bookingTracker.FailedReason = request.FailedReason;
                 }
             }
             bookingTracker.Status = request.Status;
