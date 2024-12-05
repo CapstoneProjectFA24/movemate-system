@@ -1965,7 +1965,8 @@ public class AssignmentService : IAssignmentService
             }
             if (request.Status != StatusTrackerEnums.WAITING.ToString() && request.Status != StatusTrackerEnums.AVAILABLE.ToString())
             {
-
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotSuitableBookingTracker, false);
+                return result;
             }
             if (request.Status == StatusTrackerEnums.WAITING.ToString())
             {
@@ -1989,7 +1990,7 @@ public class AssignmentService : IAssignmentService
             bookingTracker.Status = request.Status;
             await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(bookingTracker);
             await _unitOfWork.SaveChangesAsync();
-    
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateBookingTracker, true);
             return result;
         }
         catch (Exception ex)

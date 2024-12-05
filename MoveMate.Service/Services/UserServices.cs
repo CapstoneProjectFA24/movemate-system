@@ -433,6 +433,12 @@ namespace MoveMate.Service.Services
                 }
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(request.BookingId, includeProperties: "BookingTrackers.TrackerSources");
 
+                if(booking.Status != BookingEnums.IN_PROGRESS.ToString())
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.DamageReport, false);
+                    return result;
+                }
+
                 if (request.IsInsurance == true)
                 {
                     if (booking.IsInsurance == true)
