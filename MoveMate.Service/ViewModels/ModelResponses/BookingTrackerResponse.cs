@@ -20,7 +20,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string Point { get; set; }
         [FirestoreProperty] public string? Status { get; set; }
         [FirestoreProperty] public string Description { get; set; }
-        [FirestoreProperty] public string? Tittle { get; set; }
+        [FirestoreProperty] public string? Title { get; set; }
         [FirestoreProperty] public double? EstimatedAmount { get; set; }
         [FirestoreProperty] public double? RealAmount { get; set; }
         [FirestoreProperty] public bool? IsInsurance { get; set; }

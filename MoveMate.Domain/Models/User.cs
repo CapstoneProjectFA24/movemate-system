@@ -47,6 +47,8 @@ public partial class User
 
     public int? GroupId { get; set; }
 
+    public string? Shard { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();

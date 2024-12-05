@@ -14,7 +14,7 @@ namespace MoveMate.Service.Commons.AutoMapper
         {
             // Mapping for UserResponse
             CreateMap<User, UserResponse>()
-                .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Wallet.Id))
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
             CreateMap<UpdateUserRequest, User>();
             CreateMap<CustomerToRegister, User>()
@@ -70,12 +70,12 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<BookingDetail, BookingDetailsResponse>()
                  .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.Service != null ? src.Service.ImageUrl : null));
             CreateMap<BookingDetail, BookingDetailWaitingResponse>()
-                .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Assignments)); 
+                .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Assignments));
 
             CreateMap<FailReportRequest, BookingDetail>();
 
             CreateMap<BookingDetailRequest, BookingDetail>();
-            
+
             CreateMap<BookingTracker, BookingTrackerResponse>();
             CreateMap<HouseType, HouseTypeResponse>();
             // REQUEST
@@ -132,7 +132,7 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             CreateMap<ScheduleBooking, ScheduleBookingResponse>()
                 .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Assignments));
-            
+
             CreateMap<CreateScheduleBookingRequest, ScheduleBooking>();
             //Truck
             CreateMap<TruckCategory, TruckCateResponse>();
@@ -150,7 +150,7 @@ namespace MoveMate.Service.Commons.AutoMapper
 
 
             //Transaction 
-            CreateMap<Transaction,  TransactionResponse>();
+            CreateMap<Transaction, TransactionResponse>();
             //Payment
             CreateMap<Payment, PaymentResponse>()
                 .ForMember(dest => dest.Transactions, opt => opt.MapFrom(src => src.Transactions));
@@ -163,6 +163,8 @@ namespace MoveMate.Service.Commons.AutoMapper
             //   .ForMember(dest => dest.Id, opt => opt.Ignore());
             CreateMap<CreateHouseTypeRequest, HouseType>();
             CreateMap<UpdateHouseTypeRequest, HouseType>();
+
+
 
 
             //Service
@@ -184,7 +186,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             // Mapping for TruckCategory to TruckCategoryResponse
             CreateMap<TruckCategory, TruckCategoryResponse>()
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
-            
+
 
             // Free
             CreateMap<FeeDetail, FeeDetailResponse>();
@@ -201,6 +203,25 @@ namespace MoveMate.Service.Commons.AutoMapper
             //Tracker
             CreateMap<BookingTracker, BookingTrackerResponse>()
                 .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources));
+            CreateMap<BookingTracker, ExceptionResponse>()
+                .ForMember(dest => dest.Deposit, opt => opt.MapFrom(src => src.Booking.Deposit)) 
+                .ForMember(dest => dest.BookingStatus, opt => opt.MapFrom(src => src.Booking.Status))
+                .ForMember(dest => dest.PickupAddress, opt => opt.MapFrom(src => src.Booking.PickupAddress))
+                .ForMember(dest => dest.DeliveryAddress, opt => opt.MapFrom(src => src.Booking.DeliveryAddress))
+                .ForMember(dest => dest.Total, opt => opt.MapFrom(src => src.Booking.Total))
+                .ForMember(dest => dest.TotalReal, opt => opt.MapFrom(src => src.Booking.TotalReal))
+                .ForMember(dest => dest.Note, opt => opt.MapFrom(src => src.Booking.Note))
+                .ForMember(dest => dest.BookingAt, opt => opt.MapFrom(src => src.Booking.BookingAt))
+                .ForMember(dest => dest.IsReviewOnline, opt => opt.MapFrom(src => src.Booking.IsReviewOnline))
+                .ForMember(dest => dest.IsInsurance, opt => opt.MapFrom(src => src.Booking.IsInsurance))
+                .ForMember(dest => dest.Assignments, opt => opt.MapFrom(src => src.Booking.Assignments))
+                .ForMember(dest => dest.Owner, opt => opt.MapFrom(src => src.Booking.User));
+
+
+            CreateMap<User, UserExceptionResponse>()
+                .ForMember(dest => dest.BankName, opt => opt.MapFrom(src => src.Wallet.BankName))
+                .ForMember(dest => dest.BankNumber, opt => opt.MapFrom(src => src.Wallet.BankNumber))
+                .ForMember(dest => dest.CardHolderName, opt => opt.MapFrom(src => src.Wallet.CardHolderName));
 
             //Fee Setting
             CreateMap<FeeSetting, FeeSettingResponse>();

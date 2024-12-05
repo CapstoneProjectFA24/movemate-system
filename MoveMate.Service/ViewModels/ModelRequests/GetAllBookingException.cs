@@ -1,5 +1,6 @@
 ﻿using LinqKit;
 using MoveMate.Domain.Enums;
+using MoveMate.Domain.Models;
 using MoveMate.Service.Commons.Page;
 using System;
 using System.Collections.Generic;
@@ -10,36 +11,24 @@ using System.Threading.Tasks;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
-    public class GetAllBookingException : PaginationRequest<MoveMate.Domain.Models.Booking>
+    public class GetAllBookingException : PaginationRequestV2<BookingTracker>
     {
         public string? Search { get; set; }
         public string? Type { get; set; }
-        public string? Status { get; set; }
-        public int? UserId { get; set; }
 
-        public override Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressions()
-        {
-            return GetExpressionsWithRole(null);
-        }
-
-        public Expression<Func<MoveMate.Domain.Models.Booking, bool>> GetExpressionsWithRole(int? userRoleId)
+       
+        public override Expression<Func<BookingTracker, bool>> GetExpressions()
         {
             if (!string.IsNullOrWhiteSpace(Search))
             {
                 Search = Search.Trim().ToLower();
 
-                var queryExpression = PredicateBuilder.New<MoveMate.Domain.Models.Booking>(true);
-                queryExpression.Or(cus => cus.DeliveryPoint.ToLower().Contains(Search));
+                var queryExpression = PredicateBuilder.New<BookingTracker>(true);
+                queryExpression.Or(cus => cus.Description.ToLower().Contains(Search));
 
 
                 Expression = Expression.And(queryExpression);
             }
-
-            if (!string.IsNullOrWhiteSpace(UserId.ToString()))
-            {
-                Expression = Expression.And(u => u.UserId == UserId);
-            }
-
             if (!string.IsNullOrWhiteSpace(Type))
             {
 
@@ -47,19 +36,11 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .Select(s => s.Trim())
                     .Where(s => !string.IsNullOrEmpty(s))
                     .ToList();
-                Expression = Expression.And(b => b.BookingTrackers.Any(bt => bt.Type == Type));
+                Expression = Expression.And(b => b.Type == Type);
             }
 
-            if (!string.IsNullOrWhiteSpace(Status))
-            {
-
-                var statuses = Status.Split('.')
-                    .Select(s => s.Trim())
-                    .Where(s => !string.IsNullOrEmpty(s))
-                    .ToList();
-                Expression = Expression.And(b => b.BookingTrackers.Any(bt => bt.Status == Status));
-            }
-            Expression = Expression.And(u => u.IsDeleted == false);
+          
+            Expression = Expression.And(u => u.Status == StatusTrackerEnums.WAITING.ToString());
 
             return Expression;
         }

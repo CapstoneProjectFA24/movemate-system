@@ -1937,4 +1937,62 @@ public class AssignmentService : IAssignmentService
             return result;
         }
     }
+
+    public async Task<OperationResult<bool>> StaffCheckException(int userId, int bookingTrackerId, PorterCheckReportRequest request)
+    {
+        var result = new OperationResult<bool>();
+        try
+        {
+            var bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsync(bookingTrackerId);
+            if (bookingTracker == null)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingTracker, false);
+                return result;
+            }
+
+            var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingTracker.BookingId);
+            if (booking == null)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking, false);
+                return result;
+            }
+
+            var porter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), booking.Id);
+            if (booking == null)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment, false);
+                return result;
+            }
+            if (request.Status != StatusTrackerEnums.WAITING.ToString() && request.Status != StatusTrackerEnums.AVAILABLE.ToString())
+            {
+
+            }
+            if (request.Status == StatusTrackerEnums.WAITING.ToString())
+            {
+                if (string.IsNullOrEmpty(request.FailedReason))
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFail, false);
+                    return result;
+                }
+            }
+            else
+            {
+                if (request.Status == StatusTrackerEnums.AVAILABLE.ToString())
+                {
+                    if (!string.IsNullOrEmpty(request.FailedReason))
+                    {
+                        result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFailedReason, false);
+                        return result;
+                    }
+                }
+            }
+            bookingTracker.Status = request.Status;
+            return result;
+        }
+        catch (Exception ex)
+        {
+            result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            return result;
+        }
+    }
 }

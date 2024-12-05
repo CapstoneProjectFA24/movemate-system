@@ -28,6 +28,6 @@ namespace MoveMate.Service.IServices
 
         Task<OperationResult<UserInfoResponse>> CreateUserInfo(CreateUserInfoRequest request);
 
-        //Task<OperationResult<bool>> UserReportException(ExceptionRequest request);
+        Task<OperationResult<bool>> UserReportException(int userId, ExceptionRequest request);
     }
 }

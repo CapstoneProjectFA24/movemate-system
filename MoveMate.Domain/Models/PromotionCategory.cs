@@ -39,6 +39,8 @@ public partial class PromotionCategory
 
     public bool? IsDeleted { get; set; }
 
+    public string? Shard { get; set; }
+
     public virtual Service? Service { get; set; }
 
     public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
