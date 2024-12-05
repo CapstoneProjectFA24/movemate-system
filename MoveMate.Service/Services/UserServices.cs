@@ -467,6 +467,7 @@ namespace MoveMate.Service.Services
                 var tracker = _mapper.Map<BookingTracker>(request);
                 await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                 tracker.Type = TrackerEnums.MONETARY.ToString();
+                tracker.IsCompensation = false;
                 tracker.Status = StatusTrackerEnums.PENDING.ToString();
                 tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 

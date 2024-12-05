@@ -24,6 +24,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public double? EstimatedAmount { get; set; }
         [FirestoreProperty] public double? RealAmount { get; set; }
         [FirestoreProperty] public bool? IsInsurance { get; set; }
+        [FirestoreProperty] public bool? IsCompensation { get; set; }
         [FirestoreProperty] public string? FailedReason { get; set; }
         [FirestoreProperty] public List<TrackerSourceResponse> TrackerSources { get; set; }
     }

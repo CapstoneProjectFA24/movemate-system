@@ -177,5 +177,17 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.StaffCheckException(userId, bookingTrackerId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE: Manager handles exceptions
+        /// </summary>
+        /// <param name="bookingTrackerId"></param>
+        /// <returns></returns>
+        [HttpPut("manager-resolve-exception/{bookingTrackerId}")]
+        public async Task<IActionResult> ManagerResolveException(int bookingTrackerId, [FromBody] ManagerResolveRequest request)
+        {
+            var response = await _assignmentService.ManagerResolveException(bookingTrackerId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
