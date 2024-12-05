@@ -37,10 +37,25 @@ namespace MoveMate.Repository.Repositories.Repository
             IQueryable<BookingTracker> query = _dbSet;
 
             var assignments = await query
-                .Where(a => a.BookingId == bookingId && a.Type == TrackerEnums.MONETARY.ToString())
+                .Where(a => a.BookingId == bookingId && a.Type == TrackerEnums.MONETARY.ToString() && a.IsInsurance == true)
                 .ToListAsync(); // Execute and return the list of assignments
 
             return assignments;
+        }
+
+        public virtual async Task<BookingTracker?> GetByIdAsyncV1(int id, string includeProperties = "")
+        {
+            IQueryable<BookingTracker> query = _dbSet;
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            query = query.Where(a => a.Id == id);
+
+            var result = await query.FirstOrDefaultAsync();
+            return result;
         }
     }
 }
