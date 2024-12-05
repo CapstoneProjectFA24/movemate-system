@@ -44,6 +44,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [JsonIgnore]
         public bool? IsDeleted { get; set; } = false;
 
-        public virtual ICollection<VoucherRequest> Vouchers { get; set; } = new List<VoucherRequest>();
+        public double Price { get; set; }
     }
 }

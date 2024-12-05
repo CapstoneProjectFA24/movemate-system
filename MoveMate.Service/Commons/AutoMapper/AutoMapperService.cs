@@ -93,7 +93,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<BookingDetail, BookingDetailReport>()
                 .ForMember(dest => dest.BookingAt, opt => opt.MapFrom(src => src.Booking.BookingAt))
                 .ForMember(dest => dest.Number, opt => opt.MapFrom(src => src.Booking.TruckNumber))
-                .ForMember(dest => dest.Users, opt => opt.MapFrom(src => src.Booking.User)); ;
+                .ForMember(dest => dest.Users, opt => opt.MapFrom(src => src.Booking.User));
 
             //.ForMember(dest => dest.HouseTypeId, opt => opt.Ignore());
 
@@ -102,6 +102,18 @@ namespace MoveMate.Service.Commons.AutoMapper
             //    .ForMember(dest => dest.ScheduleDetails, opt => opt.MapFrom(src => src.ScheduleBookingDetails));
 
             //CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
+
+            CreateMap<Schedule, ScheduleDailyResponse>()
+            .ForMember(dest => dest.ScheduleWorkingId,
+                       opt => opt.MapFrom(src => src.ScheduleWorkings.FirstOrDefault().Id))
+            .ForMember(dest => dest.GroupId,
+                       opt => opt.MapFrom(src => src.ScheduleWorkings.FirstOrDefault().GroupId));
+
+            CreateMap<ScheduleRequest, Schedule>()
+           .ForMember(dest => dest.Date, opt => opt.MapFrom(src =>
+               string.IsNullOrWhiteSpace(src.Date)
+                   ? (DateOnly?)null
+                   : DateOnly.ParseExact(src.Date, "MM/dd/yyyy")));
 
             CreateMap<CreateScheduleWorkingRequest, ScheduleWorking>()
      .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src =>
@@ -193,8 +205,7 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<FeeSetting, GetFeeSettingResponse>();
 
             //Promotion
-            CreateMap<CreatePromotionRequest, PromotionCategory>()
-                .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));
+            CreateMap<CreatePromotionRequest, PromotionCategory>();
             CreateMap<UpdatePromotionRequest, PromotionCategory>();
             CreateMap<PromotionCategory, PromotionResponse>()
                 .ForMember(dest => dest.Vouchers, opt => opt.MapFrom(src => src.Vouchers));

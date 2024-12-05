@@ -97,15 +97,7 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<PromotionResponse>> UpdatePromotion(int id, UpdatePromotionRequest request)
         {
             var result = new OperationResult<PromotionResponse>();
-            var validationContext = new ValidationContext(request);
-            var validationResults = new List<ValidationResult>();
-            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
-
-            if (!isValid)
-            {
-                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
-                return result;
-            }
+           
             try
             {
                 var promotion = await _unitOfWork.PromotionCategoryRepository.GetByIdAsync(id, includeProperties: "Vouchers");
@@ -179,6 +171,7 @@ namespace MoveMate.Service.Services
 
 
                 ReflectionUtils.UpdateProperties(request, promotion);
+                var vouchers = await _unitOfWork.VoucherRepository.GetVoucherWithHighestPriceByPromotionIdAsync(promotion.Id);
                 if (request.Quantity > assignedVoucherCount)
                 {
                     int currentVoucherCount = promotion.Vouchers.Count;
@@ -190,6 +183,7 @@ namespace MoveMate.Service.Services
                             PromotionCategoryId = promotion.Id,
                             Code = GenerateVoucherCode(),
                             IsActived = false,
+                            Price = vouchers.Price,
                             IsDeleted = false
                         };
                         await _unitOfWork.VoucherRepository.AddAsync(newVoucher);
@@ -228,15 +222,7 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<PromotionResponse>> CreatePromotion(CreatePromotionRequest request)
         {
             var result = new OperationResult<PromotionResponse>();
-            var validationContext = new ValidationContext(request);
-            var validationResults = new List<ValidationResult>();
-            bool isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
-
-            if (!isValid)
-            {
-                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ValidateField);
-                return result;
-            }
+          
             try
             {
                 
@@ -247,7 +233,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                if (service.InverseParentService.Count == 0)
+                if (service.Tier == 0)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.SuperService);
                     return result;
@@ -265,16 +251,29 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                List<Voucher> vouchers = _mapper.Map<List<Voucher>>(request.Vouchers);
-                if (vouchers.Count != request.Quantity)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VoucherLessThanQuantity);
-                    return result;
-                }
+               
                 var promotion = _mapper.Map<PromotionCategory>(request);
                 await _unitOfWork.PromotionCategoryRepository.AddAsync(promotion);
                 await _unitOfWork.SaveChangesAsync();
+                if (request.Quantity.HasValue && request.Quantity.Value > 0)
+                {
+                    var vouchers = new List<Voucher>();
+                    for (int i = 0; i < request.Quantity.Value; i++)
+                    {
+                        var voucher = new Voucher
+                        {
+                            PromotionCategoryId = promotion.Id,
+                            Price = request.Price,
+                            Code = GenerateVoucherCode(10), // Tạo mã voucher
+                            IsActived = false,
+                            IsDeleted = false
+                        };
+                        vouchers.Add(voucher);
+                    }
 
+                    await _unitOfWork.VoucherRepository.AddRangeAsync(vouchers);
+                }
+                _unitOfWork.Save();
                 var response = _mapper.Map<PromotionResponse>(promotion);
                 result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreatePromotion, response);
 
