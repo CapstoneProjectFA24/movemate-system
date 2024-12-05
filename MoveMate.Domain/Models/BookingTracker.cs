@@ -25,6 +25,7 @@ public partial class BookingTracker
     public double? RealAmount { get; set; }
     public bool? IsInsurance { get; set; }
     public string? FailedReason { get; set; }
+    public bool? IsCompensation { get; set; }
     public virtual Booking? Booking { get; set; }
 
     public virtual ICollection<TrackerSource> TrackerSources { get; set; } = new List<TrackerSource>();
