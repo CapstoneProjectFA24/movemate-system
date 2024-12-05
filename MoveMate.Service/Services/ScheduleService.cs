@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
@@ -73,18 +74,67 @@ namespace MoveMate.Service.Services
             }
         }
 
-        //public async Task<OperationResult<ScheduleDailyResponse>> CreateSchedule(ScheduleRequest request)
-        //{
-        //    var result = new OperationResult<ScheduleDailyResponse>();
-        //    try
-        //    {
-        //        var 
-        //    }
-        //    catch(Exception e)
-        //    {
-        //        result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
-        //        return result;
-        //    }
-        //}
+        public async Task<OperationResult<ScheduleDailyResponse>> CreateSchedule(ScheduleRequest request)
+        {
+            var result = new OperationResult<ScheduleDailyResponse>();
+            try
+            {
+                var scheduleWorking = await _unitOfWork.ScheduleWorkingRepository.GetByIdAsync(request.ScheduleWorkingId);
+                if (scheduleWorking == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundScheduleWorking);
+                    return result;
+                }
+
+                var group = await _unitOfWork.GroupRepository.GetByIdAsync(request.GroupId);
+                if (group == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundGroup);
+                    return result;
+                }
+
+                var schedule = _unitOfWork.ScheduleRepository.GetByDate(request.Date);
+                if (schedule.IsDeleted == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ScheduleIsDeleted);
+                    return result;
+                }
+                if (schedule == null)
+                {
+                    schedule = new Schedule
+                    {
+                        Date = DateOnly.ParseExact(request.Date, "MM/dd/yyyy"), 
+                        IsDeleted = false
+                    };
+
+                    // Thêm Schedule vào cơ sở dữ liệu
+                    await _unitOfWork.ScheduleRepository.AddAsync(schedule);
+
+                    scheduleWorking.ScheduleId = schedule.Id;
+                    scheduleWorking.GroupId = group.Id;
+                }
+                else
+                {
+                    scheduleWorking.ScheduleId = schedule.Id;
+                    scheduleWorking.GroupId = group.Id;
+                }
+                await _unitOfWork.ScheduleWorkingRepository.SaveOrUpdateAsync(scheduleWorking);
+                await _unitOfWork.GroupRepository.SaveOrUpdateAsync(group);
+                await _unitOfWork.ScheduleRepository.SaveOrUpdateAsync(schedule);
+                await _unitOfWork.SaveChangesAsync();
+                schedule = await _unitOfWork.ScheduleRepository.GetByIdAsync(schedule.Id, includeProperties: "ScheduleWorkings");
+                var response = _mapper.Map<ScheduleDailyResponse>(schedule);
+                result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateSchedule,
+                    response);
+
+                return result;
+
+            }
+            catch (Exception e)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
     }
 }

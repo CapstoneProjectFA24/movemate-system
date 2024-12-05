@@ -187,10 +187,11 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("BookingTracker");
 
             entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.FailedReason).HasMaxLength(255);
             entity.Property(e => e.Location).HasMaxLength(255);
             entity.Property(e => e.Point).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
-            entity.Property(e => e.Tittle).HasMaxLength(255);
+            entity.Property(e => e.Title).HasMaxLength(255);
             entity.Property(e => e.Time).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
 

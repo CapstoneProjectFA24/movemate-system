@@ -37,6 +37,7 @@ using StackExchange.Redis;
 using MoveMate.Service.Library;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
+using System.Diagnostics;
 
 namespace MoveMate.Service.Services
 {
@@ -3512,10 +3513,13 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RefundTrueNoReasonFail);
                     return result;
                 }
-
+                var tracker = await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByBookingIdAndStatusAndTypeAsync(bookingId, StatusTrackerEnums.WAITING.ToString(), TrackerEnums.REFUND.ToString());
                 if (request.IsRefunded == false && !string.IsNullOrEmpty(request.ReasonRefundFailed))
                 {
                     booking.ReasonRefundFailed = request.ReasonRefundFailed;
+                    tracker.Status = StatusTrackerEnums.AVAILABLE.ToString();
+                    tracker.FailedReason = request.ReasonRefundFailed;
+                    tracker.RealAmount = 0;
                 }
                 else if (request.IsRefunded == true && string.IsNullOrEmpty(request.ReasonRefundFailed) && booking.IsDeposited == true)
                 {
@@ -3542,7 +3546,9 @@ namespace MoveMate.Service.Services
                     booking.IsRefunded = true;
                     // Calculate and return the refund amount
                     double amount = (double)(booking.Deposit * refundPercentage);
-                    booking.TotalRefund = amount;
+                    booking.TotalRefund = amount;                   
+                    tracker.Status = StatusTrackerEnums.AVAILABLE.ToString();
+                    tracker.RealAmount = amount;
 
                     var user = await _unitOfWork.UserRepository.GetManagerAsync();
                     var walletManager = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(user.Id);
@@ -3602,6 +3608,7 @@ namespace MoveMate.Service.Services
 
                 booking.Status = BookingEnums.COMPLETED.ToString();
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(tracker);
                 await _unitOfWork.SaveChangesAsync();
                 var entity = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
                   "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
@@ -3618,6 +3625,45 @@ namespace MoveMate.Service.Services
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
+            }
+        }
+
+        public async Task<OperationResult<List<BookingResponse>>> GetBookingExcception(GetAllBookingException request)
+        {
+            var result = new OperationResult<List<BookingResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.BookingRepository.GetWithCount(
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder(),
+                    includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers"
+                );
+                var listResponse = _mapper.Map<List<BookingResponse>>(entities.Data);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingEmpty, listResponse);
+                    return result;
+                }
+
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingSuccess, listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occurred in getAll Service Method");
+                throw;
             }
         }
     }

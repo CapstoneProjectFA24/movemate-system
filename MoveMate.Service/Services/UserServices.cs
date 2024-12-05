@@ -413,5 +413,18 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
+
+        //public Task<OperationResult<bool>> UserReportException(ExceptionRequest request)
+        //{
+        //    var result = new OperationResult<bool>();
+        //    try
+        //    {
+
+        //    }
+        //    catch(Exception ex)
+        //    {
+
+        //    }
+        //}
     }
 }
