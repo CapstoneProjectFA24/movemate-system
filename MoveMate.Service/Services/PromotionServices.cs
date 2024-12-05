@@ -263,7 +263,7 @@ namespace MoveMate.Service.Services
                         var voucher = new Voucher
                         {
                             PromotionCategoryId = promotion.Id,
-                            Price = request.Price,
+                            Price = request.Amount,
                             Code = GenerateVoucherCode(10), // Tạo mã voucher
                             IsActived = false,
                             IsDeleted = false
