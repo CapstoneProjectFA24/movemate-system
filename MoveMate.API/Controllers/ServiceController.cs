@@ -184,10 +184,7 @@ namespace MoveMate.API.Controllers
             var response = await _services.CalService(request); 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
-
-
-
-
+        
         /// <summary>
         /// CHORE : Creates a new service with the specified details.
         /// </summary>

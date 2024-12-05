@@ -329,6 +329,24 @@ namespace MoveMate.Service.Utils
             return result;
         }
 
+        /// <summary>
+        /// Generate shard range from input string.
+        /// </summary>
+        /// <remarks>
+        /// This method receives a shard range string and validates its format. If valid, it returns a list of shards within the range (year, month, or day). 
+        /// If the range is invalid, it returns an error and a suitable message.
+        /// Validation rules:
+        /// - Checks if the shard range string is null or empty.
+        /// - The shard range must have a valid format, such as `yyyy-yyyy`, `yyyyMM-yyyyMM`, `yyyyMMdd-yyyyMMdd`.
+        /// - If the format is invalid, it returns an error with a suitable message.
+        /// </remarks>
+        /// <param name="shardRange">Shard range string (e.g., yyyy-yyyy, yyyyMM-yyyyMM, yyyyMMdd-yyyyMMdd).</param>
+        /// <returns>
+        /// Returns a tuple including:
+        ///  - isError: A boolean indicating whether there is an error.
+        ///  - msg: An error message if there is one.
+        ///  - result: A list of valid shards or empty if there is an error.
+        /// </returns>
         public static (bool isError, string msg, List<string> result) GenerateShardRangeV2(string shardRange)
         {
             var result = new List<string>();

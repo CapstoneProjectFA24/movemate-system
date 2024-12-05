@@ -65,6 +65,24 @@ namespace MoveMate.Service.Services
             }
         }
 
+
+        /// <summary>
+        /// CHORE: Calculate and summarize transactions by shard range.
+        /// </summary>
+        /// <remarks>
+        /// This method performs transaction statistics based on the shard range provided in the `request` parameter. 
+        /// If both the `Shard` and `Type` parameters are provided, it will return a 400 (BadRequest) error. 
+        /// Validation rules:
+        /// - If both `Shard` and `Type` are provided in the request, it will return a `400 BadRequest` with the error message "Shard and Type cannot be provided together."
+        /// - Based on the `Type` value, the shard range can be:
+        ///   - **NOW**: Statistics for the current time.
+        ///   - **WEEKNOW**: Statistics for the current week.
+        ///   - **MONTHNOW**: Statistics for the current month. If `IsSummary` is `true`, it will return a summary; otherwise, it will return detailed statistics.
+        /// </remarks>
+        /// <param name="request">Transaction statistics request, including `Shard`, `Type`, and `IsSummary`.</param>
+        /// <returns>
+        /// Returns a result with transaction statistics information if successful, or an error if there is an issue.
+        /// </returns>
         public async Task<OperationResult<object>> StatisticTransaction(StatisticRequest request)
         {
             var result = new OperationResult<object>();
@@ -74,7 +92,8 @@ namespace MoveMate.Service.Services
             if (request.Shard != null && request.Type != null)
             {
                 // throw 400 1 trong 2 thui đừng có tham lam
-                result.AddError(StatusCode.BadRequest, MessageConstant.ShardErrorMessage.ShardAndTypeCannotBeProvidedTogether);
+                result.AddError(StatusCode.BadRequest,
+                    MessageConstant.ShardErrorMessage.ShardAndTypeCannotBeProvidedTogether);
                 return result;
             }
 
@@ -102,6 +121,7 @@ namespace MoveMate.Service.Services
                         {
                             shard = DateUtil.GetCurrentMonthDaysShard();
                         }
+
                         break;
 
                     default:
@@ -145,7 +165,6 @@ namespace MoveMate.Service.Services
             {
                 shardList.Add(new
                 {
-                    
                     Shard = shard,
                     TotalCompensation = sumCompensation,
                     TotalIncome = sumIncome
