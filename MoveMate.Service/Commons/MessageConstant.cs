@@ -135,7 +135,9 @@ namespace MoveMate.Service.Commons
             public const string CannotAssigned = "Drivers or porters cannot be added to the booking";
             public const string RefundFail = "Refund failure reasons cannot be added when you agree to a refund";
             public const string RefundTrueNoReasonFail = "Please provide a reason for not accepting a refund";
-
+            public const string NotInsurance = "This booking has not purchased insurance";
+            public const string PriceOver20m = "Cannot set a desired price greater than 20 million";
+            public const string NotEnoughInsurance = "Insufficient amount of insurance";
 
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
@@ -146,7 +148,8 @@ namespace MoveMate.Service.Commons
             public const string AssignmentManual = "Manual assignment Faild";
             public const string AssignmentDuplicate = "The staff member is already assigned to this booking.";
             public const string ReviewIsRequired = "What makes you unhappy about this staff?";
-
+            public const string MonetoryFail = "Cannot be added fail reason when you agree to a solve";
+            public const string MonetoryFailedReason = "Must give reason for refusal if refusing to resolve";
             //House type
             public const string NotFoundHouseType = "House type not found";
             public const string AddHouseTypeFail = "Add house type setting failed";
@@ -405,6 +408,7 @@ namespace MoveMate.Service.Commons
             //Tracker Source
             public const string DeleteTrackerSource = "Tracker source has been deleted";
             public const string AddTrackerSuccess = "Add tracker successful";
+            public const string AddTrackerReport = "We have noted your report";
 
             //HouseType
             public const string HouseTypeUpdateSuccess = "Update house type succesful";

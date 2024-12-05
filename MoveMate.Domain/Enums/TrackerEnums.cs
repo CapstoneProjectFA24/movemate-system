@@ -5,6 +5,7 @@ public enum TrackerEnums
     PENDING,
     REPORT,
     REFUND,
+    MONETARY,
     REVIEW_OFFLINE,
     DRIVER_ARRIVED,
     DRIVER_COMPLETED,

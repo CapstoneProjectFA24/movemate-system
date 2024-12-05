@@ -45,6 +45,14 @@ namespace MoveMate.Repository.Repositories.Repository
                 .ToListAsync();
         }
 
+        public async Task<List<Assignment>> GetByBookingIdAndIsReposibility(int bookingId)
+        {
+            IQueryable<Assignment> query = _dbSet;
+            return await query
+                .Where(p => p.BookingId == bookingId && p.IsResponsible == true)
+                .ToListAsync();
+        }
+
         public Assignment GetByStaffTypeAndIsResponsible(string staffType, int bookingId)
         {
             IQueryable<Assignment> query = _dbSet;
