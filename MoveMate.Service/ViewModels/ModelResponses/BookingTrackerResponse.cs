@@ -18,7 +18,13 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string Location { get; set; }
 
         public string Point { get; set; }
+        [FirestoreProperty] public string? Status { get; set; }
         [FirestoreProperty] public string Description { get; set; }
+        [FirestoreProperty] public string? Tittle { get; set; }
+        [FirestoreProperty] public double? EstimatedAmount { get; set; }
+        [FirestoreProperty] public double? RealAmount { get; set; }
+        [FirestoreProperty] public bool? IsInsurance { get; set; }
+        [FirestoreProperty] public string? FailedReason { get; set; }
         [FirestoreProperty] public List<TrackerSourceResponse> TrackerSources { get; set; }
     }
 }
