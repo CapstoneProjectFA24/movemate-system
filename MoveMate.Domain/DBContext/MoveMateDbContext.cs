@@ -139,6 +139,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.Review).HasMaxLength(255);
             entity.Property(e => e.ReviewAt).HasColumnType("datetime");
             entity.Property(e => e.RoomNumber).HasMaxLength(255);
+            entity.Property(e => e.Shard).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.TypeBooking).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
@@ -187,10 +188,11 @@ public partial class MoveMateDbContext : DbContext
             entity.ToTable("BookingTracker");
 
             entity.Property(e => e.Description).HasMaxLength(255);
+            entity.Property(e => e.FailedReason).HasMaxLength(255);
             entity.Property(e => e.Location).HasMaxLength(255);
             entity.Property(e => e.Point).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
-            entity.Property(e => e.Tittle).HasMaxLength(255);
+            entity.Property(e => e.Title).HasMaxLength(255);
             entity.Property(e => e.Time).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
 
@@ -296,6 +298,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.EndBookingTime).HasColumnType("datetime");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.Shard).HasMaxLength(255);
             entity.Property(e => e.StartBookingTime).HasColumnType("datetime");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
             entity.Property(e => e.Type).HasMaxLength(255);
@@ -465,6 +468,7 @@ public partial class MoveMateDbContext : DbContext
             entity.Property(e => e.NumberIntroduce).HasMaxLength(255);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.Phone).HasMaxLength(255);
+            entity.Property(e => e.Shard).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
 

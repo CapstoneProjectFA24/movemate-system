@@ -40,7 +40,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     expression = expression.And(u => u.Date.HasValue && u.Date.Value == parsedDate);
                 }
             }
-
+            expression = expression.And(u => u.IsDeleted == false);
 
             return expression;
         }

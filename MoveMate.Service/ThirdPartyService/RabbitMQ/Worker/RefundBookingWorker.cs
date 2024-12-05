@@ -38,7 +38,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                 var firebaseServices = scope.ServiceProvider.GetRequiredService<IFirebaseServices>();
                 var producer = scope.ServiceProvider.GetRequiredService<IMessageProducer>();
                 // check booking
-                var existingBooking = await unitOfWork.BookingRepository.GetByIdAsync(message);
+                var existingBooking = await unitOfWork.BookingRepository.GetByIdAsync(message, includeProperties:"Assignments");
                 if (existingBooking == null)
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
@@ -68,13 +68,25 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     }
                     existingBooking.TotalRefund = (double)(existingBooking.Deposit * refundPercentage);
                     existingBooking.Status = BookingEnums.REFUNDING.ToString();
+                    var tracker = new BookingTracker();
+                    tracker.BookingId = existingBooking.Id;
+                    tracker.Type = TrackerEnums.REFUND.ToString();
+                    tracker.Status = StatusTrackerEnums.WAITING.ToString();
+                    tracker.EstimatedAmount = existingBooking.TotalRefund;
+                    tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+                    await unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                 }
 
                 if (existingBooking.TotalRefund == 0 || !existingBooking.TotalRefund.HasValue)
                 {
                     existingBooking.Status = BookingEnums.COMPLETED.ToString();
+                    foreach(var assignment  in existingBooking.Assignments)
+                    {
+                        assignment.Status = AssignmentStatusEnums.COMPLETED.ToString();
+                        
+                    }
                 }
-
+                await unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(existingBooking.Assignments.ToList());
                 await unitOfWork.BookingRepository.SaveOrUpdateAsync(existingBooking);
                 await unitOfWork.SaveChangesAsync();
                 producer.SendingMessage("movemate.push_to_firebase", existingBooking.Id);

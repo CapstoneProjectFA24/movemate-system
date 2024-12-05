@@ -12,6 +12,6 @@ namespace MoveMate.Service.IServices
     public interface IScheduleService
     {
         public Task<OperationResult<List<ScheduleDailyResponse>>> GetAll(GetAllScheduleDailyRequest request);
-       // public Task<OperationResult<ScheduleDailyResponse>> CreateSchedule(ScheduleRequest request);
+        public Task<OperationResult<ScheduleDailyResponse>> CreateSchedule(ScheduleRequest request);
     }
 }

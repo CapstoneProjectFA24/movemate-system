@@ -39,6 +39,27 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        
+        /// <summary>
+        /// CHORE : Creates a new group entry.
+        /// </summary>
+        /// <param name="request">The request payload containing group detail.</param>
+        /// <returns>A response indicating success or failure of the operation.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/group/
+        ///     {
+        ///         "date": "12/05/2024",
+        ///         "scheduleWorkingId": 1,
+        ///         "groupId": 2
+        ///     }
+        /// </remarks>
+        [HttpPost("")]
+        public async Task<IActionResult> CreateSchedule([FromBody] ScheduleRequest request)
+        {
+            var response = await _scheduleServices.CreateSchedule(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
