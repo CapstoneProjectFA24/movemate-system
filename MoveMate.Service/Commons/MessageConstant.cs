@@ -219,7 +219,7 @@ namespace MoveMate.Service.Commons
             //Wallet
             public const string NotFoundWallet = "Wallet not found";
             public const string UpdateWalletBalance = "Failed to update wallet balance";
-
+            public const string NotEnoughMoney = "Wallet balance is not enough";
             //Group
             public const string NotFoundGroup = "Not found group";
             public const string CannotAddReviewer = "Group cannot have more than 3 REVIEWER";
@@ -381,7 +381,7 @@ namespace MoveMate.Service.Commons
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";
             public const string UpdateWalletSuccess = "Wallet updated successfully";
-            
+            public const string EnoughMoney = "Sufficient wallet balance";
 
             //Payment
             public const string CreatePaymentLinkSuccess = "Payment link created successfully";

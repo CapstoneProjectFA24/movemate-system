@@ -42,7 +42,7 @@ namespace MoveMate.Service.Services
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetWalletSuccess, walletResponse);
                     return result;
                 }
-            
+
                 else
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
@@ -115,6 +115,43 @@ namespace MoveMate.Service.Services
                         response);
                 return result;
 
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<bool>> CheckBalance(int userId, double amount)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId, includeProperties: "Wallet");
+                if (user == null)
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);
+                    return result;
+                }
+
+                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+                if (wallet == null)
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet, false);
+                    return result;
+                }
+
+                if (wallet.Balance < amount)
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.NotEnoughMoney, false);
+                    return result;
+                }
+                else
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.EnoughMoney, true);
+                    return result;
+                }
             }
             catch (Exception ex)
             {

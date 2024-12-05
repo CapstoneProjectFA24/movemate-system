@@ -167,5 +167,19 @@ namespace MoveMate.API.Controllers
             var response = await _walletServices.UpdateWallet(userId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE: Check wallet balance 
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("")]
+        public async Task<IActionResult> CheckWallet([FromQuery]double amount)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _walletServices.CheckBalance(userId, amount);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
