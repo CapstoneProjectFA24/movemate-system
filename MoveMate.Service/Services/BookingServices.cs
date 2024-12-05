@@ -537,6 +537,14 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             }
+
+            if (booking != null && booking.Status == BookingEnums.COMING.ToString())
+            {
+                booking.Status = BookingEnums.IN_PROGRESS.ToString();
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+            }
         }
 
         #endregion
