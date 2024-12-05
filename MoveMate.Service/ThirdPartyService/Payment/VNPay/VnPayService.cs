@@ -62,6 +62,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
+                if (wallet.IsLocked == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.WalletLocked);
+                    return result;
+                }
 
                 var userResult = await _unitOfWork.UserRepository.GetByIdAsync(wallet.UserId);
                 if (userResult == null)
