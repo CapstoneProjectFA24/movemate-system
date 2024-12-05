@@ -19,7 +19,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? Note { get; set; }
         public DateTime? BookingAt { get; set; }
         public bool? IsReviewOnline { get; set; } = false;
-        public bool? IsInsurance { get; set; } = false;
+        public bool? BookingIsInsurance { get; set; } = false;
         public UserExceptionResponse Owner { get; set; }
         public virtual ICollection<AssignmentResponse> Assignments { get; set; }
     }

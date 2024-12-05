@@ -20,4 +20,5 @@ public interface IAssignmentService
     public Task<OperationResult<bool>> ReviewStaff(int userId, int assignmentId, ReviewStaffRequest request);
     Task<OperationResult<BookingResponse>> BonusStaff(int userId, int assignmentId, BonusStaffRequest request);
     Task<OperationResult<bool>> StaffCheckException(int userId, int bookingTrackerId, PorterCheckReportRequest request);
+    Task<OperationResult<BookingTrackerResponse>> ManagerResolveException(int bookingTrackerId, ManagerResolveRequest request);
 }

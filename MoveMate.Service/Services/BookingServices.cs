@@ -3525,7 +3525,7 @@ namespace MoveMate.Service.Services
                 if (request.IsRefunded == false && !string.IsNullOrEmpty(request.ReasonRefundFailed))
                 {
                     booking.ReasonRefundFailed = request.ReasonRefundFailed;
-                    tracker.Status = StatusTrackerEnums.AVAILABLE.ToString();
+                    tracker.Status = StatusTrackerEnums.NOTAVAILABLE.ToString();
                     tracker.FailedReason = request.ReasonRefundFailed;
                     tracker.RealAmount = 0;
                 }
