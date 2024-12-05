@@ -442,6 +442,18 @@ namespace MoveMate.Service.Commons
 
         }
 
+        public static class ShardErrorMessage
+        {
+            public const string ShardRangeCannotBeNullOrEmpty = "Shard range cannot be null or empty.";
+            public const string InvalidShardRangeFormat = "Invalid shard range format. Expected format: yyyy-yyyy, yyyyMM-yyyyMM, yyyyMMdd-yyyyMMdd, or a single shard.";
+            public const string InvalidShardFormat = "One or both shards are in an invalid format.";
+            public const string StartAndEndShardsMustBeSameType = "Start and end shards must be of the same type (yyyy, yyyyMM, or yyyyMMdd).";
+            public const string InvalidYearFormat = "Invalid year format.";
+            public const string InvalidMonthFormat = "Invalid month format.";
+            public const string InvalidDayFormat = "Invalid day format.";
+            public const string UnsupportedShardFormat = "Unsupported shard format. Supported formats: yyyy, yyyyMM, yyyyMMdd.";
+            public const string ShardAndTypeCannotBeProvidedTogether = "Both Shard and Type cannot be provided together. Please specify only one.";
+        }
 
 
     }
