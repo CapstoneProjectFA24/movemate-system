@@ -105,8 +105,10 @@ namespace MoveMate.API.Extensions
             services.AddScoped<IVnPayService, VnPayService>();
             services.AddScoped<IZaloPayService, ZaloPayServices>();
             services.AddScoped<IPayOsService, PayOsService>();
+            services.AddScoped<IStatisticService, StatisticService>();
             services.AddScoped<ZaloPaySDK>();
             services.AddScoped<IAssignmentService, AssignmentService>();
+            
 
             services.AddScoped<IAssignJobService, AssignJobService>();
 

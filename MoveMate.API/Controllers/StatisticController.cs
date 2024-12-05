@@ -10,21 +10,19 @@ namespace MoveMate.API.Controllers;
 [ApiController]
 public class StatisticController : BaseController
 {
-    private readonly IUserServices _userServices;
     private readonly ILogger<StatisticController> _logger;
-    private readonly ITransactionService _transactionService;
+    private readonly IStatisticService _statisticService;
+
 
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="userServices"></param>
-    /// <param name="transactionService"></param>
     /// <param name="logger"></param>
-    public StatisticController(IUserServices userServices, ITransactionService transactionService, ILogger<StatisticController> logger)
+    /// <param name="statisticService"></param>
+    public StatisticController(IStatisticService statisticService, ILogger<StatisticController> logger)
     {
-        _userServices = userServices;
-        _transactionService = transactionService;
         _logger = logger;
+        _statisticService = statisticService;
     }
 
     /// <summary>
@@ -54,7 +52,7 @@ public class StatisticController : BaseController
     [HttpGet("manager/transactions")]
     public async Task<IActionResult> StatisticTransactions([FromQuery]StatisticRequest request)
     {
-        var response = await _transactionService.StatisticTransaction(request);
+        var response = await _statisticService.StatisticTransaction(request);
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
