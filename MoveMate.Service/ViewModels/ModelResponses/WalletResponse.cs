@@ -15,6 +15,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? BankNumber { get; set; }
 
         public string? BankName { get; set; }
+        public string? ExpirdAt { get; set; }
+        public string? CardHolderName { get; set; }
         public bool? IsLocked { get; set; }
 
         public DateTime CreatedAt { get; set; }

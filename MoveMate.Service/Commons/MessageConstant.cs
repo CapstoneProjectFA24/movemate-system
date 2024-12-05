@@ -337,7 +337,8 @@ namespace MoveMate.Service.Commons
             public const string DeleteScheduleWorking = "Schedule working has been deleted";
             public const string CreateScheduleWorking = "Create a new schedule working successful";
             public const string ScheduleWorkingUpdateSuccess = "Update schedule working succesful";
-
+            public const string GetListScheduleDailyEmpty = "List schedule daily is empty!";
+            public const string GetListScheduleDailySuccess = "Get list schedule daily done";
 
             public const string GetListScheduleBookingEmpty = "List schedule booking is empty!";
             public const string GetListScheduleBookingSuccess = "Get list schedule booking done";

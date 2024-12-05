@@ -32,13 +32,55 @@ namespace MoveMate.Service.Services
             _logger = logger;          
         }
 
+        public async Task<OperationResult<List<ScheduleDailyResponse>>> GetAll(GetAllScheduleDailyRequest request)
+        {
+            var result = new OperationResult<List<ScheduleDailyResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.ScheduleRepository.GetWithCount(
+                    filter: request.GetExpressions(),
+                    pageIndex: request.page,
+                    pageSize: request.per_page,
+                    orderBy: request.GetOrder(),
+                    includeProperties: "ScheduleWorkings"
+                );
+                var listResponse = _mapper.Map<List<ScheduleDailyResponse>>(entities.Data);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok,
+                        MessageConstant.SuccessMessage.GetListScheduleDailyEmpty, listResponse);
+                    return result;
+                }
+
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListScheduleDailySuccess,
+                    listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occurred in getAll Service Method");
+                throw;
+            }
+        }
+
         //public async Task<OperationResult<ScheduleDailyResponse>> CreateSchedule(ScheduleRequest request)
         //{
         //    var result = new OperationResult<ScheduleDailyResponse>();
         //    try
         //    {
-
-        //    }catch(Exception ex) 
+        //        var 
+        //    }
+        //    catch(Exception e)
         //    {
         //        result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
         //        return result;

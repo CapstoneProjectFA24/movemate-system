@@ -256,6 +256,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 operationResult.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return operationResult;
             }
+            if (wallet.IsLocked == true)
+            {
+                operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.WalletLocked);
+                return operationResult;
+            }
 
             var newGuid = Guid.NewGuid();
             try
