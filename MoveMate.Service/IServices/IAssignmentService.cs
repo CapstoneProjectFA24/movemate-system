@@ -19,5 +19,5 @@ public interface IAssignmentService
     Task<OperationResult<BookingDetailWaitingResponse>> StaffReportFail(int assignmentId, FailReportRequest request);
     public Task<OperationResult<bool>> ReviewStaff(int userId, int assignmentId, ReviewStaffRequest request);
     Task<OperationResult<BookingResponse>> BonusStaff(int userId, int assignmentId, BonusStaffRequest request);
-
+    Task<OperationResult<bool>> StaffCheckException(int userId, int bookingTrackerId, PorterCheckReportRequest request);
 }

@@ -3628,9 +3628,9 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task<OperationResult<List<BookingResponse>>> GetBookingExcception(GetAllBookingException request)
+        public async Task<OperationResult<List<ExceptionResponse>>> GetBookingExcception(GetAllBookingException request)
         {
-            var result = new OperationResult<List<BookingResponse>>();
+            var result = new OperationResult<List<ExceptionResponse>>();
 
             var pagin = new Pagination();
 
@@ -3638,15 +3638,15 @@ namespace MoveMate.Service.Services
 
             try
             {
-                var entities = _unitOfWork.BookingRepository.GetWithCount(
+                var entities = _unitOfWork.BookingTrackerRepository.GetWithCount(
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
                     orderBy: request.GetOrder(),
-                    includeProperties: "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers"
+                    includeProperties: "Booking.Assignments,TrackerSources,Booking.User.Wallet"
                 );
-                var listResponse = _mapper.Map<List<BookingResponse>>(entities.Data);
-
+                var listResponse = _mapper.Map<List<ExceptionResponse>>(entities.Data);
+             
                 if (listResponse == null || !listResponse.Any())
                 {
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListBookingEmpty, listResponse);

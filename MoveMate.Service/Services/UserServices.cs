@@ -7,6 +7,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
+using MoveMate.Service.ThirdPartyService.Firebase;
 using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
@@ -18,6 +19,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static Grpc.Core.Metadata;
 
 namespace MoveMate.Service.Services
 {
@@ -26,12 +28,16 @@ namespace MoveMate.Service.Services
         private UnitOfWork _unitOfWork;
         private IMapper _mapper;
         private readonly ILogger<UserService> _logger;
+        private readonly IEmailService _emailService;
+        private readonly IFirebaseServices _firebaseServices;
 
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger)
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger, IEmailService emailService, IFirebaseServices firebaseServices)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
+            _emailService = emailService;
+            _firebaseServices = firebaseServices;
         }
 
 
@@ -50,7 +56,7 @@ namespace MoveMate.Service.Services
                 pageIndex: request.page,
                 pageSize: request.per_page,
                 orderBy: request.GetOrder(),
-                includeProperties: "Role,Truck"
+                includeProperties: "Role,Truck,Wallet"
             );
                 var listResponse = _mapper.Map<List<UserResponse>>(entities.Data);
 
@@ -304,10 +310,10 @@ namespace MoveMate.Service.Services
                 }
 
                 var existingUserInfo = await _unitOfWork.UserInfoRepository
-             .GetUserInfoByUserIdAndTypeAsync(user.Id , request.Type);
+             .GetUserInfoByUserIdAndTypeAsync(user.Id, request.Type);
 
 
-                if (existingUserInfo != null) 
+                if (existingUserInfo != null)
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoExist);
                     return result;
@@ -403,7 +409,7 @@ namespace MoveMate.Service.Services
                 var productResponse = _mapper.Map<GetUserResponse>(entity);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess,
                         productResponse);
-                
+
 
                 return result;
             }
@@ -414,17 +420,95 @@ namespace MoveMate.Service.Services
             }
         }
 
-        //public Task<OperationResult<bool>> UserReportException(ExceptionRequest request)
-        //{
-        //    var result = new OperationResult<bool>();
-        //    try
-        //    {
+        public async Task<OperationResult<bool>> UserReportException(int userId, ExceptionRequest request)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var checkBooking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(request.BookingId, userId);
+                if (checkBooking == null)
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay, false);
+                    return result;
+                }
+                var booking = await _unitOfWork.BookingRepository.GetByIdAsync(request.BookingId, includeProperties: "BookingTrackers.TrackerSources");
 
-        //    }
-        //    catch(Exception ex)
-        //    {
+                if (request.IsInsurance == true)
+                {
+                    if (booking.IsInsurance == true)
+                    {
+                        var bookingDetail = await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(TypeServiceEnums.INSURANCE.ToString(), booking.Id);
+                        if (bookingDetail == null)
+                        {
+                            result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail, false);
+                            return result;
+                        }
+                        var trackerReport = await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByTypeAndBookingIdAsync(TrackerEnums.MONETARY.ToString(), booking.Id);
 
-        //    }
-        //}
+                        if (bookingDetail.Quantity <= trackerReport.Count())
+                        {
+                            result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.NotEnoughInsurance, false);
+                            return result;
+                        }
+                    }
+                    else
+                    {
+                        result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.NotInsurance, false);
+                        return result;
+                    }
+                }
+
+                var tracker = _mapper.Map<BookingTracker>(request);
+                await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                tracker.Type = TrackerEnums.MONETARY.ToString();
+                tracker.Status = StatusTrackerEnums.PENDING.ToString();
+                tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+
+                List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                tracker.TrackerSources = resourceList;
+
+                booking.BookingTrackers.Add(tracker);
+
+                var assignments = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), booking.Id);
+                if (assignments == null)
+                {
+                    throw new Exception($"Not found assignment with booking Id {booking.UserId} - {booking.Status}");
+                }
+                var notificationStaff =
+                    await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignments.UserId);
+                if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
+                {
+                    var titleAssignment = "Report from Customer";
+                    var bodyAssignment = $"The customer has reported damaged or broken items for booking ID {booking.Id}.";
+                    var fcmTokenAssignment = notificationStaff.FcmToken;
+                    var dataAssignment = new Dictionary<string, string>
+        {
+            { "bookingId", booking.Id.ToString() },
+            { "status", booking.Status.ToString() },
+            { "message", "he customer has reported an issue with the booking." }
+        };
+
+                    // Send notification for each assignment to staff
+                    await _firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment,
+                        fcmTokenAssignment,
+                        dataAssignment);
+                }
+
+
+
+
+
+                await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
+                await _unitOfWork.SaveChangesAsync();
+                //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AddTrackerReport, true);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
     }
 }

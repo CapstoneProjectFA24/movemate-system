@@ -199,5 +199,33 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }
+
+        /// <summary>
+        /// CHORE : Update user info by user info id
+        /// </summary>
+        /// <param name="request">The user info request model.</param>
+        /// <returns>A response containing the created user info.</returns>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT /api/user-info/{id}
+        ///     {
+        ///         "type": "CAVET",
+        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729864500/movemate/eopqdqwqcblmzc5ymbeg.jpg",
+        ///         "value": "324214221212312"
+        ///     }
+        /// </remarks>
+        /// <response code="201">Returns the created truck category</response>
+        /// <response code="500">If there is a server error</response>
+        [HttpPost("report")]
+        public async Task<IActionResult> UserReport([FromBody] ExceptionRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _userService.UserReportException(userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
     }
 }

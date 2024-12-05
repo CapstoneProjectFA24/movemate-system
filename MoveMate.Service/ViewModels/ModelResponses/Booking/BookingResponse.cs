@@ -46,6 +46,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public bool IsCancel { get; set; }
 
         [FirestoreProperty] public string CancelReason { get; set; }
+        public string? Shard { get; set; }
 
         public bool IsPorter { get; set; }
         [FirestoreProperty] public bool IsRoundTrip { get; set; }
@@ -53,6 +54,9 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public double TotalFee { get; set; }
         [FirestoreProperty] public bool? IsReviewOnline { get; set; }
         [FirestoreProperty] public bool? IsRefunded { get; set; }
+        [FirestoreProperty] public bool? IsStaffReviewed { get; set; }
+        [FirestoreProperty] public bool? IsUpdated { get; set; }
+        [FirestoreProperty] public bool? IsInsurance { get; set; }
         [FirestoreProperty] public string? RefundAt { get; set; }
         [FirestoreProperty] public string? OrderStatus { get; set; }
         [FirestoreProperty] public string? ReasonRefundFailed { get; set; }
