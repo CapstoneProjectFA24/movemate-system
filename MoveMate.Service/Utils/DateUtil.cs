@@ -1,9 +1,5 @@
-﻿using MoveMate.Service.ViewModels.ModelRequests;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
+using MoveMate.Service.Commons;
 
 namespace MoveMate.Service.Utils
 {
@@ -168,7 +164,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
-        
+
         public static String GetKeyReview(int groupId, int scheduleId)
         {
             string dateKey = GetShardNow();
@@ -184,6 +180,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+
         public static String GetKeyDriverV2(DateTime? time, int truckCateId)
         {
             string dateKey = GetShard(time);
@@ -191,7 +188,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
-        
+
         public static String GetKeyDriver(DateTime? time, int truckCateId, int groupId, int scheduleId)
         {
             string dateKey = GetShard(time);
@@ -199,6 +196,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+
         public static String GetKeyDriverV2(DateTime? time, int truckCateId, int groupId, int scheduleId)
         {
             string dateKey = GetShard(time);
@@ -206,7 +204,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
-        
+
         public static String GetKeyDriverBooking(DateTime? time, int bookingId)
         {
             string dateKey = GetShard(time);
@@ -214,7 +212,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
-        
+
         // porter
         public static String GetKeyPorter(DateTime? time)
         {
@@ -223,6 +221,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
+
         public static String GetKeyPorterV2(DateTime? time)
         {
             string dateKey = GetShard(time);
@@ -230,7 +229,7 @@ namespace MoveMate.Service.Utils
 
             return redisKey;
         }
-        
+
         public static String GetKeyPorterBooking(DateTime? time, int bookingId)
         {
             string dateKey = GetShard(time);
@@ -253,5 +252,285 @@ namespace MoveMate.Service.Utils
             return (endTime - startTime).TotalHours >= 24;
         }
 
+        public static bool IsValidShard(string shard)
+        {
+            if (string.IsNullOrWhiteSpace(shard)) return false;
+
+            string pattern = @"^(?:\d{4}(?:\d{2}(?:\d{2})?)?)$";
+
+            return Regex.IsMatch(shard, pattern);
+        }
+
+        public static List<string> GenerateShardRange(string shardRange)
+        {
+            if (string.IsNullOrWhiteSpace(shardRange))
+                shardRange = GetShardNow();
+
+            var shards = shardRange.Split('-');
+
+            if (shards.Length > 2)
+                throw new ArgumentException(
+                    "Invalid shard range format. Expected format: yyyy-yyyy, yyyyMM-yyyyMM, yyyyMMdd-yyyyMMdd, or a single shard.");
+
+            var startShard = shards[0];
+            var endShard =
+                shards.Length == 2 ? shards[1] : shards[0]; // Nếu chỉ có 1 shard, startShard và endShard giống nhau
+
+            if (!IsValidShard(startShard) || !IsValidShard(endShard))
+                throw new ArgumentException("One or both shards are in an invalid format.");
+
+            if (startShard.Length != endShard.Length)
+                throw new ArgumentException(
+                    "Start and end shards must be of the same type (yyyy, yyyyMM, or yyyyMMdd).");
+
+            var result = new List<string>();
+
+            if (startShard.Length == 4) // yyyy
+            {
+                if (!int.TryParse(startShard, out var startYear) || !int.TryParse(endShard, out var endYear))
+                    throw new ArgumentException("Invalid year format.");
+
+                for (var year = startYear; year <= endYear; year++)
+                {
+                    result.Add(year.ToString());
+                }
+            }
+            else if (startShard.Length == 6) // yyyyMM
+            {
+                if (!DateTime.TryParseExact(startShard, "yyyyMM", null, System.Globalization.DateTimeStyles.None,
+                        out var startDate) ||
+                    !DateTime.TryParseExact(endShard, "yyyyMM", null, System.Globalization.DateTimeStyles.None,
+                        out var endDate))
+                    throw new ArgumentException("Invalid month format.");
+
+                for (var date = startDate; date <= endDate; date = date.AddMonths(1))
+                {
+                    result.Add(date.ToString("yyyyMM"));
+                }
+            }
+            else if (startShard.Length == 8) // yyyyMMdd
+            {
+                if (!DateTime.TryParseExact(startShard, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None,
+                        out var startDate) ||
+                    !DateTime.TryParseExact(endShard, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None,
+                        out var endDate))
+                    throw new ArgumentException("Invalid day format.");
+
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    result.Add(date.ToString("yyyyMMdd"));
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Unsupported shard format. Supported formats: yyyy, yyyyMM, yyyyMMdd.");
+            }
+
+            return result;
+        }
+
+        public static (bool isError, string msg, List<string> result) GenerateShardRangeV2(string shardRange)
+        {
+            var result = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(shardRange))
+            {
+                return (true, "Shard range cannot be null or empty.", result);
+            }
+
+            var shards = shardRange.Split('-');
+
+            if (shards.Length > 2)
+            {
+                return (true,
+                    "Invalid shard range format. Expected format: yyyy-yyyy, yyyyMM-yyyyMM, yyyyMMdd-yyyyMMdd, or a single shard.",
+                    result);
+            }
+
+            var startShard = shards[0];
+            var endShard =
+                shards.Length == 2 ? shards[1] : shards[0]; // Nếu chỉ có 1 shard, startShard và endShard giống nhau
+
+            if (!IsValidShard(startShard) || !IsValidShard(endShard))
+            {
+                return (true, "One or both shards are in an invalid format.", result);
+            }
+
+            if (startShard.Length != endShard.Length)
+            {
+                return (true, "Start and end shards must be of the same type (yyyy, yyyyMM, or yyyyMMdd).", result);
+            }
+
+            if (startShard.Length == 4) // yyyy
+            {
+                if (!int.TryParse(startShard, out var startYear) || !int.TryParse(endShard, out var endYear))
+                {
+                    return (true, "Invalid year format.", result);
+                }
+
+                for (var year = startYear; year <= endYear; year++)
+                {
+                    result.Add(year.ToString());
+                }
+            }
+            else if (startShard.Length == 6) // yyyyMM
+            {
+                if (!DateTime.TryParseExact(startShard, "yyyyMM", null, System.Globalization.DateTimeStyles.None,
+                        out var startDate) ||
+                    !DateTime.TryParseExact(endShard, "yyyyMM", null, System.Globalization.DateTimeStyles.None,
+                        out var endDate))
+                {
+                    return (true, "Invalid month format.", result);
+                }
+
+                for (var date = startDate; date <= endDate; date = date.AddMonths(1))
+                {
+                    result.Add(date.ToString("yyyyMM"));
+                }
+            }
+            else if (startShard.Length == 8) // yyyyMMdd
+            {
+                if (!DateTime.TryParseExact(startShard, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None,
+                        out var startDate) ||
+                    !DateTime.TryParseExact(endShard, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None,
+                        out var endDate))
+                {
+                    return (true, "Invalid day format.", result);
+                }
+
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    result.Add(date.ToString("yyyyMMdd"));
+                }
+            }
+            else
+            {
+                return (true, "Unsupported shard format. Supported formats: yyyy, yyyyMM, yyyyMMdd.", result);
+            }
+
+            return (false, string.Empty, result); // Return no error, with the generated result
+        }
+
+
+        public static (bool isError, string msg, List<string> result) GenerateShardRangeV3(string shardRange)
+        {
+            var result = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(shardRange))
+            {
+                return (true, MessageConstant.ShardErrorMessage.ShardRangeCannotBeNullOrEmpty, result);
+            }
+
+            var shards = shardRange.Split('-');
+
+            if (shards.Length > 2)
+            {
+                return (true, MessageConstant.ShardErrorMessage.InvalidShardRangeFormat, result);
+            }
+
+            var startShard = shards[0];
+            var endShard =
+                shards.Length == 2 ? shards[1] : shards[0]; // Nếu chỉ có 1 shard, startShard và endShard giống nhau
+
+            if (!IsValidShard(startShard) || !IsValidShard(endShard))
+            {
+                return (true, MessageConstant.ShardErrorMessage.InvalidShardFormat, result);
+            }
+
+            if (startShard.Length != endShard.Length)
+            {
+                return (true, MessageConstant.ShardErrorMessage.StartAndEndShardsMustBeSameType, result);
+            }
+
+            if (startShard.Length == 4) // yyyy
+            {
+                if (!int.TryParse(startShard, out var startYear) || !int.TryParse(endShard, out var endYear))
+                {
+                    return (true, MessageConstant.ShardErrorMessage.InvalidYearFormat, result);
+                }
+
+                for (var year = startYear; year <= endYear; year++)
+                {
+                    result.Add(year.ToString());
+                }
+            }
+            else if (startShard.Length == 6) // yyyyMM
+            {
+                if (!DateTime.TryParseExact(startShard, "yyyyMM", null, System.Globalization.DateTimeStyles.None,
+                        out var startDate) ||
+                    !DateTime.TryParseExact(endShard, "yyyyMM", null, System.Globalization.DateTimeStyles.None,
+                        out var endDate))
+                {
+                    return (true, MessageConstant.ShardErrorMessage.InvalidMonthFormat, result);
+                }
+
+                for (var date = startDate; date <= endDate; date = date.AddMonths(1))
+                {
+                    result.Add(date.ToString("yyyyMM"));
+                }
+            }
+            else if (startShard.Length == 8) // yyyyMMdd
+            {
+                if (!DateTime.TryParseExact(startShard, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None,
+                        out var startDate) ||
+                    !DateTime.TryParseExact(endShard, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None,
+                        out var endDate))
+                {
+                    return (true, MessageConstant.ShardErrorMessage.InvalidDayFormat, result);
+                }
+
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                {
+                    result.Add(date.ToString("yyyyMMdd"));
+                }
+            }
+            else
+            {
+                return (true, MessageConstant.ShardErrorMessage.UnsupportedShardFormat, result);
+            }
+
+            return (false, string.Empty, result); // Return no error, with the generated result
+        }
+
+
+        public static string GetCurrentMonthShard()
+        {
+            return DateTime.Now.ToString("yyyyMM");
+        }
+
+        public static string GetCurrentMonthDaysShard()
+        {
+            var now = DateTime.Now;
+            var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            var days = new List<string>();
+            /*for (var date = startOfMonth; date <= endOfMonth; date = date.AddDays(1))
+            {
+                days.Add($"{date:yyyyMMdd}");
+            }*/
+            days.Add($"{startOfMonth:yyyyMMdd}");
+            days.Add($"{endOfMonth:yyyyMMdd}");
+
+            return string.Join("-", days);
+        }
+
+
+        public static string GetCurrentWeekDaysShard()
+        {
+            var now = DateTime.Now;
+            var startOfWeek = now.AddDays(-(int)now.DayOfWeek + 1);
+            var endOfWeek = startOfWeek.AddDays(6);
+
+            var days = new List<string>();
+            /*for (var date = startOfWeek; date <= endOfWeek; date = date.AddDays(1))
+            {
+                days.Add($"{date:yyyyMMdd}");
+            }*/
+            days.Add($"{startOfWeek:yyyyMMdd}");
+            days.Add($"{endOfWeek:yyyyMMdd}");
+            
+            return string.Join("-", days);
+        }
     }
 }
