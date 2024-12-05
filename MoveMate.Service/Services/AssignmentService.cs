@@ -2075,6 +2075,7 @@ public class AssignmentService : IAssignmentService
                         var userTranferTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             WalletId = walletManager.Id,
+                            PaymentId = booking.Id,
                             Amount = request.RealAmount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.TRANFER.ToString(),
@@ -2103,6 +2104,7 @@ public class AssignmentService : IAssignmentService
                         var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             WalletId = walletCustomer.Id,
+                            PaymentId = booking.Id,
                             Amount = request.RealAmount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
@@ -2130,7 +2132,11 @@ public class AssignmentService : IAssignmentService
                     if(request.PaymentMethod == Resource.Other.ToString())
                     {
                         List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
-                        bookingTracker.TrackerSources = resourceList;
+                        foreach(var trackerSource in resourceList)
+                        {
+                            trackerSource.BookingTrackerId = bookingTracker.Id;
+                        }
+                        await _unitOfWork.TrackerSourceRepository.AddRangeAsync(resourceList.ToList());
                     }
                 }
             }
@@ -2138,7 +2144,7 @@ public class AssignmentService : IAssignmentService
             await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(bookingTracker);
             await _unitOfWork.SaveChangesAsync();
 
-            bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsync(bookingTrackerId);
+            bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsyncV1(bookingTrackerId, includeProperties: "TrackerSources");
             var response = _mapper.Map<BookingTrackerResponse>(bookingTracker);
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ResolveException, response);
             return result;
