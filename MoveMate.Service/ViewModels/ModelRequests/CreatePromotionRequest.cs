@@ -44,6 +44,6 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [JsonIgnore]
         public bool? IsDeleted { get; set; } = false;
 
-        public double Price { get; set; }
+        public double Amount { get; set; }
     }
 }

@@ -15,7 +15,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
     {
         public string? Search { get; set; }
         public string? Type { get; set; }
-
+        public int? UserId { get; set; }
+        public int? BookingId { get; set; }
        
         public override Expression<Func<BookingTracker, bool>> GetExpressions()
         {
@@ -38,8 +39,16 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .ToList();
                 Expression = Expression.And(b => b.Type == Type);
             }
+            if (UserId.HasValue)
+            {
+                Expression = Expression.And(b => b.Booking.UserId == UserId);
+            }
+            if (BookingId.HasValue)
+            {
+                Expression = Expression.And(b => b.BookingId == BookingId);
+            }
 
-          
+
             Expression = Expression.And(u => u.Status == StatusTrackerEnums.WAITING.ToString());
 
             return Expression;

@@ -1987,6 +1987,9 @@ public class AssignmentService : IAssignmentService
                 }
             }
             bookingTracker.Status = request.Status;
+            await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(bookingTracker);
+            await _unitOfWork.SaveChangesAsync();
+    
             return result;
         }
         catch (Exception ex)
