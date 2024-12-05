@@ -103,6 +103,8 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //CreateMap<ScheduleBookingDetail, ScheduleDetailResponse>();
 
+            CreateMap<ExceptionRequest, BookingTracker>();
+
             CreateMap<Schedule, ScheduleDailyResponse>()
             .ForMember(dest => dest.ScheduleWorkingId,
                        opt => opt.MapFrom(src => src.ScheduleWorkings.FirstOrDefault().Id))

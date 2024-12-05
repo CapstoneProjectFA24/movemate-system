@@ -9,5 +9,7 @@ public partial class Schedule
 
     public DateOnly? Date { get; set; }
 
+    public bool? IsDeleted { get; set; }
+
     public virtual ICollection<ScheduleWorking> ScheduleWorkings { get; set; } = new List<ScheduleWorking>();
 }
