@@ -39,15 +39,20 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .ToList();
                 Expression = Expression.And(b => b.Type == Type);
             }
-            if (UserId.HasValue)
-            {
-                Expression = Expression.And(b => b.Booking.UserId == UserId);
-            }
+           
             if (BookingId.HasValue)
             {
                 Expression = Expression.And(b => b.BookingId == BookingId);
             }
+            if (UserId.HasValue)
+            {
+               
+                Expression = PredicateBuilder.New<BookingTracker>(true); // Reset existing conditions
+                Expression = Expression.And(b => b.Type == TrackerEnums.MONETARY.ToString() && b.Booking.UserId == UserId.Value);
 
+                // Return immediately since this condition overrides others
+                return Expression;
+            }
 
             Expression = Expression.And(u => u.Status == StatusTrackerEnums.WAITING.ToString());
 
