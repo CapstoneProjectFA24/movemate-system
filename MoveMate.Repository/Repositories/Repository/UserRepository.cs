@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -30,12 +31,13 @@ namespace MoveMate.Repository.Repositories.Repository
             {
                 query = query.Include(includeProperty.Trim());
             }
+
             query = query.Where(a => a.Id == id);
 
             var result = await query.FirstOrDefaultAsync();
             return result;
         }
-        
+
         public async Task<User> GetUserAsync(int accountId)
         {
             try
@@ -52,19 +54,18 @@ namespace MoveMate.Repository.Repositories.Repository
 
         public async Task<List<User>> GetUsersByTruckCategoryIdAsync(int truckCategoryId, int groupId)
         {
-
             IQueryable<User> query = _dbSet;
 
             var users = await query
-            .Include(u => u.Truck) 
+                .Include(u => u.Truck)
                 .Where(u => u.Truck != null && u.Truck.TruckCategoryId == truckCategoryId && u.GroupId == groupId)
                 .ToListAsync();
 
             return users;
         }
+
         public async Task<List<User>> GetUsersByGroupIdAsync(int groupId, int roleId)
         {
-
             IQueryable<User> query = _dbSet;
 
             var users = await query
@@ -132,7 +133,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<User> query = _dbSet;
             return await query.Where(u => userIds.Contains(u.Id)) // Get users where ID is in the list
-                                 .ToListAsync();
+                .ToListAsync();
         }
 
         public async Task<User> GetUserAsync(string email)
@@ -173,7 +174,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<User> query = _dbSet;
             return await query
-            .AsNoTracking() // No tracking is needed for read operations
+                .AsNoTracking() // No tracking is needed for read operations
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
@@ -181,7 +182,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<User> query = _dbSet;
             return await query
-            .Where(u => u.RoleId == roleId)
+                .Where(u => u.RoleId == roleId)
                 .Select(u => u.Id)
                 .ToListAsync();
         }
@@ -190,7 +191,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<User> query = _dbSet;
             return await query
-            .Where(u => u.RoleId == roleId && u.GroupId == groupId)
+                .Where(u => u.RoleId == roleId && u.GroupId == groupId)
                 .Select(u => u.Id)
                 .ToListAsync();
         }
@@ -204,7 +205,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Select(u => u.Id)
                 .ToListAsync();
         }
-        
+
         public async Task<User> GetDriverAsync(int accountId)
         {
             try
@@ -218,24 +219,24 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
-        
+
         public async Task<List<int>> GetUsersWithTruckCategoryIdAsync(int truckCategoryId)
         {
             try
             {
                 IQueryable<User> query = _dbSet;
                 return await query
-                    .Include(u => u.Truck) 
+                    .Include(u => u.Truck)
                     .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
                     .Select(u => u.Id)
-                    .ToListAsync(); 
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
-        
+
         public async Task<List<int>> GetUsersWithTruckCategoryIdAsync(int truckCategoryId, int groupId)
         {
             try
@@ -243,10 +244,10 @@ namespace MoveMate.Repository.Repositories.Repository
                 IQueryable<User> query = _dbSet;
                 return await query
                     .Where(u => u.GroupId == groupId)
-                    .Include(u => u.Truck) 
+                    .Include(u => u.Truck)
                     .Where(u => u.Truck!.TruckCategoryId == truckCategoryId)
                     .Select(u => u.Id)
-                    .ToListAsync(); 
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -254,14 +255,16 @@ namespace MoveMate.Repository.Repositories.Repository
             }
         }
 
-        public async Task<List<User>> GetWithTruckCategoryIdAsync(int truckCategoryId, int groupId, string includeProperties = "")
+        public async Task<List<User>> GetWithTruckCategoryIdAsync(int truckCategoryId, int groupId,
+            string includeProperties = "")
         {
             try
             {
                 IQueryable<User> query = _dbSet;
 
                 // Apply includes dynamically
-                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                             StringSplitOptions.RemoveEmptyEntries))
                 {
                     query = query.Include(includeProperty.Trim());
                 }
@@ -276,15 +279,17 @@ namespace MoveMate.Repository.Repositories.Repository
                 throw new Exception(ex.Message);
             }
         }
-        
-        public async Task<List<User>> GetUserWithRoleIdAndGroupIdAsync(int roleId, int groupId, string includeProperties = "")
+
+        public async Task<List<User>> GetUserWithRoleIdAndGroupIdAsync(int roleId, int groupId,
+            string includeProperties = "")
         {
             try
             {
                 IQueryable<User> query = _dbSet;
 
                 // Apply includes dynamically
-                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                             StringSplitOptions.RemoveEmptyEntries))
                 {
                     query = query.Include(includeProperty.Trim());
                 }
@@ -305,7 +310,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<User> query = _dbSet;
             return await query
-            .Where(u => u.RoleId == 6)
+                .Where(u => u.RoleId == 6)
                 .FirstOrDefaultAsync();
         }
 
@@ -322,6 +327,203 @@ namespace MoveMate.Repository.Repositories.Repository
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        //
+        /// <summary>
+        /// Calculates user statistics for a specific shard prefix.
+        /// </summary>
+        /// <param name="shardPrefix">The shard prefix to filter users by.</param>
+        /// <returns>
+        /// An object of type <see cref="CalculateStatisticUserDto"/> containing statistics such as the total number of users,
+        /// the number of users per role, and other relevant metrics.
+        /// </returns>
+        public async Task<CalculateStatisticUserDto> CalculateStatisticUsersAsync(string shardPrefix)
+        {
+            // Lấy dữ liệu người dùng từ shard theo tiền tố
+            var users = await _dbSet
+                .Where(u => u.Shard.StartsWith(shardPrefix) && u.IsDeleted == false)
+                .Include(u => u.Role) // Bao gồm thông tin Role để tính phân vùng theo role
+                .ToListAsync();
+
+            // Tổng số người dùng
+            var totalUsers = users.Count;
+
+            // Số lượng người dùng bị cấm
+            var totalBannedUsers = users
+                .Where(u => u.IsBanned == true)
+                .Count();
+
+            // Số lượng người dùng không bị cấm
+            var totalActiveUsers = users
+                .Where(u => u.IsBanned == false)
+                .Count();
+
+            // Phân vùng người dùng theo role
+            var usersByRole = users
+                .GroupBy(u => u.Role?.Name)
+                .Select(g => new
+                {
+                    RoleName = g.Key,
+                    UserCount = g.Count()
+                })
+                .ToList();
+
+            return new CalculateStatisticUserDto
+            {
+                Shard = shardPrefix,
+                TotalUsers = totalUsers,
+                TotalBannedUsers = totalBannedUsers,
+                TotalActiveUsers = totalActiveUsers,
+                UsersByRole = usersByRole.Select(r => new RoleUserCount
+                {
+                    RoleName = r.RoleName,
+                    UserCount = r.UserCount
+                }).ToList()
+            };
+        }
+
+        /// <summary>
+        /// Calculates user statistics for multiple shards concurrently.
+        /// </summary>
+        /// <param name="shardPrefixes">A list of shard prefixes to calculate statistics for each shard.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation. The result of the task is a list of <see cref="CalculateStatisticUserDto"/>
+        /// objects containing the statistics for each shard.
+        /// </returns>
+        public async Task<List<CalculateStatisticUserDto>> CalculateStatisticsPerShardAsync(List<string> shardPrefixes)
+        {
+            var results = new List<CalculateStatisticUserDto>();
+
+            foreach (var shardPrefix in shardPrefixes)
+            {
+                var shardStatistics = await CalculateStatisticUsersAsync(shardPrefix);
+                results.Add(shardStatistics);
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Calculates overall statistics for all users across multiple shards.
+        /// </summary>
+        /// <param name="shardPrefixes">A list of shard prefixes to aggregate data from multiple shards.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation. The result of the task is an object of type 
+        /// <see cref="CalculateStatisticUserDto"/> containing overall statistics for users across all the specified shards.
+        /// </returns>
+        public async Task<CalculateStatisticUserDto> CalculateOverallStatisticsAsync(List<string> shardPrefixes)
+        {
+            // Gom tất cả dữ liệu người dùng từ các shard
+            var users = await GetAllUsersFromShardsAsync(shardPrefixes);
+
+            var totalUsers = users.Count;
+
+            // Số lượng người dùng bị cấm
+            var totalBannedUsers = users
+                .Where(u => u.IsBanned == true)
+                .Count();
+
+            // Số lượng người dùng không bị cấm
+            var totalActiveUsers = users
+                .Where(u => u.IsBanned == false)
+                .Count();
+
+            // Phân vùng người dùng theo role
+            var usersByRole = users
+                .GroupBy(u => u.Role?.Name)
+                .Select(g => new
+                {
+                    RoleName = g.Key,
+                    UserCount = g.Count()
+                })
+                .ToList();
+
+            return new CalculateStatisticUserDto
+            {
+                TotalUsers = totalUsers,
+                TotalBannedUsers = totalBannedUsers,
+                TotalActiveUsers = totalActiveUsers,
+                UsersByRole = usersByRole.Select(r => new RoleUserCount
+                {
+                    RoleName = r.RoleName,
+                    UserCount = r.UserCount
+                }).ToList()
+            };
+        }
+
+        /// <summary>
+        /// Retrieves all user data from multiple shards concurrently.
+        /// </summary>
+        /// <param name="shardPrefixes">A list of shard prefixes to filter users by.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation. The result of the task is a list of <see cref="User"/> objects 
+        /// representing all users from the specified shards.
+        /// </returns>
+        private async Task<List<User>> GetAllUsersFromShardsAsync(List<string> shardPrefixes)
+        {
+            var allUsers = new List<User>();
+
+            foreach (var shardPrefix in shardPrefixes)
+            {
+                var data = await _dbSet
+                    .Where(u => u.Shard.StartsWith(shardPrefix) && u.IsDeleted == false)
+                    .Include(u => u.Role) // Bao gồm Role trong truy vấn
+                    .ToListAsync();
+                allUsers.AddRange(data);
+            }
+
+            return allUsers;
+        }
+        
+        /// <summary>
+        /// Calculates user statistics without filtering by shard prefix.
+        /// </summary>
+        /// <returns>
+        /// An object of type <see cref="CalculateStatisticUserDto"/> containing statistics such as the total number of users,
+        /// the number of users per role, and other relevant metrics.
+        /// </returns>
+        public async Task<CalculateStatisticUserDto> CalculateStatisticsWithoutShardAsync()
+        {
+            // Lấy tất cả dữ liệu người dùng
+            var users = await _dbSet
+                .Where(u => u.IsDeleted == false) // Lọc người dùng không bị xóa
+                .Include(u => u.Role) // Bao gồm thông tin Role để tính phân vùng theo role
+                .ToListAsync();
+
+            var totalUsers = users.Count;
+
+            // Số lượng người dùng bị cấm
+            var totalBannedUsers = users
+                .Where(u => u.IsBanned == true)
+                .Count();
+
+            // Số lượng người dùng không bị cấm
+            var totalActiveUsers = users
+                .Where(u => u.IsBanned == false)
+                .Count();
+
+            // Phân vùng người dùng theo role
+            var usersByRole = users
+                .GroupBy(u => u.Role?.Name)
+                .Select(g => new
+                {
+                    RoleName = g.Key,
+                    UserCount = g.Count()
+                })
+                .ToList();
+
+            return new CalculateStatisticUserDto
+            {
+                TotalUsers = totalUsers,
+                TotalBannedUsers = totalBannedUsers,
+                TotalActiveUsers = totalActiveUsers,
+                UsersByRole = usersByRole.Select(r => new RoleUserCount
+                {
+                    RoleName = r.RoleName,
+                    UserCount = r.UserCount
+                }).ToList()
+            };
         }
 
     }
