@@ -127,7 +127,7 @@ public class StatisticController : BaseController
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
-    
+
     /// <summary>
     /// Retrieves statistics for users, including the total number of users and the distribution of users by role.
     /// </summary>
@@ -164,7 +164,7 @@ public class StatisticController : BaseController
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
-    
+
     /// <summary>
     /// CHORE: Retrieves statistics of users grouped by their roles within each group.
     /// </summary>
@@ -185,6 +185,100 @@ public class StatisticController : BaseController
     public async Task<IActionResult> StatisticGroups()
     {
         var response = await _statisticService.StatisticGroup();
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+
+
+    /// <summary>
+    /// API endpoint to retrieve promotion statistics for managerial purposes.
+    /// </summary>
+    /// <returns>
+    /// An <see cref="IActionResult"/> containing:
+    /// - HTTP 200 status with a detailed <see cref="PromotionStatisticsResponse"/> if the operation is successful.
+    /// - An error response with appropriate status code and error details if the operation fails.
+    /// </returns>
+    /// <remarks>
+    /// This API endpoint provides a high-level interface for fetching promotion statistics from the service layer. 
+    /// The primary use case is for managerial insights, enabling analysis of:
+    /// - Total promotions.
+    /// - Active promotions.
+    /// - User participation in vouchers.
+    /// - Voucher usage statistics.
+    /// - Financial impact of promotions.
+    /// 
+    /// This method:
+    /// 1. Calls the <see cref="StatisticPromotion"/> service method to fetch promotion statistics.
+    /// 2. Checks for errors in the response.
+    /// 3. Returns the appropriate HTTP response based on the operation's success or failure.
+    /// 
+    /// `Fields`
+    /// The following fields are included in the <see cref="PromotionStatisticsResponse"/> object:
+    /// - **TotalPromotions**: The total number of promotions available in the system.
+    /// - **ActivePromotions**: The number of promotions currently active (within start and end dates).
+    /// - **TotalAmountRunningVouchers**: The total value of vouchers that are still running.
+    /// - **TotalUsersTakingVouchers**: The total number of users who have claimed vouchers from any promotion.
+    /// - **TotalUsedVouchers**: The total number of vouchers that have been redeemed by users.
+    /// - **TotalAmountUsedPromotions**: The total monetary value of all redeemed vouchers.
+    /// - **PromotionDetails**: A list of detailed statistics for each promotion, including:
+    ///   - **PromotionId**: The unique identifier for the promotion.
+    ///   - **PromotionName**: The name of the promotion.
+    ///   - **TotalUsersTakingVouchers**: The number of users who have claimed vouchers from this promotion.
+    ///   - **TotalUsedVouchers**: The number of vouchers redeemed for this promotion.
+    ///   - **TotalAmountUsedPromotions**: The monetary value of redeemed vouchers for this promotion.
+    ///   - **TotalAmountRunningPromotion**: The monetary value of vouchers still available for this promotion.
+    /// - **PromotionActiveDetails**: A list of detailed statistics for currently active promotions (same structure as PromotionDetails).
+    /// - **TotalActiveUsersTakingVouchers**: The total number of users who have claimed vouchers from active promotions.
+    /// - **TotalActiveUsedVouchers**: The total number of vouchers redeemed from active promotions.
+    /// - **TotalActiveAmountRunningVouchers**: The total monetary value of vouchers still running for active promotions.
+    /// - **TotalActiveAmountUsedPromotions**: The total monetary value of vouchers redeemed for active promotions.
+    /// The underlying service layer utilizes the `GetPromotionStatisticsAsync` repository method to aggregate data.
+    /// </remarks>
+    /// <example>
+    /// Example request:
+    /// <code>
+    /// GET /manager/Promotions
+    /// </code>
+    /// Example response (success):
+    /// <code>
+    /// {
+    ///     "totalPromotions": 5,
+    ///     "activePromotions": 3,
+    ///     "totalAmountRunningVouchers": 1500.0,
+    ///     "totalUsersTakingVouchers": 50,
+    ///     "totalUsedVouchers": 40,
+    ///     "totalAmountUsedPromotions": 1200.0,
+    ///     "promotionDetails": [
+    ///         {
+    ///             "promotionId": 1,
+    ///             "promotionName": "New Year Sale",
+    ///             "totalUsersTakingVouchers": 25,
+    ///             "totalUsedVouchers": 20,
+    ///             "totalAmountUsedPromotions": 800.0,
+    ///             "totalAmountRunningPromotion": 1000.0
+    ///         }
+    ///     ],
+    ///     "promotionActiveDetails": [
+    ///         {
+    ///             "promotionId": 2,
+    ///             "promotionName": "Holiday Discount",
+    ///             "totalUsersTakingVouchers": 15,
+    ///             "totalUsedVouchers": 10,
+    ///             "totalAmountUsedPromotions": 400.0,
+    ///             "totalAmountRunningPromotion": 500.0
+    ///         }
+    ///     ],
+    ///     "totalActiveUsersTakingVouchers": 15,
+    ///     "totalActiveUsedVouchers": 10,
+    ///     "totalActiveAmountRunningVouchers": 500.0,
+    ///     "totalActiveAmountUsedPromotions": 400.0
+    /// }
+    /// </code>
+    /// </example>
+    [HttpGet("manager/Promotions")]
+    public async Task<IActionResult> StatisticPromotions()
+    {
+        var response = await _statisticService.StatisticPromotion();
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
