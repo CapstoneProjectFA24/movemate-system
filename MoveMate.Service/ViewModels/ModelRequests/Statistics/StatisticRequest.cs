@@ -1,6 +1,4 @@
-﻿using MoveMate.Domain.Enums;
-
-namespace MoveMate.Service.ViewModels.ModelRequests.Statistics;
+﻿namespace MoveMate.Service.ViewModels.ModelRequests.Statistics;
 
 public class StatisticRequest
 {

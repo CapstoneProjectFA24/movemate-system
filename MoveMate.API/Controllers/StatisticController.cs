@@ -10,21 +10,19 @@ namespace MoveMate.API.Controllers;
 [ApiController]
 public class StatisticController : BaseController
 {
-    private readonly IUserServices _userServices;
     private readonly ILogger<StatisticController> _logger;
-    private readonly ITransactionService _transactionService;
+    private readonly IStatisticService _statisticService;
+
 
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="userServices"></param>
-    /// <param name="transactionService"></param>
     /// <param name="logger"></param>
-    public StatisticController(IUserServices userServices, ITransactionService transactionService, ILogger<StatisticController> logger)
+    /// <param name="statisticService"></param>
+    public StatisticController(IStatisticService statisticService, ILogger<StatisticController> logger)
     {
-        _userServices = userServices;
-        _transactionService = transactionService;
         _logger = logger;
+        _statisticService = statisticService;
     }
 
     /// <summary>
@@ -52,11 +50,55 @@ public class StatisticController : BaseController
     /// Returns the statistics results or error messages if any.
     /// </returns>
     [HttpGet("manager/transactions")]
-    public async Task<IActionResult> StatisticTransactions([FromQuery]StatisticRequest request)
+    public async Task<IActionResult> StatisticTransactions([FromQuery] StatisticRequest request)
     {
-        var response = await _transactionService.StatisticTransaction(request);
+        var response = await _statisticService.StatisticTransaction(request);
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
-    
+
+    /// <summary>
+    /// CHORE: Retrieves booking statistics through the API endpoint.
+    /// </summary>
+    /// <remarks>
+    /// This is a GET HTTP endpoint that calculates and returns booking statistics based on the provided query parameters.
+    /// Validation rules:
+    /// - Accepts `Shard`, `Type`, and `IsSummary` as query parameters.
+    /// - If both `Shard` and `Type` are provided, a `400 BadRequest` error is returned with the message 
+    ///   "Shard and Type cannot be provided together."
+    /// - If `Type` is invalid, a `400 BadRequest` error is returned with the message "Invalid statistic type."
+    /// - The shard range must have a valid format, such as `yyyy-yyyy`, `yyyyMM-yyyyMM`, or `yyyyMMdd-yyyyMMdd`. If the format
+    ///   is invalid, an appropriate error message is returned.
+    /// - Based on the `Type` value, the shard range can be:
+    ///   - **NOW**: Statistics for the current time.
+    ///   - **WEEKNOW**: Statistics for the current week.
+    ///   - **MONTHNOW**: Statistics for the current month. If `IsSummary` is `true`, a summary is returned; otherwise,
+    ///     detailed statistics are provided.
+    /// 
+    /// Response details:
+    /// The response contains statistics in the form of a list of <see cref="CalculateStatisticBookingDto"/> objects, including:
+    /// - **Shard**: The shard range used for the statistics (e.g., "2024").
+    /// - **TotalBookings**: Total number of bookings.
+    /// - **TotalInProcessBookings**: Total number of bookings currently in process (neither completed nor canceled).
+    /// - **TotalCancelBookings**: Total number of canceled bookings.
+    /// - **MostBookedHouseType**: ID of the house type booked the most (e.g., 1 for `HouseTypeId=1`).
+    /// - **MostBookedTruck**: Number of the truck booked the most (e.g., 2 for `TruckNumber=2`).
+    /// - **MostBookedTime**: The most booked hour (e.g., 9 for 9:00 AM).
+    /// - **MostBookedDayOfWeek**: The most booked day of the week (e.g., "Friday").
+    /// - **MostBookedDate**: The specific date booked the most (e.g., "2024-11-01T00:00:00").
+    /// </remarks>
+    /// <param name="request">
+    /// A <see cref="StatisticRequest"/> object containing the request parameters, including `Shard`, `Type`, and `IsSummary`.
+    /// </param>
+    /// <returns>
+    /// Returns a response with a list of <see cref="CalculateStatisticBookingDto"/> objects containing the booking statistics,
+    /// or an error if the input is invalid.
+    /// </returns>
+    [HttpGet("manager/bookings")]
+    public async Task<IActionResult> StatisticBookings([FromQuery] StatisticRequest request)
+    {
+        var response = await _statisticService.StatisticBooking(request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
 }
