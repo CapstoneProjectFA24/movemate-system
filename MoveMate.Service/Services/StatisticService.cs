@@ -242,4 +242,19 @@ public class StatisticService : IStatisticService
             shardList);
         return result;
     }
+
+    /// <summary>
+    /// Retrieves a statistical summary of truck categories, including the total number of trucks and bookings for each category.
+    /// </summary>
+    /// <returns>
+    /// Returns an operation result with the statistical data for truck categories.
+    /// The result includes a status code, a message, and the data for truck categories.
+    /// </returns>
+    public async Task<OperationResult<object>> StatisticTruckCategory()
+    {
+        var result = new OperationResult<object>();
+        var data = await _unitOfWork.TruckCategoryRepository.GetTruckCategorySummaryAsync();
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
+        return  result;
+    }
 }
