@@ -41,6 +41,12 @@ namespace MoveMate.Repository.Repositories.Repository
             return truckImages;
         }
 
+        /// <summary>
+        /// Retrieves summary information about the total number of trucks and the number of bookings for each truck category.
+        /// </summary>
+        /// <returns>
+        /// Returns the summary result through the <see cref="StatisticTruckCategoryResult"/> object.
+        /// </returns>
         public async Task<StatisticTruckCategoryResult> GetTruckCategorySummaryAsync()
         {
             var truckCategories = await _dbContext.TruckCategories

@@ -102,7 +102,24 @@ public class StatisticController : BaseController
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
-    
+
+    /// <summary>
+    /// CHORE: Retrieves a statistical summary of truck categories, including the total number of trucks and bookings for each category.
+    /// </summary>
+    /// <remarks>
+    /// Returns an HTTP response with either a success status and the truck category statistics, or an error response if something goes wrong.
+    /// The response contains the following:
+    /// - Total number of truck categories
+    /// - A list of truck categories, each containing:
+    ///   - Truck category ID
+    ///   - Name of the truck category
+    ///   - Total number of trucks in that category
+    ///   - Total number of bookings associated with that category
+    /// </remarks>
+    /// <returns>
+    /// Returns a response with a <see cref="StatisticTruckCategoryResult"/> objects containing the TruckCategory statistics,
+    /// or an error if the input is invalid.
+    /// </returns>
     [HttpGet("manager/TruckCategoris")]
     public async Task<IActionResult> StatisticTruckCategoris()
     {
