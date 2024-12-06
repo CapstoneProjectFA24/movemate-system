@@ -242,4 +242,12 @@ public class StatisticService : IStatisticService
             shardList);
         return result;
     }
+
+    public async Task<OperationResult<object>> StatisticTruckCategory()
+    {
+        var result = new OperationResult<object>();
+        var data = await _unitOfWork.TruckCategoryRepository.GetTruckCategorySummaryAsync();
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
+        return  result;
+    }
 }

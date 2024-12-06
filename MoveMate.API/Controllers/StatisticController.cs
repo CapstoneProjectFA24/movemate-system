@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MoveMate.Repository.Repositories.Dtos;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ViewModels.ModelRequests.Statistics;
 
@@ -98,6 +99,14 @@ public class StatisticController : BaseController
     public async Task<IActionResult> StatisticBookings([FromQuery] StatisticRequest request)
     {
         var response = await _statisticService.StatisticBooking(request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+    
+    [HttpGet("manager/TruckCategoris")]
+    public async Task<IActionResult> StatisticTruckCategoris()
+    {
+        var response = await _statisticService.StatisticTruckCategory();
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
