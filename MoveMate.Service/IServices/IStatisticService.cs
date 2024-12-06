@@ -8,4 +8,5 @@ public interface IStatisticService
     Task<OperationResult<object>> StatisticTransaction(StatisticRequest request);
     Task<OperationResult<object>> StatisticBooking(StatisticRequest request);
     Task<OperationResult<object>> StatisticTruckCategory();
+    Task<OperationResult<object>> StatisticUser(StatisticRequest request);
 }
