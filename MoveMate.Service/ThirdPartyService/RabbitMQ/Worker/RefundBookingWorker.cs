@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿
+using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
@@ -68,13 +69,17 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     }
                     existingBooking.TotalRefund = (double)(existingBooking.Deposit * refundPercentage);
                     existingBooking.Status = BookingEnums.REFUNDING.ToString();
-                    var tracker = new BookingTracker();
-                    tracker.BookingId = existingBooking.Id;
-                    tracker.Type = TrackerEnums.REFUND.ToString();
-                    tracker.Status = StatusTrackerEnums.WAITING.ToString();
-                    tracker.EstimatedAmount = existingBooking.TotalRefund;
-                    tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
-                    await unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                    if (existingBooking.TotalRefund > 0)
+                    {
+                        var tracker = new BookingTracker();
+                        tracker.BookingId = existingBooking.Id;
+                        tracker.Type = TrackerEnums.REFUND.ToString();
+                        tracker.Status = StatusTrackerEnums.WAITING.ToString();
+                        tracker.EstimatedAmount = existingBooking.TotalRefund;
+                        tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
+                        await unitOfWork.BookingTrackerRepository.AddAsync(tracker);
+                    }
+                   
                 }
 
                 if (existingBooking.TotalRefund == 0 || !existingBooking.TotalRefund.HasValue)
