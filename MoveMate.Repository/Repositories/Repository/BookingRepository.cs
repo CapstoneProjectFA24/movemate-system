@@ -1,11 +1,6 @@
 ﻿using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -15,12 +10,25 @@ using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
+    /// <summary>
+    /// Repository for managing bookings in the MoveMate application.
+    /// </summary>
     public class BookingRepository : GenericRepository<Booking>, IBookingRepository
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BookingRepository"/> class with the specified DbContext.
+        /// </summary>
+        /// <param name="context">The MoveMateDbContext instance for database operations.</param>
         public BookingRepository(MoveMateDbContext context) : base(context)
         {
         }
 
+        /// <summary>
+        /// Retrieves a booking by its ID, including specified related entities.
+        /// </summary>
+        /// <param name="id">The ID of the booking to retrieve.</param>
+        /// <param name="includeProperties">Comma-separated list of related entities to include.</param>
+        /// <returns>A <see cref="Booking"/> object, or null if no booking matches the specified ID.</returns>
         public virtual async Task<Booking?> GetByIdAsyncV1(int id, string includeProperties = "")
         {
             IQueryable<Booking> query = _dbSet;
@@ -44,6 +52,12 @@ namespace MoveMate.Repository.Repositories.Repository
             return result;
         }
 
+        /// <summary>
+        /// Retrieves a booking by its ID synchronously, including specified related entities.
+        /// </summary>
+        /// <param name="id">The ID of the booking to retrieve.</param>
+        /// <param name="includeProperties">Comma-separated list of related entities to include.</param>
+        /// <returns>A <see cref="Booking"/> object, or null if no booking matches the specified ID.</returns>
         public Booking GetByIdV1(int id, string includeProperties = "")
         {
             IQueryable<Booking> query = _dbSet;
@@ -59,7 +73,13 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return query.FirstOrDefault(e => e.Id == id);
         }
-
+        
+        /// <summary>
+        /// Retrieves a booking by its ID asynchronously, including specified related entities.
+        /// </summary>
+        /// <param name="id">The ID of the booking to retrieve.</param>
+        /// <param name="includeProperties">Comma-separated list of related entities to include.</param>
+        /// <returns>A <see cref="Booking"/> object, or null if no booking matches the specified ID.</returns>
         public virtual async Task<Booking?> GetByIdAsync(int id, string includeProperties = "")
         {
             IQueryable<Booking> query = _dbSet;
@@ -79,7 +99,13 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-
+        
+        /// <summary>
+        /// Retrieves a booking by its ID and associated user ID asynchronously.
+        /// </summary>
+        /// <param name="bookingId">The ID of the booking.</param>
+        /// <param name="userId">The ID of the user associated with the booking.</param>
+        /// <returns>A <see cref="Booking"/> object, or null if no matching booking is found.</returns>
         public virtual async Task<Booking?> GetByBookingIdAndUserIdAsync(int bookingId, int userId)
         {
             IQueryable<Booking> query = _dbSet;
@@ -88,6 +114,12 @@ namespace MoveMate.Repository.Repositories.Repository
             return await query.FirstOrDefaultAsync();
         }
 
+        /// <summary>
+        /// Retrieves a booking asynchronously based on a filter and optional include properties.
+        /// </summary>
+        /// <param name="filter">An expression defining the filtering criteria.</param>
+        /// <param name="include">Optional include properties for related entities.</param>
+        /// <returns>A <see cref="Booking"/> object, or null if no matches are found.</returns>
         public virtual async Task<Booking?> GetAsync(
             Expression<Func<Booking, bool>> filter,
             Func<IQueryable<Booking>, IIncludableQueryable<Booking, object>>? include = null)
@@ -109,6 +141,14 @@ namespace MoveMate.Repository.Repositories.Repository
                     .FirstOrDefaultAsync(); // Note: Using AsNoTracking to avoid unintended tracking
         }
 
+        /// <summary>
+        /// Calculates booking statistics for a specific shard.
+        /// </summary>
+        /// <param name="shardPrefix">The prefix of the shard to filter bookings by.</param>
+        /// <returns>
+        /// A <see cref="CalculateStatisticBookingDto"/> object containing statistics such as total bookings,
+        /// most booked house type, most booked truck, and other metrics.
+        /// </returns>
         public async Task<CalculateStatisticBookingDto> CalculateStatisticBookingsAsync(string shardPrefix)
         {
             var datas = await _dbSet
@@ -198,6 +238,14 @@ namespace MoveMate.Repository.Repositories.Repository
                 MostBookedDate = mostBookedDate?.Date
             };
         }
+        /// <summary>
+        /// Calculates statistics for multiple shards asynchronously.
+        /// </summary>
+        /// <param name="shardPrefixes">A list of shard prefixes to calculate statistics for.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a list of 
+        /// <see cref="CalculateStatisticBookingDto"/> objects, each representing statistics for a specific shard.
+        /// </returns>
         public async Task<List<CalculateStatisticBookingDto>> CalculateStatisticsPerShardAsync(List<string> shardPrefixes)
         {
             var results = new List<CalculateStatisticBookingDto>();
@@ -211,6 +259,15 @@ namespace MoveMate.Repository.Repositories.Repository
             return results;
         }
 
+        /// <summary>
+        /// Calculates overall booking statistics across all provided shards.
+        /// </summary>
+        /// <param name="shardPrefixes">A list of shard prefixes to aggregate data from.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a 
+        /// <see cref="CalculateStatisticBookingDto"/> object with overall booking statistics such as total bookings,
+        /// most booked house type, most booked truck, and other aggregated metrics.
+        /// </returns>
         public async Task<CalculateStatisticBookingDto> CalculateOverallStatisticsAsync(List<string> shardPrefixes)
         {
             // Gom tất cả dữ liệu từ các shard
@@ -299,6 +356,14 @@ namespace MoveMate.Repository.Repositories.Repository
             };
         }
 
+        /// <summary>
+        /// Retrieves all booking data from multiple shards asynchronously.
+        /// </summary>
+        /// <param name="shardPrefixes">A list of shard prefixes to filter bookings by.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a list of 
+        /// <see cref="Booking"/> objects representing all bookings from the specified shards.
+        /// </returns>
         private async Task<List<Booking>> GetAllBookingsFromShardsAsync(List<string> shardPrefixes)
         {
             var allData = new List<Booking>();

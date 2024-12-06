@@ -138,6 +138,28 @@ public class StatisticService : IStatisticService
         return result;
     }
 
+    /// <summary>
+    /// Calculates and summarizes booking statistics based on the provided shard range.
+    /// </summary>
+    /// <remarks>
+    /// This method processes booking statistics according to the criteria specified in the `request` parameter. 
+    /// Validation rules:
+    /// - If both `Shard` and `Type` are provided, a `400 BadRequest` error will be returned with the message 
+    ///   "Shard and Type cannot be provided together."
+    /// - Based on the `Type` value, the following shard ranges are handled:
+    ///   - **NOW**: Statistics for the current time.
+    ///   - **WEEKNOW**: Statistics for the current week.
+    ///   - **MONTHNOW**: Statistics for the current month. If `IsSummary` is `true`, only summary statistics are returned;
+    ///     otherwise, detailed statistics are provided.
+    /// </remarks>
+    /// <param name="request">
+    /// A <see cref="StatisticRequest"/> object containing the details for statistics calculation, including `Shard`, `Type`,
+    /// and `IsSummary` to specify the desired level of detail.
+    /// </param>
+    /// <returns>
+    /// Returns an <see cref="OperationResult{object}"/> containing the statistics data if successful, or an error if the 
+    /// input is invalid or another issue occurs.
+    /// </returns>
     public async Task<OperationResult<object>> StatisticBooking(StatisticRequest request)
     {
         var result = new OperationResult<object>();
