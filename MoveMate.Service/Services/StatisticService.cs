@@ -367,4 +367,43 @@ public class StatisticService : IStatisticService
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
         return  result;
     }
+
+    /// <summary>
+    /// Retrieves promotion statistics by delegating the operation to the repository layer.
+    /// </summary>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing:
+    /// - A response status code indicating success or failure.
+    /// - A message providing context for the result.
+    /// - The promotion statistics data, represented as a detailed <see cref="PromotionStatisticsResponse"/> object.
+    /// </returns>
+    /// <remarks>
+    /// This method serves as an abstraction layer between the service and repository. It performs the following steps:
+    /// 1. Invokes the `GetPromotionStatisticsAsync` method in the repository to retrieve data.
+    /// 2. Wraps the result in an `OperationResult` object with a status code and message.
+    /// 3. Returns the processed result to the caller.
+    /// </remarks>
+    /// <example>
+    /// Example usage:
+    /// <code>
+    /// var result = await StatisticPromotion();
+    /// if (result.IsSuccess)
+    /// {
+    ///     var statistics = result.Data as PromotionStatisticsResponse;
+    ///     Console.WriteLine($"Total Promotions: {statistics.TotalPromotions}");
+    ///     Console.WriteLine($"Active Promotions: {statistics.ActivePromotions}");
+    /// }
+    /// else
+    /// {
+    ///     Console.WriteLine($"Error: {result.Message}");
+    /// }
+    /// </code>
+    /// </example>
+    public async Task<OperationResult<object>> StatisticPromotion()
+    {
+        var result = new OperationResult<object>();
+        var data = await _unitOfWork.PromotionCategoryRepository.GetPromotionStatisticsAsync();
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
+        return  result;
+    }
 }
