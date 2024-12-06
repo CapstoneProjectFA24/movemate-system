@@ -20,6 +20,7 @@ using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelRequests.Assignments;
 using MoveMate.Service.ViewModels.ModelResponses;
 using MoveMate.Service.ViewModels.ModelResponses.Assignments;
+using Parlot.Fluent;
 using System.Diagnostics;
 using System.IO;
 using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
@@ -1831,14 +1832,14 @@ public class AssignmentService : IAssignmentService
         try
         {
             var assignment = await _unitOfWork.AssignmentsRepository.GetByIdAsync(assignmentId);
-            if(assignment == null)
+            if (assignment == null)
             {
                 result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundAssignment, false);
                 return result;
             }
 
             var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId);
-            if(booking == null)
+            if (booking == null)
             {
                 result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking, false);
                 return result;
@@ -1850,7 +1851,7 @@ public class AssignmentService : IAssignmentService
                 return result;
             }
 
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId); 
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
                 result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);
@@ -1871,12 +1872,12 @@ public class AssignmentService : IAssignmentService
             ReflectionUtils.UpdateProperties(request, assignment);
             await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
             await _unitOfWork.SaveChangesAsync();
-           result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ReviewSuccess,
-                    true);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ReviewSuccess,
+                     true);
             return result;
-            
+
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             return result;
@@ -1920,7 +1921,7 @@ public class AssignmentService : IAssignmentService
                 return result;
             }
 
-         
+
 
             ReflectionUtils.UpdateProperties(request, assignment);
             booking.Total += request.Bonus;
@@ -1930,7 +1931,7 @@ public class AssignmentService : IAssignmentService
 
             booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId, includeProperties:
                     "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
-           
+
             var response = _mapper.Map<BookingResponse>(booking);
             await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
@@ -1989,7 +1990,7 @@ public class AssignmentService : IAssignmentService
                     result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFail, false);
                     return result;
                 }
-                
+
             }
             else
             {
@@ -2060,7 +2061,7 @@ public class AssignmentService : IAssignmentService
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFail);
                     return result;
                 }
-                
+
                 if (request.PaymentMethod == Resource.Wallet.ToString())
                 {
                     var manager = await _unitOfWork.UserRepository.GetManagerAsync();
@@ -2127,29 +2128,31 @@ public class AssignmentService : IAssignmentService
                         }
                     }
                 }
+                else if (request.PaymentMethod == Resource.Other.ToString())
+                {
+                    List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
+                    foreach (var trackerSource in resourceList)
+                    {
+                        trackerSource.BookingTrackerId = bookingTracker.Id;
+                    }
+                    await _unitOfWork.TrackerSourceRepository.AddRangeAsync(resourceList.ToList());
+                }
                 else
                 {
-                    if(request.PaymentMethod == Resource.Other.ToString())
-                    {
-                        List<TrackerSource> resourceList = _mapper.Map<List<TrackerSource>>(request.ResourceList);
-                        foreach(var trackerSource in resourceList)
-                        {
-                            trackerSource.BookingTrackerId = bookingTracker.Id;
-                        }
-                        await _unitOfWork.TrackerSourceRepository.AddRangeAsync(resourceList.ToList());
-                    }
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotSuitableBookingTracker);
+                    return result;
                 }
             }
 
             await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(bookingTracker);
-            await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
-            bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsyncV1(bookingTrackerId, includeProperties: "TrackerSources");
-            var response = _mapper.Map<BookingTrackerResponse>(bookingTracker);
-            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ResolveException, response);
-            return result;
+        bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsyncV1(bookingTrackerId, includeProperties: "TrackerSources");
+        var response = _mapper.Map<BookingTrackerResponse>(bookingTracker);
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ResolveException, response);
+        return result;
 
-        }
+    }
         catch(Exception ex)
         {
             result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
