@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Domain.DBContext;
+using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -38,6 +39,38 @@ namespace MoveMate.Repository.Repositories.Repository
             var truckImages = truck.TruckImgs.Select(img => img.ImageUrl).ToList();
 
             return truckImages;
+        }
+
+        /// <summary>
+        /// Retrieves summary information about the total number of trucks and the number of bookings for each truck category.
+        /// </summary>
+        /// <returns>
+        /// Returns the summary result through the <see cref="StatisticTruckCategoryResult"/> object.
+        /// </returns>
+        public async Task<StatisticTruckCategoryResult> GetTruckCategorySummaryAsync()
+        {
+            var truckCategories = await _dbContext.TruckCategories
+                .Where(tc => tc.IsDeleted != true)
+                .Select(tc => new StatisticTruckCategorySummary
+                {
+                    TruckCategoryId = tc.Id,
+                    TruckCategoryName = tc.CategoryName!,
+                    TotalTrucks = tc.Trucks.Count,
+                    TotalBookings = tc.Trucks
+                        .Where(t => t.IsDeleted != true)
+                        .SelectMany(t => t.Assignments)
+                        .Select(a => a.BookingId)
+                        .Count()
+                })
+                .ToListAsync();
+
+            var result = new StatisticTruckCategoryResult
+            {
+                TotalTruckCategories = truckCategories.Count,
+                TruckCategories = truckCategories
+            };
+
+            return result;
         }
     }
 }
