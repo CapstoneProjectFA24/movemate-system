@@ -164,4 +164,28 @@ public class StatisticController : BaseController
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
+    
+    /// <summary>
+    /// CHORE: Retrieves statistics of users grouped by their roles within each group.
+    /// </summary>
+    /// <remarks>
+    /// This HTTP GET endpoint retrieves statistics for each group, including:
+    /// - Total number of groups.
+    /// - For each group, the total number of users and the breakdown of users by their roles (e.g., Admin, User, etc.).
+    /// </remarks>
+    /// <returns>
+    /// Returns an <see cref="OkObjectResult"/> containing a <see cref="GroupUserRoleStatisticsResponse"/> object, which includes:
+    /// - TotalGroups: The total number of groups.
+    /// - Groups: A list of group statistics where each group contains:
+    ///   - GroupName: The name of the group.
+    ///   - TotalUsers: The total number of users in the group.
+    ///   - UsersByRole: A list of roles and the count of users assigned to each role.
+    /// </returns>
+    [HttpGet("manager/groups")]
+    public async Task<IActionResult> StatisticGroups()
+    {
+        var response = await _statisticService.StatisticGroup();
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
 }

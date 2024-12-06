@@ -259,9 +259,18 @@ public class StatisticService : IStatisticService
     public async Task<OperationResult<object>> StatisticUser(StatisticRequest request)
     {
         var result = new OperationResult<object>();
+        List<object> shardList = new List<object>();
+
         if (request.Shard == null && request.Type == null)
         {
             request.Shard = DateUtil.GetShardNow();
+            var data = await _unitOfWork.UserRepository.CalculateStatisticsWithoutShardAsync();
+            data.Shard = "All";
+            shardList.Add(data);
+            
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
+                shardList);
+            return result;
         }
 
         if (request.Shard != null && request.Type != null)
@@ -317,7 +326,6 @@ public class StatisticService : IStatisticService
             return result;
         }
 
-        List<object> shardList = new List<object>();
         
         if (request.IsSummary)
         {
@@ -335,5 +343,28 @@ public class StatisticService : IStatisticService
             shardList);
         return result;
 
+    }
+
+    /// <summary>
+    /// Retrieves statistics of users grouped by their roles within each group.
+    /// </summary>
+    /// <remarks>
+    /// This method fetches statistics for each group, including:
+    /// - The total number of groups.
+    /// - For each group, it retrieves the total number of users and the breakdown of users by their roles (e.g., Admin, User, etc.).
+    /// It uses the `GroupRepository` to get the required statistics data.
+    /// </remarks>
+    /// <returns>
+    /// Returns an <see cref="OperationResult{T}"/> containing:
+    /// - `StatusCode`: HTTP status code, which is OK (200) if the operation is successful.
+    /// - `Message`: A success message, indicating that the data retrieval was successful.
+    /// - `Data`: The retrieved statistics, which includes total groups and detailed statistics for each group, including the number of users and their role distribution.
+    /// </returns>
+    public async Task<OperationResult<object>> StatisticGroup()
+    {
+        var result = new OperationResult<object>();
+        var data = await _unitOfWork.GroupRepository.GetGroupUserRoleStatistics();
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
+        return  result;
     }
 }
