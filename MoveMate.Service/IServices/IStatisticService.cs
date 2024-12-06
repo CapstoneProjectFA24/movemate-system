@@ -1,0 +1,10 @@
+﻿using MoveMate.Service.Commons;
+using MoveMate.Service.ViewModels.ModelRequests.Statistics;
+
+namespace MoveMate.Service.IServices;
+
+public interface IStatisticService
+{
+    Task<OperationResult<object>> StatisticTransaction(StatisticRequest request);
+    Task<OperationResult<object>> StatisticBooking(StatisticRequest request);
+}

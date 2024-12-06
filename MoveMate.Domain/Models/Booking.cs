@@ -102,7 +102,7 @@ public partial class Booking
 
     public double? TotalRefund { get; set; }
 
-    public string? Shard { get; set; }
+    public string? Shard { get; set; } = DateUtil.GetShardNow();
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
