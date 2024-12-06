@@ -127,4 +127,41 @@ public class StatisticController : BaseController
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
+    
+    /// <summary>
+    /// Retrieves statistics for users, including the total number of users and the distribution of users by role.
+    /// </summary>
+    /// <remarks>
+    /// This is a GET HTTP endpoint to request user statistics.
+    /// Validation rules:
+    /// - The method receives `StatisticRequest` as a query parameter, which includes necessary filters.
+    /// - It returns the total number of users, the number of banned users, the number of active users, and the distribution of users by role.
+    /// - Accepts `Shard`, `Type`, and `IsSummary` as query parameters.
+    /// - If both `Shard` and `Type` are provided, a `400 BadRequest` error is returned with the message 
+    ///   "Shard and Type cannot be provided together."
+    /// - If `Type` is invalid, a `400 BadRequest` error is returned with the message "Invalid statistic type."
+    /// - The shard range must have a valid format, such as `yyyy-yyyy`, `yyyyMM-yyyyMM`, or `yyyyMMdd-yyyyMMdd`. If the format
+    ///   is invalid, an appropriate error message is returned.
+    /// - Based on the `Type` value, the shard range can be:
+    ///   - **NOW**: Statistics for the current time.
+    ///   - **WEEKNOW**: Statistics for the current week.
+    ///   - **MONTHNOW**: Statistics for the current month. If `IsSummary` is `true`, a summary is returned; otherwise,
+    ///     detailed statistics are provided.
+    /// 
+    /// </remarks>
+    /// <param name="request">The request containing the necessary parameters for user statistics calculation.</param>
+    /// <returns>
+    /// Returns a `CalculateStatisticUserDto` object containing:
+    /// - TotalUsers: Total number of users.
+    /// - TotalBannedUsers: Number of banned users.
+    /// - TotalActiveUsers: Number of active users.
+    /// - UsersByRole: A list of `RoleUserCount` objects, each containing a role name and the number of users in that role.
+    /// </returns>
+    [HttpGet("manager/users")]
+    public async Task<IActionResult> StatisticUsers([FromQuery] StatisticRequest request)
+    {
+        var response = await _statisticService.StatisticUser(request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
 }
