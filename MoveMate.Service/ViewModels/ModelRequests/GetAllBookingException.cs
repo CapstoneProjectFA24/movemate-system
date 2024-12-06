@@ -17,7 +17,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Type { get; set; }
         public int? UserId { get; set; }
         public int? BookingId { get; set; }
-
+       
         public override Expression<Func<BookingTracker, bool>> GetExpressions()
         {
             if (!string.IsNullOrWhiteSpace(Search))
@@ -39,18 +39,16 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .ToList();
                 Expression = Expression.And(b => b.Type == Type);
             }
-
+           
             if (BookingId.HasValue)
             {
                 Expression = Expression.And(b => b.BookingId == BookingId);
             }
             if (UserId.HasValue)
             {
-
+               
                 Expression = PredicateBuilder.New<BookingTracker>(true); // Reset existing conditions
-                Expression = Expression.And(b =>
-            (b.Type == TrackerEnums.MONETARY.ToString() || b.Type == TrackerEnums.REFUND.ToString())
-            && b.Booking.UserId == UserId.Value);
+                Expression = Expression.And(b => b.Type == TrackerEnums.MONETARY.ToString() && b.Booking.UserId == UserId.Value);
 
                 // Return immediately since this condition overrides others
                 return Expression;
