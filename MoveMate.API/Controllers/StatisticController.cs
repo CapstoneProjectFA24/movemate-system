@@ -57,4 +57,12 @@ public class StatisticController : BaseController
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }
     
+    [HttpGet("manager/bookings")]
+    public async Task<IActionResult> StatisticBookings([FromQuery]StatisticRequest request)
+    {
+        var response = await _statisticService.StatisticBooking(request);
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+    
 }

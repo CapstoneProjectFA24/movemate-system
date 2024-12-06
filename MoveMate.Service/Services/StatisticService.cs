@@ -44,7 +44,10 @@ public class StatisticService : IStatisticService
     {
         var result = new OperationResult<object>();
 
-        var shard = request.Shard;
+        if (request.Shard == null && request.Type == null)
+        {
+            request.Shard = DateUtil.GetShardNow();
+        }
 
         if (request.Shard != null && request.Type != null)
         {
@@ -53,6 +56,8 @@ public class StatisticService : IStatisticService
                 MessageConstant.ShardErrorMessage.ShardAndTypeCannotBeProvidedTogether);
             return result;
         }
+
+        var shard = request.Shard;
 
         if (request.Type != null)
         {
@@ -126,6 +131,89 @@ public class StatisticService : IStatisticService
                 TotalCompensation = sumCompensation,
                 TotalIncome = sumIncome
             });
+        }
+
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
+            shardList);
+        return result;
+    }
+
+    public async Task<OperationResult<object>> StatisticBooking(StatisticRequest request)
+    {
+        var result = new OperationResult<object>();
+
+        if (request.Shard == null && request.Type == null)
+        {
+            request.Shard = DateUtil.GetShardNow();
+        }
+
+        if (request.Shard != null && request.Type != null)
+        {
+            // throw 400 1 trong 2 thui đừng có tham lam
+            result.AddError(StatusCode.BadRequest,
+                MessageConstant.ShardErrorMessage.ShardAndTypeCannotBeProvidedTogether);
+            return result;
+        }
+
+        var shard = request.Shard;
+
+        if (request.Type != null)
+        {
+            switch (request.Type)
+            {
+                case var status when status == StatisticEnums.NOW.ToString():
+                    Console.WriteLine("Handle statistics for current time.");
+                    shard = DateUtil.GetShardNow();
+                    break;
+
+                case var status when status == StatisticEnums.WEEKNOW.ToString():
+                    Console.WriteLine("Handle statistics for the current week.");
+                    shard = DateUtil.GetCurrentWeekDaysShard();
+                    break;
+
+                case var status when status == StatisticEnums.MONTHNOW.ToString():
+                    Console.WriteLine("Handle statistics for the current month.");
+                    if (request.IsSummary)
+                    {
+                        shard = DateUtil.GetCurrentMonthShard();
+                    }
+                    else
+                    {
+                        shard = DateUtil.GetCurrentMonthDaysShard();
+                    }
+
+                    break;
+
+                default:
+                    Console.WriteLine("Invalid statistic type.");
+                    break;
+            }
+        }
+
+
+        //var shards = DateUtil.GenerateShardRange(shard);
+        var (isError, msg, shards) = DateUtil.GenerateShardRangeV2(shard);
+
+        if (isError)
+        {
+            result.AddError(StatusCode.BadRequest, msg);
+            return result;
+        }
+
+        List<object> shardList = new List<object>();
+        double sumCompensation = 0d;
+        double sumIncome = 0d;
+
+        if (request.IsSummary)
+        {
+            var data = await _unitOfWork.BookingRepository.CalculateOverallStatisticsAsync(shards);
+            data.Shard = shard;
+            shardList.Add(data);
+        }
+        else
+        {
+            var datas = await _unitOfWork.BookingRepository.CalculateStatisticsPerShardAsync(shards);
+            shardList.AddRange(datas);
         }
 
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
