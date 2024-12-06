@@ -144,7 +144,7 @@ namespace MoveMate.Service.Services
 
                 if (wallet.Balance < amount)
                 {
-                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.NotEnoughMoney, false);
+                    result.AddResponseErrorStatusCode(StatusCode.Ok, MessageConstant.FailMessage.NotEnoughMoney, false);
                     return result;
                 }
                 else
