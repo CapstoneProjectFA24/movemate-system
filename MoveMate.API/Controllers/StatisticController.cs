@@ -191,7 +191,7 @@ public class StatisticController : BaseController
 
 
     /// <summary>
-    /// API endpoint to retrieve promotion statistics for managerial purposes.
+    /// CHORE: API endpoint to retrieve promotion statistics for managerial purposes.
     /// </summary>
     /// <returns>
     /// An <see cref="IActionResult"/> containing:
