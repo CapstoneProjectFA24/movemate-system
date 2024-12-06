@@ -89,17 +89,12 @@ namespace MoveMate.API.Controllers
         ///         "name": "Winter Sale",
         ///         "description": "Special winter discount",
         ///         "type": "Seasonal",
-        ///         "quantity": 100,
+        ///         "quantity": 5,
         ///         "startBookingTime": "2024-10-29T00:00:00",
         ///         "endBookingTime": "2024-11-30T23:59:59",
         ///         "isInfinite": false,
         ///         "serviceId": 1,
-        ///         "vouchers": [
-        ///             {
-        ///                 "price": 50.0,
-        ///                 "code": "WINTER50"
-        ///             }
-        ///         ]
+        ///         "amount": 100
         ///     }
         /// 
         /// </remarks>

@@ -41,6 +41,8 @@ public partial class PromotionCategory
 
     public string? Shard { get; set; }
 
+    public double? Amount { get; set; }
+
     public virtual Service? Service { get; set; }
 
     public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();

@@ -420,18 +420,24 @@ namespace MoveMate.Service.Services
             }
         }
 
-        public async Task<OperationResult<bool>> UserReportException(int userId, ExceptionRequest request)
+        public async Task<OperationResult<BookingTrackerResponse>> UserReportException(int userId, ExceptionRequest request)
         {
-            var result = new OperationResult<bool>();
+            var result = new OperationResult<BookingTrackerResponse>();
             try
             {
                 var checkBooking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(request.BookingId, userId);
                 if (checkBooking == null)
                 {
-                    result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay, false);
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCannotPay);
                     return result;
                 }
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(request.BookingId, includeProperties: "BookingTrackers.TrackerSources");
+
+                if(booking.Status != BookingEnums.IN_PROGRESS.ToString())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.DamageReport);
+                    return result;
+                }
 
                 if (request.IsInsurance == true)
                 {
@@ -440,20 +446,20 @@ namespace MoveMate.Service.Services
                         var bookingDetail = await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(TypeServiceEnums.INSURANCE.ToString(), booking.Id);
                         if (bookingDetail == null)
                         {
-                            result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail, false);
+                            result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBookingDetail);
                             return result;
                         }
                         var trackerReport = await _unitOfWork.BookingTrackerRepository.GetBookingTrackerByTypeAndBookingIdAsync(TrackerEnums.MONETARY.ToString(), booking.Id);
 
                         if (bookingDetail.Quantity <= trackerReport.Count())
                         {
-                            result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.NotEnoughInsurance, false);
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotEnoughInsurance);
                             return result;
                         }
                     }
                     else
                     {
-                        result.AddResponseErrorStatusCode(StatusCode.BadRequest, MessageConstant.FailMessage.NotInsurance, false);
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotInsurance);
                         return result;
                     }
                 }
@@ -461,6 +467,7 @@ namespace MoveMate.Service.Services
                 var tracker = _mapper.Map<BookingTracker>(request);
                 await _unitOfWork.BookingTrackerRepository.AddAsync(tracker);
                 tracker.Type = TrackerEnums.MONETARY.ToString();
+                tracker.IsCompensation = false;
                 tracker.Status = StatusTrackerEnums.PENDING.ToString();
                 tracker.Time = DateTime.Now.ToString("yy-MM-dd hh:mm:ss");
 
@@ -501,7 +508,8 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
                 //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AddTrackerReport, true);
+                var response = _mapper.Map<BookingTrackerResponse>(tracker);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AddTrackerReport, response);
                 return result;
             }
             catch (Exception ex)

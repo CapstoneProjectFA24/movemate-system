@@ -162,5 +162,32 @@ namespace MoveMate.API.Controllers
             var response = await _assignmentService.BonusStaff(userId, assignmentId, request);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE: Porter check booking tracker
+        /// </summary>
+        /// <param name="bookingTrackerId"></param>
+        /// <returns></returns>
+        [HttpPut("porter/{bookingTrackerId}")]
+        public async Task<IActionResult> StaffCheckException(int bookingTrackerId, [FromBody] PorterCheckReportRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _assignmentService.StaffCheckException(userId, bookingTrackerId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// FEATURE: Manager handles exceptions
+        /// </summary>
+        /// <param name="bookingTrackerId"></param>
+        /// <returns></returns>
+        [HttpPut("manager-resolve-exception/{bookingTrackerId}")]
+        public async Task<IActionResult> ManagerResolveException(int bookingTrackerId, [FromBody] ManagerResolveRequest request)
+        {
+            var response = await _assignmentService.ManagerResolveException(bookingTrackerId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

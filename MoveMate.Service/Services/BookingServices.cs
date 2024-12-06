@@ -537,6 +537,14 @@ namespace MoveMate.Service.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
             }
+
+            if (booking != null && booking.Status == BookingEnums.COMING.ToString())
+            {
+                booking.Status = BookingEnums.IN_PROGRESS.ToString();
+                _unitOfWork.BookingRepository.Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+            }
         }
 
         #endregion
@@ -3517,7 +3525,7 @@ namespace MoveMate.Service.Services
                 if (request.IsRefunded == false && !string.IsNullOrEmpty(request.ReasonRefundFailed))
                 {
                     booking.ReasonRefundFailed = request.ReasonRefundFailed;
-                    tracker.Status = StatusTrackerEnums.AVAILABLE.ToString();
+                    tracker.Status = StatusTrackerEnums.NOTAVAILABLE.ToString();
                     tracker.FailedReason = request.ReasonRefundFailed;
                     tracker.RealAmount = 0;
                 }

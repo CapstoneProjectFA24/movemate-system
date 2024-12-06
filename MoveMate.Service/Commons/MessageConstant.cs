@@ -138,7 +138,8 @@ namespace MoveMate.Service.Commons
             public const string NotInsurance = "This booking has not purchased insurance";
             public const string PriceOver20m = "Cannot set a desired price greater than 20 million";
             public const string NotEnoughInsurance = "Insufficient amount of insurance";
-
+            public const string NotSuitableBookingTracker = "Booking tracker is not suitable for exchange";
+            public const string DamageReport = "Damage cannot be reported at this time";
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
             public const string AssignmentSuggeted = "The assignment status must be SUGGESTED";
@@ -218,7 +219,7 @@ namespace MoveMate.Service.Commons
             //Wallet
             public const string NotFoundWallet = "Wallet not found";
             public const string UpdateWalletBalance = "Failed to update wallet balance";
-
+            public const string NotEnoughMoney = "Wallet balance is not enough";
             //Group
             public const string NotFoundGroup = "Not found group";
             public const string CannotAddReviewer = "Group cannot have more than 3 REVIEWER";
@@ -315,6 +316,7 @@ namespace MoveMate.Service.Commons
             public const string BookingDetailUpdateSuccess = "Update booking detail succesful";
             public const string FoundAvailableDrivers = "Get Driver successful";
             public const string FoundAvailablePorters = "Get Porter successful";
+            public const string ResolveException = "Successful compensation";
 
 
             //FeeSetting
@@ -380,7 +382,7 @@ namespace MoveMate.Service.Commons
             //Wallet
             public const string GetWalletSuccess = "Wallet retrieved successfully";
             public const string UpdateWalletSuccess = "Wallet updated successfully";
-            
+            public const string EnoughMoney = "Sufficient wallet balance";
 
             //Payment
             public const string CreatePaymentLinkSuccess = "Payment link created successfully";
@@ -409,6 +411,7 @@ namespace MoveMate.Service.Commons
             public const string DeleteTrackerSource = "Tracker source has been deleted";
             public const string AddTrackerSuccess = "Add tracker successful";
             public const string AddTrackerReport = "We have noted your report";
+            public const string UpdateBookingTracker = "Update booking tracker successful";
 
             //HouseType
             public const string HouseTypeUpdateSuccess = "Update house type succesful";
