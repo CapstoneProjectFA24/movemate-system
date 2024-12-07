@@ -1,5 +1,4 @@
-﻿using MoveMate.Domain.DBContext;
-using MoveMate.Domain.Models;
+﻿using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
 using System;
@@ -8,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using MoveMate.Repository.DBContext;
 
 namespace MoveMate.Repository.Repositories.Repository
 {

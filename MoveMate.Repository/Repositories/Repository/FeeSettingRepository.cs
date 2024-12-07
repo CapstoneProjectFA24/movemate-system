@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using MoveMate.Domain.DBContext;
 using MoveMate.Domain.Enums;
+using MoveMate.Repository.DBContext;
 
 namespace MoveMate.Repository.Repositories.Repository
 {

@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Google.Api;
+using MoveMate.Repository.DBContext;
 using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository

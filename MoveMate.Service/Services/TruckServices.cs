@@ -69,7 +69,8 @@ namespace MoveMate.Service.Services
                     filter: request.GetExpressions(),
                     pageIndex: request.page,
                     pageSize: request.per_page,
-                    orderBy: request.GetOrder()
+                    orderBy: request.GetOrder(),
+                    includeProperties: "Services.FeeSettings"
                 );
                 var listResponse = _mapper.Map<List<TruckCategoryResponse>>(entities.Data);
 

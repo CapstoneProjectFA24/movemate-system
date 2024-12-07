@@ -1,11 +1,11 @@
 ﻿using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.GenericRepository;
 using MoveMate.Repository.Repositories.IRepository;
-using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
 using MoveMate.Domain.Enums;
+using MoveMate.Repository.DBContext;
 using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository

@@ -4,8 +4,8 @@ using MoveMate.Domain.Models;
 //using ShopRepository.Models;
 using System.Linq.Expressions;
 using MoveMate.Repository.Repositories.UnitOfWork;
-using MoveMate.Domain.DBContext;
 using Microsoft.EntityFrameworkCore.Metadata;
+using MoveMate.Repository.DBContext;
 
 
 namespace MoveMate.Repository.Repositories.GenericRepository
