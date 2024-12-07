@@ -89,6 +89,21 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+        /// <summary>
+        /// CHORE : Update user information
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <returns>Returns a response indicating the success or failure of the update user.</returns>
+        /// <response code="200">Returns if the user was successfully updated.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateAccountRequest request)
+        {
+            var response = await _userService.UpdateAccountAsync(userId, request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
 
 
         /// <summary>
@@ -269,14 +284,42 @@ namespace MoveMate.API.Controllers
         /// <response code="200">Returns if the user was successfully banned.</response>
         /// <response code="404">Returns if the user is not found.</response>
         /// <response code="500">Returns if a system error occurs.</response>
-        [HttpPost("admin/ban-user/{id}")]
+        [HttpPut("admin/ban-user/{id}")]
         public async Task<IActionResult> BanUser(int id)
         {
             var response = await _userService.BanUser(id);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+        /// <summary>
+        /// CHORE : Unban for user by setting the user's banned status to fasle.
+        /// </summary>
+        /// <param name="userId">The ID of the user to be banned.</param>
+        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+        /// <response code="200">Returns if the user was successfully banned.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpPut("admin/unban-user/{userId}")]
+        public async Task<IActionResult> UnbanUser(int userId)
+        {
+            var response = await _userService.UnBannedUser(userId);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        /// <summary>
+        /// CHORE : Delete a user by setting the user's deleted status to true.
+        /// </summary>
+        /// <param name="userId">The ID of the user to be banned.</param>
+        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+        /// <response code="200">Returns if the user was successfully banned.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            var response = await _userService.DeleteUser(userId);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

@@ -66,4 +66,6 @@ public partial class User
     public virtual ICollection<Voucher> Vouchers { get; set; } = new List<Voucher>();
 
     public virtual Wallet? Wallet { get; set; }
+
+    public virtual ICollection<Withdrawal> Withdrawals { get; set; } = new List<Withdrawal>();
 }

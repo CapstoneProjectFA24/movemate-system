@@ -75,7 +75,7 @@ public partial class MoveMateDbContext : DbContext
 
     public virtual DbSet<Wallet> Wallets { get; set; }
 
-   
+    public virtual DbSet<Withdrawal> Withdrawals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -529,6 +529,25 @@ public partial class MoveMateDbContext : DbContext
             entity.HasOne(d => d.User).WithOne(p => p.Wallet)
                 .HasForeignKey<Wallet>(d => d.UserId)
                 .HasConstraintName("FK_Wallet_User");
+        });
+
+        modelBuilder.Entity<Withdrawal>(entity =>
+        {
+            entity.ToTable("Withdrawal");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.BankName).HasMaxLength(255);
+            entity.Property(e => e.BankNumber).HasMaxLength(255);
+            entity.Property(e => e.CancelReason).HasMaxLength(255);
+            entity.Property(e => e.Date).HasColumnType("datetime");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Withdrawals)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_Withdrawal_User");
+
+            entity.HasOne(d => d.Wallet).WithMany(p => p.Withdrawals)
+                .HasForeignKey(d => d.WalletId)
+                .HasConstraintName("FK_Withdrawal_Wallet");
         });
 
         OnModelCreatingPartial(modelBuilder);
