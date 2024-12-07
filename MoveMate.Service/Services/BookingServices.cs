@@ -2312,27 +2312,36 @@ namespace MoveMate.Service.Services
                 existingBooking.TotalFee = totalFee;
 
                 // Ensure total includes service and fee totals
-                if (isDriverUpdate)
+                if(existingBooking.IsDeposited == true)
                 {
-                    existingBooking.TotalReal = total - existingBooking.Deposit;
-                    existingBooking.Status = BookingEnums.PAUSED.ToString();
-                    existingBooking.Deposit = existingBooking.Total * 0.30; ;
+                    if (isDriverUpdate)
+                    {
+                        existingBooking.TotalReal = total - existingBooking.Deposit;
+                        existingBooking.Status = BookingEnums.PAUSED.ToString();
+                        existingBooking.Deposit = existingBooking.Total * 0.30; ;
+                    }
+                    else
+                    {
+                        if (existingBooking.IsReviewOnline == false)
+                        {
+                            var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
+                            deposit = feeReviewerOffline!.Amount!.Value;
+                        }
+                        existingBooking.TotalReal = total - existingBooking.Deposit;
+                        existingBooking.Deposit = deposit;
+
+                    }
+                    existingBooking.Total = total;
                 }
                 else
                 {
-                    if (existingBooking.IsReviewOnline == false)
-                    {
-                        var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
-                        deposit = feeReviewerOffline!.Amount!.Value;
-                    }
-
+                    existingBooking.Total = total;
                     existingBooking.Deposit = deposit;
-
-
-
-                    existingBooking.TotalReal = total;
+                    existingBooking.TotalReal = total ;
+                    
                 }
-                existingBooking.Total = total;
+                
+               
 
 
                 // Update booking type based on timing
@@ -2752,7 +2761,7 @@ namespace MoveMate.Service.Services
                         }
 
                         existingBooking.Total -= totalVoucherPrice;
-                        existingBooking.TotalReal = existingBooking.Total;
+                        existingBooking.TotalReal = existingBooking.Total - existingBooking.Deposit;
                         foreach (var voucher in vouchers)
                         {
                             voucher.BookingId = existingBooking.Id;
