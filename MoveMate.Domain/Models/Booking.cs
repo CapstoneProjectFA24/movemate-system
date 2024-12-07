@@ -102,6 +102,8 @@ public partial class Booking
 
     public double? TotalRefund { get; set; }
 
+    public bool? IsUnchanged { get; set; } = false;
+
     public string? Shard { get; set; } = DateUtil.GetShardNow();
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
