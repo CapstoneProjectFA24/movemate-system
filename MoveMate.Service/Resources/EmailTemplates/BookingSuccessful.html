@@ -24,11 +24,23 @@
 
         .header {
             text-align: center;
-            background-color: #28a745;
+            background-color: #ffffff; /* Nền trắng */
             padding: 10px;
-            color: #ffffff;
             border-radius: 5px 5px 0 0;
         }
+
+            .header img {
+                max-width: 100px;
+                margin-bottom: 10px;
+            }
+
+            .header h2 {
+                color: #ffffff; /* Màu cam */
+                margin: 0;
+                background-color: #28a745; /* Nền xanh lá */
+                padding: 10px;
+                border-radius: 5px;
+            }
 
         .content {
             margin-top: 20px;
@@ -50,20 +62,22 @@
 <body>
     <div class="container">
         <div class="header">
+            <!-- Logo -->
+            <img src="https://res.cloudinary.com/dkpnkjnxs/image/upload/v1732365346/movemate_logo_esm5fx.png" alt="MoveMate Logo">
             <h2>Đặt Hàng Thành Công</h2>
         </div>
         <div class="content">
             <p>Chào {{UserName}},</p>
             <p>Chúng tôi rất vui thông báo rằng đơn đặt hàng của bạn với mã số <strong>{{BookingId}}</strong> đã được xác nhận thành công.</p>
             <p>Chi tiết đơn đặt hàng của bạn như sau:</p>
-            <p><strong>Ngày Đặt:</strong> {{BookingDate}}</p>
-            <p><strong>Tổng Số Tiền:</strong> {{TotalAmount}}</p>
+            <p><strong>Ngày đặt:</strong> {{BookingDate}}</p>
+            <p><strong>Số tiền đặt cọc:</strong> {{Deposit}}</p>
+            <p><strong>Tổng số tiền:</strong> {{TotalAmount}}</p>
             <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi.</p>
             <p>Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi. Chúng tôi mong được phục vụ bạn trong thời gian tới.</p>
             <p><strong>Lúc:</strong> {{CurrentDateTime}}</p>
             <p>Trân trọng,</p>
-            <p>Đội ngũ MoveMate</p>
-
+            <p>MoveMate</p>
         </div>
         <div class="footer">
             <p>© 2024 MoveMate. Bảo lưu mọi quyền.</p>

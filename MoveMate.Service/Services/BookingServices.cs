@@ -38,6 +38,7 @@ using MoveMate.Service.Library;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 using System.Diagnostics;
+using Org.BouncyCastle.Crypto.Macs;
 
 namespace MoveMate.Service.Services
 {
@@ -311,7 +312,11 @@ namespace MoveMate.Service.Services
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
                     // Sending a booking confirmation email
                     // Inside RegisterBooking method, after the booking is successfully created:
-                    //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+                    if (user.Id == 3)
+                    {
+                        user.Email = "hoaiphuong2506@gmail.com";
+                    }
+                    await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
 
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
