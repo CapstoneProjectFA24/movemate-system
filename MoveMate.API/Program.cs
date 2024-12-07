@@ -51,6 +51,7 @@ namespace MoveMate.API
             builder.Services.AddAutoMapper(typeof(AutoMapperService));
             builder.Services.AddExceptionMiddleware();
             builder.Services.AddFirebaseServices(builder.Configuration);
+            builder.Services.AddCloudinaryService(builder.Configuration);
             builder.Services.AddPayOS(builder.Configuration);
             builder.Services.AddZaloPayConfig(builder.Configuration);
             builder.Services.AddMomoConfig(builder.Configuration);
@@ -59,8 +60,8 @@ namespace MoveMate.API
 
             // CORS Policy
             string[] allowedOrigins = builder.Environment.IsDevelopment()
-                 ? new[] { "http://localhost:3000", "https://movemate-dashboard.vercel.app" }
-                 : new[] { "https://movemate-dashboard.vercel.app" };
+                 ? new[] { "http://localhost:3000", "https://movematee.vercel.app" }
+                 : new[] { "https://movematee.vercel.app" };
 
             builder.Services.AddCors(options =>
             {

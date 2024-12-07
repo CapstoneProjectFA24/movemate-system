@@ -216,22 +216,34 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Update user info by user info id
+        /// Allows users to submit a report for an exception or issue.
         /// </summary>
-        /// <param name="request">The user info request model.</param>
-        /// <returns>A response containing the created user info.</returns>
+        /// <param name="request">The request model containing exception details.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         /// <remarks>
         /// Sample request:
         /// 
-        ///     PUT /api/user-info/{id}
+        ///     POST /api/user-info/report
         ///     {
-        ///         "type": "CAVET",
-        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729864500/movemate/eopqdqwqcblmzc5ymbeg.jpg",
-        ///         "value": "324214221212312"
+        ///         "bookingId": 1,
+        ///         "location": "28 Hẻm 635 Hương Lộ 2,Phường Bình Trị Đông,Quận Bình Tân,Thành Phố Hồ Chí Minh",
+        ///         "point": "10.767782,106.611362",
+        ///         "description": "Accidentally broke it",
+        ///         "title": "Report title",
+        ///         "estimatedAmount": 2243230,
+        ///         "isInsurance": false,
+        ///         "resourceList": [
+        ///             {
+        ///                 "type": "Image",
+        ///                 "resourceUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1731766020/movemate/images/kh6logaucsyb6bydkbpu.jpg",
+        ///                 "resourceCode": "string"
+        ///             }
+        ///         ]
         ///     }
         /// </remarks>
-        /// <response code="201">Returns the created truck category</response>
-        /// <response code="500">If there is a server error</response>
+        /// <response code="200">If the report is successfully processed.</response>
+        /// <response code="400">If the request contains invalid data.</response>
+        /// <response code="500">If an internal server error occurs.</response>
         [HttpPost("report")]
         public async Task<IActionResult> UserReport([FromBody] ExceptionRequest request)
         {
