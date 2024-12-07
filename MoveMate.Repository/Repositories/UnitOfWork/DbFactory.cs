@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MoveMate.API.Utils;
-using MoveMate.Domain.DBContext;
+using MoveMate.Repository.DBContext;
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MoveMate.Domain.Models;
 
-namespace MoveMate.Domain.DBContext;
+namespace MoveMate.Repository.DBContext;
 
 public partial class MoveMateDbContext : DbContext
 {

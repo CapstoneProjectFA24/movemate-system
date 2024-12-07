@@ -7,8 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.EntityFrameworkCore;
-using MoveMate.Domain.DBContext;
 using MoveMate.Domain.Enums;
+using MoveMate.Repository.DBContext;
 using MoveMate.Repository.Repositories.Dtos;
 using Transaction = MoveMate.Domain.Models.Transaction;
 

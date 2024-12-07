@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.Models;
+using MoveMate.Repository.DBContext;
 using MoveMate.Repository.Repositories.Repository;
-using MoveMate.Domain.DBContext;
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
