@@ -141,7 +141,6 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         {
             try
             {
-
                 if (saveObj.IsReviewOnline == false && saveObj.Status == BookingEnums.REVIEWING.ToString() && saveObj.Assignments.Any(a => a.StaffType == RoleEnums.REVIEWER.ToString() && a.Status == AssignmentStatusEnums.ASSIGNED.ToString()))
                 {
                     if (!isRecursiveCall)
