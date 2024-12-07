@@ -181,5 +181,19 @@ namespace MoveMate.API.Controllers
             var response = await _walletServices.CheckBalance(userId, amount);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE: User request withdraw
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("with-draw")]
+        public async Task<IActionResult> UserRequestWithdraw([FromQuery] double amount)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _walletServices.UserRequestWithDraw(userId, amount);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

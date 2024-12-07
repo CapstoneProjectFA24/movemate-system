@@ -102,7 +102,7 @@ namespace MoveMate.Service.Commons
             //Booking
             public const string NotFoundBooking = "Booking not found";
             public const string BookingCannotPay = "Booking is not from this user";
-            public const string NotFoundBookingDetail = "Booking detail not found";
+            public const string NotFoundBookingDetail = "Booking detail not found or status not WAITING";
             public const string IsValidTimeGreaterNow = "Time is not null and whether the value is greater than or equal to the current time";
             public const string RegisterBookingFail = "Add booking failed";
             public const string CanNotUpdateStatus = "Cannot update to the next status from the current status";
@@ -387,6 +387,7 @@ namespace MoveMate.Service.Commons
             public const string GetWalletSuccess = "Wallet retrieved successfully";
             public const string UpdateWalletSuccess = "Wallet updated successfully";
             public const string EnoughMoney = "Sufficient wallet balance";
+            public const string WithDrawMoney = "Withdrawal request successful";
 
             //Payment
             public const string CreatePaymentLinkSuccess = "Payment link created successfully";

@@ -84,7 +84,7 @@ public class AssignmentService : IAssignmentService
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 TypeServiceEnums.TRUCK.ToString(), bookingId);
 
-        if (bookingDetailTruck == null)
+        if (bookingDetailTruck == null || bookingDetailTruck.Status != BookingDetailStatusEnums.WAITING.ToString())
         {
             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
             return result;
@@ -505,7 +505,7 @@ public class AssignmentService : IAssignmentService
             await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                 TypeServiceEnums.PORTER.ToString(), bookingId);
 
-        if (bookingDetail == null)
+        if (bookingDetail == null || bookingDetail.Status != BookingDetailStatusEnums.WAITING.ToString())
         {
             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
             return result;
@@ -890,6 +890,7 @@ public class AssignmentService : IAssignmentService
             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBooking);
             return result;
         }
+        
 
         if (request.FailedAssignmentId != null)
         {
@@ -926,7 +927,7 @@ public class AssignmentService : IAssignmentService
                 var bookingDetailDriver =
                     await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                         TypeServiceEnums.TRUCK.ToString(), bookingId);
-                if (bookingDetailDriver == null)
+                if (bookingDetailDriver == null || bookingDetailDriver.Status != BookingDetailStatusEnums.WAITING.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
@@ -954,10 +955,12 @@ public class AssignmentService : IAssignmentService
                 var driver = await _unitOfWork.UserRepository.GetByIdAsyncV1(request.AssignToUserId.Value,
                     includeProperties:
                     "Truck");
-
+                var truck = await _unitOfWork.TruckRepository.FindByUserIdAsync((int)request.AssignToUserId);
                 var isDriver = driver.RoleId == 4 ? true : false;
                 if (isDriver)
                 {
+
+
                     if (driver.Truck.TruckCategoryId != existingBooking.TruckNumber)
                     {
                         result.AddError(StatusCode.NotFound,
@@ -973,6 +976,7 @@ public class AssignmentService : IAssignmentService
                         UserId = request.AssignToUserId,
                         StartDate = existingBooking.BookingAt!.Value,
                         EndDate = endTime,
+                        TruckId = truck.Id,
                         IsResponsible = false,
                         ScheduleBookingId = scheduleBooking!.Id,
                         BookingDetailsId = bookingDetailDriver.Id
@@ -994,7 +998,7 @@ public class AssignmentService : IAssignmentService
                 var bookingDetailPorter =
                     await _unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                         request.StaffType, bookingId);
-                if (bookingDetailPorter == null)
+                if (bookingDetailPorter == null || bookingDetailPorter.Status != BookingDetailStatusEnums.WAITING.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBookingDetail);
                     return result;
