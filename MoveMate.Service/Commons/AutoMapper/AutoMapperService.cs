@@ -185,7 +185,11 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             // Mapping for TruckCategory to TruckCategoryResponse
             CreateMap<TruckCategory, TruckCategoryResponse>()
-                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl));
+     .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+     // Flatten FeeSettings from Services into a single list
+     .ForMember(dest => dest.FeeSettings,
+         opt => opt.MapFrom(src => src.Services.SelectMany(service => service.FeeSettings).ToList()));
+
 
 
             // Free
@@ -206,7 +210,7 @@ namespace MoveMate.Service.Commons.AutoMapper
                 .ForMember(dest => dest.IsCompensation, opt => opt.MapFrom(src => src.IsCompensation))
                 .ForMember(dest => dest.TrackerSources, opt => opt.MapFrom(src => src.TrackerSources));
             CreateMap<BookingTracker, ExceptionResponse>()
-                .ForMember(dest => dest.Deposit, opt => opt.MapFrom(src => src.Booking.Deposit)) 
+                .ForMember(dest => dest.Deposit, opt => opt.MapFrom(src => src.Booking.Deposit))
                 .ForMember(dest => dest.BookingStatus, opt => opt.MapFrom(src => src.Booking.Status))
                 .ForMember(dest => dest.PickupAddress, opt => opt.MapFrom(src => src.Booking.PickupAddress))
                 .ForMember(dest => dest.DeliveryAddress, opt => opt.MapFrom(src => src.Booking.DeliveryAddress))
