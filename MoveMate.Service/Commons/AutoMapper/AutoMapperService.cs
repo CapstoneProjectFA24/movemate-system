@@ -38,7 +38,11 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<CreateUserInfoRequest, UserInfo>();
             CreateMap<UpdateUserInfoRequest, UserInfo>();
             CreateMap<User, GetUserResponse>()
-                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name))
+                 .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Wallet.Id))
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name))
+                .ForMember(dest => dest.UserInfos,
+         opt => opt.MapFrom(src => src.UserInfos.ToList()));
 
 
             //Register

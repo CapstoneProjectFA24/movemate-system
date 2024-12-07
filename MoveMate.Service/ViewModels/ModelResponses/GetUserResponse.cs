@@ -12,7 +12,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public int? RoleId { get; set; }
         public string RoleName { get; set; }
-
+        public int? GroupId { get; set; }
+        public int WalletId { get; set; }
         public string? Name { get; set; }
 
         public string? Phone { get; set; }   
@@ -44,5 +45,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? CodeIntroduce { get; set; }
 
         public string? NumberIntroduce { get; set; }
+
+        public virtual ICollection<UserInfoResponse> UserInfos { get; set; }
     }
 }
