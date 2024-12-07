@@ -42,7 +42,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         [FirestoreProperty] public string RoomNumber { get; set; }
         [FirestoreProperty] public string FloorsNumber { get; set; }
         [FirestoreProperty] public bool IsManyItems { get; set; }
-
+        [FirestoreProperty] public bool? IsUnchanged { get; set; }
         [FirestoreProperty] public bool IsCancel { get; set; }
 
         [FirestoreProperty] public string CancelReason { get; set; }
