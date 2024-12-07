@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MoveMate.Domain.DBContext;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using MoveMate.Repository.DBContext;
 using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository
