@@ -230,6 +230,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AccountNotLogin);
                     return result;
                 }
+                if (user.IsDeleted == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AccountNotFound);
+                    return result;
+                }
                 // Validate the password
                 if (!user.Password.Equals(request.Password))
                 {

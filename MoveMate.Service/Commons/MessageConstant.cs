@@ -77,6 +77,7 @@ namespace MoveMate.Service.Commons
             public const string UserInfoIsDeleted = "User info has been deleted";
             public const string UserInfoExist = "User info with this type has existed";
             public const string AccountNotLogin = "This account has been banned";
+            public const string AccountNotFound = "Account not found in the system";
             public const string RequestIdFail = "The input Id must match the request Id";
             public const string NotPermission = "User have no permission";
             //User
@@ -151,6 +152,7 @@ namespace MoveMate.Service.Commons
             public const string ReviewIsRequired = "What makes you unhappy about this staff?";
             public const string MonetoryFail = "Cannot be added fail reason when you agree to a solve";
             public const string MonetoryFailedReason = "Must give reason for refusal if refusing to resolve";
+            public const string AssignFailed = "Automatic employee assignment failed"; 
             //House type
             public const string NotFoundHouseType = "House type not found";
             public const string AddHouseTypeFail = "Add house type setting failed";
@@ -296,9 +298,11 @@ namespace MoveMate.Service.Commons
             public const string UserInformationRetrieved = "User information retrieved successfully";
             public const string CreateUser = "Create user successful";
             public const string BanUserSuccess = "User has been banned";
+            public const string DeletedUserSuccess = "User has been deleted";
             public const string DeleteUserInfo = "User info has been deleted";
             public const string CreateUserInfo = "Create a new user info successful";
             public const string UserInfoUpdateSuccess = "Update user info succesful";
+            public const string UserUpdateSuccess = "Update user succesful";
             public const string GetUserSuccess = "Get user done";
             public const string GetListUserEmpty = "List user is empty!";
 
