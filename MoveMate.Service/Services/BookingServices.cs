@@ -1896,6 +1896,7 @@ namespace MoveMate.Service.Services
                         }
 
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+                        booking.IsUnchanged = true;
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
                         break;
