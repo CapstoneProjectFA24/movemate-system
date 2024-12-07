@@ -6,8 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Domain.Models;
-using MoveMate.Repository.DBContext;
+
 using MoveMate.Repository.Repositories.Repository;
+using MoveMate.Repository.DBContext;
 
 namespace MoveMate.Repository.Repositories.UnitOfWork
 {
@@ -46,6 +47,7 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
         private TruckImgRepository _truckImgRepository;
         private UserInfoRepository _userInfoRepository;
         private WalletRepository _walletRepository;
+        private WithdrawalRepository _withdrawalRepository;
         private HolidaySettingRepository _holidaySettingRepository;
         private ScheduleWorkingRepository _scheduleWorkingRepository;
 
@@ -483,6 +485,19 @@ namespace MoveMate.Repository.Repositories.UnitOfWork
                 }
 
                 return _walletRepository;
+            }
+        }
+
+        public WithdrawalRepository WithdrawalRepository
+        {
+            get
+            {
+                if (_withdrawalRepository == null)
+                {
+                    _withdrawalRepository = new WithdrawalRepository(_dbContext);
+                }
+
+                return _withdrawalRepository;
             }
         }
 

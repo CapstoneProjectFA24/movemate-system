@@ -185,6 +185,7 @@ namespace MoveMate.Service.Commons.AutoMapper
 
             //Wallet
             CreateMap<Wallet, WalletResponse>();
+            CreateMap<Withdrawal, WalletWithDrawResponse>();
 
 
             // Mapping for TruckCategory to TruckCategoryResponse
