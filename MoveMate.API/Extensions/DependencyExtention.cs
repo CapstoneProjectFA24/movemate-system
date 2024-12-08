@@ -37,6 +37,7 @@ using MoveMate.Service.ThirdPartyService.RabbitMQ.Worker;
 using MoveMate.Service.ThirdPartyService.Redis.Connection;
 using Index = MoveMate.Service.ThirdPartyService.RabbitMQ.Config.Index;
 using DotNetEnv;
+using MoveMate.Service.ThirdPartyService.Cloudinary;
 using MoveMate.Service.ThirdPartyService.GoongMap;
 
 
@@ -109,7 +110,6 @@ namespace MoveMate.API.Extensions
             services.AddScoped<ZaloPaySDK>();
             services.AddScoped<IAssignmentService, AssignmentService>();
             
-
             services.AddScoped<IAssignJobService, AssignJobService>();
 
             services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("14.225.204.144:6379"));
@@ -181,6 +181,15 @@ namespace MoveMate.API.Extensions
 
             services.AddTransient<IFirebaseMiddleware, FirebaseMiddleware>();
 
+            return services;
+        }
+        // Cloudinary
+        public static IServiceCollection AddCloudinaryService(this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.Configure<CloudinarySettings>(configuration.GetSection("Cloudinary"));
+
+            services.AddScoped<CloudinaryService>();
             return services;
         }
 
