@@ -14,6 +14,7 @@ using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using System.Globalization;
 using MoveMate.Domain.Models;
+using MoveMate.Service.ViewModels.ModelResponses.Assignments;
 
 namespace MoveMate.Service.Services
 {
@@ -116,7 +117,35 @@ namespace MoveMate.Service.Services
             };
 
             // Call the SendEmailAsync method with the cancellation template
-            await SendEmailAsync(toEmail, "Booking Cancellation", "BookingCancellation.html", placeholders);
+            await SendEmailAsync(toEmail, $"Đơn hàng #{bookingResponse.Id} đã bị hủy", "BookingCancellation.html", placeholders);
+        }
+
+        public async Task SendAssignStaffResponsibleEmailAsync(string toEmail, AssignmentResponse assignmentResponse)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync((int)assignmentResponse.UserId);
+            if (user == null)
+            {
+                throw new Exception("User not found.");
+            }
+            // Format current date and time in Vietnamese culture
+            var currentDateTime = DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss", new CultureInfo("vi-VN"));
+
+            // Format assignment start date in Vietnamese culture
+            var startDate = assignmentResponse.StartDate.ToString("dddd, dd MMMM yyyy HH:mm:ss", new CultureInfo("vi-VN"));
+
+
+
+            // Replace placeholders in the template
+            var placeholders = new Dictionary<string, string>
+            {
+                { "UserName", user.Name },
+                { "BookingId", assignmentResponse.BookingId.ToString() },
+                { "CurrentDateTime", currentDateTime },
+                { "StartDate", startDate }
+            };
+
+            // Call the SendEmailAsync method with the cancellation template
+            await SendEmailAsync(toEmail, $"Đơn hàng #{assignmentResponse.BookingId}", "AssignStaffResponsible.html", placeholders);
         }
 
         public async Task SendBookingSuccessfulEmailAsync(string toEmail, BookingResponse bookingResponse)
@@ -134,19 +163,20 @@ namespace MoveMate.Service.Services
         { "UserName", user.Name },
         { "BookingId", bookingResponse.Id.ToString() },
         { "BookingDate", bookingResponse.BookingAt },
+        { "Deposit", bookingResponse.Deposit.ToString("C0", new CultureInfo("vi-VN")) },
         { "TotalAmount", bookingResponse.Total.ToString("C0", new CultureInfo("vi-VN")) },
         { "CurrentDateTime", currentDateTime }
                  };
 
 
             // Call the SendEmailAsync method with the booking successful template
-            await SendEmailAsync(toEmail, "Booking Successful", "BookingSuccessful.html", placeholders);
+            await SendEmailAsync(toEmail, $"Đơn hàng #{bookingResponse.Id} đã đặt thành công", "BookingSuccessful.html", placeholders);
         }
 
         // Add more methods for other email types, calling SendEmailAsync with different templates and placeholders
 
 
-       
+
 
     }
 }

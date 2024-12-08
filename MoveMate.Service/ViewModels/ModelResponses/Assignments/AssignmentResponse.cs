@@ -13,5 +13,8 @@ namespace MoveMate.Service.ViewModels.ModelResponses.Assignments
         [FirestoreProperty] public string? StaffType { get; set; }
         [FirestoreProperty] public bool? IsResponsible { get; set; }
         public string? FailedReason { get; set; }
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
     }
 }

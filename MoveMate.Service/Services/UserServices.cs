@@ -56,7 +56,7 @@ namespace MoveMate.Service.Services
                 pageIndex: request.page,
                 pageSize: request.per_page,
                 orderBy: request.GetOrder(),
-                includeProperties: "Role,Truck,Wallet"
+                includeProperties: "Role,Truck,Wallet,UserInfos"
             );
                 var listResponse = _mapper.Map<List<UserResponse>>(entities.Data);
 
@@ -256,6 +256,59 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        public async Task<OperationResult<bool>> DeleteUser(int userId)
+        {
+            var result = new OperationResult<bool>();
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddResponseErrorStatusCode(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser, false);
+                    return result;
+                }
+
+                user.IsDeleted = true;
+                await _unitOfWork.UserRepository.SaveOrUpdateAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.DeletedUserSuccess, true);
+            }
+            catch (Exception ex)
+            {
+                result.AddResponseErrorStatusCode(StatusCode.ServerError, MessageConstant.FailMessage.ServerError, false);
+            }
+
+            return result;
+        }
+
+        public async Task<OperationResult<GetUserResponse>> UnBannedUser(int userId)
+        {
+            var result = new OperationResult<GetUserResponse>();
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+
+                user.IsBanned = false;
+                await _unitOfWork.UserRepository.SaveOrUpdateAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+                user = await _unitOfWork.UserRepository.GetByIdAsyncV1(userId, includeProperties: "Role,UserInfos,Wallet,Group");
+                var response = _mapper.Map<GetUserResponse>(user);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BanUserSuccess, response);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
+
         public async Task<OperationResult<bool>> DeleteUserInfo(int id)
         {
             var result = new OperationResult<bool>();
@@ -394,6 +447,46 @@ namespace MoveMate.Service.Services
             return result;
         }
 
+        public async Task<OperationResult<GetUserResponse>> UpdateAccountAsync(int userId, UpdateAccountRequest request)
+        {
+            var result = new OperationResult<GetUserResponse>();
+            
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+
+                // Update properties from request to existingUserInfo
+                ReflectionUtils.UpdateProperties(request, user);
+
+                await _unitOfWork.UserRepository.SaveOrUpdateAsync(user);
+                var saveResult = await _unitOfWork.SaveChangesAsync(); // Ensure you await this
+
+                // Check save result and return response
+                if (saveResult > 0)
+                {
+                    user = await _unitOfWork.UserRepository.GetByIdAsync(userId, includeProperties: "Role,UserInfos,Wallet,Group");
+                    var response = _mapper.Map<GetUserResponse>(user);
+
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UserUpdateSuccess,
+                        response);
+                }
+                else
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UserInfoUpdateFail);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
+        }
 
         public async Task<OperationResult<GetUserResponse>> GetUserById(int id)
         {
@@ -401,7 +494,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.UserRepository.GetByIdAsync(id, includeProperties: "Role");
+                    await _unitOfWork.UserRepository.GetByIdAsync(id, includeProperties: "Role,UserInfos,Wallet,Group");
                 if (entity == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);

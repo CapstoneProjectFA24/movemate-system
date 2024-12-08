@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt Hàng Thành Công</title>
+    <title>Thông Báo Bổ Nhiệm</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,7 +37,7 @@
             .header h2 {
                 color: #ffffff;
                 margin: 0;
-                background-color: #28a745;
+                background-color: #007bff;
                 padding: 10px;
                 border-radius: 5px;
             }
@@ -66,15 +66,13 @@
         }
 
             .footer a {
-                color: #28a745;
+                color: #007bff;
                 text-decoration: none;
             }
 
                 .footer a:hover {
                     text-decoration: underline;
                 }
-
-        
     </style>
 </head>
 <body>
@@ -84,26 +82,24 @@
             <a href="https://movematee.vercel.app/" target="_blank">
                 <img src="https://res.cloudinary.com/dkpnkjnxs/image/upload/v1732365346/movemate_logo_esm5fx.png" alt="MoveMate Logo">
             </a>
-            <h2>Đặt Hàng Thành Công</h2>
+            <h2>Thông Báo Bổ Nhiệm</h2>
         </div>
 
         <!-- Content Section -->
         <div class="content">
             <p>Chào {{UserName}},</p>
-            <p>Chúng tôi rất vui thông báo rằng đơn đặt hàng của bạn với mã số <strong>{{BookingId}}</strong> đã được xác nhận thành công.</p>
-            <p>Chi tiết đơn đặt hàng của bạn như sau:</p>
-            <p><strong>Ngày đặt:</strong> {{BookingDate}}</p>
-            <p><strong>Số tiền đặt cọc:</strong> {{Deposit}}</p>
-            <p><strong>Tổng số tiền:</strong> {{TotalAmount}}</p>
-            <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi.</p>
-            <p>Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi. Chúng tôi mong được phục vụ bạn trong thời gian tới.</p>
+            <p>Chúng tôi rất vui mừng thông báo rằng bạn đã được chọn làm <strong>người chịu trách nhiệm</strong> cho đơn #<strong>{{BookingId}}</strong>.</p>
+            <p>Chi tiết trách nhiệm của bạn như sau:</p>
+            <p><strong>Ngày bắt đầu:</strong> {{StartDate}}</p>
+            <p>Chúng tôi tin tưởng vào năng lực và trách nhiệm của bạn. Hãy thực hiện nhiệm vụ này với sự tận tâm và trung thực cao nhất.</p>
+            <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với quản lý trực tiếp của bạn hoặc gửi email đến đội ngũ hỗ trợ của chúng tôi.</p>
             <p><strong>Lúc:</strong> {{CurrentDateTime}}</p>
             <p>Trân trọng,</p>
             <p>Đội ngũ MoveMate</p>
 
             <!-- Policy Section -->
             <div class="policy">
-                <p>Hãy dọn nhà cùng <a href="https://movematee.vercel.app/" target="_blank">MoveMate</a></p>
+                <p>Hãy cùng chúng tôi xây dựng một môi trường làm việc hiệu quả và chuyên nghiệp.</p>
                 <p>
                     <a href="https://movematee.vercel.app/" target="_blank">Chính sách bảo mật</a> |
                     <a href="https://movematee.vercel.app/" target="_blank">Điều khoản MoveMate</a>

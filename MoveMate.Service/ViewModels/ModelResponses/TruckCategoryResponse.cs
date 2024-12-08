@@ -30,5 +30,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         public int? TotalTrips { get; set; }
 
+        public virtual ICollection<FeeSettingResponse> FeeSettings { get; set; }
+
     }
 }

@@ -89,6 +89,21 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+        /// <summary>
+        /// CHORE : Update user information
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <returns>Returns a response indicating the success or failure of the update user.</returns>
+        /// <response code="200">Returns if the user was successfully updated.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateAccountRequest request)
+        {
+            var response = await _userService.UpdateAccountAsync(userId, request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
 
 
         /// <summary>
@@ -201,22 +216,34 @@ namespace MoveMate.API.Controllers
         }
 
         /// <summary>
-        /// CHORE : Update user info by user info id
+        /// Allows users to submit a report for an exception or issue.
         /// </summary>
-        /// <param name="request">The user info request model.</param>
-        /// <returns>A response containing the created user info.</returns>
+        /// <param name="request">The request model containing exception details.</param>
+        /// <returns>An <see cref="IActionResult"/> indicating the result of the operation.</returns>
         /// <remarks>
         /// Sample request:
         /// 
-        ///     PUT /api/user-info/{id}
+        ///     POST /api/user-info/report
         ///     {
-        ///         "type": "CAVET",
-        ///         "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1729864500/movemate/eopqdqwqcblmzc5ymbeg.jpg",
-        ///         "value": "324214221212312"
+        ///         "bookingId": 1,
+        ///         "location": "28 Hẻm 635 Hương Lộ 2,Phường Bình Trị Đông,Quận Bình Tân,Thành Phố Hồ Chí Minh",
+        ///         "point": "10.767782,106.611362",
+        ///         "description": "Accidentally broke it",
+        ///         "title": "Report title",
+        ///         "estimatedAmount": 2243230,
+        ///         "isInsurance": false,
+        ///         "resourceList": [
+        ///             {
+        ///                 "type": "Image",
+        ///                 "resourceUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1731766020/movemate/images/kh6logaucsyb6bydkbpu.jpg",
+        ///                 "resourceCode": "string"
+        ///             }
+        ///         ]
         ///     }
         /// </remarks>
-        /// <response code="201">Returns the created truck category</response>
-        /// <response code="500">If there is a server error</response>
+        /// <response code="200">If the report is successfully processed.</response>
+        /// <response code="400">If the request contains invalid data.</response>
+        /// <response code="500">If an internal server error occurs.</response>
         [HttpPost("report")]
         public async Task<IActionResult> UserReport([FromBody] ExceptionRequest request)
         {
@@ -269,14 +296,42 @@ namespace MoveMate.API.Controllers
         /// <response code="200">Returns if the user was successfully banned.</response>
         /// <response code="404">Returns if the user is not found.</response>
         /// <response code="500">Returns if a system error occurs.</response>
-        [HttpPost("admin/ban-user/{id}")]
+        [HttpPut("admin/ban-user/{id}")]
         public async Task<IActionResult> BanUser(int id)
         {
             var response = await _userService.BanUser(id);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+        /// <summary>
+        /// CHORE : Unban for user by setting the user's banned status to fasle.
+        /// </summary>
+        /// <param name="userId">The ID of the user to be banned.</param>
+        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+        /// <response code="200">Returns if the user was successfully banned.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpPut("admin/unban-user/{userId}")]
+        public async Task<IActionResult> UnbanUser(int userId)
+        {
+            var response = await _userService.UnBannedUser(userId);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+        /// <summary>
+        /// CHORE : Delete a user by setting the user's deleted status to true.
+        /// </summary>
+        /// <param name="userId">The ID of the user to be banned.</param>
+        /// <returns>Returns a response indicating the success or failure of the ban operation.</returns>
+        /// <response code="200">Returns if the user was successfully banned.</response>
+        /// <response code="404">Returns if the user is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            var response = await _userService.DeleteUser(userId);
 
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }

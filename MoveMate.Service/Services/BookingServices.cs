@@ -38,6 +38,7 @@ using MoveMate.Service.Library;
 using MoveMate.Service.ThirdPartyService.Payment.Models;
 using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 using System.Diagnostics;
+using Org.BouncyCastle.Crypto.Macs;
 
 namespace MoveMate.Service.Services
 {
@@ -311,7 +312,11 @@ namespace MoveMate.Service.Services
                     var user = await _unitOfWork.UserRepository.GetByIdAsync(userid);
                     // Sending a booking confirmation email
                     // Inside RegisterBooking method, after the booking is successfully created:
-                    //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
+                    if (user.Id == 3)
+                    {
+                        user.Email = "hoaiphuong2506@gmail.com";
+                    }
+                    await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
 
                     result.AddResponseStatusCode(StatusCode.Created,
                         MessageConstant.SuccessMessage.RegisterBookingSuccess, response);
@@ -1844,6 +1849,8 @@ namespace MoveMate.Service.Services
                         }
 
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+
+                        booking.IsUnchanged = true;
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
                         break;
@@ -1889,6 +1896,7 @@ namespace MoveMate.Service.Services
                         }
 
                         nextStatus = AssignmentStatusEnums.REVIEWED.ToString();
+                        booking.IsUnchanged = true;
                         booking.Status = BookingEnums.REVIEWED.ToString();
                         booking.IsStaffReviewed = true;
                         break;
@@ -2858,6 +2866,7 @@ namespace MoveMate.Service.Services
                     assign.Status = AssignmentStatusEnums.ASSIGNED.ToString();
                 }
 
+
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(assigned);
                 var saveResult = _unitOfWork.Save();
@@ -2870,7 +2879,36 @@ namespace MoveMate.Service.Services
                     var entity = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId, includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
+                    var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)assignment.BookingId);
+                    var user = await _unitOfWork.UserRepository.GetByIdAsync((int)assignment.UserId);
+                    var notificationUser =
+                       await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignment.UserId);
+                    if (notificationUser == null)
+                    {
+                        throw new Exception($"Can't send notification to user");
+                    }
+                    if (!string.IsNullOrEmpty(notificationUser.FcmToken))
+                    {
+                        // Define title, body, and data for the notification
+                        var title = "Responsible Staff";
+                        var body = $"You have been randomly selected as the person responsible for the booking{assignment.BookingId}.";
+                        var fcmToken = notificationUser.FcmToken;
+                        var data = new Dictionary<string, string>
+                    {
+                        { "bookingId", booking.Id.ToString() },
+                        { "status", booking.Status.ToString() },
+                        { "message", "You have been selected as the person who chooses responsibility." }
+                    };
 
+                        // Send notification to Firebase
+                        await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+                    }
+
+                    if(user.Id == 61)
+                    {
+                        user.Email = "hoaiphuong2506@gmail.com";
+                    }
+                    await _emailService.SendAssignStaffResponsibleEmailAsync(user.Email, response);
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.UpdateAssignment,
                         response);
                 }

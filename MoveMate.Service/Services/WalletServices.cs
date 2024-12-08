@@ -159,5 +159,54 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
+
+        public async Task<OperationResult<WalletWithDrawResponse>> UserRequestWithDraw(int userId, double amount)
+        {
+            var result = new OperationResult<WalletWithDrawResponse>();
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+                if(wallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+                if (wallet.Balance < amount)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotEnoughMoney);
+                    return result;
+                }
+                var withdrawal = new Withdrawal();
+
+                withdrawal.UserId = userId;
+                withdrawal.Amount = amount;
+                withdrawal.WalletId = wallet.Id;
+                withdrawal.BalanceBefore = wallet.Balance;
+                withdrawal.BalanceAfter = wallet.Balance - amount;
+                withdrawal.Date = DateTime.Now;
+                withdrawal.BankName = wallet.BankName;
+                withdrawal.BankNumber = wallet.BankNumber;
+                withdrawal.IsSuccess = false;
+                withdrawal.IsCancel = false;
+                
+                await _unitOfWork.WithdrawalRepository.AddAsync(withdrawal);
+                await _unitOfWork.SaveChangesAsync();
+                withdrawal = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawal.Id);
+                var response = _mapper.Map<WalletWithDrawResponse>(withdrawal);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.WithDrawMoney, response); 
+                return result;
+            }
+            catch(Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
     }
 }
