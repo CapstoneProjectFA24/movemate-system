@@ -3093,7 +3093,7 @@ namespace MoveMate.Service.Services
                 {
                     bookingDetail = await _unitOfWork.BookingDetailRepository.GetByIdAsync((int)bookingDetail.Id);
                     var response = _mapper.Map<BookingDetailsResponse>(bookingDetail);
-                    var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId, includeProperties: "BookingDetails");
+                    var booking = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId, includeProperties: "BookingDetails,Assignments");
                     await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
                         response);
