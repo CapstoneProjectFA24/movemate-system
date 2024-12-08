@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
+using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
 using MoveMate.Repository.Repositories.UnitOfWork;
 using MoveMate.Service.Commons;
 using MoveMate.Service.IServices;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
@@ -12,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 
 namespace MoveMate.Service.Services
 {
@@ -203,6 +206,160 @@ namespace MoveMate.Service.Services
                 return result;
             }
             catch(Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<WalletWithDrawResponse>> UserCancelRequestWithDraw(int withdrawId, int userId, UserCancelRequestWithDrawRequest request)
+        {
+            var result = new OperationResult<WalletWithDrawResponse>();
+            try
+            {
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                    return result;
+                }
+                var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
+                if (wallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+                var withdraw = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawId);
+                if (withdraw == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWithDraw);
+                    return result;
+                }
+                if (withdraw.UserId != userId)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.WithdrawNotFromUser);
+                    return result;
+                }
+                if (withdraw.IsSuccess == true)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.WithdrawSuccess);
+                    return result;
+                }
+                withdraw.IsCancel = true;
+                withdraw.CancelReason = request.CancelReason;
+                await _unitOfWork.WithdrawalRepository.SaveOrUpdateAsync(withdraw);
+                await _unitOfWork.SaveChangesAsync();
+                withdraw = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawId);
+                var response = _mapper.Map<WalletWithDrawResponse>(withdraw);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelWithDrawMoney, response);
+                return result;
+
+            }
+            catch(Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<WalletWithDrawResponse>> ManagerDeniedRequestWithDraw(int withdrawId, UserCancelRequestWithDrawRequest request)
+        {
+            var result = new OperationResult<WalletWithDrawResponse>();
+            try
+            {               
+                
+                var withdraw = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawId);
+                if (withdraw == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWithDraw);
+                    return result;
+                }
+                
+                if (withdraw.IsSuccess == true)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.WithdrawSuccess);
+                    return result;
+                }
+                withdraw.IsCancel = true;
+                withdraw.CancelReason = request.CancelReason;
+                await _unitOfWork.WithdrawalRepository.SaveOrUpdateAsync(withdraw);
+                await _unitOfWork.SaveChangesAsync();
+                withdraw = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawId);
+                var response = _mapper.Map<WalletWithDrawResponse>(withdraw);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.CancelWithDrawMoney, response);
+                return result;
+
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
+
+        public async Task<OperationResult<WalletWithDrawResponse>> ManagerAccpectRequestWithDraw(int withdrawId)
+        {
+            var result = new OperationResult<WalletWithDrawResponse>();
+            try
+            {
+
+                var withdraw = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawId);
+                if (withdraw == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWithDraw);
+                    return result;
+                }
+                if (withdraw.IsCancel == true)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.WithdrawCancel);
+                    return result;
+                }
+                var wallet = await _unitOfWork.WalletRepository.GetByIdAsync((int)withdraw.WalletId);
+                if (wallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+                if (wallet.Balance < withdraw.Amount)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotEnoughMoney);
+                    return result;
+                }
+                withdraw.IsSuccess = true;
+
+                var newGuid = Guid.NewGuid();
+                var transaction = new MoveMate.Domain.Models.Transaction
+                {                  
+                    WalletId = wallet.Id,
+                    Amount = withdraw.Amount,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = PaymentMethod.WITHDRAW.ToString(),
+                    TransactionCode = newGuid.ToString(),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Wallet.ToString(),
+                    PaymentMethod = Resource.Wallet.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = false
+                };
+                wallet.Balance -= withdraw.Amount;
+
+                var updateWallet = await UpdateWalletBalance(wallet.Id, (float)wallet.Balance);
+                if (updateWallet.IsError)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
+                    return result;
+                }
+                await _unitOfWork.WithdrawalRepository.SaveOrUpdateAsync(withdraw);
+                await _unitOfWork.TransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveChangesAsync();
+                withdraw = await _unitOfWork.WithdrawalRepository.GetByIdAsync(withdrawId);
+                var response = _mapper.Map<WalletWithDrawResponse>(withdraw);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.WithDrawMoneySuccess, response);
+                return result;
+
+            }
+            catch (Exception ex)
             {
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
