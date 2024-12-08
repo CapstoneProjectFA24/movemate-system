@@ -184,6 +184,10 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                                 _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
 
                             }
+                            else
+                            {
+                                Console.WriteLine("HAVE DRIVER ASSIGNED");
+                            }
                         }
                     }
 
