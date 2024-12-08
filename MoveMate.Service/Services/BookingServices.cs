@@ -1199,16 +1199,16 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                DateTime currentTime = DateTime.Now;
-                if (booking.BookingAt.HasValue)
-                {
-                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
-                    if (currentTime < earliestUpdateTime)
-                    {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
-                        return result;
-                    }
-                }
+                //DateTime currentTime = DateTime.Now;
+                //if (booking.BookingAt.HasValue)
+                //{
+                //    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
+                //    if (currentTime < earliestUpdateTime)
+                //    {
+                //        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                //        return result;
+                //    }
+                //}
 
 
 

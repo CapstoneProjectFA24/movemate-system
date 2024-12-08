@@ -982,6 +982,15 @@ public class AssignmentService : IAssignmentService
                         BookingDetailsId = bookingDetailDriver.Id
                     };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                    //driverAssignments = existingBooking.Assignments
+                    //.Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
+                    //            a.Status != AssignmentStatusEnums.FAILED.ToString())
+                    //.ToList();
+                    //if (driverAssignments.Count >= existingBooking.DriverNumber)
+                    //{
+                    //    bookingDetailDriver.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
+                    //}
+                    //await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailDriver);
                 }
                 else
                 {
@@ -1043,6 +1052,15 @@ public class AssignmentService : IAssignmentService
                     };
 
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                    //porterAssignments = existingBooking.Assignments
+                    //.Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
+                    //            a.Status != AssignmentStatusEnums.FAILED.ToString())
+                    //.ToList();
+                    //if (porterAssignments.Count >= existingBooking.DriverNumber)
+                    //{
+                    //    bookingDetailPorter.Status = BookingDetailStatusEnums.AVAILABLE.ToString();
+                    //}
+                    //await _unitOfWork.BookingDetailRepository.SaveOrUpdateAsync(bookingDetailPorter);
                 }
                 else
                 {
