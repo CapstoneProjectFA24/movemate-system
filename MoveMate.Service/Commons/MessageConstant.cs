@@ -220,8 +220,12 @@ namespace MoveMate.Service.Commons
             public const string ScheduleIsDeleted = "Schedule has been deleted";
             //Wallet
             public const string NotFoundWallet = "Wallet not found";
+            public const string NotFoundWithDraw = "Withdrawal not found";
             public const string UpdateWalletBalance = "Failed to update wallet balance";
             public const string NotEnoughMoney = "Wallet balance is not enough";
+            public const string WithdrawNotFromUser = "Withdrawal is not from this user";
+            public const string WithdrawSuccess = "Withdrawal has been completed";
+            public const string WithdrawCancel = "Withdrawal has been canceled";
             //Group
             public const string NotFoundGroup = "Not found group";
             public const string CannotAddReviewer = "Group cannot have more than 3 REVIEWER";
@@ -388,6 +392,8 @@ namespace MoveMate.Service.Commons
             public const string UpdateWalletSuccess = "Wallet updated successfully";
             public const string EnoughMoney = "Sufficient wallet balance";
             public const string WithDrawMoney = "Withdrawal request successful";
+            public const string CancelWithDrawMoney = "Cancel withdrawal request successful";
+            public const string WithDrawMoneySuccess = "Successful withdrawal";
 
             //Payment
             public const string CreatePaymentLinkSuccess = "Payment link created successfully";

@@ -195,5 +195,44 @@ namespace MoveMate.API.Controllers
             var response = await _walletServices.UserRequestWithDraw(userId, amount);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        /// <summary>
+        /// FEATURE: User cancel request withdraw
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut("cancel-withdrawal/{withdrawId}")]
+        public async Task<IActionResult> UserCancelRequestWithdraw(int withdrawId, [FromBody] UserCancelRequestWithDrawRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _walletServices.UserCancelRequestWithDraw(withdrawId, userId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// FEATURE: Manager denied request withdraw
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut("denied-withdrawal/{withdrawId}")]
+        public async Task<IActionResult> ManagerDeniedRequestWithdraw(int withdrawId, [FromBody] UserCancelRequestWithDrawRequest request)
+        {
+            IEnumerable<Claim> claims = HttpContext.User.Claims;
+            Claim accountId = claims.First(x => x.Type.ToLower().Equals("sid"));
+            var userId = int.Parse(accountId.Value);
+            var response = await _walletServices.ManagerDeniedRequestWithDraw(withdrawId, request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
+        /// <summary>
+        /// FEATURE: Manager accept request withdraw
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut("accept-withdrawal/{withdrawId}")]
+        public async Task<IActionResult> ManagerAcceptRequestWithdraw(int withdrawId)
+        {        
+            var response = await _walletServices.ManagerAccpectRequestWithDraw(withdrawId);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
     }
 }
