@@ -12,6 +12,7 @@ namespace MoveMate.Domain.Enums
         DEPOSIT,
         PAYMENT,
         RECEIVE,
-        TRANFER
+        TRANFER,
+        WITHDRAW
     }
 }
