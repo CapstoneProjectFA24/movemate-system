@@ -178,7 +178,12 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                             _producer.SendingMessage("movemate.push_to_firebase", saveObj.Id);
 
                             Console.WriteLine("Pushed to old_bookings successfully");
-                            _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
+
+                            if (!saveObj.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString()))
+                            {
+                                _producer.SendingMessage("movemate.booking_assign_driver", saveObj.Id);
+
+                            }
                         }
                     }
 
