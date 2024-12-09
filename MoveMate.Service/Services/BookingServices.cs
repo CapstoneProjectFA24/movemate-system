@@ -1908,9 +1908,8 @@ namespace MoveMate.Service.Services
                         }
                         else if (booking.IsReviewOnline == false && booking.Status == BookingEnums.REVIEWING.ToString())
                         {
-                            //nextStatus = AssignmentStatusEnums.INCOMING.ToString();
-                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ReviewerBadRequest);
-                            return result;
+                            nextStatus = AssignmentStatusEnums.INCOMING.ToString();
+                           
                         }
                         else
                         {
