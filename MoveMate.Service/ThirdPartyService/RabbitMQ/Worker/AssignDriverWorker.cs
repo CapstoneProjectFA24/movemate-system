@@ -126,7 +126,7 @@ Auto-Assign Driver Workflow:
                 var bookingDetailTruck =
                     await unitOfWork.BookingDetailRepository.GetAsyncByTypeAndBookingId(
                         TypeServiceEnums.TRUCK.ToString(), message);
-
+                
                 var bookingDetailPorter =
                     await unitOfWork.BookingDetailRepository.GetPorterAsyncByServiceIdAndBookingIdNotDriver(message);
                 if (bookingDetailPorter != null)
@@ -143,6 +143,11 @@ Auto-Assign Driver Workflow:
                 if (bookingDetailTruck == null)
                 {
                     throw new NotFoundException(MessageConstant.FailMessage.NotFoundBooking);
+                }
+                
+                if (bookingDetailTruck.Status == BookingDetailStatusEnums.WAITING.ToString() || bookingDetailTruck.Assignments.Any(a => a.StaffType == RoleEnums.DRIVER.ToString() ))
+                {
+                    return;
                 }
                 
                 var schedule = await unitOfWork.ScheduleWorkingRepository.GetScheduleByBookingAtAsync(existingBooking.BookingAt.Value);
