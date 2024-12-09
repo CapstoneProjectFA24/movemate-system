@@ -365,5 +365,43 @@ namespace MoveMate.Service.Services
                 return result;
             }
         }
+
+        public async Task<OperationResult<List<WalletWithDrawResponse>>> GetAllWithDraw(GetAllWithDrawalRequest request)
+        {
+            var result = new OperationResult<List<WalletWithDrawResponse>>();
+
+            var pagin = new Pagination();
+
+            var filter = request.GetExpressions();
+
+            try
+            {
+                var entities = _unitOfWork.WithdrawalRepository.GetWithCount(
+                filter: request.GetExpressions(),
+                pageIndex: request.page,
+                pageSize: request.per_page,
+                orderBy: request.GetOrder()
+            );
+                var listResponse = _mapper.Map<List<WalletWithDrawResponse>>(entities.Data);
+
+                if (listResponse == null || !listResponse.Any())
+                {
+                    result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListWithDrawalEmpty, listResponse);
+                    return result;
+                }
+
+                pagin.pageSize = request.per_page;
+                pagin.totalItemsCount = entities.Count;
+
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListWithDrawalSuccess, listResponse, pagin);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error occurred in getAll Service Method");
+                throw;
+            }
+        }
     }
 }

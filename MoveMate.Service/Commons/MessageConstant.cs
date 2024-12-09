@@ -117,6 +117,7 @@ namespace MoveMate.Service.Commons
             public const string BookingAssigned = "The booking status must be ASSIGNED";
             public const string BookingReviewOnline = "The booking is review online";
             public const string BookingReviewing = "The booking status must be REVIEWING";
+            public const string ReviewerBadRequest = "Bad Request";
             public const string BookingCompleted = "The booking status must be COMPLETED";
             public const string BookingRefund = "The booking status must be REFUNDING";
             public const string BookingCancel = "Booking have been canceled";
@@ -394,6 +395,8 @@ namespace MoveMate.Service.Commons
             public const string WithDrawMoney = "Withdrawal request successful";
             public const string CancelWithDrawMoney = "Cancel withdrawal request successful";
             public const string WithDrawMoneySuccess = "Successful withdrawal";
+            public const string GetListWithDrawalEmpty = "List withdrawal is empty!";
+            public const string GetListWithDrawalSuccess = "Get list withdrawal done";
 
             //Payment
             public const string CreatePaymentLinkSuccess = "Payment link created successfully";

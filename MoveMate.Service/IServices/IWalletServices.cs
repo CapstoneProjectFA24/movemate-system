@@ -20,6 +20,7 @@ namespace MoveMate.Service.IServices
         Task<OperationResult<WalletWithDrawResponse>> UserCancelRequestWithDraw(int withdrawId, int userId, UserCancelRequestWithDrawRequest request);
         Task<OperationResult<WalletWithDrawResponse>> ManagerDeniedRequestWithDraw(int withdrawId, UserCancelRequestWithDrawRequest request);
         Task<OperationResult<WalletWithDrawResponse>> ManagerAccpectRequestWithDraw(int withdrawId);
+        Task<OperationResult<List<WalletWithDrawResponse>>> GetAllWithDraw(GetAllWithDrawalRequest request);
 
     }
 }

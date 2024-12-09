@@ -234,5 +234,27 @@ namespace MoveMate.API.Controllers
             var response = await _walletServices.ManagerAccpectRequestWithDraw(withdrawId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+
+        /// <summary>
+        /// CHORE : Retrieves a paginated list of all withdrawal.
+        /// </summary>
+        /// <param name="request">The request containing pagination and filter parameters.</param>
+        /// <returns>An IActionResult containing the operation result.</returns>
+        /// <remarks>
+        /// </remarks>
+        /// <response code="200">Get List Withdrawal Done</response>
+        /// <response code="200">List Withdrawal is Empty!</response>
+        /// <response code="500">Internal server error occurred</response>
+        [HttpGet("withdrawal")]
+        public async Task<IActionResult> GetAll([FromQuery] GetAllWithDrawalRequest request)
+        {
+            //IEnumerable<Claim> claims = HttpContext.User.Claims;
+
+            var response = await _walletServices.GetAllWithDraw(request);
+
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+        }
+
     }
 }
