@@ -2883,26 +2883,26 @@ namespace MoveMate.Service.Services
                     var user = await _unitOfWork.UserRepository.GetByIdAsync((int)assignment.UserId);
                     var notificationUser =
                        await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignment.UserId);
-                    if (notificationUser == null)
+                    if (notificationUser != null)
                     {
-                        throw new Exception($"Can't send notification to user");
-                    }
-                    if (!string.IsNullOrEmpty(notificationUser.FcmToken))
-                    {
-                        // Define title, body, and data for the notification
-                        var title = "Responsible Staff";
-                        var body = $"You have been randomly selected as the person responsible for the booking{assignment.BookingId}.";
-                        var fcmToken = notificationUser.FcmToken;
-                        var data = new Dictionary<string, string>
+                        if (!string.IsNullOrEmpty(notificationUser.FcmToken))
+                        {
+                            // Define title, body, and data for the notification
+                            var title = "Responsible Staff";
+                            var body = $"You have been randomly selected as the person responsible for the booking{assignment.BookingId}.";
+                            var fcmToken = notificationUser.FcmToken;
+                            var data = new Dictionary<string, string>
                     {
                         { "bookingId", booking.Id.ToString() },
                         { "status", booking.Status.ToString() },
                         { "message", "You have been selected as the person who chooses responsibility." }
                     };
 
-                        // Send notification to Firebase
-                        await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+                            // Send notification to Firebase
+                            await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+                        }
                     }
+                
 
                     if(user.Id == 61)
                     {
