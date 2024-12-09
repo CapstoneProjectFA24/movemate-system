@@ -333,5 +333,13 @@ namespace MoveMate.API.Controllers
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
+
+        [HttpPost("staff")]
+        public async Task<IActionResult> CreateStaff([FromBody] CreateStaffRequest request)
+        {
+            var response = await _userService.CreateStaff(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
     }
 }

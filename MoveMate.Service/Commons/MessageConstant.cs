@@ -394,6 +394,8 @@ namespace MoveMate.Service.Commons
             public const string WithDrawMoney = "Withdrawal request successful";
             public const string CancelWithDrawMoney = "Cancel withdrawal request successful";
             public const string WithDrawMoneySuccess = "Successful withdrawal";
+            public const string GetListWithDrawalEmpty = "List withdrawal is empty!";
+            public const string GetListWithDrawalSuccess = "Get list withdrawal done";
 
             //Payment
             public const string CreatePaymentLinkSuccess = "Payment link created successfully";

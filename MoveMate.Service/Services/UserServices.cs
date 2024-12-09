@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Messaging;
+using Catel.Collections;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
@@ -610,6 +611,67 @@ namespace MoveMate.Service.Services
                 result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
                 return result;
             }
+        }
+
+        public async Task<OperationResult<GetUserResponse>> CreateStaff(CreateStaffRequest request)
+        {
+            var result = new OperationResult<GetUserResponse>();
+            try
+            {
+                // Check if the email already exists
+                var userEmail = await _unitOfWork.UserRepository.GetUserAsyncByEmail(request.Email);
+                if (userEmail != null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.EmailExist);
+                    return result;
+                }
+
+                // Check if the phone already exists
+                var userPhone = await _unitOfWork.UserRepository.GetUserByPhoneAsync(request.Phone);
+                if (userPhone != null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PhoneExist);
+                    return result;
+                }
+
+                var roleId = await _unitOfWork.RoleRepository.GetByIdAsync((int)request.RoleId);
+                if (roleId == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.RoleNotFound);
+                    return result;
+                }
+
+                var user = _mapper.Map<User>(request);
+                if (request.RoleId == 4)
+                {
+                    user.IsDriver = true;
+                }
+                List<UserInfo> resourceList = _mapper.Map<List<UserInfo>>(request.UserInfo);
+                user.UserInfos = resourceList;
+                user.Wallet = new Wallet
+                {
+                    Balance = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsLocked = true,
+                    Tier = 1
+                };
+
+                await _unitOfWork.UserRepository.AddAsync(user);
+                _unitOfWork.Save();
+                var staff = await _unitOfWork.UserRepository.GetByIdAsync(user.Id, includeProperties: "Role,Wallet,UserInfos,Group");
+                var userResponse = _mapper.Map<GetUserResponse>(staff);
+                
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess,
+                    userResponse);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+            }
+
+            return result;
         }
     }
 }
