@@ -32,5 +32,7 @@ namespace MoveMate.Service.IServices
 
         Task<OperationResult<BookingTrackerResponse>> UserReportException(int userId, ExceptionRequest request);
         Task<OperationResult<GetUserResponse>> UnBannedUser(int userId);
+        public Task<OperationResult<GetUserResponse>> CreateStaff(CreateStaffRequest request);
+
     }
 }

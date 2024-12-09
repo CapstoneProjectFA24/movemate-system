@@ -19,6 +19,10 @@ namespace MoveMate.Service.Commons.AutoMapper
             CreateMap<UpdateUserRequest, User>();
             CreateMap<CustomerToRegister, User>()
                 .ForMember(dest => dest.Wallet, opt => opt.Ignore());
+            CreateMap<CreateStaffRequest, User>()
+                .ForMember(dest => dest.UserInfos, opt => opt.MapFrom(src => src.UserInfo));
+            
+            CreateMap<UserInfoRequest, UserInfo>();
             // Mapping for AccountToken
             CreateMap<AccountTokenRequest, AccountToken>();
             CreateMap<AccountToken, AccountTokenRequest>();
