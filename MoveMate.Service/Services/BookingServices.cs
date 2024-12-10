@@ -2805,7 +2805,7 @@ namespace MoveMate.Service.Services
                         includeProperties:
                         "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
                     var response = _mapper.Map<BookingResponse>(updatedBooking);
-                    await _firebaseServices.SaveBooking(existingBooking, existingBooking.Id, "bookings");
+                    await _firebaseServices.SaveBooking(updatedBooking, updatedBooking.Id, "bookings");
                     result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingUpdateSuccess,
                         response);
                 }

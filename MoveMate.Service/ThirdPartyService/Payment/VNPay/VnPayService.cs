@@ -488,7 +488,9 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId, includeProperties:
+                "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                await _firebaseServices.SaveBooking(updatedBooking, updatedBooking.Id, "bookings");
                 result = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
             }
             catch (Exception ex)
