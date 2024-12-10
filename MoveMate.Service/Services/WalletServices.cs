@@ -75,7 +75,7 @@ namespace MoveMate.Service.Services
 
                 wallet.Balance = balance;
                 wallet.UpdatedAt = DateTime.Now;
-                await _unitOfWork.WalletRepository.UpdateAsync(wallet);
+                await _unitOfWork.WalletRepository.SaveOrUpdateAsync(wallet);
 
                 var walletResponse = _mapper.Map<WalletResponse>(wallet);
                 return OperationResult<WalletResponse>.Success(walletResponse);
