@@ -3398,21 +3398,10 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-                var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
-                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
-
-                if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
-         assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
-         assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString() && booking.IsCredit == true)
-                {
+                
                     booking.Status = BookingEnums.COMPLETED.ToString();
                     booking.TotalReal = 0;
-                }
-                else
-                {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.BookingStatus);
-                    return result;
-                }
+                
 
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
