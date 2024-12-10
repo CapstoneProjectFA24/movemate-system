@@ -673,5 +673,33 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
+        public async Task<OperationResult<GetUserResponse>> AcceptUser(int userId)
+        {
+            var result = new OperationResult<GetUserResponse>();
+            try
+            {
+                var entity =
+                    await _unitOfWork.UserRepository.GetByIdAsync(userId, includeProperties: "Role,UserInfos,Wallet,Group");
+                if (entity == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                }
+
+                entity.IsAccepted = true;
+                await _unitOfWork.UserRepository.SaveOrUpdateAsync(entity);
+                await _unitOfWork.SaveChangesAsync();
+                var userResponse = _mapper.Map<GetUserResponse>(entity);
+                await _emailService.SendJobAcceptanceEmailAsync(entity.Email, userResponse);
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetUserSuccess,
+                        userResponse);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                return result;
+            }
+        }
     }
 }

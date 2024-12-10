@@ -14,6 +14,7 @@ namespace MoveMate.Service.IServices
         Task SendBookingCancellationEmailAsync(string toEmail, BookingResponse bookingResponse);
         Task SendBookingSuccessfulEmailAsync(string toEmail, BookingResponse bookingResponse);
         Task SendAssignStaffResponsibleEmailAsync(string toEmail, AssignmentResponse assignmentResponse);
+        Task SendJobAcceptanceEmailAsync(string toEmail, GetUserResponse userResponse);
         Task SendEmailAsync(string toEmail, string subject, string templateFileName, Dictionary<string, string> placeholders);
 
         

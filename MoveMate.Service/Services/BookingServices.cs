@@ -2698,7 +2698,7 @@ namespace MoveMate.Service.Services
                             voucher.BookingId = existingBooking.Id;
                         }
 
-                        _unitOfWork.VoucherRepository.UpdateRange(voucherOnlines);
+                        await _unitOfWork.VoucherRepository.SaveOrUpdateRangeAsync(voucherOnlines);
                         BackgroundJob.Schedule(() => CheckAndCancelBooking(existingBooking.Id), TimeSpan.FromDays(1));
                         break;
                     case "COMING":
@@ -2970,6 +2970,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingHasBeenUpdated);
                     return result;
                 }
+                //if (DateTime.Now.AddHours(1) > existingBooking.BookingAt)
+                //{
+                //    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CannotUpdateBookingCloseToTime);
+                //    return result;
+                //}
 
                 if (existingBooking.IsReviewOnline == true)
                 {

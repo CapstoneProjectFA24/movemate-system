@@ -10,10 +10,12 @@
     <None Remove="Resources\EmailTemplates\AssignStaffResponsible.html" />
     <None Remove="Resources\EmailTemplates\BookingCancellation.html" />
     <None Remove="Resources\EmailTemplates\BookingSuccessful.html" />
+    <None Remove="Resources\EmailTemplates\JobAcceptance.html" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\EmailTemplates\AssignStaffResponsible.html" />
+    <EmbeddedResource Include="Resources\EmailTemplates\JobAcceptance.html" />
     <EmbeddedResource Include="Resources\EmailTemplates\BookingSuccessful.html" />
     <EmbeddedResource Include="Resources\EmailTemplates\BookingCancellation.html" />
   </ItemGroup>

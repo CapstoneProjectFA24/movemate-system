@@ -27,7 +27,9 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         [JsonIgnore]
         public bool? IsBanned { get; set; } = false;
         [JsonIgnore]
-        public bool? IsDeleted { get; set; } = true;
+        public bool? IsDeleted { get; set; } = false;
+        [JsonIgnore]
+        public bool? IsAccepted { get; set; } = false;
         [JsonIgnore]
         public DateTime? CreatedAt { get; set; } = DateTime.Now;
         public virtual ICollection<UserInfoRequest> UserInfo { get; set; } = new List<UserInfoRequest>();
