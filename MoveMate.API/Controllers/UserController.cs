@@ -334,10 +334,66 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
+
+        /// <summary>
+        /// CHORE: Creates a new staff member with the information provided in the request.
+        /// </summary>
+        /// <param name="request">A <see cref="CreateStaffRequest"/> object containing the staff details.</param>
+        /// <returns>Returns a response indicating the success or failure of the staff creation operation.</returns>
+        /// <remarks>
+        /// **Example Request:**
+        /// 
+        ///     POST /api/staff
+        ///     {
+        ///         "roleId": 4,
+        ///         "name": "Jane Doe",
+        ///         "phone": "0987654321",
+        ///         "password": "SecurePassword123",
+        ///         "gender": "Female",
+        ///         "email": "janedoe@example.com",
+        ///         "avatarUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///         "dob": "1992-08-20T00:00:00Z",
+        ///         "userInfo": [
+        ///             {
+        ///                 "type": "Department",
+        ///                 "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "value": "Human Resources"
+        ///             }
+        ///         ]
+        ///     }
+        /// </remarks>
+        /// <response code="200">Returns if the staff member was successfully created.</response>
+        /// <response code="400">Returns if the provided information is invalid or incomplete.</response>
+        /// <response code="500">Returns if an unexpected system error occurs.</response>
         [HttpPost("staff")]
         public async Task<IActionResult> CreateStaff([FromBody] CreateStaffRequest request)
         {
             var response = await _userService.CreateStaff(request);
+            return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+
+        }
+
+        /// <summary>
+        /// CHORE: Approves a staff member by updating their acceptance status.
+        /// </summary>
+        /// <param name="userId">The ID of the staff member to be accepted.</param>
+        /// <returns>Returns a response indicating the success or failure of the acceptance operation.</returns>
+        /// <remarks>
+        /// **Example Request:**
+        /// 
+        ///     PUT /api/accept-staff/123
+        /// 
+        /// **Details:**
+        /// - This endpoint updates the `IsAccepted` property of the staff member with the given `userId` to `true`.
+        /// - Sends an acceptance email notification to the staff member upon successful update.
+        /// </remarks>
+        /// <response code="200">Returns if the staff member was successfully accepted.</response>
+        /// <response code="404">Returns if the specified staff member is not found.</response>
+        /// <response code="500">Returns if a system error occurs.</response>
+        [HttpPut("accept-staff/{userId}")]
+        public async Task<IActionResult> AcceptStaff(int userId)
+        {
+            var response = await _userService.AcceptUser(userId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
         }

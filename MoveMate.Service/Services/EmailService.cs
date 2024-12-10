@@ -173,6 +173,35 @@ namespace MoveMate.Service.Services
             await SendEmailAsync(toEmail, $"Đơn hàng #{bookingResponse.Id} đã đặt thành công", "BookingSuccessful.html", placeholders);
         }
 
+        public async Task SendJobAcceptanceEmailAsync(string toEmail, GetUserResponse userResponse)
+        {
+
+            var currentDateTime = DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss", new CultureInfo("vi-VN"));
+            string position = "";
+            if (userResponse.RoleId == 4)
+            {
+                position = "Tài xế";
+            }
+            else if (userResponse.RoleId == 5)
+            {
+                position = "Bốc vác";
+            }
+            else if (userResponse.RoleId == 2)
+            {
+                position = "Người đánh giá";
+            }
+            // Replace placeholders in the template
+            var placeholders = new Dictionary<string, string>
+            {
+                { "UserName", userResponse.Name },
+                { "Position", position },
+                { "CurrentDateTime", currentDateTime }
+            };
+
+            // Call the SendEmailAsync method with the cancellation template
+            await SendEmailAsync(toEmail, $"Bạn đã đăng kí thành công và trở thành nhân viên chính thức của MoveMate", "JobAcceptance.html", placeholders);
+        }
+
         // Add more methods for other email types, calling SendEmailAsync with different templates and placeholders
 
 

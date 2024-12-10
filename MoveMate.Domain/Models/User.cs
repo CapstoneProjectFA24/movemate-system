@@ -49,6 +49,8 @@ public partial class User
 
     public string? Shard { get; set; }
 
+    public bool? IsAccepted { get; set; }
+
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();

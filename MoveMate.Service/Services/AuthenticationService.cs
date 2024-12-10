@@ -235,6 +235,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AccountNotFound);
                     return result;
                 }
+                if (user.IsAccepted == false)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AccountNotFound);
+                    return result;
+                }
                 // Validate the password
                 if (!user.Password.Equals(request.Password))
                 {
@@ -314,6 +319,8 @@ namespace MoveMate.Service.Services
                         AvatarUrl = "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
                         Gender = "Male",
                         RoleId = 3,
+                        IsDeleted = false,
+                        IsBanned = false,
                         Wallet = new Wallet
                         {
                             Balance = 0,
