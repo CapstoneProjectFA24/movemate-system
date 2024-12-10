@@ -29,6 +29,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public bool? IsBanned { get; set; }
 
         public bool? IsDeleted { get; set; }
+        public bool? IsAccepted { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 
