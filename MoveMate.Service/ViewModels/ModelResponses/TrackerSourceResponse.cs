@@ -16,7 +16,7 @@ namespace MoveMate.Service.ViewModels.ModelResponses
 
         [FirestoreProperty] public string ResourceUrl { get; set; }
 
-        public string ResourceCode { get; set; }
+        [FirestoreProperty] public string ResourceCode { get; set; }
 
         [FirestoreProperty] public string Type { get; set; }
     }
