@@ -289,11 +289,22 @@ namespace MoveMate.Service.Services
                 //       if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
                 //assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
                 //assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString() && booking.IsCredit == false)
-                if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+                if (assignmentPorter == null)
+                {
+                    if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
+assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString())
+                    {
+                        booking.IsCredit = true;
+                    }
+                }
+                else if (assignmentPorter != null)
+                {
+                    if (booking.Status == BookingEnums.IN_PROGRESS.ToString() &&
 assignmentDriver.Status == AssignmentStatusEnums.COMPLETED.ToString() &&
 assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
-                {
-                    booking.IsCredit = true;
+                    {
+                        booking.IsCredit = true;
+                    }
                 }
                 else
                 {
