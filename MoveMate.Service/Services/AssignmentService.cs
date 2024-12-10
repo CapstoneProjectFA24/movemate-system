@@ -890,7 +890,7 @@ public class AssignmentService : IAssignmentService
             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotFoundBooking);
             return result;
         }
-        
+
 
         if (request.FailedAssignmentId != null)
         {
@@ -1787,6 +1787,7 @@ public class AssignmentService : IAssignmentService
 
             assignment.Status = AssignmentStatusEnums.FAILED.ToString();
             assignment.FailedReason = request.FailReason;
+            assignment.IsResponsible = false;
             _unitOfWork.AssignmentsRepository.Update(assignment);
 
             var bookingDetail =
@@ -2061,6 +2062,8 @@ public class AssignmentService : IAssignmentService
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                 return result;
             }
+            var payment = await _unitOfWork.PaymentRepository.GetPaymentByBooingIdAsync(booking.Id);
+
             if (request.IsCompensation == false)
             {
                 if (string.IsNullOrEmpty(request.FailedReason))
@@ -2098,7 +2101,7 @@ public class AssignmentService : IAssignmentService
                         var userTranferTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             WalletId = walletManager.Id,
-                            PaymentId = booking.Id,
+                            PaymentId = payment.Id,
                             Amount = request.RealAmount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.TRANFER.ToString(),
@@ -2127,7 +2130,7 @@ public class AssignmentService : IAssignmentService
                         var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
                         {
                             WalletId = walletCustomer.Id,
-                            PaymentId = booking.Id,
+                            PaymentId = payment.Id,
                             Amount = request.RealAmount,
                             Status = PaymentEnum.SUCCESS.ToString(),
                             TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
@@ -2167,15 +2170,15 @@ public class AssignmentService : IAssignmentService
             }
 
             await _unitOfWork.BookingTrackerRepository.SaveOrUpdateAsync(bookingTracker);
-        await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
-        bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsyncV1(bookingTrackerId, includeProperties: "TrackerSources");
-        var response = _mapper.Map<BookingTrackerResponse>(bookingTracker);
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ResolveException, response);
-        return result;
+            bookingTracker = await _unitOfWork.BookingTrackerRepository.GetByIdAsyncV1(bookingTrackerId, includeProperties: "TrackerSources");
+            var response = _mapper.Map<BookingTrackerResponse>(bookingTracker);
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.ResolveException, response);
+            return result;
 
-    }
-        catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
             return result;
