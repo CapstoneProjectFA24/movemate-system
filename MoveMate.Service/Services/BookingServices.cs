@@ -1229,7 +1229,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
@@ -1261,7 +1261,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
@@ -1475,16 +1475,16 @@ namespace MoveMate.Service.Services
                 var porterAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
 
 
-                DateTime currentTime = DateTime.Now;
-                if (booking.BookingAt.HasValue)
-                {
-                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
-                    if (currentTime < earliestUpdateTime)
-                    {
-                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
-                        return result;
-                    }
-                }
+                //DateTime currentTime = DateTime.Now;
+                //if (booking.BookingAt.HasValue)
+                //{
+                //    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
+                //    if (currentTime < earliestUpdateTime)
+                //    {
+                //        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                //        return result;
+                //    }
+                //}
 
                 string nextStatus = assignment.Status;
 
@@ -1503,7 +1503,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
@@ -1536,7 +1536,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
@@ -1566,7 +1566,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
@@ -1592,7 +1592,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
@@ -1618,7 +1618,7 @@ namespace MoveMate.Service.Services
                             return result;
                         }
 
-                        if (request.ResourceList.Count() <= 0)
+                        if (request == null || !request.ResourceList.Any())
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.VerifyReviewOffline);
                             return result;
