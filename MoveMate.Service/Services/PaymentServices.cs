@@ -48,7 +48,7 @@ namespace MoveMate.Service.Services
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);                 
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                     return result;
                 }
                 var booking = await _unitOfWork.BookingRepository.GetByBookingIdAndUserIdAsync(bookingId, userId);
@@ -72,7 +72,7 @@ namespace MoveMate.Service.Services
                 var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
 
-                if(assignmentPorter == null)
+                if (assignmentPorter == null)
                 {
                     if (booking.Status == BookingEnums.DEPOSITING.ToString())
                     {
@@ -107,7 +107,7 @@ namespace MoveMate.Service.Services
                         return result;
                     }
                 }
-                
+
 
                 int amount = 0;
                 if (booking.Status == BookingEnums.DEPOSITING.ToString())
@@ -116,10 +116,11 @@ namespace MoveMate.Service.Services
                     {
                         result.AddError(StatusCode.BadRequest, $"{returnUrl}?isSuccess=false&message={MessageConstant.FailMessage.BalanceNotEnough}");
                         return result;
-                    } else
+                    }
+                    else
                     {
                         amount = (int)booking.Deposit;
-                    }  
+                    }
                 }
                 else if (booking.Status == BookingEnums.IN_PROGRESS.ToString())
                 {
@@ -169,7 +170,7 @@ namespace MoveMate.Service.Services
                     category = CategoryEnums.PAYMENT_TOTAL.ToString();
                 }
 
-              
+
 
 
                 var newGuid = Guid.NewGuid();
@@ -221,7 +222,7 @@ namespace MoveMate.Service.Services
                         {
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateWalletBalance);
                             return result;
-                        }                      
+                        }
                     }
                 }
                 await _unitOfWork.TransactionRepository.AddAsync(transaction);
@@ -249,7 +250,9 @@ namespace MoveMate.Service.Services
 
                 _unitOfWork.BookingRepository.Update(booking);
                 await _unitOfWork.SaveChangesAsync();
-                await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                var updatedBooking = await _unitOfWork.BookingRepository.GetByIdAsyncV1(bookingId, includeProperties:
+                "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                await _firebaseServices.SaveBooking(updatedBooking, updatedBooking.Id, "bookings");
                 var url = $"{returnUrl}?isSuccess=true&amount={amount}&payDate={DateTime.Now}&bookingId={bookingId}&transactionCode={transaction.TransactionCode}&userId={userId}&paymentMethod={Resource.Wallet}&category={category}";
                 result.AddResponseStatusCode(StatusCode.Ok, url, MessageConstant.SuccessMessage.PaymentSuccess);
             }
@@ -279,7 +282,7 @@ namespace MoveMate.Service.Services
                 //    return result;
                 //}
 
-        
+
                 var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
                 var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
@@ -299,15 +302,16 @@ assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 }
 
 
-                
+
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
                 var notificationUser =
         await _unitOfWork.NotificationRepository.GetByUserIdAsync(userId);
-                if (notificationUser == null) { 
+                if (notificationUser == null)
+                {
                 }
-                else if(!string.IsNullOrEmpty(notificationUser.FcmToken))
+                else if (!string.IsNullOrEmpty(notificationUser.FcmToken))
                 {
                     var title = "Thông báo: Thanh toán bằng tiền mặt";
                     var body = $"Thông báo: Người dùng đã chọn thanh toán bằng tiền mặt cho đơn hàng {booking.Id}.";
