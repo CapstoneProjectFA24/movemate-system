@@ -15,7 +15,8 @@ namespace MoveMate.Domain.Enums
         DRIVER_LICENSE,
         PERMANENT_ADDRESS,
         TEMPORARY_RESIDENCE_ADDRESS,
-        CRIMINAL_RECORD
+        CRIMINAL_RECORD,
+        CURRICULUM_VITAE
 
     }
 }

@@ -614,6 +614,16 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<GetUserResponse>();
             try
             {
+                // Validate that required UserInfo types are present
+                var requiredTypes = new List<string> { "CITIZEN_IDENTIFICATION_CARD", "HEALTH_CERTIFICATE", "DRIVER_LICENSE", "CRIMINAL_RECORD", "CURRICULUM_VITAE", "PORTRAIT" };
+                var missingTypes = requiredTypes.Except(request.UserInfo.Select(u => u.Type)).ToList();
+                if (missingTypes.Any())
+                {
+                    result.AddError(StatusCode.BadRequest,
+                        $"The following required UserInfo types are missing: {string.Join(", ", missingTypes)}");
+                    return result;
+                }
+
                 // Check if the email already exists
                 var userEmail = await _unitOfWork.UserRepository.GetUserAsyncByEmail(request.Email);
                 if (userEmail != null)
@@ -642,8 +652,12 @@ namespace MoveMate.Service.Services
                 {
                     user.IsDriver = true;
                 }
+
+                // Map UserInfos
                 List<UserInfo> resourceList = _mapper.Map<List<UserInfo>>(request.UserInfo);
                 user.UserInfos = resourceList;
+
+                // Create Wallet
                 user.Wallet = new Wallet
                 {
                     Balance = 0,
@@ -655,9 +669,10 @@ namespace MoveMate.Service.Services
 
                 await _unitOfWork.UserRepository.AddAsync(user);
                 _unitOfWork.Save();
+
                 var staff = await _unitOfWork.UserRepository.GetByIdAsync(user.Id, includeProperties: "Role,Wallet,UserInfos,Group");
                 var userResponse = _mapper.Map<GetUserResponse>(staff);
-                
+
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.RegisterSuccess,
                     userResponse);
                 return result;
@@ -669,6 +684,7 @@ namespace MoveMate.Service.Services
 
             return result;
         }
+
 
         public async Task<OperationResult<GetUserResponse>> AcceptUser(int userId)
         {

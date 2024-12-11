@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MoveMate.Domain.Utils;
+using System;
 using System.Collections.Generic;
 
 namespace MoveMate.Domain.Models;
@@ -47,7 +48,7 @@ public partial class User
 
     public int? GroupId { get; set; }
 
-    public string? Shard { get; set; }
+    public string? Shard { get; set; } = DateUtil.GetShardNow();
 
     public bool? IsAccepted { get; set; }
 
