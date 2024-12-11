@@ -571,33 +571,29 @@ namespace MoveMate.Service.Services
                 booking.BookingTrackers.Add(tracker);
 
                 var assignments = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), booking.Id);
-                if (assignments == null)
+                if (assignments != null)
                 {
-                    throw new Exception($"Not found assignment with booking Id {booking.UserId} - {booking.Status}");
-                }
-                var notificationStaff =
-                    await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignments.UserId);
-                if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
-                {
-                    var titleAssignment = "Report from Customer";
-                    var bodyAssignment = $"The customer has reported damaged or broken items for booking ID {booking.Id}.";
-                    var fcmTokenAssignment = notificationStaff.FcmToken;
-                    var dataAssignment = new Dictionary<string, string>
+                    var notificationStaff =
+                     await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignments.UserId);
+                    if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
+                    {
+                        var titleAssignment = "Report from Customer";
+                        var bodyAssignment = $"The customer has reported damaged or broken items for booking ID {booking.Id}.";
+                        var fcmTokenAssignment = notificationStaff.FcmToken;
+                        var dataAssignment = new Dictionary<string, string>
         {
             { "bookingId", booking.Id.ToString() },
             { "status", booking.Status.ToString() },
             { "message", "he customer has reported an issue with the booking." }
         };
 
-                    // Send notification for each assignment to staff
-                    await _firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment,
-                        fcmTokenAssignment,
-                        dataAssignment);
+                        // Send notification for each assignment to staff
+                        await _firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment,
+                            fcmTokenAssignment,
+                            dataAssignment);
+                    }
+
                 }
-
-
-
-
 
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
