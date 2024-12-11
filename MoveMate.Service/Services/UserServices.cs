@@ -451,7 +451,7 @@ namespace MoveMate.Service.Services
         public async Task<OperationResult<GetUserResponse>> UpdateAccountAsync(int userId, UpdateAccountRequest request)
         {
             var result = new OperationResult<GetUserResponse>();
-            
+
             try
             {
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
@@ -527,7 +527,7 @@ namespace MoveMate.Service.Services
                 }
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(request.BookingId, includeProperties: "BookingTrackers.TrackerSources");
 
-                if(booking.Status != BookingEnums.IN_PROGRESS.ToString())
+                if (booking.Status != BookingEnums.IN_PROGRESS.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.DamageReport);
                     return result;
@@ -614,8 +614,28 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<GetUserResponse>();
             try
             {
-                // Validate that required UserInfo types are present
-                var requiredTypes = new List<string> { "CITIZEN_IDENTIFICATION_CARD", "HEALTH_CERTIFICATE", "DRIVER_LICENSE", "CRIMINAL_RECORD", "CURRICULUM_VITAE", "PORTRAIT" };
+                var requiredTypes = new List<string> {
+                                    "CITIZEN_IDENTIFICATION_CARD",
+                                    "HEALTH_CERTIFICATE",
+                                    "DRIVER_LICENSE",
+                                    "CRIMINAL_RECORD",
+                                    "CURRICULUM_VITAE",
+                                    "PORTRAIT"};
+
+                if (request.RoleId == 4)
+                {
+                    requiredTypes.Add("TRUCK_NAME");
+                }
+                else
+                {
+                    var invalidTruckName = request.UserInfo.Any(u => u.Type == "TRUCK_NAME");
+                    if (invalidTruckName)
+                    {
+                        result.AddError(StatusCode.BadRequest,
+                            "UserInfo type 'TRUCK_NAME' is not allowed for this role.");
+                        return result;
+                    }
+                }
                 var missingTypes = requiredTypes.Except(request.UserInfo.Select(u => u.Type)).ToList();
                 if (missingTypes.Any())
                 {
@@ -623,6 +643,7 @@ namespace MoveMate.Service.Services
                         $"The following required UserInfo types are missing: {string.Join(", ", missingTypes)}");
                     return result;
                 }
+
 
                 // Check if the email already exists
                 var userEmail = await _unitOfWork.UserRepository.GetUserAsyncByEmail(request.Email);
