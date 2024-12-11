@@ -1456,11 +1456,15 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-
-                var bookingDetails = booking.BookingDetails.ToList();
-                bool hasSinglePorterBookingDetail = bookingDetails.Count(bd => bd.Type == "PORTER" && bd.ServiceId == 2) == 1;
-
-                var staffType = hasSinglePorterBookingDetail ? RoleEnums.DRIVER.ToString() : RoleEnums.PORTER.ToString();
+                var porter = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
+                var staffType = RoleEnums.PORTER.ToString();
+                if (porter == null)
+                {
+                    var bookingDetails = booking.BookingDetails.ToList();
+                    bool hasSinglePorterBookingDetail = bookingDetails.Count(bd => bd.Type == "PORTER" && bd.ServiceId == 2) == 1;
+                    staffType = hasSinglePorterBookingDetail ? RoleEnums.DRIVER.ToString() : RoleEnums.PORTER.ToString();
+                }
+                
                 var assignment = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffTypeAndIsResponsible(
                     userId, staffType, bookingId);
 
