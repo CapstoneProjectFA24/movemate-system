@@ -355,10 +355,40 @@ namespace MoveMate.API.Controllers
         ///         "dob": "1992-08-20T00:00:00Z",
         ///         "userInfo": [
         ///             {
-        ///                 "type": "Department",
+        ///                 "Type": "CITIZEN_IDENTIFICATION_CARD",
         ///                 "imageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
-        ///                 "value": "Human Resources"
-        ///             }
+        ///                 "value": "CID123456"
+        ///             },
+        ///             {
+        ///                 "Type": "HEALTH_CERTIFICATE",
+        ///                 "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "Value": "HC789012"
+        ///              },
+        ///              {
+        ///                 "Type": "DRIVER_LICENSE",
+        ///                 "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "Value": "DL345678"
+        ///              },
+        ///              {
+        ///                 "Type": "CRIMINAL_RECORD",
+        ///                 "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "Value": "CR901234"
+        ///              },
+        ///              {
+        ///                 "Type": "CURRICULUM_VITAE",
+        ///                 "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "Value": "CV567890"
+        ///              },
+        ///              {
+        ///                 "Type": "PORTRAIT",
+        ///                 "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "Value": "Portrait of John Doe"
+        ///              },
+        ///              {
+        ///                 "Type": "TRUCK_NAME",
+        ///                 "ImageUrl": "https://res.cloudinary.com/dkpnkjnxs/image/upload/v1730660748/movemate/ggaaf2ckbqyxguosytwa.jpg",
+        ///                 "Value": "1"
+        ///              }                
         ///         ]
         ///     }
         /// </remarks>
