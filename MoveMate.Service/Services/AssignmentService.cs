@@ -1832,7 +1832,9 @@ public class AssignmentService : IAssignmentService
                 response.Assignments = responseAssignment; // Populate assignments in the response
                 string Id = notification.Id + "-" + bookingDetail.BookingId;
                 await _firebaseServices.SaveMailManager(notification, Id, "reports");
-
+                var entity = await _unitOfWork.BookingRepository.GetByIdAsync((int)bookingDetail.BookingId, includeProperties:
+  "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments,Vouchers");
+                await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.BookingDetailUpdateSuccess,
                     response);
             }
