@@ -42,7 +42,9 @@ namespace MoveMate.Service.ViewModels.ModelRequests
            
             if (BookingId.HasValue)
             {
-                Expression = Expression.And(b => b.BookingId == BookingId);
+                Expression = PredicateBuilder.New<BookingTracker>(true);
+                Expression = Expression.And(b => b.BookingId == BookingId && b.Type == TrackerEnums.MONETARY.ToString());
+                return Expression;
             }
             if (UserId.HasValue)
             {
