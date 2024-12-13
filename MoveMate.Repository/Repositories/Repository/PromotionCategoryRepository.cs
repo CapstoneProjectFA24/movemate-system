@@ -183,6 +183,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 {
                     PromotionId = promotion.Id,
                     PromotionName = promotion.Name,
+                    Quantity = promotion.Quantity,
                     TotalUsersTakingVouchers = totalUsersTakingPromotion,
                     TotalUsedVouchers = totalUsedPromotionDetails,
                     TotalAmountUsedPromotions = totalAmountUsedPromotionDetails,
@@ -217,6 +218,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 {
                     PromotionId = promotion.Id,
                     PromotionName = promotion.Name,
+                    Quantity = promotion.Quantity,
                     TotalUsersTakingVouchers = totalUsersTakingPromotion,
                     TotalUsedVouchers = totalUsedPromotionDetails,
                     TotalAmountUsedPromotions = totalAmountUsedPromotionDetails,
