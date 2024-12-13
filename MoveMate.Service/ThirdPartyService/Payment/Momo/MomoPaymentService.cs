@@ -302,6 +302,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return result;
             }
+            if(command.IsSuccess == false)
+            {
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.TransactionCancel, MessageConstant.FailMessage.TransactionCancel);
+                return result;
+            }
 
             // Tìm wallet của user
             var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
@@ -358,6 +363,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
             try
             {
+                if (callback.IsSuccess == false)
+                {
+                    operationResult = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
+                    operationResult.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.TransactionCancel, MessageConstant.FailMessage.TransactionCancel);
+                    return operationResult;
+                }
                 var orderIdParts = callback.OrderId.Split('-');
                 if (!int.TryParse(orderIdParts[0], out int bookingId))
                 {

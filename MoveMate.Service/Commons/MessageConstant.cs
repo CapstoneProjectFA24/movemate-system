@@ -228,6 +228,7 @@ namespace MoveMate.Service.Commons
             public const string WithdrawNotFromUser = "Withdrawal is not from this user";
             public const string WithdrawSuccess = "Withdrawal has been completed";
             public const string WithdrawCancel = "Withdrawal has been canceled";
+            public const string TransactionCancel = "Transaction has been canceled";
             //Group
             public const string NotFoundGroup = "Not found group";
             public const string CannotAddReviewer = "Group cannot have more than 3 REVIEWER";

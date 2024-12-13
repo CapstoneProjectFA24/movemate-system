@@ -39,6 +39,7 @@ using MoveMate.Service.ThirdPartyService.Payment.Models;
 using static Google.Cloud.Firestore.V1.StructuredAggregationQuery.Types.Aggregation.Types;
 using System.Diagnostics;
 using Org.BouncyCastle.Crypto.Macs;
+using CloudinaryDotNet;
 
 namespace MoveMate.Service.Services
 {
@@ -3408,11 +3409,62 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
                 }
-                
-                    booking.Status = BookingEnums.COMPLETED.ToString();
-                    booking.TotalReal = 0;
-                
+                if (booking.IsCredit == false)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
+                    return result;
+                }
+                var userTranferWallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync((int)booking.UserId);
+                if (userTranferWallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+                var payment = await _unitOfWork.PaymentRepository.GetPaymentByBooingIdAsync(bookingId);
+                var userTranferTransaction = new MoveMate.Domain.Models.Transaction
+                {
+                    PaymentId = payment.Id,
+                    WalletId = userTranferWallet.Id,
+                    Amount = booking.TotalReal,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.PAYMENT.ToString(),
+                    TransactionCode = "R" + Utilss.RandomString(7),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Cash.ToString(),
+                    PaymentMethod = Resource.Cash.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = false
+                };
 
+                await _unitOfWork.TransactionRepository.AddAsync(userTranferTransaction);
+
+                var userReceive = await _unitOfWork.UserRepository.GetManagerAsync();
+                var userReceiveWallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userReceive.Id);
+                if (userReceiveWallet == null)
+                {
+                    result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
+                    return result;
+                }
+                var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
+                {
+                    PaymentId = payment.Id,
+                    WalletId = userReceiveWallet.Id,
+                    Amount = booking.TotalReal,
+                    Status = PaymentEnum.SUCCESS.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                    TransactionCode = "R" + Utilss.RandomString(7),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Cash.ToString(),
+                    PaymentMethod = Resource.Cash.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = true
+                };
+
+                await _unitOfWork.TransactionRepository.AddAsync(userReceiveTransaction);
+                booking.Status = BookingEnums.COMPLETED.ToString();
+                booking.TotalReal = 0;
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
                 booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, includeProperties:
