@@ -21,6 +21,8 @@ using System.Configuration;
 using MoveMate.Service.Commons.AutoMapper;
 using MoveMate.Service.Commons.Validates;
 using DotNetEnv;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 
 namespace MoveMate.API
 {
@@ -34,6 +36,48 @@ namespace MoveMate.API
             builder.Services.AddControllers().ConfigureApiBehaviorOptions(opts
                 => opts.SuppressModelStateInvalidFilter = true);
             builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+            
+            /*// add prometheus exporter
+            builder.Services.AddOpenTelemetry()
+                .WithMetrics(opt =>
+    
+                    opt
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("MoveMate.API"))
+                        .AddMeter(builder.Configuration.GetValue<string>("OpenRemoteManageMeterName"))
+                        .AddAspNetCoreInstrumentation()
+                        .AddRuntimeInstrumentation()
+                        .AddProcessInstrumentation()
+                        .AddOtlpExporter(opts =>
+                        {
+                            opts.Endpoint = new Uri(builder.Configuration["Otel:Endpoint"]);
+                            Console.WriteLine("OTLP Endpoint: " + builder.Configuration["Otel:Endpoint"]);
+                        })
+                );   */
+            // Add OpenTelemetry with Prometheus exporter
+            builder.Services.AddOpenTelemetry()
+                .WithMetrics(opt =>
+                {
+                    // Log thông tin để gỡ lỗi
+                    string meterName = builder.Configuration.GetValue<string>("MoveMateMeterName");
+                    string otelEndpoint = builder.Configuration["Otel:Endpoint"];
+
+                    Console.WriteLine($"Initializing OpenTelemetry with Meter: {meterName}");
+                    Console.WriteLine($"OTLP Endpoint: {otelEndpoint}");
+
+                    // Cấu hình metrics
+                    opt
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("MoveMate.API"))
+                        .AddMeter(meterName) // Tên Meter từ cấu hình
+                        .AddAspNetCoreInstrumentation() // Theo dõi request/response từ ASP.NET
+                        .AddRuntimeInstrumentation() // Theo dõi thông tin runtime
+                        .AddProcessInstrumentation() // Theo dõi quy trình thực thi
+                        .AddOtlpExporter(opts =>
+                        {
+                            opts.Endpoint = new Uri(otelEndpoint);
+                            Console.WriteLine("OpenTelemetry Exporter configured successfully.");
+                        });
+                });
+            
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddConfigSwagger();
 
@@ -42,6 +86,9 @@ namespace MoveMate.API
 
             // Dependency Injection
             DotNetEnv.Env.Load();
+            
+            
+            
             builder.Services.AddDbFactory();
             builder.Services.AddUnitOfWork();
             builder.Services.AddHangfire();
