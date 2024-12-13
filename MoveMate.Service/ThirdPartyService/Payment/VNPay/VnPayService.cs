@@ -338,6 +338,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidSignature);
                     return result;
                 }
+                if (callback.IsSuccess == false)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidSignature);
+                    return result;
+                }
 
                 // Get transaction information from the response
                 var amount = Convert.ToSingle(vnpay.GetResponseData("vnp_Amount")) / 100f;
