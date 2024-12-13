@@ -12,6 +12,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Models
         PayOS,
         VNPay,
         Wallet,
-        Other
+        Other,
+        Cash
     }
 }

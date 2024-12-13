@@ -138,13 +138,12 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             {
                 var urlReturn =
                     $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}&BookingId={bookingId}&Type=order&BuyerEmail={user.Email}&Amount={amount}&userId={userId}&category={category}";
-                var urlCancel = $"{serverUrl}/api/v1/payments/payos/callback?returnUrl={returnUrl}";
                 var paymentData = new PaymentData(
                     orderCode: newGuid,
                     amount: amount,
                     description: description,
                     items: null,
-                    cancelUrl: urlCancel,
+                    cancelUrl: "https://movematee.vercel.app/payment-status?isSuccess=false",
                     returnUrl: urlReturn,
                     buyerName: user.Name,
                     buyerEmail: user.Email,
@@ -214,7 +213,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     amount: (int)amount,
                     description: "Recharge into wallet",
                     items: null,
-                    cancelUrl: "https://movemate-dashboard.vercel.app/payment-status?isSuccess=false",
+                    cancelUrl: "https://movematee.vercel.app/payment-status?isSuccess=false",
                     returnUrl: urlReturn,
                     buyerName: user.Name,
                     buyerEmail: user.Email,
@@ -241,6 +240,11 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             PayOsPaymentCallbackCommand command)
         {
             var result = new OperationResult<string>();
+            if (command.IsSuccess == false)
+            {
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                return result;
+            }
             string email = command.BuyerEmail;
             var user = await _unitOfWork.UserRepository.GetUserAsyncByEmail(email);
             if (user == null)

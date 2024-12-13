@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoveMate.Service.Commons.Page;
 using MoveMate.Domain.Enums;
+using MoveMate.Service.ThirdPartyService.Payment.Models;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
