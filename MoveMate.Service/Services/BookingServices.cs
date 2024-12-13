@@ -1199,6 +1199,8 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
+                var driverAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.DRIVER.ToString(), bookingId);
+
                 //DateTime currentTime = DateTime.Now;
                 //if (booking.BookingAt.HasValue)
                 //{
@@ -1292,8 +1294,12 @@ namespace MoveMate.Service.Services
                     default:
                         break;
                 }
-
+                foreach (var assignments in driverAssignments)
+                {
+                    assignments.Status = nextStatus;
+                }
                 assignment.Status = nextStatus;
+                await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(driverAssignments);
                 await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
