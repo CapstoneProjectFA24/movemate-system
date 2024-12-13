@@ -287,7 +287,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 {
                     WalletId = wallet.Id,
                     Amount = (float)command.Amount,
-                    Status = command.IsSuccess.ToString(),
+                    Status = PaymentEnum.SUCCESS.ToString(),
                     TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
                     TransactionCode = command.OrderCode, // Use the callback's TransactionCode
                     CreatedAt = DateTime.Now,
