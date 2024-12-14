@@ -41,6 +41,7 @@ public partial class Assignment
 
     public double? StarReview { get; set; }
     public string? Review { get; set; }
+    public bool? IsChanged { get; set; } = false;
 
     public virtual Booking? Booking { get; set; }
 

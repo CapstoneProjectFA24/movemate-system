@@ -143,7 +143,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     amount: amount,
                     description: description,
                     items: null,
-                    cancelUrl: "https://movematee.vercel.app/payment-status?isSuccess=false",
+                    cancelUrl: urlReturn,
                     returnUrl: urlReturn,
                     buyerName: user.Name,
                     buyerEmail: user.Email,
@@ -255,7 +255,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return result;
             }
-            if (command.IsSuccess == false)
+            if (command.Cancel == true)
             {
                 var transactionFail = new MoveMate.Domain.Models.Transaction
                 {
@@ -386,9 +386,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
                     booking.TotalReal -= (float)command.Amount;
                 }
-                if (command.IsSuccess == false)
+                if (command.Cancel == true)
                 {
-
                     var transactionFail = new MoveMate.Domain.Models.Transaction
                     {
                         PaymentId = payment.Id,

@@ -398,6 +398,7 @@ Auto-Assign Driver Workflow:
                 StartDate = startTime,
                 EndDate = endTime,
                 IsResponsible = false,
+                IsChanged = false,
                 ScheduleBookingId = scheduleBookingId,
                 TruckId = truck.Id,
                 BookingDetailsId = bookingDetailTruck.Id
@@ -538,6 +539,7 @@ Auto-Assign Driver Workflow:
                 StartDate = startTime,
                 EndDate = endTime,
                 IsResponsible = false,
+                IsChanged = false,
                 ScheduleBookingId = scheduleBookingId,
                 TruckId = assignment.TruckId,
                 BookingDetailsId = bookingDetailTruck.Id

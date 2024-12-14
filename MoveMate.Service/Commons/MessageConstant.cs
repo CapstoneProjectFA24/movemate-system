@@ -154,7 +154,8 @@ namespace MoveMate.Service.Commons
             public const string ReviewIsRequired = "What makes you unhappy about this staff?";
             public const string MonetoryFail = "Cannot be added fail reason when you agree to a solve";
             public const string MonetoryFailedReason = "Must give reason for refusal if refusing to resolve";
-            public const string AssignFailed = "Automatic employee assignment failed"; 
+            public const string AssignFailed = "Automatic employee assignment failed";
+            public const string AssignmentIsChanged = "This staff has been replaced";
             //House type
             public const string NotFoundHouseType = "House type not found";
             public const string AddHouseTypeFail = "Add house type setting failed";

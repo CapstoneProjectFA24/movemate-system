@@ -294,6 +294,7 @@ public class AssignPorterWorker
                 StartDate = startTime,
                 EndDate = endTime,
                 IsResponsible = false,
+                IsChanged = false,
                 ScheduleBookingId = scheduleBookingId,
                 BookingDetailsId = bookingDetail.Id
             };
@@ -432,6 +433,7 @@ public class AssignPorterWorker
                 StartDate = startTime,
                 EndDate = endTime,
                 IsResponsible = false,
+                IsChanged = false,
                 ScheduleBookingId = scheduleBookingId,
                 BookingDetailsId = bookingDetail.Id
             });
