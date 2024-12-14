@@ -305,7 +305,7 @@ namespace MoveMate.Service.Services
                         }
                     }
 
-                    _producer.SendingMessage("movemate.booking_assign_review", entity.Id);
+                    _producer.SendingMessage("movemate.booking_assign_review_local", entity.Id);
                     await _firebaseServices.SaveBooking(entity, entity.Id, "bookings");
                     await _firebaseServices.SaveBooking(entity, entity.Id, "old_bookings");
 

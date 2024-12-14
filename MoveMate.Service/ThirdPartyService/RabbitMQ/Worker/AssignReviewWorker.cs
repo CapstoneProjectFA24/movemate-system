@@ -25,7 +25,7 @@ public class AssignReviewWorker
 
     }
 
-    [Consumer("movemate.booking_assign_review")]
+    [Consumer("movemate.booking_assign_review_local")]
     public async Task HandleMessage(int message)
     {
         //await Task.Delay(TimeSpan.FromSeconds(1));
@@ -111,13 +111,9 @@ public class AssignReviewWorker
                 await firebaseServices.SaveBooking(booking, message, "bookings");
                 await firebaseServices.SaveBooking(booking, message, "old_bookings");
 
-                producer.SendingMessage("movemate.push_to_firebase", booking.Id);
-                
-                //booking = await unitOfWork.BookingRepository.GetByIdAsyncV1(booking.Id,
-                //    includeProperties:
-                //    "BookingTrackers.TrackerSources,BookingDetails.Service,FeeDetails,Assignments");
-                
-                //firebaseServices.SaveBooking(booking, booking.Id, "bookings");
+                producer.SendingMessage("movemate.push_to_firebase_local", booking.Id);
+
+                firebaseServices.SaveBooking(booking, booking.Id, "bookings");
                 redisService.EnqueueAsync(redisKey, reviewerId);
 
                 Console.WriteLine($"Booking info: {booking.Id}");

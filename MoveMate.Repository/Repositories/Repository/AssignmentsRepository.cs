@@ -35,6 +35,18 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return assignments;
         }
+        public async Task<List<Assignment>> GetAssignmentByUserIdAndFCMTokenAsync(int bookingId)
+        {
+            IQueryable<Assignment> query = _dbSet
+                .Include(a => a.User)
+                .ThenInclude(u => u.Notifications);
+
+            var assignments = await query              
+                .Where(a => a.BookingId == bookingId && a.Status != AssignmentStatusEnums.FAILED.ToString() && a.User.Notifications.Any(n => n.FcmToken != null))
+                .ToListAsync(); // Execute and return the list of assignments
+
+            return assignments;
+        }
 
 
         public async Task<List<Assignment>> GetByBookingId(int bookingId)

@@ -200,10 +200,10 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 }
 
 
-                var redisKey = saveObj.Id + '-' + saveObj.Status;
+                var redisKey = saveObj.Id + "-" + saveObj.Status;
 
                 var checkExistQueue = await _redisService.KeyExistsAsync(redisKey);
-                if (checkExistQueue == false)
+                if (checkExistQueue == false && !isRecursiveCall)
                 {
                     _redisService.SetData(redisKey, saveObj.Id);
                     _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);

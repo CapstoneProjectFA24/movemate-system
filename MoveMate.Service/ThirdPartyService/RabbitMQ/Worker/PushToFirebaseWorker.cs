@@ -25,7 +25,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
             _serviceScopeFactory = serviceScopeFactory;
         }
 
-        [Consumer("movemate.push_to_firebase")]
+        [Consumer("movemate.push_to_firebase_local")]
         public async Task HandleMessage(int message)
         {
             try
