@@ -301,7 +301,7 @@ namespace MoveMate.API.Controllers
             //    IsSuccess = false;
             //}
             bool IsSuccess = true;
-            if(cancellationToken.IsCancellationRequested == false)
+            if(callback.Cancel == true)
             {
                 IsSuccess = false;
             }
