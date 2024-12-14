@@ -374,32 +374,29 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
         {
             try
             {
+                var redisKey = $"{title}-{body}-{fcmToken}-{(data != null ? string.Join(",", data.Select(kvp => $"{kvp.Key}:{kvp.Value}")) : "")}";
 
-                var message = new Message()
+                var isExistQueue = await _redisService.KeyExistsAsync(redisKey);
+
+                if (!isExistQueue)
                 {
-                    Notification = new FirebaseAdmin.Messaging.Notification
+                    _redisService.SetData(redisKey, body);
+
+                    var message = new Message()
                     {
-                        Title = title,
-                        Body = body
-                    },
-                    Token = fcmToken,
-                    Data = data ?? new Dictionary<string, string>()
-                };
+                        Notification = new FirebaseAdmin.Messaging.Notification
+                        {
+                            Title = title,
+                            Body = body
+                        },
+                        Token = fcmToken,
+                        Data = data ?? new Dictionary<string, string>()
+                    };
 
-                /*var message = new Message()
-                {
-                    Data = data ?? new Dictionary<string, string>
-                    {
-                        { "title", title },
-                        { "body", body }
-                    },
-                    Token = fcmToken
-                };*/
-
-
-                // Gửi thông báo
-                string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
-                Console.WriteLine($"Thông báo đã được gửi thành công với ID: {response}");
+                    string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                    Console.WriteLine($"Thông báo đã được gửi thành công với ID: {response}");
+                }
+               
             }
             catch (FirebaseMessagingException ex)
             {

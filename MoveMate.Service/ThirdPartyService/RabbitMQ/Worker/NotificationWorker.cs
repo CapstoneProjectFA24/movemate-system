@@ -22,13 +22,35 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
         private readonly ILogger<NotificationWorker> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
-
+        private static readonly Dictionary<string, string> BookingStatusNames = new Dictionary<string, string>
+    {
+        { BookingEnums.PENDING.ToString(), "Đang xử lý yêu cầu" },
+        { BookingEnums.DEPOSITING.ToString(), "Vui lòng thanh toán để tiến hành dịch vụ" },
+        { BookingEnums.ASSIGNED.ToString(), "Nhân viên đang xem xét yêu cầu của bạn" },
+        { BookingEnums.REVIEWING.ToString(), "Đã có đề xuất dịch vụ mới" },
+        { BookingEnums.REVIEWED.ToString(), "Vui lòng xác nhận đề xuất dịch vụ" },
+        { BookingEnums.COMING.ToString(), "Đội ngũ vận chuyển đang trên đường đến" },
+        { BookingEnums.WAITING.ToString(), "Vui lòng xác nhận lịch khảo sát" },
+        { BookingEnums.IN_PROGRESS.ToString(), "Đang thực hiện vận chuyển" },
+        { BookingEnums.COMPLETED.ToString(), "Dịch vụ đã hoàn thành" },
+        { BookingEnums.PAUSED.ToString(), "Đã có đề xuất dịch vụ mới" },
+        { BookingEnums.CANCEL.ToString(), "Đơn hàng đã bị hủy" },
+        { BookingEnums.REFUNDING.ToString(), "Đang chờ hoàn tiền" }
+    };
         public NotificationWorker(ILogger<NotificationWorker> logger, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
         }
 
+        private string GetBookingStatusName(string status)
+        {
+            if (BookingStatusNames.ContainsKey(status))
+            {
+                return BookingStatusNames[status];
+            }
+            return "Trạng thái không xác định"; 
+        }
         [Consumer("movemate.notification_update_booking")]
         public async Task HandleMessage(int message)
         {
@@ -46,7 +68,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     {
                         throw new Exception($"Booking with Id {message} not found");
                     }
-
+                    var statusName = GetBookingStatusName(booking.Status);
 
                     var notificationUser =
                         await unitOfWork.NotificationRepository.GetByUserIdAsync((int)booking.UserId);
@@ -75,14 +97,14 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         {
                             redisService.SetData(redisKey, message);
 
-                            var title = "Change Status Booking";
-                            var body = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
+                            var title = $"Đơn hàng đã được cập nhật - {statusName}.";
+                            var body = $"Đơn hàng với mã đơn {booking.Id} đã cập nhật trạng thái mới - {statusName}.";
                             var fcmToken = notificationUser.FcmToken;
                             var data = new Dictionary<string, string>
                             {
                                 { "bookingId", booking.Id.ToString() },
-                                { "status", booking.Status.ToString() },
-                                { "message", "The booking has been change status successfully." }
+                                { "status", booking.Status.ToString()  },
+                                { "message", "Đơn hàng đã được thay đổi trạng thái thành công." }
                             };
 
                             // Send notification to Firebase
@@ -94,7 +116,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     foreach (var assignment in assignments)
                     {
 
-                        var redisKey = message + "-"+ "staff" + "-" + assignment.Id + "-" + booking.Status;
+                        var redisKey = message + "-" + "staff" + "-" + assignment.Id + "-" + booking.Status;
 
                         var isExistQueue = await redisService.KeyExistsAsync(redisKey);
 
@@ -107,14 +129,14 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
 
                             if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
                             {
-                                var titleAssignment = "Change Status Booking";
-                                var bodyAssignment = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
+                                var titleAssignment = $"Đơn hàng đã được cập nhật - {statusName}.";
+                                var bodyAssignment = $"Đơn hàng bạn phụ trách với mã đơn {booking.Id} đã cập nhật - {statusName}.";
                                 var fcmTokenAssignment = notificationStaff.FcmToken;
                                 var dataAssignment = new Dictionary<string, string>
                                 {
                                     { "bookingId", booking.Id.ToString() },
                                     { "status", booking.Status.ToString() },
-                                    { "message", "The booking has been changed successfully." }
+                                    { "message", "Đơn hàng đã được thay đổi trạng thái thành công." }
                                 };
 
                                 // Send notification for each assignment to staff
@@ -127,12 +149,12 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                     }
                 }
             }
-           /* catch (FirebaseMessagingException ex)
-            {
-                _logger.LogError(ex, "FirebaseMessagingException processing booking notification for message {Message}", message);
+            /* catch (FirebaseMessagingException ex)
+             {
+                 _logger.LogError(ex, "FirebaseMessagingException processing booking notification for message {Message}", message);
 
-                return;
-            }*/
+                 return;
+             }*/
             catch (Exception e)
             {
                 _logger.LogError(e, "Error processing booking notification for message {Message}", message);

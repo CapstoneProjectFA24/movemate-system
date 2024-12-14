@@ -23,6 +23,7 @@ public class Index : BackgroundService
         _consumer.StartConsuming<PushToFirebaseWorker>();
         _consumer.StartConsuming<AssignPorterWorker>();
         _consumer.StartConsuming<RefundBookingWorker>();
+        _consumer.StartConsuming<NotificationUserWorker>();
 
         return Task.CompletedTask;
     }
