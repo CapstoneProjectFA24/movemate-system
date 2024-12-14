@@ -1018,7 +1018,7 @@ public class AssignmentService : IAssignmentService
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
 
-                if (porterAssignments.Count >= existingBooking.DriverNumber)
+                if (porterAssignments.Count >= existingBooking.PorterNumber)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
                     return result;

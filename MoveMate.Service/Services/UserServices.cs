@@ -604,7 +604,7 @@ namespace MoveMate.Service.Services
             }
             catch (Exception ex)
             {
-                result.AddError(StatusCode.ServerError, MessageConstant.FailMessage.ServerError);
+                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ServerError);
                 return result;
             }
         }

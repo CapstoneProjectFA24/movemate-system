@@ -106,7 +106,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
         {
             var result = new OperationResult<Transaction>();
             var transaction = await _unitOfWork.BeginTransactionAsync();
-
+           
             try
             {
                 var vnpay = new VnPayLibrary();
@@ -139,13 +139,29 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                     return result;
                 }
-
                 if (vnpay.GetResponseData("vnp_ResponseCode") != "00")
                 {
+
+                    var transactionFail = new MoveMate.Domain.Models.Transaction
+                    {
+                        WalletId = wallet.Id,
+                        Amount = amount,
+                        Status = PaymentEnum.FAIL.ToString(),
+                        TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
+                        CreatedAt = DateTime.Now,
+                        UpdatedAt = DateTime.Now,
+                        Resource = vnpay.GetResponseData("vnp_BankCode"),
+                        PaymentMethod = Resource.VNPay.ToString(),
+                        IsDeleted = false,
+                        TransactionCode = "DEP" + Utilss.RandomString(7),
+                        IsCredit = true
+                    };
+                    await _unitOfWork.TransactionRepository.AddAsync(transactionFail);
+                    await transaction.RollbackAsync();
+                    await _unitOfWork.SaveChangesAsync();
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.CreatePaymentFail);
                     return result;
                 }
-
                 // Create a new payment transaction
                 var payment = new Transaction
                 {
@@ -171,7 +187,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ProcessPaymentFail);
                     return result;
                 }
-
+               
                 // Detach the wallet entity if already being tracked to prevent conflict
                 _unitOfWork.WalletRepository.Detach(wallet);
 
@@ -189,6 +205,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 await transaction.CommitAsync();
                 result.Payload = payment;
                 result.IsError = false;
+                await _unitOfWork.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -338,11 +355,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidSignature);
                     return result;
                 }
-                if (callback.IsSuccess == false)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.InvalidSignature);
-                    return result;
-                }
+                
 
                 // Get transaction information from the response
                 var amount = Convert.ToSingle(vnpay.GetResponseData("vnp_Amount")) / 100f;
@@ -362,23 +375,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundBooking);
                     return result;
-                }
-
-                if (callback.IsSuccess == false)
-                {
-                    var paymentFail = new Domain.Models.Payment
-                    {
-                        BookingId = bookingId,
-                        Amount = amount,
-                        Success = callback.IsSuccess,
-                        BankCode = Resource.VNPay.ToString()
-                    };
-
-                    await _unitOfWork.PaymentRepository.AddAsync(paymentFail);
-                    await _unitOfWork.SaveChangesAsync();
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
-                    return result;
-                }
+                }          
 
                 var payment = new Domain.Models.Payment
                 {
@@ -405,7 +402,27 @@ namespace MoveMate.Service.ThirdPartyService.Payment.VNPay
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
                     booking.TotalReal -=  (float)amount;
                 }
-
+                if (callback.IsSuccess == false)
+                {
+                    var transactionFail = new MoveMate.Domain.Models.Transaction
+                    {
+                        PaymentId = payment.Id,
+                        Amount = amount,
+                        Status = PaymentEnum.FAIL.ToString(),
+                        TransactionType = transType,
+                        TransactionCode = callback.vnp_TransactionNo.ToString(),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.VNPay.ToString(),
+                        PaymentMethod = Resource.VNPay.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = false
+                    };
+                    await _unitOfWork.TransactionRepository.AddAsync(transactionFail);
+                    await _unitOfWork.SaveChangesAsync();
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
+                    return result;
+                }
                 // Check the response status
                 if (vnpay.GetResponseData("vnp_ResponseCode") != "00")
                 {

@@ -72,7 +72,7 @@ namespace MoveMate.API.Controllers
         /// - Issue Date: 07/15
         /// - OTP: 123456
         ///
-        /// The `returnUrl` parameter should be set to: https://movemate-dashboard.vercel.app/payment-status
+        /// The `returnUrl` parameter should be set to: https://movematee.vercel.app/payment-status
         /// </remarks>
         [HttpPost()]
         [Authorize]
@@ -283,24 +283,28 @@ namespace MoveMate.API.Controllers
                 return BadRequest(new { statusCode = 400, message = MessageConstant.FailMessage.Callback, isError = true });
             }
 
-            bool IsSuccess = false;
-            if (callback.IsSuccess == true)
-            {
-                IsSuccess = true;
-            }       
-            if (callback.Status == "CANCELED")
+            //bool IsSuccess = false;
+            //if (callback.IsSuccess == true)
+            //{
+            //    IsSuccess = true;
+            //}       
+            //if (callback.Status == "CANCELED")
+            //{
+            //    IsSuccess = false;
+            //}
+            //if (callback.Status == "PAID")
+            //{
+            //    IsSuccess = true;
+            //}
+            //if (callback.IsSuccess == false)
+            //{
+            //    IsSuccess = false;
+            //}
+            bool IsSuccess = true;
+            if(cancellationToken.IsCancellationRequested == false)
             {
                 IsSuccess = false;
             }
-            if (callback.Status == "PAID")
-            {
-                IsSuccess = true;
-            }
-            if (callback.IsSuccess == false)
-            {
-                IsSuccess = false;
-            }
-
             if (callback.Type == "order")
             {
                 var returnUrl = $"{callback.returnUrl}?isSuccess={IsSuccess.ToString().ToLower()}&amount={callback.Amount}&payDate={DateTime.Now}&bookingId={callback.BookingId}&transactionCode={callback.OrderCode}&userId={callback.userId}&paymentMethod={Resource.PayOS}&category={callback.category}";

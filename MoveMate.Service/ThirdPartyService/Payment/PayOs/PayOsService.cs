@@ -213,7 +213,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     amount: (int)amount,
                     description: "Recharge into wallet",
                     items: null,
-                    cancelUrl: "https://movematee.vercel.app/payment-status?isSuccess=false",
+                    cancelUrl: urlReturn,
                     returnUrl: urlReturn,
                     buyerName: user.Name,
                     buyerEmail: user.Email,
@@ -240,11 +240,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
             PayOsPaymentCallbackCommand command)
         {
             var result = new OperationResult<string>();
-            if (command.IsSuccess == false)
-            {
-                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
-                return result;
-            }
+           
             string email = command.BuyerEmail;
             var user = await _unitOfWork.UserRepository.GetUserAsyncByEmail(email);
             if (user == null)
@@ -259,7 +255,28 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return result;
             }
+            if (command.IsSuccess == false)
+            {
+                var transactionFail = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = wallet.Id,
+                    Amount = (float)command.Amount,
+                    Status = PaymentEnum.FAIL.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
+                    TransactionCode = command.OrderCode, // Use the callback's TransactionCode
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.PayOS.ToString(),
+                    PaymentMethod = Resource.PayOS.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = true
+                };
 
+                await _unitOfWork.TransactionRepository.AddAsync(transactionFail);
+                await _unitOfWork.SaveChangesAsync();
+                result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
+                return result;
+            }
             // Check if this transaction has already been processed
             var existingTransaction =
                 await _unitOfWork.TransactionRepository.GetByTransactionCodeAsync(command.OrderCode);
@@ -340,21 +357,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                 return result; // Exit without updating the wallet
             }
 
-            if (command.IsSuccess == false)
-            {
-                var payment = new Domain.Models.Payment
-                {
-                    BookingId = bookingId,
-                    Amount = (double)command.Amount,
-                    Success = command.IsSuccess,
-                    BankCode = Resource.PayOS.ToString()
-                };
-
-                await _unitOfWork.PaymentRepository.AddAsync(payment);
-                await _unitOfWork.SaveChangesAsync();
-                result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
-                return result;
-            }
+           
 
             try
             {
@@ -383,7 +386,28 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
                     booking.TotalReal -= (float)command.Amount;
                 }
+                if (command.IsSuccess == false)
+                {
 
+                    var transactionFail = new MoveMate.Domain.Models.Transaction
+                    {
+                        PaymentId = payment.Id,
+                        Amount = (float)command.Amount,
+                        Status = PaymentEnum.FAIL.ToString(),
+                        TransactionType = transType,
+                        TransactionCode = command.OrderCode.ToString(),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.PayOS.ToString(),
+                        PaymentMethod = Resource.PayOS.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = false
+                    };
+                    await _unitOfWork.TransactionRepository.AddAsync(transactionFail);
+                    await _unitOfWork.SaveChangesAsync();
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
+                    return result;
+                }
                 var transaction = new MoveMate.Domain.Models.Transaction
                 {
                     PaymentId = payment.Id,
