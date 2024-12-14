@@ -102,7 +102,7 @@ namespace MoveMate.API.Controllers
         /// - Issue Date: 07/15
         /// - OTP: 123456
         /// 
-        /// The `returnUrl` should be set to: https://movemate-dashboard.vercel.app/payment-status
+        /// The `returnUrl` should be set to: https://movematee.vercel.app/payment-status
         /// </remarks>
         [HttpPost("recharge")]
         [Authorize]

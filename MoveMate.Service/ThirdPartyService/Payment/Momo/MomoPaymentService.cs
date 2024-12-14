@@ -302,11 +302,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 return result;
             }
-            if(command.IsSuccess == false)
-            {
-                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.TransactionCancel, MessageConstant.FailMessage.TransactionCancel);
-                return result;
-            }
+            
 
             // Tìm wallet của user
             var wallet = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(userId);
@@ -315,7 +311,28 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundWallet);
                 return result;
             }
+            if (command.IsSuccess == false)
+            {
+                var transactionFail = new MoveMate.Domain.Models.Transaction
+                {
+                    WalletId = wallet.Id,
+                    Amount = (float)command.Amount,
+                    Status = PaymentEnum.FAIL.ToString(),
+                    TransactionType = Domain.Enums.PaymentMethod.RECHARGE.ToString(),
+                    TransactionCode = command.TransId.ToString(),
+                    CreatedAt = DateTime.Now,
+                    Resource = Resource.Momo.ToString(),
+                    PaymentMethod = Resource.Momo.ToString(),
+                    IsDeleted = false,
+                    UpdatedAt = DateTime.Now,
+                    IsCredit = true
+                };
 
+                await _unitOfWork.TransactionRepository.AddAsync(transactionFail);
+                await _unitOfWork.SaveChangesAsync();
+                result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.TransactionCancel, MessageConstant.FailMessage.TransactionCancel);
+                return result;
+            }
             try
             {
                 wallet.Balance += (float)command.Amount;
@@ -363,12 +380,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
 
             try
             {
-                if (callback.IsSuccess == false)
-                {
-                    operationResult = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
-                    operationResult.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.TransactionCancel, MessageConstant.FailMessage.TransactionCancel);
-                    return operationResult;
-                }
+               
                 var orderIdParts = callback.OrderId.Split('-');
                 if (!int.TryParse(orderIdParts[0], out int bookingId))
                 {
@@ -424,7 +436,28 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                     transType = Domain.Enums.PaymentMethod.PAYMENT.ToString();
                     booking.TotalReal -= (float)callback.Amount;
                 }
-
+                if (callback.IsSuccess == false)
+                {
+                    var transactionFail = new MoveMate.Domain.Models.Transaction
+                    {
+                        PaymentId = payment.Id,
+                        Amount = (float)callback.Amount,
+                        Status = PaymentEnum.FAIL.ToString(),
+                        TransactionType = transType,
+                        TransactionCode = callback.TransId.ToString(),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.Momo.ToString(),
+                        PaymentMethod = Resource.Momo.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = false
+                    };
+                    await _unitOfWork.TransactionRepository.AddAsync(transactionFail);
+                    await _unitOfWork.SaveChangesAsync();
+                    operationResult = OperationResult<string>.Success(callback.returnUrl, StatusCode.Ok, MessageConstant.SuccessMessage.CreatePaymentLinkSuccess);
+                    operationResult.AddResponseStatusCode(StatusCode.Ok, MessageConstant.FailMessage.TransactionCancel, MessageConstant.FailMessage.TransactionCancel);
+                    return operationResult;
+                }
                 var transaction = new MoveMate.Domain.Models.Transaction
                 {
                     PaymentId = payment.Id,
