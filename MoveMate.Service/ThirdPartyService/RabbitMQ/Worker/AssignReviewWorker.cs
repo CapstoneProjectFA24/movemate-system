@@ -76,6 +76,7 @@ public class AssignReviewWorker
                     UserId = reviewerId,
                     StaffType = RoleEnums.REVIEWER.ToString(),
                     IsResponsible = isResponsible,
+                    IsChanged = false,
                     StartDate = startDate,
                 };
 

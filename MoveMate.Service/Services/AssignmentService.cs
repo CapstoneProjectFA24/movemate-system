@@ -897,6 +897,7 @@ public class AssignmentService : IAssignmentService
             var failedAssignment =
                 await _unitOfWork.AssignmentsRepository.GetByIdAsync(request.FailedAssignmentId.Value);
             failedAssignment.Status = AssignmentStatusEnums.FAILED.ToString();
+
             await _unitOfWork.AssignmentsRepository.UpdateAsync(failedAssignment);
         }
 
@@ -937,7 +938,18 @@ public class AssignmentService : IAssignmentService
                     .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
-
+                var driverNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(request.NeedReplaceAssignmentId, RoleEnums.DRIVER.ToString(), bookingId);
+                if (driverNeedReplace == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                    return result;
+                }
+                if (driverNeedReplace.IsChanged == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
+                    return result;
+                }
+                driverNeedReplace.IsChanged = true;
                 if (driverAssignments.Count >= existingBooking.DriverNumber)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
@@ -956,6 +968,7 @@ public class AssignmentService : IAssignmentService
                     includeProperties:
                     "Truck");
                 var truck = await _unitOfWork.TruckRepository.FindByUserIdAsync((int)request.AssignToUserId);
+
                 var isDriver = driver.RoleId == 4 ? true : false;
                 if (isDriver)
                 {
@@ -978,10 +991,12 @@ public class AssignmentService : IAssignmentService
                         EndDate = endTime,
                         TruckId = truck.Id,
                         IsResponsible = false,
+                        IsChanged = false,
                         ScheduleBookingId = scheduleBooking!.Id,
                         BookingDetailsId = bookingDetailDriver.Id
                     };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(driverNeedReplace);
                     //driverAssignments = existingBooking.Assignments
                     //.Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                     //            a.Status != AssignmentStatusEnums.FAILED.ToString())
@@ -1017,7 +1032,18 @@ public class AssignmentService : IAssignmentService
                     .Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
-
+                var porterNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(request.NeedReplaceAssignmentId, RoleEnums.PORTER.ToString(), bookingId);
+                if (porterNeedReplace == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                    return result;
+                }
+                if (porterNeedReplace.IsChanged == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
+                    return result;
+                }
+                porterNeedReplace.IsChanged = true;
                 if (porterAssignments.Count >= existingBooking.PorterNumber)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
@@ -1047,11 +1073,13 @@ public class AssignmentService : IAssignmentService
                         StartDate = existingBooking.BookingAt!.Value,
                         EndDate = endTimePorter,
                         IsResponsible = false,
+                        IsChanged = false,
                         ScheduleBookingId = scheduleBooking!.Id,
                         BookingDetailsId = bookingDetailPorter.Id
                     };
 
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(porterNeedReplace);
                     //porterAssignments = existingBooking.Assignments
                     //.Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
                     //            a.Status != AssignmentStatusEnums.FAILED.ToString())
@@ -1083,7 +1111,18 @@ public class AssignmentService : IAssignmentService
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentDuplicate);
                     return result;
                 }
-
+                var reviewerNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(request.NeedReplaceAssignmentId, RoleEnums.REVIEWER.ToString(), bookingId);
+                if (reviewerNeedReplace == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                    return result;
+                }
+                if (reviewerNeedReplace.IsChanged == true)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
+                    return result;
+                }
+                reviewerNeedReplace.IsChanged = true;
                 Console.WriteLine($"Filtered {reviewerAssignments.Count} REVIEWER assignments.");
 
                 var review = await _unitOfWork.UserRepository.GetByIdAsyncV1(request.AssignToUserId.Value);
@@ -1099,9 +1138,11 @@ public class AssignmentService : IAssignmentService
                         UserId = request.AssignToUserId,
                         StartDate = existingBooking.BookingAt!.Value,
                         IsResponsible = false,
+                        IsChanged = false,
                         ScheduleBookingId = scheduleBooking!.Id
                     };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(reviewerNeedReplace);
                 }
                 else
                 {
