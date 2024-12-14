@@ -206,7 +206,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 if (checkExistQueue == false)
                 {
                     _redisService.SetData(redisKey, saveObj.Id);
-                    //_producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
+                    _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
                 }
 
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
