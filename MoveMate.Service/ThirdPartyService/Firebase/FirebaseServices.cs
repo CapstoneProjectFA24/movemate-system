@@ -206,7 +206,7 @@ namespace MoveMate.Service.ThirdPartyService.Firebase
                 if (checkExistQueue == false && !isRecursiveCall)
                 {
                     _redisService.SetData(redisKey, saveObj.Id);
-                    _producer.SendingMessage("movemate.notification_update_booking_local", saveObj.Id);
+                    _producer.SendingMessage("movemate.notification_update_booking", saveObj.Id);
                 }
 
                 DocumentReference docRef = _dbFirestore.Collection(collectionName).Document(id.ToString());
