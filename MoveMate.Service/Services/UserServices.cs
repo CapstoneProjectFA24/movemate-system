@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Azure.Messaging;
 using Catel.Collections;
+using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.Logging;
 using MoveMate.Domain.Enums;
 using MoveMate.Domain.Models;
@@ -9,6 +10,8 @@ using MoveMate.Service.Commons;
 using MoveMate.Service.Exceptions;
 using MoveMate.Service.IServices;
 using MoveMate.Service.ThirdPartyService.Firebase;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
+using MoveMate.Service.ThirdPartyService.RabbitMQ.DTO;
 using MoveMate.Service.Utils;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.ViewModels.ModelResponses;
@@ -30,15 +33,17 @@ namespace MoveMate.Service.Services
         private IMapper _mapper;
         private readonly ILogger<UserService> _logger;
         private readonly IEmailService _emailService;
+        private readonly IMessageProducer _producer;
         private readonly IFirebaseServices _firebaseServices;
 
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger, IEmailService emailService, IFirebaseServices firebaseServices)
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger, IEmailService emailService, IFirebaseServices firebaseServices, IMessageProducer producer)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
             _emailService = emailService;
             _firebaseServices = firebaseServices;
+            _producer = producer;
         }
 
 
@@ -570,33 +575,16 @@ namespace MoveMate.Service.Services
 
                 booking.BookingTrackers.Add(tracker);
 
-                var assignments = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), booking.Id);
-                if (assignments != null)
-                {
-                    var notificationStaff =
-                     await _unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignments.UserId);
-                    if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
-                    {
-                        var titleAssignment = "Report from Customer";
-                        var bodyAssignment = $"The customer has reported damaged or broken items for booking ID {booking.Id}.";
-                        var fcmTokenAssignment = notificationStaff.FcmToken;
-                        var dataAssignment = new Dictionary<string, string>
-        {
-            { "bookingId", booking.Id.ToString() },
-            { "status", booking.Status.ToString() },
-            { "message", "he customer has reported an issue with the booking." }
-        };
-
-                        // Send notification for each assignment to staff
-                        await _firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment,
-                            fcmTokenAssignment,
-                            dataAssignment);
-                    }
-
-                }
-
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
+                var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), booking.Id);
+                var noti = new NotiListDto()
+                {
+                    BookingId = booking.Id,
+                    StaffType = assignmentPorter.StaffType,
+                    Type = NotificationEnums.CUSTOMER_REPORT.ToString(),
+                };
+                _producer.SendingMessage("movemate.notification_user", noti);
                 //await _emailService.SendBookingSuccessfulEmailAsync(user.Email, response);
                 var response = _mapper.Map<BookingTrackerResponse>(tracker);
                 result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AddTrackerReport, response);

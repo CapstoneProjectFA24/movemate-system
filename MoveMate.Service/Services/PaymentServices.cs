@@ -19,6 +19,8 @@ using MoveMate.Service.Library;
 using Parlot.Fluent;
 using MoveMate.Service.ViewModels.ModelRequests;
 using MoveMate.Service.Utils;
+using MoveMate.Service.ThirdPartyService.RabbitMQ.DTO;
+using MoveMate.Service.ThirdPartyService.RabbitMQ;
 
 namespace MoveMate.Service.Services
 {
@@ -29,14 +31,16 @@ namespace MoveMate.Service.Services
         private readonly ILogger<PaymentService> _logger;
         private readonly IFirebaseServices _firebaseServices;
         private readonly IWalletServices _walletService;
+        private readonly IMessageProducer _producer;
 
-        public PaymentService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PaymentService> logger, IFirebaseServices firebaseServices, IWalletServices walletService)
+        public PaymentService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PaymentService> logger, IFirebaseServices firebaseServices, IWalletServices walletService, IMessageProducer producer)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
             this._logger = logger;
             this._firebaseServices = firebaseServices;
             _walletService = walletService;
+            _producer = producer;
         }
 
         public async Task<OperationResult<string>> PaymentByWallet(int userId, int bookingId, string returnUrl)
@@ -317,26 +321,13 @@ assignmentPorter.Status == AssignmentStatusEnums.COMPLETED.ToString())
                 await _unitOfWork.BookingRepository.SaveOrUpdateAsync(booking);
                 await _unitOfWork.SaveChangesAsync();
 
-                var notificationUser =
-        await _unitOfWork.NotificationRepository.GetByUserIdAsync(userId);
-                if (notificationUser == null)
+                var noti = new NotiListDto()
                 {
-                }
-                else if (!string.IsNullOrEmpty(notificationUser.FcmToken))
-                {
-                    var title = "Thông báo: Thanh toán bằng tiền mặt";
-                    var body = $"Thông báo: Người dùng đã chọn thanh toán bằng tiền mặt cho đơn hàng {booking.Id}.";
-                    var fcmToken = notificationUser.FcmToken;
-                    var data = new Dictionary<string, string>
-                    {
-                        { "bookingId", booking.Id.ToString() },
-                        { "status", booking.Status.ToString() },
-                        { "message", "Người dùng đã chọn thanh toán bằng tiền mặt." }
-                    };
-
-                    // Send notification to Firebase
-                    await _firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
-                }
+                    BookingId = booking.Id,
+                    StaffType = assignmentDriver.StaffType,
+                    Type = NotificationEnums.PAYMENT_BY_CASH.ToString(),
+                };
+                _producer.SendingMessage("movemate.notification_user", noti);
 
                 await _firebaseServices.SaveBooking(booking, booking.Id, "bookings");
 
