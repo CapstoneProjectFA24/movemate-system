@@ -17,7 +17,25 @@ namespace MoveMate.Repository.Repositories.Repository
         public AssignmentsRepository(MoveMateDbContext context) : base(context)
         {
         }
+        public virtual async Task<Assignment?> GetByIdAsync(int id, string includeProperties = "")
+        {
+            IQueryable<Assignment> query = _dbSet;
 
+            // Apply includes
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' },
+                         StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            // Filter by ID
+            query = query.Where(a => a.Id == id);
+
+            // Execute the query and get the result
+            var result = await query.FirstOrDefaultAsync();
+
+            return result;
+        }
         public Assignment GetByStaffTypeAndBookingId(string staffType, int bookingId)
         {
             IQueryable<Assignment> query = _dbSet;
@@ -47,7 +65,18 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return assignments;
         }
+        public async Task<Assignment> GetAssignmentByBookingIdAndStaffTypeAndFCMTokenAsync(int bookingId, string staffType)
+        {
+            IQueryable<Assignment> query = _dbSet
+                .Include(a => a.User)
+                .ThenInclude(u => u.Notifications);
 
+            var assignments = await query
+                .Where(a => a.BookingId == bookingId && a.IsResponsible == true && a.StaffType == staffType && a.Status != AssignmentStatusEnums.FAILED.ToString() && a.User.Notifications.Any(n => n.FcmToken != null))
+                .FirstOrDefaultAsync(); // Execute and return the list of assignments
+
+            return assignments;
+        }
 
         public async Task<List<Assignment>> GetByBookingId(int bookingId)
         {
@@ -69,7 +98,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<Assignment> query = _dbSet;
             return query
-                .Where(a => a.StaffType == staffType && a.BookingId == bookingId && a.IsResponsible == true)
+                .Where(a => a.StaffType == staffType && a.BookingId == bookingId && a.Status != AssignmentStatusEnums.FAILED.ToString() && a.IsResponsible == true)
                 .FirstOrDefault();
         }
 

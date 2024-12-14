@@ -399,21 +399,7 @@ namespace MoveMate.Service.ThirdPartyService.Payment.Momo
                 var assignmentDriver = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.DRIVER.ToString(), bookingId);
                 var assignmentPorter = _unitOfWork.AssignmentsRepository.GetByStaffTypeAndIsResponsible(RoleEnums.PORTER.ToString(), bookingId);
 
-                if (callback.IsSuccess == false)
-                {
-                    var paymentFail = new Domain.Models.Payment
-                    {
-                        BookingId = bookingId,
-                        Amount = (double)callback.Amount,
-                        Success = callback.IsSuccess,
-                        BankCode = Resource.Momo.ToString()
-                    };
-
-                    await _unitOfWork.PaymentRepository.AddAsync(paymentFail);
-                    await _unitOfWork.SaveChangesAsync();
-                    operationResult.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.PaymentFail);
-                    return operationResult;
-                }
+               
 
                 var payment = new Domain.Models.Payment
                 {
