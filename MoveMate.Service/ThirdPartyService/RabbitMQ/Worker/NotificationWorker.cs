@@ -51,7 +51,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
             }
             return "Trạng thái không xác định"; 
         }
-        [Consumer("movemate.notification_update_booking_local")]
+        [Consumer("movemate.notification_update_booking")]
         public async Task HandleMessage(int message)
         {
             try
