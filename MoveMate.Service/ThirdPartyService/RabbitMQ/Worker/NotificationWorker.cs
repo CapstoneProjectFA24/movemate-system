@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using MoveMate.Service.ThirdPartyService.Redis;
+using FirebaseAdmin.Messaging;
 
 namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
 {
@@ -54,58 +55,90 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         throw new Exception($"Can't send notification to user with Id {booking.UserId} - {booking.Status}");
                     }
 
-                    var assignments = await unitOfWork.AssignmentsRepository.GetByBookingId(booking.Id);
+                    //if (booking.Status == BookingEnums.)
+
+                    var assignments = await unitOfWork.AssignmentsRepository.GetAssignmentByUserIdAndFCMTokenAsync(booking.Id);
                     if (assignments == null)
                     {
                         throw new Exception($"Not found assignment with booking Id {booking.UserId} - {booking.Status}");
                     }
+
                     if (!string.IsNullOrEmpty(notificationUser.FcmToken))
                     {
                         // Define title, body, and data for the notification
-                        var title = "Change Status Booking";
-                        var body = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
-                        var fcmToken = notificationUser.FcmToken;
-                        var data = new Dictionary<string, string>
-                    {
-                        { "bookingId", booking.Id.ToString() },
-                        { "status", booking.Status.ToString() },
-                        { "message", "The booking has been change status successfully." }
-                    };
 
-                        // Send notification to Firebase
-                        await firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
-                    }
-                    foreach (var assignment in assignments)
-                    {
-                        // Retrieve the staff's notification token
-                        var notificationStaff =
-                            await unitOfWork.NotificationRepository.GetByUserIdAsync((int)assignment.UserId);
-                        if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
+                        var redisKey = message + "-" + "user" + "-" + booking.UserId + "-" + booking.Status;
+
+                        var isExistQueue = await redisService.KeyExistsAsync(redisKey);
+
+                        if (!isExistQueue)
                         {
-                            var titleAssignment = "Change Status Booking";
-                            var bodyAssignment = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
-                            var fcmTokenAssignment = notificationStaff.FcmToken;
-                            var dataAssignment = new Dictionary<string, string>
+                            redisService.SetData(redisKey, message);
+
+                            var title = "Change Status Booking";
+                            var body = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
+                            var fcmToken = notificationUser.FcmToken;
+                            var data = new Dictionary<string, string>
                             {
                                 { "bookingId", booking.Id.ToString() },
                                 { "status", booking.Status.ToString() },
-                                { "message", "The booking has been changed successfully." }
+                                { "message", "The booking has been change status successfully." }
                             };
 
-                            // Send notification for each assignment to staff
-                            await firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment,
-                                fcmTokenAssignment,
-                                dataAssignment);
+                            // Send notification to Firebase
+                            await firebaseServices.SendNotificationAsync(title, body, fcmToken, data);
+                        }
+
+
+                    }
+                    foreach (var assignment in assignments)
+                    {
+
+                        var redisKey = message + "-"+ "staff" + "-" + assignment.Id + "-" + booking.Status;
+
+                        var isExistQueue = await redisService.KeyExistsAsync(redisKey);
+
+                        if (!isExistQueue)
+                        {
+                            redisService.SetData(redisKey, message);
+                            // Retrieve the staff's notification token
+                            var notificationStaff =
+                               assignment.User.Notifications.FirstOrDefault(n => n.FcmToken != null);
+
+                            if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
+                            {
+                                var titleAssignment = "Change Status Booking";
+                                var bodyAssignment = $"Your booking with ID {booking.Id} has been changed - {booking.Status}.";
+                                var fcmTokenAssignment = notificationStaff.FcmToken;
+                                var dataAssignment = new Dictionary<string, string>
+                                {
+                                    { "bookingId", booking.Id.ToString() },
+                                    { "status", booking.Status.ToString() },
+                                    { "message", "The booking has been changed successfully." }
+                                };
+
+                                // Send notification for each assignment to staff
+                                await firebaseServices.SendNotificationAsync(titleAssignment, bodyAssignment,
+                                    fcmTokenAssignment,
+                                    dataAssignment);
+                            }
+
                         }
                     }
                 }
             }
+           /* catch (FirebaseMessagingException ex)
+            {
+                _logger.LogError(ex, "FirebaseMessagingException processing booking notification for message {Message}", message);
+
+                return;
+            }*/
             catch (Exception e)
             {
                 _logger.LogError(e, "Error processing booking notification for message {Message}", message);
                 throw;
             }
-            
+
             Console.WriteLine($"Received message to queue movemate.notification_update_booking: {message}");
         }
     }
