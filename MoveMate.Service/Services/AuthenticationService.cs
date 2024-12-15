@@ -321,6 +321,7 @@ namespace MoveMate.Service.Services
                         RoleId = 3,
                         IsDeleted = false,
                         IsBanned = false,
+                        IsAccepted = true,
                         Wallet = new Wallet
                         {
                             Balance = 0,
