@@ -33,8 +33,6 @@ public class TruckCategoryController : BaseController
     /// <response code="200">List TruckCate is Empty!</response>
     /// <response code="500">Internal server error occurred</response>
     [HttpGet("")]
-    [Authorize]
-    // get all
     public async Task<IActionResult> GetAllCate([FromQuery] GetAllTruckCategoryRequest request)
     {
         //IEnumerable<Claim> claims = HttpContext.User.Claims;
@@ -95,7 +93,6 @@ public class TruckCategoryController : BaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete("manager/truck-img/{id}")]
-    [Authorize]
     public async Task<IActionResult> DeleteTruckImgById(int id)
     {
         var response = await _truckServices.DeleteTruckImg(id);
