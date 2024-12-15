@@ -9,7 +9,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 {
     public class UserInfoRequest
     {
-        public string? Type { get; set; }
+        public Byte? Type { get; set; }
 
         public string? ImageUrl { get; set; }
 
