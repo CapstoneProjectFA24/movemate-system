@@ -67,7 +67,7 @@ namespace MoveMate.Service.Services
             }
         }
 
-       
+
 
         public async Task<OperationResult<GetFeeSettingResponse>> GetFeeSettingById(int id)
         {
@@ -110,7 +110,7 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-                
+
                 if (request.HouseTypeId.HasValue)
                 {
                     var houseType = await _unitOfWork.HouseTypeRepository.GetByIdAsync((int)request.HouseTypeId);
@@ -270,9 +270,9 @@ namespace MoveMate.Service.Services
                         return result;
                     }
                 }
-                
-                    
-                if (request.Type == TypeFeeEnums.TRUCK.ToString()) 
+
+
+                if (request.Type == TypeFeeEnums.TRUCK.ToString())
                 {
                     if (request.HouseTypeId.HasValue)
                     {
@@ -327,7 +327,7 @@ namespace MoveMate.Service.Services
 
                 if (request.Unit == UnitEnums.FLOOR.ToString())
                 {
-                    if(!request.FloorPercentage.HasValue)
+                    if (!request.FloorPercentage.HasValue)
                     {
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.FeeUnitFloorFail);
                         return result;
@@ -349,15 +349,41 @@ namespace MoveMate.Service.Services
                         return result;
                     }
                 }
+                if (request.Unit == UnitEnums.KM.ToString() || request.Unit == UnitEnums.FLOOR.ToString())
+                {
+                    if (request.RangeMin > request.RangeMax)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RangeMinMax);
+                        return result;
+                    }
+                    var feeSettings = await _unitOfWork.FeeSettingRepository.GetByServiceIdAsync((int)request.ServiceId);
+                    
+                    if (request.RangeMin != 0)
+                    {
+                        var isMatchingRange = feeSettings.Any(fee => fee.RangeMax == request.RangeMin);
 
+                        if (!isMatchingRange)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RangeFalse);
+                            return result;
+                        }
+                    }
+                    else
+                    {
+                        var isDuplicate = feeSettings.Any(fee => fee.RangeMin == request.RangeMin);
+                        if (isDuplicate)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ExistFeeRange);
+                            return result;
+                        }
+                    }
+                }
                 var feeSetting = _mapper.Map<FeeSetting>(request);
 
                 await _unitOfWork.FeeSettingRepository.AddAsync(feeSetting);
                 await _unitOfWork.SaveChangesAsync();
-
                 var response = _mapper.Map<GetFeeSettingResponse>(feeSetting);
                 result.AddResponseStatusCode(StatusCode.Created, MessageConstant.SuccessMessage.CreateTruckImg, response);
-
                 return result;
             }
             catch (Exception ex)

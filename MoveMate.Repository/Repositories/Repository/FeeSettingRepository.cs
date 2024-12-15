@@ -47,19 +47,28 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true && f.Type == TypeFeeEnums.SYSTEM.ToString())
                 .ToListAsync();
         }
-        
+
         public async Task<List<FeeSetting>> GetPercentHolidayFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Unit == UnitEnums.PERCENT.ToString() && f.IsActived == true && f.Type == TypeFeeEnums.HOLIDAY.ToString())
                 .ToListAsync();
         }
-        
+
         public async Task<FeeSetting?> GetReviewerFeeSettingsAsync()
         {
             return await _context.Set<FeeSetting>()
                 .Where(f => f.Type == TypeFeeEnums.REVIEWER.ToString() && f.IsActived == true)
                 .FirstOrDefaultAsync();
+        }
+        public async Task<List<FeeSetting>> GetByServiceIdAsync(int serviceId)
+        {
+            IQueryable<FeeSetting> query = _dbSet;
+            var assignments = await query
+                    .Where(a => a.ServiceId == serviceId && a.IsActived == true)
+                    .ToListAsync(); // Execute and return the list of assignments
+
+            return assignments;
         }
 
         //public List<FeeSetting> GetTruckFeeSettings(int cateTruckId)
