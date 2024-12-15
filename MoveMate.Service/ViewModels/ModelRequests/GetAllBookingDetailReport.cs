@@ -30,11 +30,19 @@ namespace MoveMate.Service.ViewModels.ModelRequests
 
             if (UserId.HasValue)
             {
-                queryExpression = queryExpression.And(detail =>
-                    detail.BookingId.HasValue && 
-                    detail.Booking.Assignments
-                        .Any(assignment => assignment.UserId == UserId)
-                );
+                if (UserId == 4 || UserId == 1)
+                {
+                    queryExpression = queryExpression.And(detail => detail.Status == BookingDetailStatusEnums.WAITING.ToString());
+                }
+                else
+                {
+                    queryExpression = queryExpression.And(detail =>
+                                        detail.BookingId.HasValue &&
+                                        detail.Booking.Assignments
+                                            .Any(assignment => assignment.UserId == UserId)
+                                    );
+                }
+                
             }
 
             queryExpression = queryExpression.And(detail => detail.Status == BookingDetailStatusEnums.WAITING.ToString());

@@ -199,6 +199,9 @@ namespace MoveMate.Service.Commons
             public const string ServiceTypeTruck = "Service type's must be TRUCK";
             public const string ServiceTier1 = "Cannot create fee settings for parent service";
             public const string ServiceTruckCategory = "Service does not have a truck category";
+            public const string RangeFalse = "There are no fees for previous distances";
+            public const string RangeMinMax = "Range min must be shorter than range max";
+            public const string ExistFeeRange = "There is a charge for this distance";
 
 
             //Truck category

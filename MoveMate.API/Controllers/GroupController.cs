@@ -111,7 +111,7 @@ namespace MoveMate.API.Controllers
 
         }
 
-        [HttpPost("add-user")]
+        [HttpPut("add-user")]
         public async Task<IActionResult> AddUserIntoGroup([FromBody] AddUserIntoGroup request)
         {
             var response = await _groupService.AddUserIntoGroup(request);
