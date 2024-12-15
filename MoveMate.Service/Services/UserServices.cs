@@ -616,21 +616,21 @@ namespace MoveMate.Service.Services
                 }
                 else
                 {
-                    //var invalidTruckName = request.UserInfo.Any(u => u.Type == "TRUCK_NAME");
-                    //if (invalidTruckName)
-                    //{
-                    //    result.AddError(StatusCode.BadRequest,
-                    //        "UserInfo type 'TRUCK_NAME' is not allowed for this role.");
-                    //    return result;
-                    //}
+                    var invalidTruckName = request.UserInfo.Any(u => u.Type == "TRUCK_NAME");
+                    if (invalidTruckName)
+                    {
+                        result.AddError(StatusCode.BadRequest,
+                            "UserInfo type 'TRUCK_NAME' is not allowed for this role.");
+                        return result;
+                    }
                 }
-                //var missingTypes = requiredTypes.Except(request.UserInfo.Select(u => u.Type)).ToList();
-                //if (missingTypes.Any())
-                //{
-                //    result.AddError(StatusCode.BadRequest,
-                //        $"The following required UserInfo types are missing: {string.Join(", ", missingTypes)}");
-                //    return result;
-                //}
+                var missingTypes = requiredTypes.Except(request.UserInfo.Select(u => u.Type)).ToList();
+                if (missingTypes.Any())
+                {
+                    result.AddError(StatusCode.BadRequest,
+                        $"The following required UserInfo types are missing: {string.Join(", ", missingTypes)}");
+                    return result;
+                }
 
 
                 // Check if the email already exists
