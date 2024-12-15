@@ -673,6 +673,16 @@ namespace MoveMate.Service.Services
                 if (request.RoleId == 4)
                 {
                     user.IsDriver = true;
+                    user.Truck = new Truck()
+                    {
+                        TruckCategoryId = request.TruckCategoryId,
+                        Model = request.Model,
+                        Capacity = request.Capacity,
+                        Brand = request.Brand,
+                        Color = request.Color,
+                        NumberPlate = request.NumberPlate
+                    };
+
                 }
 
                 // Map UserInfos
@@ -733,13 +743,16 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.UserRepository.GetByIdAsync(userId, includeProperties: "Role,UserInfos,Wallet,Group");
+                    await _unitOfWork.UserRepository.GetByIdAsync(userId, includeProperties: "Role,UserInfos,Wallet,Group,Truck");
                 if (entity == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
                 }
 
                 entity.IsAccepted = true;
+                entity.Truck.IsAvailable = true;
+                await _unitOfWork.TruckRepository.SaveOrUpdateAsync(entity.Truck);
+                
                 await _unitOfWork.UserRepository.SaveOrUpdateAsync(entity);
                 await _unitOfWork.SaveChangesAsync();
                 var userResponse = _mapper.Map<GetUserResponse>(entity);
