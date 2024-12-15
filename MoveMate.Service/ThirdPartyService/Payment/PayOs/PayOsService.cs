@@ -438,8 +438,8 @@ namespace MoveMate.Service.ThirdPartyService.Payment.PayOs
                             TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
                             TransactionCode = "R" + Utilss.RandomString(7),
                             CreatedAt = DateTime.Now,
-                            Resource = Resource.VNPay.ToString(),
-                            PaymentMethod = Resource.VNPay.ToString(),
+                            Resource = Resource.PayOS.ToString(),
+                            PaymentMethod = Resource.PayOS.ToString(),
                             IsDeleted = false,
                             UpdatedAt = DateTime.Now,
                             IsCredit = true
