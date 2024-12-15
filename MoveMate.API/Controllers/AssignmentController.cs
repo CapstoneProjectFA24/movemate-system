@@ -31,7 +31,7 @@ namespace MoveMate.API.Controllers
         public async Task<IActionResult> GetAll([FromQuery] GetAllBookingDetailReport request)
         {
             //IEnumerable<Claim> claims = HttpContext.User.Claims;
-            
+           
             var response = await _assignmentService.GetAll(request);
 
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);

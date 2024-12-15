@@ -100,7 +100,7 @@ namespace MoveMate.API.Controllers
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
         }
 
-        [HttpPost("add-schedule")]
+        [HttpPut("add-schedule")]
         public async Task<IActionResult> AddScheduleIntoGroup([FromBody] AddScheduleIntoGroup request)
         {
             var response = await _scheduleWorking.AddGroupIntoSchedule(request);
