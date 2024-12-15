@@ -616,16 +616,25 @@ namespace MoveMate.Service.Services
 
                 if (request.RoleId == 4)
                 {
-                    requiredTypes.Add("TRUCK_NAME");
+                    //requiredTypes.Add("TRUCK_NAME");
+                    if (request.TruckCategoryId == null)
+                    {
+                        result.AddError(StatusCode.BadRequest,
+                            "Driver must haveTruckCategoryId.");
+                        return result;
+                        
+                    }
+                    
                 }
                 else
                 {
-                    var invalidTruckName = request.UserInfo.Any(u => u.Type == "TRUCK_NAME");
-                    if (invalidTruckName)
+                    //var invalidTruckName = request.UserInfo.Any(u => u.Type == "TRUCK_NAME");
+                    if (request.TruckCategoryId != null)
                     {
                         result.AddError(StatusCode.BadRequest,
-                            "UserInfo type 'TRUCK_NAME' is not allowed for this role.");
+                            "Other staff drivers do not need TruckCategoryId");
                         return result;
+                        
                     }
                 }
                 var missingTypes = requiredTypes.Except(request.UserInfo.Select(u => u.Type)).ToList();
