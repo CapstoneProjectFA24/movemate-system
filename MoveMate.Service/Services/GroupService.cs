@@ -315,8 +315,9 @@ public class GroupService : IGroupServices
             await _unitOfWork.SaveChangesAsync();
 
             // Fetch the updated group and map response
-            group = await _unitOfWork.GroupRepository.GetByIdAsyncV1(request.GroupId, includeProperties: "Users");
+            group = await _unitOfWork.GroupRepository.GetByIdAsyncV1(request.GroupId, includeProperties: "ScheduleWorkings,Users");
             var groupResponse = _mapper.Map<GroupResponse>(group);
+            groupResponse.CountUser = groupResponse.Users.Count();
 
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.AddUserToGroup, groupResponse);
         }
