@@ -143,6 +143,7 @@ namespace MoveMate.Service.Commons
             public const string NotEnoughInsurance = "Insufficient amount of insurance";
             public const string NotSuitableBookingTracker = "Booking tracker is not suitable for exchange";
             public const string DamageReport = "Damage cannot be reported at this time";
+            public const string BookingDetailsRequired = "There's nothing to update at all";
             //Assignment
             public const string NotFoundAssignment = "Assignment not found";
             public const string AssignmentSuggeted = "The assignment status must be SUGGESTED";
