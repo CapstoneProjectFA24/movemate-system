@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
@@ -22,7 +23,9 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? Email { get; set; }
 
         public string? AvatarUrl { get; set; }
-
+        
+        public IFormFile? Avatar { get; set; }
+        
         public DateTime? Dob { get; set; }
         [JsonIgnore]
         public bool? IsBanned { get; set; } = false;

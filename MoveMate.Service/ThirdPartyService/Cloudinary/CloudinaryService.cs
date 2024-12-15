@@ -41,4 +41,5 @@ public class CloudinaryService
 
         return uploadResult.SecureUrl.ToString(); // Return the URL of the uploaded image
     }
+    
 }
