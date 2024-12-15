@@ -2129,11 +2129,11 @@ public class AssignmentService : IAssignmentService
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.MonetoryFail);
                     return result;
                 }
-
+                var manager = await _unitOfWork.UserRepository.GetManagerAsync();
+                var walletManager = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(manager.Id);
                 if (request.PaymentMethod == Resource.Wallet.ToString())
                 {
-                    var manager = await _unitOfWork.UserRepository.GetManagerAsync();
-                    var walletManager = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(manager.Id);
+                    
                     if (walletManager.Balance < request.RealAmount)
                     {
                         result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.NotEnoughMoney);
@@ -2204,6 +2204,44 @@ public class AssignmentService : IAssignmentService
                         trackerSource.BookingTrackerId = bookingTracker.Id;
                     }
                     await _unitOfWork.TrackerSourceRepository.AddRangeAsync(resourceList.ToList());
+
+                    var userTranferTransaction = new MoveMate.Domain.Models.Transaction
+                    {                        
+                        PaymentId = payment.Id,
+                        WalletId = walletManager.Id,
+                        Amount = request.RealAmount,
+                        Status = PaymentEnum.SUCCESS.ToString(),
+                        TransactionType = Domain.Enums.PaymentMethod.TRANFER.ToString(),
+                        TransactionCode = "R" + Utilss.RandomString(7),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.Cash.ToString(),
+                        PaymentMethod = Resource.Cash.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = false
+                    };
+
+                    await _unitOfWork.TransactionRepository.AddAsync(userTranferTransaction);
+
+                    var customer = await _unitOfWork.UserRepository.GetByIdAsync((int)booking.UserId);
+                    var walletCustomer = await _unitOfWork.WalletRepository.GetWalletByAccountIdAsync(customer.Id);
+                    var userReceiveTransaction = new MoveMate.Domain.Models.Transaction
+                    {
+                        PaymentId = payment.Id,
+                        WalletId = walletCustomer.Id,
+                        Amount = request.RealAmount,
+                        Status = PaymentEnum.SUCCESS.ToString(),
+                        TransactionType = Domain.Enums.PaymentMethod.RECEIVE.ToString(),
+                        TransactionCode = "R" + Utilss.RandomString(7),
+                        CreatedAt = DateTime.Now,
+                        Resource = Resource.Cash.ToString(),
+                        PaymentMethod = Resource.Cash.ToString(),
+                        IsDeleted = false,
+                        UpdatedAt = DateTime.Now,
+                        IsCredit = true
+                    };
+
+                    await _unitOfWork.TransactionRepository.AddAsync(userReceiveTransaction);                  
                 }
                 else
                 {
