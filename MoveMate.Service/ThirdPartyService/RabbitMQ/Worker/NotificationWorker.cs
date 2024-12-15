@@ -37,6 +37,22 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
         { BookingEnums.CANCEL.ToString(), "Đơn hàng đã bị hủy" },
         { BookingEnums.REFUNDING.ToString(), "Đang chờ hoàn tiền" }
     };
+
+        private static readonly Dictionary<string, string> ReviewerBookingStatusNames = new Dictionary<string, string>
+    {
+        { BookingEnums.PENDING.ToString(), "Đang xử lý yêu cầu" },
+        { BookingEnums.DEPOSITING.ToString(), "Đang chờ khách hàng thanh toán tiền cọc" },
+        { BookingEnums.ASSIGNED.ToString(), "Bạn đã nhận môt đơn hàng mới" },
+        { BookingEnums.REVIEWING.ToString(), "Hãy đề xuất dịch vụ mới" },
+        { BookingEnums.REVIEWED.ToString(), "Chờ khách hàng xác nhận đề xuất dịch vụ" },
+        { BookingEnums.COMING.ToString(), "Đội ngũ vận chuyển đang trên đường đến" },
+        { BookingEnums.WAITING.ToString(), "Chờ khách hàng xác nhận lịch khảo sát" },
+        { BookingEnums.IN_PROGRESS.ToString(), "Đang thực hiện vận chuyển" },
+        { BookingEnums.COMPLETED.ToString(), "Dịch vụ đã hoàn thành" },
+        { BookingEnums.PAUSED.ToString(), "Đã có đề xuất dịch vụ mới" },
+        { BookingEnums.CANCEL.ToString(), "Đơn hàng đã bị hủy" },
+        { BookingEnums.REFUNDING.ToString(), "Đang chờ hoàn tiền" }
+    };
         public NotificationWorker(ILogger<NotificationWorker> logger, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
@@ -50,6 +66,14 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                 return BookingStatusNames[status];
             }
             return "Trạng thái không xác định"; 
+        }
+        private string ReviewerGetBookingStatusName(string status)
+        {
+            if (ReviewerBookingStatusNames.ContainsKey(status))
+            {
+                return ReviewerBookingStatusNames[status];
+            }
+            return "Trạng thái không xác định";
         }
         [Consumer("movemate.notification_update_booking")]
         public async Task HandleMessage(int message)
@@ -69,7 +93,7 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
                         throw new Exception($"Booking with Id {message} not found");
                     }
                     var statusName = GetBookingStatusName(booking.Status);
-
+                    var reviewerStatusName = ReviewerGetBookingStatusName(booking.Status);
                     var notificationUser =
                         await unitOfWork.NotificationRepository.GetByUserIdAsync((int)booking.UserId);
                     if (notificationUser == null)
@@ -129,8 +153,8 @@ namespace MoveMate.Service.ThirdPartyService.RabbitMQ.Worker
 
                             if (notificationStaff != null && !string.IsNullOrEmpty(notificationStaff.FcmToken))
                             {
-                                var titleAssignment = $"Đơn hàng đã được cập nhật - {statusName}.";
-                                var bodyAssignment = $"Đơn hàng bạn phụ trách với mã đơn {booking.Id} đã cập nhật - {statusName}.";
+                                var titleAssignment = $"Đơn hàng đã được cập nhật - {reviewerStatusName}.";
+                                var bodyAssignment = $"Đơn hàng bạn phụ trách với mã đơn {booking.Id} đã cập nhật - {reviewerStatusName}.";
                                 var fcmTokenAssignment = notificationStaff.FcmToken;
                                 var dataAssignment = new Dictionary<string, string>
                                 {

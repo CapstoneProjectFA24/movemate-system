@@ -2329,19 +2329,18 @@ namespace MoveMate.Service.Services
 
                 total += (double)totalFee;
 
-                var deposit = total * 30 / 100;
+               
 
 
                 existingBooking.TotalFee = totalFee;
-
+                var deposit = total * 30 / 100;
                 // Ensure total includes service and fee totals
-                if(existingBooking.IsDeposited == true)
+                if (existingBooking.IsDeposited == true)
                 {
                     if (isDriverUpdate)
                     {
                         existingBooking.TotalReal = total - existingBooking.Deposit;
-                        existingBooking.Status = BookingEnums.PAUSED.ToString();
-                        existingBooking.Deposit = existingBooking.Total * 0.30; ;
+                        existingBooking.Status = BookingEnums.PAUSED.ToString();                     
                     }
                     else
                     {
@@ -2350,8 +2349,7 @@ namespace MoveMate.Service.Services
                             var feeReviewerOffline = await _unitOfWork.FeeSettingRepository.GetReviewerFeeSettingsAsync();
                             deposit = feeReviewerOffline!.Amount!.Value;
                         }
-                        existingBooking.TotalReal = total - existingBooking.Deposit;
-                        existingBooking.Deposit = deposit;
+                        existingBooking.TotalReal = total - existingBooking.Deposit;                       
 
                     }
                     existingBooking.Total = total;
