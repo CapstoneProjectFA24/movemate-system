@@ -938,18 +938,23 @@ public class AssignmentService : IAssignmentService
                     .Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
-                var driverNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(request.NeedReplaceAssignmentId, RoleEnums.DRIVER.ToString(), bookingId);
-                if (driverNeedReplace == null)
+                if (request.NeedReplaceAssignmentId.HasValue)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
-                    return result;
+                    var driverNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType((int)request.NeedReplaceAssignmentId, RoleEnums.DRIVER.ToString(), bookingId);
+                    if (driverNeedReplace == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                        return result;
+                    }
+                    if (driverNeedReplace.IsChanged == true)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
+                        return result;
+                    }
+                    driverNeedReplace.IsChanged = true;
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(driverNeedReplace);
                 }
-                if (driverNeedReplace.IsChanged == true)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
-                    return result;
-                }
-                driverNeedReplace.IsChanged = true;
+                
                 if (driverAssignments.Count >= existingBooking.DriverNumber)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
@@ -996,7 +1001,7 @@ public class AssignmentService : IAssignmentService
                         BookingDetailsId = bookingDetailDriver.Id
                     };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
-                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(driverNeedReplace);
+
                     //driverAssignments = existingBooking.Assignments
                     //.Where(a => a.StaffType == RoleEnums.DRIVER.ToString() &&
                     //            a.Status != AssignmentStatusEnums.FAILED.ToString())
@@ -1032,18 +1037,23 @@ public class AssignmentService : IAssignmentService
                     .Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
                                 a.Status != AssignmentStatusEnums.FAILED.ToString())
                     .ToList();
-                var porterNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(request.NeedReplaceAssignmentId, RoleEnums.PORTER.ToString(), bookingId);
-                if (porterNeedReplace == null)
+                if (request.NeedReplaceAssignmentId.HasValue)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
-                    return result;
+                    var porterNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType((int)request.NeedReplaceAssignmentId, RoleEnums.PORTER.ToString(), bookingId);
+                    if (porterNeedReplace == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                        return result;
+                    }
+                    if (porterNeedReplace.IsChanged == true)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
+                        return result;
+                    }
+                    porterNeedReplace.IsChanged = true;
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(porterNeedReplace);
                 }
-                if (porterNeedReplace.IsChanged == true)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
-                    return result;
-                }
-                porterNeedReplace.IsChanged = true;
+               
                 if (porterAssignments.Count >= existingBooking.PorterNumber)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.AssignmentUpdateFail);
@@ -1079,7 +1089,7 @@ public class AssignmentService : IAssignmentService
                     };
 
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
-                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(porterNeedReplace);
+                    
                     //porterAssignments = existingBooking.Assignments
                     //.Where(a => a.StaffType == RoleEnums.PORTER.ToString() &&
                     //            a.Status != AssignmentStatusEnums.FAILED.ToString())
@@ -1111,18 +1121,23 @@ public class AssignmentService : IAssignmentService
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentDuplicate);
                     return result;
                 }
-                var reviewerNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType(request.NeedReplaceAssignmentId, RoleEnums.REVIEWER.ToString(), bookingId);
-                if (reviewerNeedReplace == null)
+                if (request.NeedReplaceAssignmentId.HasValue)
                 {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
-                    return result;
+                    var reviewerNeedReplace = await _unitOfWork.AssignmentsRepository.GetByUserIdAndStaffType((int)request.NeedReplaceAssignmentId, RoleEnums.REVIEWER.ToString(), bookingId);
+                    if (reviewerNeedReplace == null)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignWrongReview);
+                        return result;
+                    }
+                    if (reviewerNeedReplace.IsChanged == true)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
+                        return result;
+                    }
+                    reviewerNeedReplace.IsChanged = true;
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(reviewerNeedReplace);
                 }
-                if (reviewerNeedReplace.IsChanged == true)
-                {
-                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.AssignmentIsChanged);
-                    return result;
-                }
-                reviewerNeedReplace.IsChanged = true;
+                
                 Console.WriteLine($"Filtered {reviewerAssignments.Count} REVIEWER assignments.");
 
                 var review = await _unitOfWork.UserRepository.GetByIdAsyncV1(request.AssignToUserId.Value);
@@ -1142,7 +1157,7 @@ public class AssignmentService : IAssignmentService
                         ScheduleBookingId = scheduleBooking!.Id
                     };
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(newStaff);
-                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(reviewerNeedReplace);
+                    
                 }
                 else
                 {
