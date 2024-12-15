@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using MoveMate.Domain.Models;
 
 namespace MoveMate.Service.ViewModels.ModelRequests
 {
@@ -25,6 +26,8 @@ namespace MoveMate.Service.ViewModels.ModelRequests
         public string? AvatarUrl { get; set; }
         
         public IFormFile? Avatar { get; set; }
+        
+        public int? TruckCategoryId { get; set; }
         
         public DateTime? Dob { get; set; }
         [JsonIgnore]
