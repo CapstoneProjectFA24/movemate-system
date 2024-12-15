@@ -23,6 +23,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using MoveMate.Service.ThirdPartyService.Cloudinary;
 using static Grpc.Core.Metadata;
 
 namespace MoveMate.Service.Services
@@ -35,8 +36,10 @@ namespace MoveMate.Service.Services
         private readonly IEmailService _emailService;
         private readonly IMessageProducer _producer;
         private readonly IFirebaseServices _firebaseServices;
+        private readonly CloudinaryService _cloudinaryService;
 
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger, IEmailService emailService, IFirebaseServices firebaseServices, IMessageProducer producer)
+
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger, IEmailService emailService, IFirebaseServices firebaseServices, IMessageProducer producer, CloudinaryService cloudinaryService)
         {
             this._unitOfWork = (UnitOfWork)unitOfWork;
             this._mapper = mapper;
@@ -44,6 +47,7 @@ namespace MoveMate.Service.Services
             _emailService = emailService;
             _firebaseServices = firebaseServices;
             _producer = producer;
+            _cloudinaryService = cloudinaryService;
         }
 
 
@@ -663,6 +667,25 @@ namespace MoveMate.Service.Services
                 }
 
                 // Map UserInfos
+                foreach (var userInfo in request.UserInfo)
+                {
+                    if (userInfo.Image != null)
+                    {
+                        // Upload image and set the ImageUrl
+                        var uploadedUrl = await _cloudinaryService.UploadImageAsync(userInfo.Image);
+                        userInfo.ImageUrl = uploadedUrl;
+                        // Set Image to null to avoid storing unnecessary data
+                        userInfo.Image = null;
+                    }
+                }
+
+                if (request.Avatar != null )
+                {
+                    var uploadedUrl = await _cloudinaryService.UploadImageAsync(request.Avatar);
+                    request.AvatarUrl = uploadedUrl;
+                }
+
+                
                 List<UserInfo> resourceList = _mapper.Map<List<UserInfo>>(request.UserInfo);
                 user.UserInfos = resourceList;
 

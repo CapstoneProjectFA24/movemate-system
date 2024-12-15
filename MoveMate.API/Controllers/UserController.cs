@@ -7,6 +7,7 @@ using MoveMate.Service.IServices;
 using MoveMate.Service.Services;
 using MoveMate.Service.ViewModels.ModelRequests;
 using System.Security.Claims;
+using MoveMate.Service.ThirdPartyService.Cloudinary;
 
 namespace MoveMate.API.Controllers
 {
@@ -16,10 +17,12 @@ namespace MoveMate.API.Controllers
         private readonly IUserServices _userService;
 
         private readonly IFirebaseMiddleware _firebaseMiddleware;
+        private readonly CloudinaryService _cloudinaryService;
 
-        public UserController(IUserServices userService, IFirebaseMiddleware firebaseMiddleware)
+        public UserController(IUserServices userService, IFirebaseMiddleware firebaseMiddleware, CloudinaryService cloudinaryService)
         {
             _firebaseMiddleware = firebaseMiddleware;
+            _cloudinaryService = cloudinaryService;
             _userService = userService;
         }
 
@@ -426,6 +429,25 @@ namespace MoveMate.API.Controllers
             var response = await _userService.AcceptUser(userId);
             return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
 
+        }
+        
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File cannot be null or empty.");
+            }
+
+            try
+            {
+                var imageUrl = await _cloudinaryService.UploadImageAsync(file);
+                return Ok(new { ImageUrl = imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while uploading the image.", Details = ex.Message });
+            }
         }
     }
 }
