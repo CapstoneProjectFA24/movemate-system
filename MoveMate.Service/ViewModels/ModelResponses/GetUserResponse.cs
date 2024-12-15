@@ -48,5 +48,6 @@ namespace MoveMate.Service.ViewModels.ModelResponses
         public string? NumberIntroduce { get; set; }
 
         public virtual ICollection<UserInfoResponse> UserInfos { get; set; }
+        public TruckResponse Truck {  get; set; }
     }
 }

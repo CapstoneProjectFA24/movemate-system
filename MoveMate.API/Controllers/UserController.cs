@@ -37,7 +37,7 @@ namespace MoveMate.API.Controllers
         /// <response code="200">List User is Empty!</response>
         /// <response code="500">Internal server error occurred</response>
         [HttpGet("")]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "1,6")]
         // get all
         public async Task<IActionResult> GetAll([FromQuery] GetAllUserRequest request)
         {

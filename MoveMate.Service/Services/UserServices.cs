@@ -504,7 +504,7 @@ namespace MoveMate.Service.Services
             try
             {
                 var entity =
-                    await _unitOfWork.UserRepository.GetByIdAsync(id, includeProperties: "Role,UserInfos,Wallet,Group");
+                    await _unitOfWork.UserRepository.GetByIdAsync(id, includeProperties: "Role,UserInfos,Wallet,Group,Truck.TruckImgs");
                 if (entity == null)
                 {
                     result.AddError(StatusCode.NotFound, MessageConstant.FailMessage.NotFoundUser);
