@@ -3255,11 +3255,14 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-
-
                 if (booking.Status == BookingEnums.CANCEL.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+                if (request.BookingDetails == null || !request.BookingDetails.Any())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingDetailsRequired);
                     return result;
                 }
 
@@ -3286,6 +3289,11 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<BookingResponse>();
             try
             {
+                if (request == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingDetailsRequired);
+                    return result;
+                }
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");
                 if (booking == null)
                 {
@@ -3305,6 +3313,11 @@ namespace MoveMate.Service.Services
                 if (booking.Status == BookingEnums.CANCEL.ToString())
                 {
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
+                    return result;
+                }
+                if (request.BookingDetails == null || !request.BookingDetails.Any())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingDetailsRequired);
                     return result;
                 }
 
@@ -3331,6 +3344,11 @@ namespace MoveMate.Service.Services
             var result = new OperationResult<BookingResponse>();
             try
             {
+                if (request == null)
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingDetailsRequired);
+                    return result;
+                }
                 var booking = await _unitOfWork.BookingRepository.GetByIdAsync(bookingId, "Assignments");
                 if (booking == null)
                 {
@@ -3352,7 +3370,11 @@ namespace MoveMate.Service.Services
                     result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingCancel);
                     return result;
                 }
-
+                if (request.BookingDetails == null || !request.BookingDetails.Any())
+                {
+                    result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.BookingDetailsRequired);
+                    return result;
+                }
                 var limitedUpdateRequest = new BookingServiceDetailsUpdateRequest
                 {
                     BookingDetails = request.BookingDetails ?? new List<BookingDetailRequest>()
