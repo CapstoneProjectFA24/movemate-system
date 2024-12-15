@@ -54,4 +54,7 @@
 	  <ProjectReference Include="..\MoveMate.Domain\MoveMate.Domain.csproj" />
 	  <ProjectReference Include="..\MoveMate.Repository\MoveMate.Repository.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="ViewModels\ModelRequests\UserInfoFile\" />
+	</ItemGroup>
 </Project>
