@@ -33,11 +33,11 @@ public partial class PromotionCategory
 
     public DateTime? EndBookingTime { get; set; }
 
-    public bool? IsInfinite { get; set; }
+    public bool? IsInfinite { get; set; } = false;
 
     public int? ServiceId { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; } = false;
 
     public string? Shard { get; set; }
 

@@ -19,7 +19,7 @@ public partial class Voucher
 
     public bool? IsActived { get; set; } = true;
 
-    public bool? IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; } = false;
 
     public virtual Booking? Booking { get; set; }
 
