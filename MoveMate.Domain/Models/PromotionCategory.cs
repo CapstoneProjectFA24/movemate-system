@@ -7,7 +7,7 @@ public partial class PromotionCategory
 {
     public int Id { get; set; }
 
-    public bool? IsPublic { get; set; }
+    public bool? IsPublic { get; set; } = true;
 
     public DateTime? StartDate { get; set; }
 
