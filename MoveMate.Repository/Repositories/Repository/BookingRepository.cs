@@ -280,7 +280,7 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Count();
 
             var totalCancelBookings = datas
-                .Where(b => b.IsCancel == true)
+                .Where(b => b.IsCancel == true && b.Status == BookingEnums.COMPLETED.ToString())
                 .Count();
 
             // Loại nhà được đặt nhiều nhất
