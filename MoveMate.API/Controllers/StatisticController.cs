@@ -286,14 +286,16 @@ public class StatisticController : BaseController
     /// <summary>
     ///
     /// CHORE: STATISTIC FOR SERVICE
-    /// 
+    ///
+    /// </summary>
+    /// <remarks>
     /// Retrieves service statistics, including:
     /// - Total number of parent services (Tier = 0).
     /// - Total number of child services (Tier = 1).
     /// - Total number of services.
     /// - Total number of active services.
     /// - Total number of inactive services.
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// An object containing the requested statistics.
     /// </returns>
