@@ -164,7 +164,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
                 // Thống kê cho từng promotion
                 var totalUsersTakingPromotion = vouchers
-                    .Where(v => v.IsActived == true && v.UserId.HasValue && v.PromotionCategoryId == promotion.Id)
+                    .Where(v => v.UserId.HasValue && v.PromotionCategoryId == promotion.Id)
                     .GroupBy(v => v.UserId)
                     .Count();
 
@@ -199,7 +199,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
                 // Thống kê cho từng promotion
                 var totalUsersTakingPromotion = vouchers
-                    .Where(v => v.IsActived == true && v.UserId.HasValue && v.PromotionCategoryId == promotion.Id)
+                    .Where(v => v.UserId.HasValue && v.PromotionCategoryId == promotion.Id)
                     .GroupBy(v => v.UserId)
                     .Count();
 
