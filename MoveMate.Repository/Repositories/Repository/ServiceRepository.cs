@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MoveMate.Repository.DBContext;
+using MoveMate.Repository.Repositories.Dtos;
 
 namespace MoveMate.Repository.Repositories.Repository
 {
@@ -40,7 +41,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return result;
         }
-        
+
         public virtual IEnumerable<Service> GetAll(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
@@ -79,7 +80,7 @@ namespace MoveMate.Repository.Repositories.Repository
 
             return query.ToList();
         }
-        
+
         public virtual (IEnumerable<Service> Data, int Count) GetAllWithCount(
             Expression<Func<Service, bool>> filter = null,
             Func<IQueryable<Service>, IOrderedQueryable<Service>> orderBy = null,
@@ -124,13 +125,14 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<Service> query = _dbSet;
             return await query
-                           .Where(s => s.Id == parentServiceId && s.Tier == 0) 
-                .Include(s => s.InverseParentService) 
-                .Include(s => s.TruckCategory)        
+                .Where(s => s.Id == parentServiceId && s.Tier == 0)
+                .Include(s => s.InverseParentService)
+                .Include(s => s.TruckCategory)
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<Service> FindByParentTypeAndTruckCategoryAsync(int parentServiceId, string type, int truckCategoryId)
+        public async Task<Service> FindByParentTypeAndTruckCategoryAsync(int parentServiceId, string type,
+            int truckCategoryId)
         {
             IQueryable<Service> query = _dbSet;
             return await query
@@ -139,7 +141,36 @@ namespace MoveMate.Repository.Repositories.Repository
                                           && s.TruckCategoryId == truckCategoryId);
         }
 
+        /// <summary>
+        /// Retrieves service statistics, including:
+        /// - Total number of parent services (Tier = 0).
+        /// - Total number of child services (Tier = 1).
+        /// - Total number of services.
+        /// - Total number of active services.
+        /// - Total number of inactive services.
+        /// </summary>
+        /// <returns>
+        /// An object containing the requested statistics.
+        /// </returns>
+        public async Task<ServiceStatistics> GetServiceStatisticsAsync()
+        {
+            IQueryable<Service> query = _context.Set<Service>();
 
+            // Calculate statistics using IQueryable to optimize database performance
+            var totalServices = await query.CountAsync();
+            var totalActivedServices = await query.CountAsync(s => s.IsActived == true);
+            var totalNoActivedServices = await query.CountAsync(s => s.IsActived == false);
+            var parentServices = await query.CountAsync(s => s.Tier == 0);
+            var childServices = await query.CountAsync(s => s.Tier == 1);
 
+            return new ServiceStatistics
+            {
+                TotalServices = totalServices,
+                TotalActivedServices = totalActivedServices,
+                TotalNoActivedServices = totalNoActivedServices,
+                ParentServices = parentServices,
+                ChildServices = childServices
+            };
+        }
     }
 }
