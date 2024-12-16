@@ -115,7 +115,7 @@ namespace MoveMate.Repository.Repositories.Repository
         {
             IQueryable<Assignment> query = _dbSet;
             return await query
-                .Where(p => p.BookingId == bookingId && p.StaffType == staffType)
+                .Where(a => a.BookingId == bookingId && a.StaffType == staffType && a.Status != AssignmentStatusEnums.FAILED.ToString() && a.IsResponsible == false)
                 .ToListAsync();
         }
 
