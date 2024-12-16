@@ -85,7 +85,12 @@ public class StatisticService : IStatisticService
                     }
 
                     break;
-
+                case var status when status == StatisticEnums.THREEMONTHSLASTED.ToString():
+                    shard = DateUtil.GetShardByMonthLasted(3);
+                    break;
+                case var status when status == StatisticEnums.SIXMONTHLASTED.ToString():
+                    shard = DateUtil.GetShardByMonthLasted(6);
+                    break;
                 default:
                     Console.WriteLine("Invalid statistic type.");
                     break;
@@ -253,7 +258,7 @@ public class StatisticService : IStatisticService
         var result = new OperationResult<object>();
         var data = await _unitOfWork.TruckCategoryRepository.GetTruckCategorySummaryAsync();
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
-        return  result;
+        return result;
     }
 
     public async Task<OperationResult<object>> StatisticUser(StatisticRequest request)
@@ -267,7 +272,7 @@ public class StatisticService : IStatisticService
             var data = await _unitOfWork.UserRepository.CalculateStatisticsWithoutShardAsync();
             data.Shard = "All";
             shardList.Add(data);
-            
+
             result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success,
                 shardList);
             return result;
@@ -326,7 +331,7 @@ public class StatisticService : IStatisticService
             return result;
         }
 
-        
+
         if (request.IsSummary)
         {
             var data = await _unitOfWork.UserRepository.CalculateOverallStatisticsAsync(shards);
@@ -342,7 +347,6 @@ public class StatisticService : IStatisticService
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success,
             shardList);
         return result;
-
     }
 
     /// <summary>
@@ -365,7 +369,7 @@ public class StatisticService : IStatisticService
         var result = new OperationResult<object>();
         var data = await _unitOfWork.GroupRepository.GetGroupUserRoleStatistics();
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success, data);
-        return  result;
+        return result;
     }
 
     /// <summary>
@@ -404,7 +408,7 @@ public class StatisticService : IStatisticService
         var result = new OperationResult<object>();
         var data = await _unitOfWork.PromotionCategoryRepository.GetPromotionStatisticsAsync();
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success, data);
-        return  result;
+        return result;
     }
 
     /// <summary>
@@ -424,6 +428,6 @@ public class StatisticService : IStatisticService
         var data = await _unitOfWork.ServiceRepository.GetServiceStatisticsAsync();
         result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success, data);
 
-        return  result;
+        return result;
     }
 }

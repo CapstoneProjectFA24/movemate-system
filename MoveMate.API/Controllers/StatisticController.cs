@@ -45,6 +45,8 @@ public class StatisticController : BaseController
     ///   - **NOW**: Statistics for the current time.
     ///   - **WEEKNOW**: Statistics for the current week.
     ///   - **MONTHNOW**: Statistics for the current month. If `IsSummary` is `true`, it will return a summary; otherwise, it will return detailed statistics.
+    ///   - **THREEMONTHSLASTED**: 3 months lasted to now.
+    ///   - **SIXMONTHSLASTED**: 6 months lasted to now.
     /// </remarks>
     /// <param name="request">Transaction statistics request, including `Shard`, `Type`, and `IsSummary`.</param>
     /// <returns>
