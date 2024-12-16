@@ -550,5 +550,21 @@ namespace MoveMate.Service.Utils
             
             return string.Join("-", days);
         }
+        
+        public static string GetShardByMonthLasted(int n)
+        {
+            var now = DateTime.Now;
+            var lastedMonths = now.AddMonths(-n );
+
+            var days = new List<string>();
+            /*for (var date = startOfWeek; date <= endOfWeek; date = date.AddDays(1))
+            {
+                days.Add($"{date:yyyyMMdd}");
+            }*/
+            days.Add($"{lastedMonths:yyyyMMdd}");
+            days.Add($"{now:yyyyMMdd}");
+            
+            return string.Join("-", days);
+        }
     }
 }
