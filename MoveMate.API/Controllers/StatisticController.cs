@@ -275,10 +275,32 @@ public class StatisticController : BaseController
     /// }
     /// </code>
     /// </example>
-    [HttpGet("manager/Promotions")]
+    [HttpGet("manager/promotions")]
     public async Task<IActionResult> StatisticPromotions()
     {
         var response = await _statisticService.StatisticPromotion();
+
+        return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
+    }
+    
+    /// <summary>
+    ///
+    /// CHORE: STATISTIC FOR SERVICE
+    /// 
+    /// Retrieves service statistics, including:
+    /// - Total number of parent services (Tier = 0).
+    /// - Total number of child services (Tier = 1).
+    /// - Total number of services.
+    /// - Total number of active services.
+    /// - Total number of inactive services.
+    /// </summary>
+    /// <returns>
+    /// An object containing the requested statistics.
+    /// </returns>
+    [HttpGet("manager/services")]
+    public async Task<IActionResult> StatisticServices()
+    {
+        var response = await _statisticService.StatisticSerivice();
 
         return response.IsError ? HandleErrorResponse(response.Errors) : Ok(response);
     }

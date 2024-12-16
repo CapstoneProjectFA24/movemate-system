@@ -133,7 +133,7 @@ public class StatisticService : IStatisticService
             });
         }
 
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success,
             shardList);
         return result;
     }
@@ -236,7 +236,7 @@ public class StatisticService : IStatisticService
             shardList.AddRange(datas);
         }
 
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success,
             shardList);
         return result;
     }
@@ -268,7 +268,7 @@ public class StatisticService : IStatisticService
             data.Shard = "All";
             shardList.Add(data);
             
-            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
+            result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success,
                 shardList);
             return result;
         }
@@ -339,7 +339,7 @@ public class StatisticService : IStatisticService
             shardList.AddRange(datas);
         }
 
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess,
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success,
             shardList);
         return result;
 
@@ -364,7 +364,7 @@ public class StatisticService : IStatisticService
     {
         var result = new OperationResult<object>();
         var data = await _unitOfWork.GroupRepository.GetGroupUserRoleStatistics();
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success, data);
         return  result;
     }
 
@@ -403,7 +403,27 @@ public class StatisticService : IStatisticService
     {
         var result = new OperationResult<object>();
         var data = await _unitOfWork.PromotionCategoryRepository.GetPromotionStatisticsAsync();
-        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.GetListTransactionSuccess, data);
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success, data);
+        return  result;
+    }
+
+    /// <summary>
+    /// Retrieves service statistics, including:
+    /// - Total number of parent services (Tier = 0).
+    /// - Total number of child services (Tier = 1).
+    /// - Total number of services.
+    /// - Total number of active services.
+    /// - Total number of inactive services.
+    /// </summary>
+    /// <returns>
+    /// An object containing the requested statistics.
+    /// </returns>
+    public async Task<OperationResult<object>> StatisticSerivice()
+    {
+        var result = new OperationResult<object>();
+        var data = await _unitOfWork.ServiceRepository.GetServiceStatisticsAsync();
+        result.AddResponseStatusCode(StatusCode.Ok, MessageConstant.SuccessMessage.Success, data);
+
         return  result;
     }
 }

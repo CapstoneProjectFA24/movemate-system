@@ -9,7 +9,7 @@ public partial class Group
 
     public string? Name { get; set; }
 
-    public bool? IsActived { get; set; }
+    public bool? IsActived { get; set; } = true;
 
     public DateTime? CreatedAt { get; set; }
 
