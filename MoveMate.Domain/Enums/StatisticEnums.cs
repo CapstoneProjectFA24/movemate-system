@@ -4,5 +4,8 @@ public enum StatisticEnums
 {
     NOW, 
     WEEKNOW, 
-    MONTHNOW
+    MONTHNOW,
+    THREEMONTHSLASTED,
+    SIXMONTHLASTED
+    
 }
