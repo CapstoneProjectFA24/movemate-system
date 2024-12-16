@@ -17,7 +17,7 @@ public partial class Voucher
 
     public string? Code { get; set; }
 
-    public bool? IsActived { get; set; }
+    public bool? IsActived { get; set; } = true;
 
     public bool? IsDeleted { get; set; }
 
