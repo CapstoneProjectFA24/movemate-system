@@ -500,8 +500,12 @@ namespace MoveMate.Repository.Repositories.Repository
 
             // Số lượng người dùng không bị cấm
             var totalActiveUsers = users
-                .Where(u => u.IsBanned == false)
+                .Where(u => u.IsAccepted == true)
                 .Count();
+            
+            var totalNoActiveUsers = users
+                .Where(u => u.IsAccepted == false && u.IsDeleted == false)
+                .Count(); 
 
             // Phân vùng người dùng theo role
             var usersByRole = users
@@ -509,7 +513,9 @@ namespace MoveMate.Repository.Repositories.Repository
                 .Select(g => new
                 {
                     RoleName = g.Key,
-                    UserCount = g.Count()
+                    UserCount = g.Count(),
+                    TotalActiveUsers = g.Count(g => g.IsAccepted == true),
+                    TotalNoActiveUsers = g.Count(g => g.IsAccepted == false && g.IsDeleted == false)
                 })
                 .ToList();
 
@@ -518,10 +524,13 @@ namespace MoveMate.Repository.Repositories.Repository
                 TotalUsers = totalUsers,
                 TotalBannedUsers = totalBannedUsers,
                 TotalActiveUsers = totalActiveUsers,
+                TotalNoActiveUsers = totalNoActiveUsers,
                 UsersByRole = usersByRole.Select(r => new RoleUserCount
                 {
                     RoleName = r.RoleName,
-                    UserCount = r.UserCount
+                    UserCount = r.UserCount,
+                    TotalActiveUsers = r.TotalActiveUsers,
+                    TotalNoActiveUsers = r.TotalNoActiveUsers,
                 }).ToList()
             };
         }

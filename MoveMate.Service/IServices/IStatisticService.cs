@@ -11,4 +11,5 @@ public interface IStatisticService
     Task<OperationResult<object>> StatisticUser(StatisticRequest request);
     Task<OperationResult<object>> StatisticGroup();
     Task<OperationResult<object>> StatisticPromotion();
+    Task<OperationResult<object>> StatisticSerivice();
 }
