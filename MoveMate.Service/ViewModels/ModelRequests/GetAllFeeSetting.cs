@@ -51,7 +51,7 @@ namespace MoveMate.Service.ViewModels.ModelRequests
                     .Where(s => !string.IsNullOrEmpty(s))
                     .ToArray();
 
-                Expression = Expression.And(tran => statuses.Contains(tran.Type));
+                queryExpression = queryExpression.And(tran => statuses.Contains(tran.Type));
             }
 
             // Ensure only active settings are included
