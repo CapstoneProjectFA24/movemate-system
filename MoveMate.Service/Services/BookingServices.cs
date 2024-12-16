@@ -1203,19 +1203,17 @@ namespace MoveMate.Service.Services
 
                 var driverAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.DRIVER.ToString(), bookingId);
 
-                //DateTime currentTime = DateTime.Now;
-                //if (booking.BookingAt.HasValue)
-                //{
-                //    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
-                //    if (currentTime < earliestUpdateTime)
-                //    {
-                //        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
-                //        return result;
-                //    }
-                //}
-
-
-
+                DateTime currentTime = DateTime.Now;
+                if (booking.BookingAt.HasValue)
+                {
+                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-60);
+                    if (currentTime <= earliestUpdateTime)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                        return result;
+                    }
+                }
+                
                 string nextStatus = assignment.Status;
 
                 switch (assignment.Status)
@@ -1465,8 +1463,10 @@ namespace MoveMate.Service.Services
                 }
 
                 var porter = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
+                var isHavePorter = booking.Assignments.Count(a => a.StaffType == RoleEnums.PORTER.ToString()) > 0;
                 var staffType = RoleEnums.PORTER.ToString();
-                if (porter == null)
+                
+                if (!isHavePorter)
                 {
                     var bookingDetails = booking.BookingDetails.ToList();
                     bool hasSinglePorterBookingDetail = bookingDetails.Count(bd => bd.Type == "PORTER" && bd.ServiceId == 2) == 1;
@@ -1482,22 +1482,18 @@ namespace MoveMate.Service.Services
                     return result;
                 }
 
-
-
-
                 var porterAssignments = await _unitOfWork.AssignmentsRepository.GetAllByStaffType(RoleEnums.PORTER.ToString(), bookingId);
 
-
-                //DateTime currentTime = DateTime.Now;
-                //if (booking.BookingAt.HasValue)
-                //{
-                //    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-30);
-                //    if (currentTime < earliestUpdateTime)
-                //    {
-                //        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
-                //        return result;
-                //    }
-                //}
+                DateTime currentTime = DateTime.Now;
+                if (booking.BookingAt.HasValue)
+                {
+                    DateTime earliestUpdateTime = booking.BookingAt.Value.AddMinutes(-60);
+                    if (currentTime < earliestUpdateTime)
+                    {
+                        result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.UpdateTimeNotAllowed);
+                        return result;
+                    }
+                }
 
                 string nextStatus = assignment.Status;
 
