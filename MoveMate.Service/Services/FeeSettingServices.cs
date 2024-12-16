@@ -367,6 +367,12 @@ namespace MoveMate.Service.Services
                             result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.RangeFalse);
                             return result;
                         }
+                        var isDuplicate = feeSettings.Any(fee => fee.RangeMin == request.RangeMin);
+                        if (isDuplicate)
+                        {
+                            result.AddError(StatusCode.BadRequest, MessageConstant.FailMessage.ExistFeeRange);
+                            return result;
+                        }
                     }
                     else
                     {
