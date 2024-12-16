@@ -1687,6 +1687,7 @@ namespace MoveMate.Service.Services
 
                     assignment.Status = nextStatus;
                     await _unitOfWork.AssignmentsRepository.SaveOrUpdateRangeAsync(porterAssignments);
+                    await _unitOfWork.AssignmentsRepository.SaveOrUpdateAsync(assignment);
                 }
                 else
                 {
