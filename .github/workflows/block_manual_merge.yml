@@ -11,9 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3  # Đảm bảo repo đã được clone
+
       - name: Check PR label
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}  # Sử dụng PAT thay vì GITHUB_TOKEN
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
           LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name')
@@ -25,3 +28,4 @@ jobs:
             gh pr close "$PR_NUMBER" --comment "This PR was manually created and does not have the required 'Auto-Merge' label. Please use the automated process."
             exit 1
           fi
+
