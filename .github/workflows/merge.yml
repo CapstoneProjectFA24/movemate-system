@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout development branch
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: development  # Checkout development branch
+          ref: development  # Đảm bảo checkout branch development
 
       - name: Install GitHub CLI
         run: |
@@ -25,8 +26,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-	    echo "${{ secrets.PAT_TOKEN }}" | gh auth login --with-token
-	    gh auth setup-git
+          if [[ -z "$GITHUB_TOKEN" ]]; then
+            echo "❌ PAT_TOKEN is missing. Make sure to add it in GitHub Secrets."
+            exit 1
+          fi
+          
+          echo "$GITHUB_TOKEN" | gh auth login --with-token
+          gh auth status || exit 1  # Kiểm tra xác thực
 
       - name: Create Merge Request to Main
         env:
@@ -37,11 +43,16 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
 
+          echo "✅ Source branch: $SOURCE_BRANCH"
+          echo "✅ PR Title: $PR_TITLE"
+          echo "✅ PR Number: $PR_NUMBER"
+
           # Kiểm tra xem PR từ development vào main đã tồn tại chưa
           existing_pr=$(gh pr list --base main --head development --json number -q '.[0].number')
 
           if [ -z "$existing_pr" ]; then
-            # Tạo PR mới
+            echo "🚀 Creating new PR from development to main..."
+
             gh pr create \
               --base main \
               --head development \
@@ -58,16 +69,15 @@ jobs:
             # Lấy số PR vừa tạo
             pr_number=$(gh pr list --base main --head development --json number -q '.[0].number')
 
-            # Kiểm tra xem nhãn "Auto-Merge" có tồn tại không, nếu không thì tạo
-            if ! gh label list | grep -q "Auto-Merge"; then
-              gh label create "Auto-Merge" --description "Automatically merged PRs" --color "#0E8A16"
-            fi
+            if [ -n "$pr_number" ]; then
+              echo "✅ PR #$pr_number created successfully."
 
-            # Gán nhãn "Auto-Merge" cho PR
-            gh pr edit "$pr_number" --add-label "Auto-Merge"
+              # Kiểm tra xem nhãn "Auto-Merge" có tồn tại không, nếu không thì tạo
+              if ! gh label list | grep -q "Auto-Merge"; then
+                gh label create "Auto-Merge" --description "Automatically merged PRs" --color "#0E8A16"
+              fi
 
-            echo "✅ Created PR #$pr_number"
-          else
-            echo "⚠️ A pull request from development to main already exists (#$existing_pr)"
-          fi
+              # Gán nhãn "Auto-Merge" cho PR
+              gh pr edit "$pr_number" --add-label "Auto-Merge"
+              echo "✅ Added label 'Auto-Merge' to PR #$pr_number
 
