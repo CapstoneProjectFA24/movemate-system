@@ -43,6 +43,9 @@ jobs:
               Original PR: #${{ github.event.pull_request.number }}
               
               Please review the changes before merging into main."
+            # Gán nhãn "Auto-Merge" cho PR
+            pr_number=$(basename "$pr_url")
+            gh pr edit "$pr_number" --add-label "Auto-Merge"
           else
             echo "A pull request from development to main already exists (#$existing_pr)"
           fi
