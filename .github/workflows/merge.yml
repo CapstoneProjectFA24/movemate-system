@@ -4,55 +4,33 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - development  # Chạy khi PR được merge vào development
+      - development  # Trigger khi có PR được merge vào development
 
 jobs:
   create_merge_request:
+    # Chỉ chạy khi PR được merge (không phải bị đóng)
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout development branch
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          ref: development  # Đảm bảo checkout branch development
-
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update && sudo apt install gh -y
-
-      - name: Authenticate GitHub CLI
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          if [[ -z "$GITHUB_TOKEN" ]]; then
-            echo "❌ PAT_TOKEN is missing. Make sure to add it in GitHub Secrets."
-            exit 1
-          fi
-          
-          echo "$GITHUB_TOKEN" | gh auth login --with-token
-          gh auth status || exit 1  # Kiểm tra xác thực
-
+          ref: development  # Checkout development branch
+      
       - name: Create Merge Request to Main
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Sử dụng PAT thay vì GITHUB_TOKEN
         run: |
-          # Lấy thông tin PR đã merge
+          # Lấy thông tin từ PR vừa được merge
           SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
           PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-
-          echo "✅ Source branch: $SOURCE_BRANCH"
-          echo "✅ PR Title: $PR_TITLE"
-          echo "✅ PR Number: $PR_NUMBER"
-
-          # Kiểm tra xem PR từ development vào main đã tồn tại chưa
+          
+          # Kiểm tra PR hiện có
           existing_pr=$(gh pr list --base main --head development --json number -q '.[0].number')
-
+          
           if [ -z "$existing_pr" ]; then
-            echo "🚀 Creating new PR from development to main..."
-
+            # Tạo PR mới với thông tin reference
             gh pr create \
               --base main \
               --head development \
@@ -61,23 +39,10 @@ jobs:
               
               This PR was automatically created after merging '$SOURCE_BRANCH' into development.
               
-              **Original PR title**: $PR_TITLE  
-              **Original PR**: #$PR_NUMBER  
+              Original PR title: $PR_TITLE
+              Original PR: #${{ github.event.pull_request.number }}
               
               Please review the changes before merging into main."
-
-            # Lấy số PR vừa tạo
-            pr_number=$(gh pr list --base main --head development --json number -q '.[0].number')
-
-            if [ -n "$pr_number" ]; then
-              echo "✅ PR #$pr_number created successfully."
-
-              # Kiểm tra xem nhãn "Auto-Merge" có tồn tại không, nếu không thì tạo
-              if ! gh label list | grep -q "Auto-Merge"; then
-                gh label create "Auto-Merge" --description "Automatically merged PRs" --color "#0E8A16"
-              fi
-
-              # Gán nhãn "Auto-Merge" cho PR
-              gh pr edit "$pr_number" --add-label "Auto-Merge"
-              echo "✅ Added label 'Auto-Merge' to PR #$pr_number
-
+          else
+            echo "A pull request from development to main already exists (#$existing_pr)"
+          fi
